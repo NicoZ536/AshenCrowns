@@ -80,6 +80,7 @@ pub struct MissionScene {
     pub time_alive: f32,
     last_view: Option<ViewParams>,
     last_select_voice: f32,
+    hero_greeted: bool,
 }
 
 impl MissionScene {
@@ -123,6 +124,7 @@ impl MissionScene {
             time_alive: 0.0,
             last_view: None,
             last_select_voice: -10.0,
+            hero_greeted: false,
         }
     }
 
@@ -174,7 +176,14 @@ impl MissionScene {
             && u.owner == PLAYER
         {
             self.last_select_voice = self.time_alive;
-            audio.play(&format!("voice.{}.{situation}", data.unit(u.kind).id));
+            let id = &data.unit(u.kind).id;
+            // Die Heldin begrüßt beim ersten Anwählen.
+            if situation == "select" && data.unit(u.kind).class == UnitClass::Hero && !self.hero_greeted {
+                self.hero_greeted = true;
+                audio.play(&format!("voice.{id}.greet"));
+            } else {
+                audio.play(&format!("voice.{id}.{situation}"));
+            }
         }
     }
 
@@ -434,9 +443,9 @@ impl MissionScene {
         let has_units = !self.own_selection().is_empty();
         if has_units && !cmd_mod {
             if self.mode == CommandMode::BuildMenu {
-                for (key, id) in [(KeyCode::KeyF, "farmstead"), (KeyCode::KeyB, "barracks"), (KeyCode::KeyT, "watchtower")] {
-                    if input.key_pressed(key)
-                        && let Some(bt) = data.building_id(id)
+                for bt in player_buildables(data) {
+                    if let Some(code) = data.building(bt).hotkey.and_then(letter_key)
+                        && input.key_pressed(code)
                     {
                         self.mode = CommandMode::Place(bt);
                     }
@@ -681,6 +690,15 @@ impl MissionScene {
             engine.renderer.set_fog_of_war(&engine.gpu, engine.fow_size, &self.world.fog.cells, self.world.fog.revision);
         }
     }
+}
+
+/// Vom Spieler baubare Gebäude (aus den Daten, inklusive Mods).
+pub fn player_buildables(data: &GameData) -> Vec<BuildingTypeId> {
+    data.buildings
+        .iter()
+        .filter(|b| b.buildable && b.faction == ashen_sim::data::Faction::EmberCrown)
+        .filter_map(|b| data.building_id(&b.id))
+        .collect()
 }
 
 /// Obere linke Kachel eines Gebäudes, zentriert unter dem Mauszeiger.

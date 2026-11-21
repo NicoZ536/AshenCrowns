@@ -48,7 +48,7 @@ impl ArtLibrary {
                     }
                     if let Some(c) = assets::load_override(dir, &stem) {
                         let anchor = glam::Vec2::new(c.w as f32 * 0.5, c.h as f32 - 2.0);
-                        b.add(stem, c, anchor);
+                        b.replace(&stem, c, anchor);
                         overrides += 1;
                     }
                 }

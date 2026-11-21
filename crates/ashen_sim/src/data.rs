@@ -483,6 +483,14 @@ impl GameData {
     /// Wendet ein Mod-Datenverzeichnis an. Fehlende Dateien werden ignoriert; Einträge mit
     /// vorhandener `id` werden ersetzt, neue werden angehängt.
     pub fn apply_overlay(&mut self, dir: &Path) -> Result<Vec<String>, DataError> {
+        // Atomar: erst auf einer Kopie anwenden und prüfen, dann übernehmen.
+        let mut next = self.clone();
+        let changes = next.apply_overlay_inner(dir)?;
+        *self = next;
+        Ok(changes)
+    }
+
+    fn apply_overlay_inner(&mut self, dir: &Path) -> Result<Vec<String>, DataError> {
         let mut changes = Vec::new();
         let p = dir.join("units.ron");
         if p.exists() {

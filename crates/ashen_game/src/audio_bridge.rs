@@ -37,7 +37,11 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
         SimEvent::MeleeSwing { kind, pos, .. } => {
             let id = &data.unit(*kind).id;
             let sfx = match id.as_str() {
-                "spearman" | "knight" => "sfx.spear_hit",
+                "knight" => {
+                    at(audio, "sfx.horse_charge", *pos);
+                    "sfx.spear_hit"
+                }
+                "spearman" => "sfx.spear_hit",
                 "grave_brute" => "sfx.bone_crunch",
                 _ => "sfx.sword_hit",
             };
@@ -52,6 +56,14 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
             }
             if let EntityRef::Building(_) = target {
                 at(audio, "sfx.building_hit", *pos);
+            } else if let EntityRef::Unit(u) = target
+                && let Some(unit) = world.units.get(*u)
+                && data.unit(unit.kind).class == ashen_sim::data::UnitClass::Hero
+                && unit.owner == PLAYER
+                && unit.hp < unit.max_hp * 0.25
+                && chance(world, *pos, 6)
+            {
+                at(audio, &format!("voice.{}.lowhp", data.unit(unit.kind).id), *pos);
             } else if let EntityRef::Unit(u) = target
                 && let Some(unit) = world.units.get(*u)
                 && unit.hp < unit.max_hp * 0.3
@@ -91,13 +103,16 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
             at(audio, id, *pos);
         }
         SimEvent::AbilityCast { ability, pos, unit, .. } => {
-            at(audio, &format!("sfx.{ability}"), *pos);
+            let sfx = match ability.as_str() {
+                "soul_drain" => "sfx.reeve_soul_drain".to_string(),
+                "summon_thralls" => "sfx.hollow_summon".to_string(),
+                "dread_wail" => "voice.boss_pale_reeve.taunt".to_string(),
+                other => format!("sfx.{other}"),
+            };
+            at(audio, &sfx, *pos);
             if let Some(u) = world.units.get(*unit) {
                 let id = &data.unit(u.kind).id;
                 at(audio, &format!("voice.{id}.ability"), *pos);
-            }
-            if ability == "summon_thralls" {
-                at(audio, "sfx.hollow_summon", *pos);
             }
         }
         SimEvent::LevelUp { .. } => {
@@ -127,7 +142,15 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
             audio.play_sting("victory_sting");
             audio.play("voice.hero_isolde.victory");
         }
-        SimEvent::Defeat => audio.play_sting("defeat_sting"),
+        SimEvent::Defeat => {
+            audio.play_sting("defeat_sting");
+            audio.play("narrator.m01_defeat");
+        }
+        SimEvent::MoraleBroken { unit, pos } => {
+            if let Some(u) = world.units.get(*unit) {
+                at(audio, &format!("voice.{}.retreat", data.unit(u.kind).id), *pos);
+            }
+        }
         SimEvent::HeroFallen { .. } => {
             audio.play("voice.hero_isolde.death");
         }

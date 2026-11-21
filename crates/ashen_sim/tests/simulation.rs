@@ -210,3 +210,17 @@ fn losing_the_keep_is_defeat() {
     run(&mut w, &data, 20);
     assert_eq!(w.mission.outcome, Some(ashen_sim::mission::Outcome::Defeat));
 }
+
+#[test]
+fn faulty_mod_leaves_data_untouched() {
+    let mut data = GameData::load_dir(&assets()).expect("data");
+    let dir = std::env::temp_dir().join(format!("ashen_badmod_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::copy(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../mods/example_mod/data/units.ron"), dir.join("units.ron")).unwrap();
+    std::fs::write(dir.join("buildings.ron"), "( buildings: [ kaputt ] )").unwrap();
+    let before = data.type_table();
+    assert!(data.apply_overlay(&dir).is_err());
+    assert_eq!(data.type_table(), before, "fehlerhafter Mod darf nichts teilweise ändern");
+    assert!(data.unit_id("ember_militia").is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -11,8 +11,8 @@ struct Instance {
     @location(1) size: vec2<f32>,
     @location(2) uv: vec4<f32>,
     @location(3) color: vec4<f32>,
-    @location(4) p0: vec4<f32>, // Material, Emission, Spiegelung (0/1), Lichtstärke-Multiplikator
-    @location(5) p1: vec4<f32>, // Scherung, Stauchung, Wassertiefe, Animationsphase
+    @location(4) p0: vec4<f32>, // Material, Emission (Zusatz), Spiegelung (0/1), reserviert
+    @location(5) p1: vec4<f32>, // Scherung, Stauchung, Wassertiefe, reserviert
 };
 
 struct VsOut {
@@ -95,7 +95,7 @@ fn fs_gbuffer(in: VsOut) -> GOut {
         n.x = -n.x;
     }
     var albedo = tex.rgb * in.color.rgb;
-    var emissive = nrm.b * in.p0.y;
+    var emissive = nrm.b * (1.0 + in.p0.y);
     var flags = 0.0;
 
     if (mat == MAT_WATER) {

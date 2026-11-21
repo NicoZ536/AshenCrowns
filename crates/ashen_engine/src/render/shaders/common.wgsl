@@ -1,4 +1,4 @@
-// Gemeinsame Uniforms aller Passes. Muss exakt zu `render::globals::Globals` passen.
+// Gemeinsame Uniforms aller Passes. Muss exakt zu `render::types::Globals` passen.
 struct Globals {
     view_proj: mat4x4<f32>,
     screen: vec4<f32>,      // interne Breite, Höhe, 1/Breite, 1/Höhe

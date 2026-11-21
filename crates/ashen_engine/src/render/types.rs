@@ -25,7 +25,7 @@ pub struct SpriteRect {
     pub anchor: Vec2,
 }
 
-/// Eine Sprite-Instanz, wie sie an die GPU geht (68 Byte).
+/// Eine Sprite-Instanz, wie sie an die GPU geht (80 Byte).
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SpriteInstance {

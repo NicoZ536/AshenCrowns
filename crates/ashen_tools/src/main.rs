@@ -35,17 +35,6 @@ fn audio_scan(assets: &Path, apply: bool, convert: bool, report_path: Option<Pat
     let manifest = AudioManifest::load(&root.join("manifest.ron"))?;
     let mut report = scanner::scan(&root, &manifest);
     let mut changed = false;
-    if convert && !report.needs_conversion.is_empty() {
-        for p in report.needs_conversion.clone() {
-            match scanner::convert_to_ogg(&p) {
-                Ok(out) => {
-                    println!("konvertiert: {} → {}", p.display(), out.display());
-                    changed = true;
-                }
-                Err(e) => eprintln!("Konvertierung fehlgeschlagen: {e}"),
-            }
-        }
-    }
     if apply && !report.invalid_names.is_empty() {
         for r in report.invalid_names.clone() {
             if r.to.exists() {
@@ -58,6 +47,20 @@ fn audio_scan(assets: &Path, apply: bool, convert: bool, report_path: Option<Pat
                     changed = true;
                 }
                 Err(e) => eprintln!("Umbenennen fehlgeschlagen ({}): {e}", r.from.display()),
+            }
+        }
+    }
+    if changed {
+        report = scanner::scan(&root, &manifest);
+    }
+    if convert && !report.needs_conversion.is_empty() {
+        for p in report.needs_conversion.clone() {
+            match scanner::convert_to_ogg(&p) {
+                Ok(out) => {
+                    println!("konvertiert: {} → {}", p.display(), out.display());
+                    changed = true;
+                }
+                Err(e) => eprintln!("Konvertierung fehlgeschlagen: {e}"),
             }
         }
     }

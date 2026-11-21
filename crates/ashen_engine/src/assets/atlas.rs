@@ -41,6 +41,16 @@ impl AtlasBuilder {
         }
     }
 
+    /// Ersetzt ein vorhandenes Sprite (z. B. handgezeichneter Override). Bei gleicher Größe bleibt
+    /// der Anker des Originals erhalten, sonst wird `fallback_anchor` verwendet.
+    pub fn replace(&mut self, name: &str, canvas: Canvas, fallback_anchor: Vec2) {
+        let anchor = match self.entries.iter().find(|e| e.0 == name) {
+            Some(e) if e.1.w == canvas.w && e.1.h == canvas.h => e.2,
+            _ => fallback_anchor,
+        };
+        self.add(name, canvas, anchor);
+    }
+
     pub fn contains(&self, name: &str) -> bool {
         self.entries.iter().any(|e| e.0 == name)
     }

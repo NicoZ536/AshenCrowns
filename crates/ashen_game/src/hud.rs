@@ -407,8 +407,8 @@ fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine
             return;
         }
         if scene.mode == CommandMode::BuildMenu {
-            for id in ["farmstead", "barracks", "watchtower"] {
-                let Some(bt) = data.building_id(id) else { continue };
+            for bt in crate::mission::player_buildables(data) {
+                let id = data.building(bt).id.as_str();
                 let d = data.building(bt);
                 let hk = d.hotkey.map(|c| c.to_string()).unwrap_or_default();
                 let req_ok = d.requires.iter().all(|r| data.building_id(r).is_some_and(|rb| scene.world.buildings.iter().any(|(_, x)| x.owner == PLAYER && x.kind == rb && x.complete)));

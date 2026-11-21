@@ -225,7 +225,7 @@ Figuren stimmt. Alle Figuren sind nur für „blickt nach rechts“ gezeichnet.
 
 ### 5.3 Normalenkarte im Atlas
 
-Der Normalen-Atlas (`Rgba8Unorm`): `r` = Normale x, `g` = Normale y, `b` = Emission, `a` = Abdeckung. Die Atlas-Emission wird im Shader mit der Instanz-Emission `p0.y` **multipliziert** (`emission = b · p0.y`); ohne gesetzte Instanz-Emission (Standard 0) bleibt sie wirkungslos. Sprites mit eingemalter Emission (`Canvas::glow`) leuchten daher nur, wenn das Spiel sie mit `SpriteInstance::emissive(…)` zeichnet. Normalen
+Der Normalen-Atlas (`Rgba8Unorm`): `r` = Normale x, `g` = Normale y, `b` = Emission, `a` = Abdeckung. Die Atlas-Emission wirkt immer und wird durch die Instanz-Emission `p0.y` verstärkt (`emission = b · (1 + p0.y)`). Sprites mit eingemalter Emission (`Canvas::glow`, z. B. Fenster, Fackeln, Runen) leuchten daher von selbst; `SpriteInstance::emissive(…)` verstärkt sie zusätzlich. Normalen
 entstehen entweder explizit (`Canvas::pxn`, Flächen mit `normals::*`) oder per „Kissen-Normalen“
 (`Canvas::pillow_normals`) aus einer Distanztransformation der Silhouette plus Helligkeitsfeinstruktur
 (dunkle Pixel = Vertiefung). Deaktiviert ein Grafikprofil Normalmapping (`Performance`), wird in Licht- und
@@ -318,7 +318,7 @@ Schattensprites flach auf den Boden. Beides wirkt nur in der Vertex-Stufe; der A
 * Die Ausgabe verwendet nur die größte Stufe (`bloom0`, linear gefiltert) mit Intensität 0,65 (Standard).
 * Stufenzahl je Profil: 0 (aus) / 3 / 4.
 
-### 7.4a Ausgabe (`final.wgsl`)
+### 7.5 Ausgabe (`final.wgsl`)
 
 ```text
 ip   = ausgabepixel / skalierung + subpixel            // Subpixel-Scrolling
