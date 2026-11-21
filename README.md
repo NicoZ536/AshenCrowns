@@ -15,7 +15,7 @@ A18 Pro mit 5-Kern-GPU und 8 GB Unified Memory. Windows und Linux sind architekt
 | Simulation | Deterministisch (20 Hz), A*-Wegfindung mit Glättung und Budget, Formationen, Separation, Kampf mit Rüstungs-/Schadenstypen, Moral & Flucht, Projektile, Türme, Helden mit Stufen und Fähigkeiten, Wirtschaft (Sammeln, Bauen, Ausbilden, Nahrung als Unterhalt, Hungersnot), Tag/Nacht, Wetter, Gegner-KI (Wellen, Wachen, Boss), datengetriebene Missionen, Chronik |
 | Inhalte | 4 eigene + 2 gegnerische Gebäude, 5 Einheitentypen, Heldin Isolde Raventhorn (3 Fähigkeiten), 3 Gegnertypen + Boss „Der Fahle Vogt“, Mission „Die letzte Siedlung“ |
 | Modi | Kampagne, Gefecht, Überleben, Sandbox |
-| UI | Hauptmenü mit lebendem Hintergrund, Neues Spiel, Laden, Einstellungen, Mods, Credits; HUD mit Ressourcen, Minimap, Auswahl, Befehlskarte, Zielen, Nachrichten, Pausenmenü, Chronik, Sieg/Niederlage |
+| UI | Dark-Fantasy-Oberfläche aus prozedural erzeugter Pixel-Art (geschmiedete Eisenrahmen mit Goldfiligran und Edelsteinen, Leder, Stein, Pergament), Schriften Cinzel/Cinzel Decorative/Alegreya (OFL); Hauptmenü mit Glut-Titel und lebendem Hintergrund, Neues Spiel, Laden, Einstellungen, Mods, Credits; HUD mit Ressourcenplakette, Rauten-Minimap, Porträt im Prunkrahmen, Befehlskarte mit Abklingzeiten, Zielrolle, Nachrichten, Pausenmenü, Chronik, Sieg/Niederlage |
 | Speichern | Versioniert, CRC32, atomar, Backup, rotierende Autosaves |
 | Audio | Manifest, Asset-Scanner, automatische Zuordnung, Validierung, Duplikat-/Fehlbericht, Event-Registry, Musik-Intensitäten mit Crossfade, Ambience-Schichten, Dialogsequenzen mit Ducking |
 | Modding | Datenmods (Einheiten, Gebäude, Fähigkeiten, Missionen) mit Beispiel-Mod |
