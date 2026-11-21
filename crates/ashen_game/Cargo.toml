@@ -22,5 +22,6 @@ glam.workspace = true
 egui.workspace = true
 serde.workspace = true
 ron.workspace = true
+image.workspace = true
 log.workspace = true
 env_logger.workspace = true

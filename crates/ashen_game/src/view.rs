@@ -23,7 +23,7 @@ struct Corpse {
     pos: Vec2,
     kind: String,
     hollow: bool,
-    facing_right: bool,
+    facing: f32,
     age: f32,
 }
 
@@ -152,10 +152,10 @@ impl WorldView {
     pub fn on_event(&mut self, e: &SimEvent, world: &SimWorld, data: &GameData, art: &ArtLibrary) {
         let seed = (self.time * 1000.0) as u32;
         match e {
-            SimEvent::UnitDied { kind, pos, facing_right, owner, .. } => {
+            SimEvent::UnitDied { kind, pos, facing, owner, .. } => {
                 let def = data.unit(*kind);
                 let hollow = *owner == ENEMY;
-                self.corpses.push(Corpse { pos: *pos, kind: def.id.clone(), hollow, facing_right: *facing_right, age: 0.0 });
+                self.corpses.push(Corpse { pos: *pos, kind: def.id.clone(), hollow, facing: *facing, age: 0.0 });
                 if hollow {
                     self.burst(art, *pos, 10, "fx_glow", Vec4::new(0.5, 1.0, 0.6, 0.9), 22.0, 6.0, 1.0, seed);
                 } else {
@@ -292,10 +292,10 @@ impl WorldView {
         let morning = t < 0.5;
         let mut a = Atmosphere::default();
         let night_amb = Vec3::new(0.30, 0.38, 0.76);
-        let day_amb = Vec3::new(0.56, 0.58, 0.66);
+        let day_amb = Vec3::new(0.62, 0.62, 0.66);
         let warm = if morning { Vec3::new(0.72, 0.52, 0.55) } else { Vec3::new(0.66, 0.42, 0.52) };
         a.ambient = night_amb.lerp(day_amb, day).lerp(warm, low_sun * day.max(0.3) * 0.6);
-        a.ambient_intensity = 0.85 * (1.0 - day) + 0.6 * day;
+        a.ambient_intensity = 1.0 * (1.0 - day) + 0.6 * day;
         let sun_day = Vec3::new(1.0, 0.93, 0.82);
         let sun_low = if morning { Vec3::new(1.0, 0.62, 0.34) } else { Vec3::new(1.0, 0.45, 0.28) };
         let moon = Vec3::new(0.55, 0.66, 0.95);
@@ -343,7 +343,7 @@ impl WorldView {
         // Verderbnis nahe dem Hohlschrein: entsättigt, kühl-grün getönt.
         let cam_tile = world_to_tile(camera_world);
         let hollow = 1.0 - smooth(8.0, 26.0, (cam_tile - ENEMY_BASE).length());
-        a.saturation = 0.95 - hollow * 0.3;
+        a.saturation = 1.02 - hollow * 0.35;
         a.tint = Vec3::new(0.05, 0.02, 0.10).lerp(Vec3::new(-0.02, 0.07, 0.03), hollow);
         a.contrast = 1.08 + hollow * 0.06;
         // Schattenwurf (Scherung, Stauchung) passend zur Lichtrichtung.
@@ -621,7 +621,8 @@ impl WorldView {
                 continue;
             }
             let def = data.unit(u.kind);
-            let anims = art.unit_anims(&def.id, def.faction == ashen_sim::data::Faction::Hollowed);
+            let (dir, flip) = crate::art3d::dir_for(u.facing);
+            let anims = art.unit_anims(&def.id, def.faction == ashen_sim::data::Faction::Hollowed, dir);
             let (clip_name, t) = match u.activity {
                 Activity::Walk | Activity::Flee => (if u.carry.is_some() && anims.clips.contains_key("carry") { "carry" } else { "walk" }, self.time + id.index as f32 * 0.13),
                 Activity::Attack => ("attack", u.activity_time),
@@ -639,7 +640,7 @@ impl WorldView {
             let clip = if clip.finished(t) && matches!(clip_name, "attack" | "cast") { anims.get("idle").expect("idle") } else { clip };
             let rect = *clip.frame_at(t);
             let wp = tile_to_world(p);
-            let mut inst = SpriteInstance::new(&rect, wp).flip(!u.facing_right);
+            let mut inst = SpriteInstance::new(&rect, wp).flip(flip);
             if let Some(f) = self.hit_flash.get(&id) {
                 inst = inst.tint(Vec4::new(1.6, 1.4, 1.3, 1.0)).emissive(f * 4.0);
             }
@@ -697,11 +698,12 @@ impl WorldView {
             if !in_view(c.pos) || !explored(c.pos) {
                 continue;
             }
-            let anims = art.unit_anims(&c.kind, c.hollow);
+            let (dir, flip) = crate::art3d::dir_for(c.facing);
+            let anims = art.unit_anims(&c.kind, c.hollow, dir);
             let clip = anims.get("death").expect("death");
             let rect = *clip.frame_at(c.age);
             let fade = 1.0 - smooth(16.0, 22.0, c.age);
-            frame.world.push((depth_of(c.pos) - 0.3, SpriteInstance::new(&rect, tile_to_world(c.pos)).flip(!c.facing_right).alpha(fade)));
+            frame.world.push((depth_of(c.pos) - 0.3, SpriteInstance::new(&rect, tile_to_world(c.pos)).flip(flip).alpha(fade)));
         }
 
         // --- Projektile

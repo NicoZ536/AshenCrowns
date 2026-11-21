@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SimEvent {
     UnitSpawned { id: UnitId, kind: UnitTypeId, owner: PlayerId, pos: Vec2 },
-    UnitDied { id: UnitId, kind: UnitTypeId, owner: PlayerId, pos: Vec2, facing_right: bool },
+    UnitDied { id: UnitId, kind: UnitTypeId, owner: PlayerId, pos: Vec2, facing_right: bool, facing: f32 },
     MeleeSwing { attacker: UnitId, kind: UnitTypeId, pos: Vec2 },
     Hit { target: EntityRef, pos: Vec2, amount: f32, damage_type: DamageType, blocked: bool },
     ProjectileFired { kind: ProjectileKind, from: Vec2, owner: PlayerId },

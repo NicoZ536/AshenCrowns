@@ -23,10 +23,7 @@ pub fn cast(world: &mut SimWorld, data: &GameData, caster: UnitId, ability: u8, 
             *cd = adef.cooldown;
         }
         u.set_activity(Activity::Cast);
-        let dx = (point.x - point.y) - (origin.x - origin.y);
-        if dx.abs() > 0.05 {
-            u.facing_right = dx > 0.0;
-        }
+        u.face(point - origin);
     }
     world.events.push(SimEvent::AbilityCast { unit: caster, ability: adef.id.clone(), pos: origin, target: point });
 

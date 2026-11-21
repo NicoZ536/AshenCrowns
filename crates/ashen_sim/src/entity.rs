@@ -68,6 +68,8 @@ pub struct Unit {
     pub vel: Vec2,
     /// Blickrichtung (Bildschirm): `true` = nach rechts.
     pub facing_right: bool,
+    /// Blickwinkel auf dem Boden (Bogenmaß): 0 = zum Betrachter, +π/2 = nach rechts, ±π = vom Betrachter weg.
+    pub facing: f32,
     pub hp: f32,
     pub max_hp: f32,
     pub mana: f32,
@@ -112,6 +114,7 @@ impl Unit {
             prev_pos: pos,
             vel: Vec2::ZERO,
             facing_right: true,
+            facing: 0.0,
             hp,
             max_hp: hp,
             mana,
@@ -143,6 +146,19 @@ impl Unit {
             tag: None,
             wave: None,
             alive_time: 0.0,
+        }
+    }
+
+    /// Dreht die Einheit in Richtung `dir` (Kachelraum).
+    pub fn face(&mut self, dir: Vec2) {
+        if dir.length_squared() < 1e-6 {
+            return;
+        }
+        // Kachelachsen → Bodenebene der isometrischen Kamera.
+        let (wx, wz) = (dir.x - dir.y, dir.x + dir.y);
+        self.facing = wx.atan2(wz);
+        if wx.abs() > 0.05 {
+            self.facing_right = wx > 0.0;
         }
     }
 

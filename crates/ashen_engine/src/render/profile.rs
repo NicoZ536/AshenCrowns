@@ -26,8 +26,8 @@ impl GraphicsProfile {
     pub fn settings(self) -> ProfileSettings {
         match self {
             GraphicsProfile::Performance => ProfileSettings { bloom_levels: 0, max_lights: 48, max_particles: 600, normal_mapping: false, fog: true, grain: 0.0, min_lines: 300.0 },
-            GraphicsProfile::Balanced => ProfileSettings { bloom_levels: 3, max_lights: 128, max_particles: 1600, normal_mapping: true, fog: true, grain: 0.012, min_lines: 260.0 },
-            GraphicsProfile::Quality => ProfileSettings { bloom_levels: 4, max_lights: 256, max_particles: 3200, normal_mapping: true, fog: true, grain: 0.018, min_lines: 220.0 },
+            GraphicsProfile::Balanced => ProfileSettings { bloom_levels: 3, max_lights: 128, max_particles: 1600, normal_mapping: true, fog: true, grain: 0.006, min_lines: 260.0 },
+            GraphicsProfile::Quality => ProfileSettings { bloom_levels: 4, max_lights: 256, max_particles: 3200, normal_mapping: true, fog: true, grain: 0.009, min_lines: 220.0 },
         }
     }
 }

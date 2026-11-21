@@ -253,6 +253,7 @@ dependencies = [
  "egui",
  "env_logger",
  "glam",
+ "image",
  "log",
  "ron",
  "serde",

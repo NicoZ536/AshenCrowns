@@ -4,6 +4,7 @@
 //! Screenshot ohne Fenster: `cargo run --release -- --screenshot shot.png [--scene mission] [--battle] ...`
 
 mod art;
+mod art3d;
 mod audio_bridge;
 mod content;
 mod game;

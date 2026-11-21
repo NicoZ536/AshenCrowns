@@ -130,10 +130,7 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
         u.vel = (new_pos - pos) / dt;
         u.pos = new_pos;
         if desired.length_squared() > 1e-4 {
-            let sx = desired.x - desired.y;
-            if sx.abs() > 0.05 {
-                u.facing_right = sx > 0.0;
-            }
+            u.face(desired);
             // Steckenbleiben erkennen und neu planen.
             if moved < speed * dt * 0.15 {
                 u.stuck_timer += dt;

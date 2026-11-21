@@ -7,6 +7,11 @@ in welcher Reihenfolge Kunst für die kommenden Phasen produziert werden soll. G
 
 ---
 
+> **Stand nach der Grafik-Überarbeitung:** Einheiten, Gebäude, Minen, Bäume und größere Dekoration werden als
+> 3D-Modelle gebacken – siehe [`3d_pixel_pipeline.md`](3d_pixel_pipeline.md). Die prozedurale 2D-Pipeline dieses
+> Abschnitts erzeugt weiterhin Gelände, Übergänge, Gerüste, Fundamente, Effekte, Icons und kleine Bodendetails.
+> Einheiten-Sprites heißen jetzt `<unit>_<anim>_<richtung>_<n>` (Richtung 0–4).
+
 ## 1. Die prozedurale Pipeline
 
 Alle Sprites des Vertical Slice werden **beim Start** von `ArtLibrary::build` (`art/mod.rs`) im Speicher erzeugt;

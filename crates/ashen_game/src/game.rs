@@ -137,7 +137,24 @@ impl Game for AshenGame {
                 return;
             }
         }
-        let art = ArtLibrary::build(Some(&assets));
+        let art = match ArtLibrary::build(Some(&assets), &engine.gpu) {
+            Ok(a) => a,
+            Err(e) => {
+                self.fatal = Some(format!("Grafik konnte nicht erzeugt werden: {e}"));
+                return;
+            }
+        };
+        if let Some(path) = std::env::var_os("ASHEN_DUMP_SHEET")
+            && let Err(e) = art.contact_sheet(std::path::Path::new(&path))
+        {
+            log::warn!("Kontaktbogen fehlgeschlagen: {e}");
+        }
+        if let Some(path) = std::env::var_os("ASHEN_DUMP_ATLAS") {
+            match art.atlas.save_png(std::path::Path::new(&path)) {
+                Ok(()) => log::info!("Atlas gespeichert: {}", std::path::Path::new(&path).display()),
+                Err(e) => log::warn!("Atlas-Export fehlgeschlagen: {e}"),
+            }
+        }
         engine.renderer.set_atlas(&engine.gpu, art.atlas.size, &art.atlas.albedo, &art.atlas.normal);
         let tex = engine.ui.register_texture(&engine.gpu, engine.renderer.atlas_view());
         self.atlas_tex = Some(tex);

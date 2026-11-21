@@ -6,3 +6,4 @@
 /saves
 *.log
 /assets/audio/audio_report.md
+/.claude/worktrees/

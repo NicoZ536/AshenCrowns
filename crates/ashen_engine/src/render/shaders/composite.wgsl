@@ -43,7 +43,7 @@ fn fs_main(in: FsQuad) -> @location(0) vec4<f32> {
     let sun = normalize(g.sun_dir.xyz);
     let ndl = max(dot(n, sun), 0.0);
     let sun_term = g.sun_color.rgb * g.sun_color.a * (0.45 + 0.55 * ndl) * (1.0 - shadow * 0.85);
-    let amb = g.ambient.rgb * g.ambient.a * (1.0 - shadow * 0.35);
+    let amb = g.ambient.rgb * g.ambient.a * (1.0 - shadow * 0.5);
     let lightning = g.weather.z;
     col = alb * (amb + sun_term + lights + vec3<f32>(lightning * 0.9));
     col = col + alb * nb.b * 3.2;
@@ -62,10 +62,10 @@ fn fs_main(in: FsQuad) -> @location(0) vec4<f32> {
         // 0 = unerforscht, 0.5 = erforscht, 1 = sichtbar
         let explored = smoothstep(0.15, 0.5, vis);
         let visible = smoothstep(0.55, 0.95, vis);
-        let grey = vec3<f32>(luma(col)) * vec3<f32>(0.75, 0.8, 0.95);
+        let grey = vec3<f32>(luma(col)) * vec3<f32>(0.82, 0.84, 0.9);
         let remembered = mix(grey, col, 0.35) * 0.6;
         col = mix(remembered, col, visible);
-        let unexplored = vec3<f32>(0.012, 0.012, 0.02) + fbm2(world * 0.02 + g.time.x * 0.03) * 0.02;
+        let unexplored = vec3<f32>(0.012, 0.011, 0.012) + fbm2(world * 0.02 + g.time.x * 0.03) * 0.018;
         col = mix(unexplored * g.fow.w, col, explored);
     }
 

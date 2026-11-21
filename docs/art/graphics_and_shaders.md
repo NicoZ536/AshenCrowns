@@ -90,6 +90,11 @@ Kachelvariation: `WorldView::prepare` multipliziert jede Bodenkachel mit einem R
 
 ---
 
+### 1.4 3D-gebackene Pixel-Art
+
+Figuren und Bauwerke entstehen aus 3D-Modellen, die beim Start ohne Kantenglättung in Sprites gerastert werden
+(Albedo, Normalen, Leuchtkraft getrennt). Details: [`3d_pixel_pipeline.md`](3d_pixel_pipeline.md).
+
 ## 2. Isometrisches 32×16-Raster
 
 * Kachel = **2:1-Diamant**, 32 Pixel breit, 16 Pixel hoch (`ashen_core::iso::TILE_W` / `TILE_H`).

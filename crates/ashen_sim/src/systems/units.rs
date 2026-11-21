@@ -79,10 +79,8 @@ pub fn engage(world: &mut SimWorld, data: &GameData, id: UnitId, target: EntityR
     if dist <= def.range + slack {
         u.clear_path();
         u.vel = Vec2::ZERO;
-        let dx = (tpos.x - tpos.y) - (u.pos.x - u.pos.y);
-        if dx.abs() > 0.05 {
-            u.facing_right = dx > 0.0;
-        }
+        let to = tpos - u.pos;
+        u.face(to);
         if u.windup.is_none() && u.attack_cd <= 0.0 {
             u.windup = Some((def.windup, target));
             u.set_activity(Activity::Attack);
@@ -364,8 +362,7 @@ fn gather(world: &mut SimWorld, data: &GameData, id: UnitId, node: NodeId, dt: f
     }
     u.clear_path();
     u.vel = Vec2::ZERO;
-    let dx = (center.x - center.y) - (pos.x - pos.y);
-    u.facing_right = dx > 0.0;
+    u.face(center - pos);
     u.set_activity(Activity::Work);
     let before = u.work_timer;
     u.work_timer += dt * def.gather_speed.max(0.1);
@@ -463,8 +460,7 @@ fn build(world: &mut SimWorld, data: &GameData, id: UnitId, building: BuildingId
     }
     u.clear_path();
     u.vel = Vec2::ZERO;
-    let dx = (center.x - center.y) - (pos.x - pos.y);
-    u.facing_right = dx > 0.0;
+    u.face(center - pos);
     u.set_activity(Activity::Work);
     let before = u.work_timer;
     u.work_timer += dt;

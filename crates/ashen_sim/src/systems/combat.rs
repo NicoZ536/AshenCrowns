@@ -144,7 +144,7 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
     for id in dead {
         let Some(u) = world.units.remove(id) else { continue };
         let def = data.unit(u.kind);
-        world.events.push(SimEvent::UnitDied { id, kind: u.kind, owner: u.owner, pos: u.pos, facing_right: u.facing_right });
+        world.events.push(SimEvent::UnitDied { id, kind: u.kind, owner: u.owner, pos: u.pos, facing_right: u.facing_right, facing: u.facing });
         world.players[u.owner as usize].stats.units_lost += 1;
         if let Some(tag) = &u.tag {
             world.mission.dead_tags.push(tag.clone());

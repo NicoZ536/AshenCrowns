@@ -63,7 +63,7 @@ pub fn edge_name(t: Terrain, side: u8) -> String {
 fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
     let fx = x as f32;
     let fy = y as f32 * 2.0; // isometrische Stauchung ausgleichen
-    let n = 0.3 + fbm2(fx * 0.09, fy * 0.09, seed, 3) * 0.45;
+    let n = 0.28 + fbm2(fx * 0.06, fy * 0.06, seed, 3) * 0.5 + (fbm2(fx * 0.3, fy * 0.3, seed ^ 0x55, 2) - 0.5) * 0.12;
     let r = rand2(x, y, seed ^ 0xA1);
     let b = bayer(x, y);
     let mut normal = Vec3::new(0.0, -0.25, 1.0);
@@ -74,15 +74,15 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
         Terrain::Grass | Terrain::DarkGrass => {
             ramp = if t == Terrain::Grass { pal::grass() } else { pal::dark_grass() };
             // Halme: helle Pixel mit dunklem Fuß.
-            let blade = rand2(x, y / 2, seed ^ 0x51) > 0.9;
-            let under = rand2(x, (y + 1) / 2, seed ^ 0x51) > 0.9;
+            let blade = rand2(x, y / 2, seed ^ 0x51) > 0.95;
+            let under = rand2(x, (y + 1) / 2, seed ^ 0x51) > 0.95;
             if blade && y % 2 == 0 {
                 tone += 0.22;
                 normal = Vec3::new(0.0, -0.6, 0.8);
             } else if under {
                 tone -= 0.12;
             }
-            if r > 0.985 && t == Terrain::Grass {
+            if r > 0.995 && t == Terrain::Grass {
                 return (Rgba::hex(0x6a6a3a), normal, 0.0);
             }
         }
@@ -124,13 +124,13 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
         }
         Terrain::Ash => {
             ramp = pal::ash();
-            if r > 0.997 {
-                glow = 0.9;
+            if r > 0.9993 {
+                glow = 0.6;
                 return (pal::EMBER, normal, glow);
             }
             let vein = (fbm2(fx * 0.25, fy * 0.25, seed ^ 0x99, 3) - 0.5).abs() < 0.025;
             if vein {
-                return (Rgba::hex(0x2c4a34), normal, 0.25);
+                return (Rgba::hex(0x2a3a2e), normal, 0.0);
             }
         }
         Terrain::Ford => {

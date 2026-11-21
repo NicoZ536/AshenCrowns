@@ -150,9 +150,9 @@ Das Spiel (Binary `ashen_crowns`, `default-run`). Abhängigkeiten: `ashen_core`,
 | `art/mod.rs` | Asset-Pipeline: baut den Atlas, wendet PNG-Overrides an, erzeugt Animationssets | `ArtLibrary` (`build`, `get`, `portrait`, `unit_anims`), `UNIT_ART` (10 Einheiten) |
 | `art/palette.rs` | Farbpalette der Art Direction | 29 Rampen (`grass()`, `stone()`, `steel()`, `crimson()` …), Akzentfarben `EMBER`, `EMBER_HOT`, `FIRE_DEEP`, `HOLLOW_GLOW`, `HOLLOW_DEEP`, `WINDOW_WARM`, Konstante `OUTLINE` |
 | `art/terrain.rs` | Bodenkacheln 32×16, Übergänge, Brücke, Fundamente | `tile_name`, `edge_name`, `in_diamond`, `paint_foundation`, `VARIANTS = 4` |
-| `art/units.rs` | Figuren aus Körperteilen mit Posen für Idle, Gehen, Angriff, Arbeit, Tragen, Zaubern, Tod; Porträts | Figurensätze und Sonderfiguren (Ritter, Grabkoloss, Fahler Vogt) |
-| `art/buildings.rs` | Isometrische Gebäude mit Metadaten für Lichter, Rauch, Feuer, grüne Hohlglut; Gerüste, Banner | `BuildingMeta`, `build` |
-| `art/props.rs` | Bäume, Minen, Steinbruch, Dekoration | `tree_*`, `node_*`, `decor_*` |
+| `art3d/` | 3D-Modelle (Rig, Einheiten, Bauwerke, Bäume, Dekoration) und 3D→Pixel-Bake in 5 Richtungen, siehe [`../art/3d_pixel_pipeline.md`](../art/3d_pixel_pipeline.md) | `<unit>_<anim>_<dir>_<n>`, `bld_*`, `tree_*`, `node_*`, `decor_*`, `<unit>_portrait` |
+| `art/buildings.rs` | `BuildingMeta` (Effektpunkte) und 2D-Baugerüste | `scaffold_*` |
+| `art/props.rs` | 2D-Bodendetails: Grasbüschel, Blumen, Schilf | `decor_tuft_*`, `decor_flowers_*`, `decor_reeds_*` |
 | `art/fx.rs` | Weiche Partikel, Schatten, Auswahlringe, Projektile, Fahne, Befehlsmarker | `fx_*`, `proj_*`, `shadow_*`, `ring_*`, `marker_*`, `rally_flag` |
 | `art/icons.rs` | 16×16-Symbole für Ressourcen, Befehle und Fähigkeiten | `icon_*` |
 

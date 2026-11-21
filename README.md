@@ -11,7 +11,7 @@ A18 Pro mit 5-Kern-GPU und 8 GB Unified Memory. Windows und Linux sind architekt
 | Bereich | Umgesetzt |
 |---|---|
 | Engine | Fenster/Hauptschleife, Eingabe, fester Simulationstakt, Deferred-2D-Renderer (G-Buffer, Normalen-Beleuchtung, Punktlichter, weiche Schatten per Scherung nach Sonnenstand, Wasser, Nebel, Regen, Aschefall, Blitze, Hitzeflimmern, Kriegsnebel, Bloom, Tonemapping, Farbkorrektur, Vignette), Partikelsystem, Animationssystem, Shader-Hot-Reload, Grafikprofile, Headless-Screenshots |
-| Assets | Prozedurale Pixel-Art-Pipeline (≈360 Sprites in < 50 ms), Atlas, PNG-Overrides für handgezeichnete Sprites |
+| Assets | 3D→Pixel-Bake nach dem Dead-Cells-Prinzip (Low-Poly-Modelle mit Skelettanimation, 5 Richtungen, prozedurale Materialien, Cel-Shading, Normalen für dynamisches Licht; ≈1500 Sprites beim Start), prozedurales 2D-Gelände, Atlas, PNG-Overrides |
 | Simulation | Deterministisch (20 Hz), A*-Wegfindung mit Glättung und Budget, Formationen, Separation, Kampf mit Rüstungs-/Schadenstypen, Moral & Flucht, Projektile, Türme, Helden mit Stufen und Fähigkeiten, Wirtschaft (Sammeln, Bauen, Ausbilden, Nahrung als Unterhalt, Hungersnot), Tag/Nacht, Wetter, Gegner-KI (Wellen, Wachen, Boss), datengetriebene Missionen, Chronik |
 | Inhalte | 4 eigene + 2 gegnerische Gebäude, 5 Einheitentypen, Heldin Isolde Raventhorn (3 Fähigkeiten), 3 Gegnertypen + Boss „Der Fahle Vogt“, Mission „Die letzte Siedlung“ |
 | Modi | Kampagne, Gefecht, Überleben, Sandbox |
@@ -62,11 +62,11 @@ cargo run --release -- --screenshot shot.png --scene mission --time 0.88 --battl
 - [Game Design Document](docs/design/game_design_document.md) · [Kampagne](docs/design/campaign.md)
 - [Weltbibel](docs/lore/world_bible.md) · [Glossar](docs/lore/glossary.md)
 - [Architektur](docs/tech/architecture.md) · [Module](docs/tech/modules.md) · [Datenmodell](docs/tech/data_model.md) · [Projektstruktur](docs/tech/project_structure.md) · [Roadmap](docs/tech/roadmap.md) · [Modding](docs/tech/modding.md)
-- [Grafik & Shader](docs/art/graphics_and_shaders.md) · [Asset-Produktionsplan](docs/art/asset_production_plan.md)
+- [Grafik & Shader](docs/art/graphics_and_shaders.md) · [3D→Pixel-Pipeline](docs/art/3d_pixel_pipeline.md) · [Asset-Produktionsplan](docs/art/asset_production_plan.md)
 - Audio: [ElevenLabs-Leitfaden](docs/audio/elevenlabs_production_guide.md), [Figuren](docs/audio/elevenlabs_characters.md), [Einheiten](docs/audio/elevenlabs_unit_voices.md), [Dialoge](docs/audio/elevenlabs_dialogues.md), [Soundeffekte](docs/audio/elevenlabs_sound_effects.md), [Ambience](docs/audio/elevenlabs_ambient_audio.md), [Suno-Musik](docs/audio/suno_master_production.md), [Audio-Integration](docs/audio/audio_integration.md)
 
 ## Bekannte Einschränkungen
 
-- Die Grafik der Vertical Slice ist vollständig prozedural erzeugte Pixel-Art; handgezeichnete Sprites können schrittweise über `assets/sprites/` ersetzt werden.
+- Figuren und Bauwerke sind im Code modellierte Low-Poly-3D-Modelle (kein externes 3D-Werkzeug); ein glTF-Import für professionell modellierte Assets ist geplant. Handgezeichnete Sprites können über `assets/sprites/` eingespielt werden.
 - Audiodateien sind noch nicht geliefert; das Spiel läuft ohne sie und meldet fehlende Dateien im Audio-Bericht.
 - Entwickelt und automatisiert geprüft unter Linux mit Software-Vulkan (llvmpipe); ein Lauf auf echter macOS-Hardware (Metal) steht noch aus.

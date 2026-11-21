@@ -356,6 +356,53 @@ impl Canvas {
         out
     }
 
+    /// Schneidet transparente Ränder ab (1 Pixel Rand bleibt). Liefert die neue Leinwand und den
+    /// Versatz der alten linken oberen Ecke.
+    pub fn trimmed(&self) -> (Canvas, glam::IVec2) {
+        let (mut x0, mut y0, mut x1, mut y1) = (self.w, self.h, -1, -1);
+        for y in 0..self.h {
+            for x in 0..self.w {
+                if self.color[(y * self.w + x) as usize].3 != 0 {
+                    x0 = x0.min(x);
+                    y0 = y0.min(y);
+                    x1 = x1.max(x);
+                    y1 = y1.max(y);
+                }
+            }
+        }
+        if x1 < 0 {
+            return (Canvas::new(1, 1), glam::IVec2::ZERO);
+        }
+        let (x0, y0) = ((x0 - 1).max(0), (y0 - 1).max(0));
+        let (x1, y1) = ((x1 + 1).min(self.w - 1), (y1 + 1).min(self.h - 1));
+        let (w, h) = (x1 - x0 + 1, y1 - y0 + 1);
+        let mut out = Canvas::new(w, h);
+        for y in 0..h {
+            for x in 0..w {
+                let si = ((y + y0) * self.w + x + x0) as usize;
+                let di = (y * w + x) as usize;
+                out.color[di] = self.color[si];
+                out.normal[di] = self.normal[si];
+            }
+        }
+        (out, glam::IVec2::new(x0, y0))
+    }
+
+    /// Leinwand aus gebackenen RGBA8-Puffern (Albedo sRGB, Normale/Leuchtkraft).
+    pub fn from_baked(w: i32, h: i32, albedo: &[u8], normal: &[u8]) -> Canvas {
+        let mut c = Canvas::new(w, h);
+        for i in 0..(w * h) as usize {
+            let a = &albedo[i * 4..i * 4 + 4];
+            if a[3] == 0 {
+                continue;
+            }
+            c.color[i] = Rgba(a[0], a[1], a[2], 255);
+            let n = &normal[i * 4..i * 4 + 4];
+            c.normal[i] = NormalPx { nx: n[0], ny: n[1], emissive: n[2], fixed: 1 };
+        }
+        c
+    }
+
     /// Leinwand als RGBA8-Bytes (Albedo).
     pub fn albedo_bytes(&self) -> Vec<u8> {
         self.color.iter().flat_map(|c| c.to_array()).collect()

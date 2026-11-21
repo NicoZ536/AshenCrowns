@@ -14,6 +14,7 @@ pub mod anim;
 pub mod app;
 pub mod assets;
 pub mod audio;
+pub mod bake;
 pub mod gpu;
 pub mod input;
 pub mod render;
