@@ -6,6 +6,7 @@ use crate::hud::{self, HudCtx};
 use crate::menu::{MenuAction, MenuScene};
 use crate::mission::{MissionScene, SceneAction};
 use crate::settings::UserSettings;
+use crate::ui_art::UiArt;
 use ashen_engine::ui::theme;
 use ashen_engine::{Engine, Game, WindowRequest};
 use ashen_sim::mission::MatchSettings;
@@ -35,6 +36,7 @@ pub struct AshenGame {
     content: Option<Content>,
     art: Option<ArtLibrary>,
     atlas_tex: Option<egui::TextureId>,
+    ui_art: Option<UiArt>,
     scene: Option<Scene>,
     last_mission: Option<(usize, MatchSettings)>,
     auto: AutoRun,
@@ -43,7 +45,7 @@ pub struct AshenGame {
 
 impl AshenGame {
     pub fn new(settings: UserSettings, auto: AutoRun) -> AshenGame {
-        AshenGame { settings, content: None, art: None, atlas_tex: None, scene: None, last_mission: None, auto, fatal: None }
+        AshenGame { settings, content: None, art: None, atlas_tex: None, ui_art: None, scene: None, last_mission: None, auto, fatal: None }
     }
 
     fn max_particles(engine: &Engine) -> usize {
@@ -126,6 +128,11 @@ impl AshenGame {
 impl Game for AshenGame {
     fn init(&mut self, engine: &mut Engine) {
         engine.audio.set_volumes(self.settings.volumes);
+        // Schriften und UI-Texturen (fehlende Schriften fallen auf die eingebauten zurück).
+        let fonts = engine.assets_dir.as_ref().map(|a| a.join("fonts"));
+        let n = theme::install_fonts(&engine.ui.ctx, fonts.as_deref());
+        log::info!("{n} UI-Schriftdateien geladen");
+        self.ui_art = Some(UiArt::new(&engine.ui.ctx));
         let Some(assets) = engine.assets_dir.clone() else {
             self.fatal = Some("Asset-Verzeichnis nicht gefunden. Setze ASHEN_ASSETS oder starte aus dem Projektordner.".into());
             return;
@@ -212,11 +219,11 @@ impl Game for AshenGame {
         if self.auto.hide_ui {
             return;
         }
-        let (Some(content), Some(art), Some(tex)) = (&mut self.content, &self.art, self.atlas_tex) else { return };
+        let (Some(content), Some(art), Some(tex), Some(ui_art)) = (&mut self.content, &self.art, self.atlas_tex, &self.ui_art) else { return };
         match &mut self.scene {
-            Some(Scene::Menu(m)) => m.ui(ui, engine, content, &mut self.settings),
+            Some(Scene::Menu(m)) => m.ui(ui, engine, content, &mut self.settings, ui_art),
             Some(Scene::Mission(s)) => {
-                let mut cx = HudCtx { data: &content.data, art, tex, settings: &mut self.settings };
+                let mut cx = HudCtx { data: &content.data, art, tex, ui: ui_art, settings: &mut self.settings };
                 hud::draw(s, ui, engine, &mut cx);
             }
             None => {}
