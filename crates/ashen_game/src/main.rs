@@ -12,6 +12,7 @@ mod hud;
 mod menu;
 mod mission;
 mod settings;
+mod ui_art;
 mod ui_common;
 mod view;
 
