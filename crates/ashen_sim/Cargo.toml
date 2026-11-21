@@ -1,0 +1,19 @@
+[package]
+name = "ashen_sim"
+description = "Deterministic, render-independent RTS simulation for Ashen Crowns"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ashen_core.workspace = true
+glam.workspace = true
+serde.workspace = true
+ron.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+uuid.workspace = true
+crc32fast.workspace = true
+log.workspace = true

@@ -1,0 +1,16 @@
+// ASHEN CROWNS – Globale Regelwerte
+(
+    tick_rate: 20,
+    day_length: 360.0,
+    tree_wood: 120,
+    gold_mine_gold: 6000,
+    quarry_stone: 2000,
+    gather_time: 3.5,
+    max_population: 80,
+    hero_respawn_time: 40.0,
+    xp_levels: [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200],
+    night_sight_mult: 0.7,
+    fog_sight_mult: 0.75,
+    rain_ranged_mult: 0.9,
+    demolish_refund: 0.5,
+)

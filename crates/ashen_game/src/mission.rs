@@ -1,0 +1,713 @@
+//! Missionsszene: Simulation, Kamera, Auswahl, Befehle, Ereignisverarbeitung, Speichern.
+
+use crate::art::ArtLibrary;
+use crate::audio_bridge;
+use crate::settings::{saves_dir, UserSettings};
+use crate::view::{Overlay, WorldView};
+use ashen_core::iso::{tile_to_world, world_to_tile};
+use ashen_engine::input::{KeyCode, MouseButton};
+use ashen_engine::render::{Camera2D, ViewParams};
+use ashen_engine::time::FixedStep;
+use ashen_engine::Engine;
+use ashen_sim::command::{Command, PlayerCommand};
+use ashen_sim::data::{BuildingTypeId, GameData, UnitClass};
+use ashen_sim::entity::{BuildingId, EntityRef, NodeId, UnitId, ENEMY, PLAYER};
+use ashen_sim::map::TileMap;
+use ashen_sim::mission::{MatchSettings, MissionDef};
+use ashen_sim::{SimEvent, SimWorld};
+use glam::{IVec2, Vec2};
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CommandMode {
+    Normal,
+    Place(BuildingTypeId),
+    AttackMove,
+    Patrol,
+    Rally,
+    BuildMenu,
+}
+
+pub struct Message {
+    pub speaker: String,
+    pub text: String,
+    pub age: f32,
+}
+
+/// Was die Szene vom übergeordneten Spiel möchte.
+#[derive(Clone, Debug, PartialEq)]
+pub enum SceneAction {
+    None,
+    MainMenu,
+    Load(std::path::PathBuf),
+    Restart,
+    Quit,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct ClientState {
+    camera: (f32, f32),
+    lines: f32,
+    speed: f32,
+}
+
+pub struct MissionScene {
+    pub world: SimWorld,
+    pub view: WorldView,
+    pub step: FixedStep,
+    pub camera: Camera2D,
+    pub selection: Vec<UnitId>,
+    pub selected_building: Option<BuildingId>,
+    pub groups: [Vec<UnitId>; 10],
+    pub mode: CommandMode,
+    pub drag_start: Option<Vec2>,
+    pub speed: f32,
+    pub messages: VecDeque<Message>,
+    pub toast: Option<(String, f32)>,
+    pub menu_open: bool,
+    pub menu_page: crate::hud::MenuPage,
+    pub show_objectives: bool,
+    pub autosave_timer: f32,
+    pub last_click: (f32, Option<UnitId>),
+    pub hovered: Option<UnitId>,
+    pub minimap: Option<egui::TextureHandle>,
+    pub minimap_timer: f32,
+    pub save_name: String,
+    pub status: Option<String>,
+    pub action: SceneAction,
+    pub fog_enabled: bool,
+    pub time_alive: f32,
+    last_view: Option<ViewParams>,
+    last_select_voice: f32,
+}
+
+impl MissionScene {
+    pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings, max_particles: usize) -> Result<MissionScene, String> {
+        let world = SimWorld::new(data, mission, settings)?;
+        Ok(Self::from_world(data, world, max_particles))
+    }
+
+    pub fn from_world(data: &GameData, world: SimWorld, max_particles: usize) -> MissionScene {
+        let start = world
+            .building_with_tag(&world.mission_def.defeat_tag)
+            .and_then(|b| world.buildings.get(b))
+            .map(|b| b.center() + Vec2::new(3.0, -1.0))
+            .unwrap_or(Vec2::new(36.0, 36.0));
+        let fog = !world.fog.disabled;
+        MissionScene {
+            step: FixedStep::new(data.rules.tick_rate),
+            camera: Camera2D { center: tile_to_world(start), target_lines: 330.0 },
+            world,
+            view: WorldView::new(max_particles),
+            selection: Vec::new(),
+            selected_building: None,
+            groups: Default::default(),
+            mode: CommandMode::Normal,
+            drag_start: None,
+            speed: 1.0,
+            messages: VecDeque::new(),
+            toast: None,
+            menu_open: false,
+            menu_page: crate::hud::MenuPage::Main,
+            show_objectives: true,
+            autosave_timer: 0.0,
+            last_click: (-10.0, None),
+            hovered: None,
+            minimap: None,
+            minimap_timer: 0.0,
+            save_name: "spielstand".into(),
+            status: None,
+            action: SceneAction::None,
+            fog_enabled: fog,
+            time_alive: 0.0,
+            last_view: None,
+            last_select_voice: -10.0,
+        }
+    }
+
+    /// Lädt einen Spielstand.
+    pub fn load(path: &std::path::Path, data: &GameData, max_particles: usize) -> Result<MissionScene, String> {
+        let (_, payload) = ashen_sim::save::load_from(path, data).map_err(|e| e.to_string())?;
+        let mut scene = Self::from_world(data, payload.world, max_particles);
+        if let Ok(cs) = ron::from_str::<ClientState>(&payload.client_state) {
+            scene.camera.center = Vec2::new(cs.camera.0, cs.camera.1);
+            scene.camera.target_lines = cs.lines.clamp(220.0, 480.0);
+            scene.speed = cs.speed.clamp(0.0, 3.0);
+        }
+        scene.status = Some(format!("Geladen: {}", path.file_stem().map(|s| s.to_string_lossy()).unwrap_or_default()));
+        Ok(scene)
+    }
+
+    fn client_state(&self) -> String {
+        ron::to_string(&ClientState { camera: (self.camera.center.x, self.camera.center.y), lines: self.camera.target_lines, speed: self.speed }).unwrap_or_default()
+    }
+
+    pub fn save(&mut self, data: &GameData, slot: &str) {
+        match ashen_sim::save::save_to(&saves_dir(), slot, &self.world, data, self.client_state()) {
+            Ok(p) => self.status = Some(format!("Gespeichert: {}", p.file_name().map(|s| s.to_string_lossy()).unwrap_or_default())),
+            Err(e) => self.status = Some(format!("Speichern fehlgeschlagen: {e}")),
+        }
+    }
+
+    fn cmd(&mut self, command: Command) {
+        self.world.push_command(PlayerCommand { player: PLAYER, command });
+    }
+
+    pub fn selected_hero(&self, data: &GameData) -> Option<UnitId> {
+        self.selection.iter().copied().find(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).class == UnitClass::Hero && u.owner == PLAYER))
+    }
+
+    pub fn has_workers(&self, data: &GameData) -> bool {
+        self.selection.iter().any(|id| self.world.units.get(*id).is_some_and(|u| u.owner == PLAYER && data.unit(u.kind).build_speed > 0.0))
+    }
+
+    fn own_selection(&self) -> Vec<UnitId> {
+        self.selection.iter().copied().filter(|id| self.world.units.get(*id).is_some_and(|u| u.owner == PLAYER)).collect()
+    }
+
+    pub fn select_voice(&mut self, data: &GameData, audio: &mut ashen_engine::audio::AudioSystem, situation: &str) {
+        if self.time_alive - self.last_select_voice < 0.6 {
+            return;
+        }
+        if let Some(u) = self.selection.first().and_then(|id| self.world.units.get(*id))
+            && u.owner == PLAYER
+        {
+            self.last_select_voice = self.time_alive;
+            audio.play(&format!("voice.{}.{situation}", data.unit(u.kind).id));
+        }
+    }
+
+    // ------------------------------------------------------------ Befehle aus UI
+
+    pub fn command_stop(&mut self) {
+        let u = self.own_selection();
+        self.cmd(Command::Stop { units: u });
+    }
+
+    pub fn command_hold(&mut self) {
+        let u = self.own_selection();
+        self.cmd(Command::Hold { units: u });
+    }
+
+    pub fn use_ability(&mut self, data: &GameData, index: u8) {
+        if let Some(h) = self.selected_hero(data) {
+            let p = self.world.units.get(h).map(|u| u.pos).unwrap_or_default();
+            self.cmd(Command::UseAbility { unit: h, ability: index, point: p });
+        }
+    }
+
+    pub fn train(&mut self, building: BuildingId, unit: ashen_sim::data::UnitTypeId) {
+        self.cmd(Command::Train { building, unit });
+    }
+
+    pub fn cancel_train(&mut self, building: BuildingId, index: usize) {
+        self.cmd(Command::CancelTrain { building, index });
+    }
+
+    pub fn demolish(&mut self, building: BuildingId) {
+        self.cmd(Command::Demolish { building });
+        self.selected_building = None;
+    }
+
+    pub fn center_on(&mut self, tile: Vec2) {
+        self.camera.center = tile_to_world(tile);
+    }
+
+    // ------------------------------------------------------------ Frame-Logik
+
+    pub fn update(&mut self, engine: &mut Engine, data: &GameData, art: &ArtLibrary, settings: &UserSettings, dt: f32) {
+        self.time_alive += dt;
+        let view = self.camera.view(engine.size, engine.renderer.settings.min_lines);
+        self.last_view = Some(view);
+        if !self.menu_open {
+            self.controls(engine, data, &view, settings, dt);
+        }
+        // Simulation.
+        let paused = self.menu_open || self.speed <= 0.0 || self.world.mission.outcome.is_some();
+        let steps = if paused { 0 } else { self.step.advance(dt * self.speed) };
+        for _ in 0..steps {
+            self.world.step(data);
+            let events = std::mem::take(&mut self.world.events);
+            for e in &events {
+                self.view.on_event(e, &self.world, data, art);
+                audio_bridge::on_event(&mut engine.audio, e, &self.world, data, &view);
+                self.on_event(e, data);
+            }
+        }
+        self.view.update(if paused { 0.0 } else { dt * self.speed.max(1.0) });
+        // Auswahl bereinigen.
+        let world = &self.world;
+        self.selection.retain(|id| world.units.contains(*id));
+        if self.selected_building.is_some_and(|b| !world.buildings.contains(b)) {
+            self.selected_building = None;
+        }
+        for g in &mut self.groups {
+            g.retain(|id| world.units.contains(*id));
+        }
+        for m in &mut self.messages {
+            m.age += dt;
+        }
+        while self.messages.front().is_some_and(|m| m.age > 14.0) || self.messages.len() > 4 {
+            self.messages.pop_front();
+        }
+        if let Some((_, t)) = &mut self.toast {
+            *t -= dt;
+        }
+        if self.toast.as_ref().is_some_and(|(_, t)| *t <= 0.0) {
+            self.toast = None;
+        }
+        // Musik und Ambience.
+        engine.audio.set_music_intensity(audio_bridge::music_intensity(&self.world, data));
+        audio_bridge::ambience(&mut engine.audio, &self.world, world_to_tile(self.camera.center));
+        // Autosave.
+        if settings.autosave_minutes > 0.0 && self.world.mission.outcome.is_none() && !paused {
+            self.autosave_timer += dt;
+            if self.autosave_timer > settings.autosave_minutes * 60.0 {
+                self.autosave_timer = 0.0;
+                match ashen_sim::save::autosave(&saves_dir(), &self.world, data, self.client_state(), 3) {
+                    Ok(_) => self.status = Some("Automatisch gespeichert".into()),
+                    Err(e) => log::warn!("Autosave fehlgeschlagen: {e}"),
+                }
+            }
+        }
+    }
+
+    fn on_event(&mut self, e: &SimEvent, data: &GameData) {
+        match e {
+            SimEvent::Message { speaker, text, .. } => self.messages.push_back(Message { speaker: speaker.clone(), text: text.clone(), age: 0.0 }),
+            SimEvent::Error { owner: PLAYER, text } => self.toast = Some((text.clone(), 2.5)),
+            SimEvent::WaveIncoming { size: 0, .. } => self.toast = Some(("Die Hohlen sammeln sich im Nordosten!".into(), 4.0)),
+            SimEvent::WaveIncoming { wave, size, .. } => self.toast = Some((format!("Angriffswelle {wave}: {size} Hohle rücken vor!"), 4.0)),
+            SimEvent::NightBegins { night } => self.toast = Some((format!("Die {night}. Nacht bricht herein."), 3.5)),
+            SimEvent::DayBegins { day } => self.toast = Some((format!("Tag {day} beginnt."), 3.0)),
+            SimEvent::Starvation { active: true, .. } => self.toast = Some(("Hungersnot! Baut Gehöfte – die Moral sinkt, Ausbildung stockt.".into(), 5.0)),
+            SimEvent::HeroFallen { .. } => {
+                let text = if self.world.settings.hero_permadeath { "Isolde Raventhorn ist gefallen – für immer." } else { "Isolde Raventhorn ist gefallen! Sie kehrt im Bergfried zurück." };
+                self.toast = Some((text.into(), 5.0));
+            }
+            SimEvent::HeroRespawned { .. } => self.toast = Some(("Isolde Raventhorn ist zurückgekehrt.".into(), 3.0)),
+            SimEvent::LevelUp { level, .. } => self.toast = Some((format!("Isolde erreicht Stufe {level}!"), 3.0)),
+            SimEvent::BuildingCompleted { kind, owner: PLAYER, .. } => self.status = Some(format!("{} fertiggestellt", data.building(*kind).name)),
+            _ => {}
+        }
+    }
+
+    fn pick_unit(&self, data: &GameData, view: &ViewParams, mouse: Vec2) -> Option<UnitId> {
+        let mut best: Option<(f32, UnitId)> = None;
+        for (id, u) in self.world.units.iter() {
+            if u.owner != PLAYER && self.fog_enabled && !self.world.fog.visible(u.pos) {
+                continue;
+            }
+            let def = data.unit(u.kind);
+            let h = if def.class == UnitClass::Boss { 30.0 } else if def.radius > 0.42 { 16.0 } else { 10.0 };
+            let s = view.world_to_screen(tile_to_world(u.pos) - Vec2::new(0.0, h));
+            let r = (h + 4.0) * view.pixel_scale as f32;
+            let d = (s - mouse).length();
+            if d < r && best.is_none_or(|(bd, _)| d < bd) {
+                best = Some((d, id));
+            }
+        }
+        best.map(|b| b.1)
+    }
+
+    fn pick_building(&self, tile: Vec2) -> Option<BuildingId> {
+        self.world.buildings.iter().find(|(_, b)| b.distance_to(tile) < 0.05 && (!self.fog_enabled || self.world.fog.explored(b.center()))).map(|(id, _)| id)
+    }
+
+    fn pick_node(&self, tile: Vec2) -> Option<NodeId> {
+        self.world.nodes.iter().find(|(_, n)| n.distance_to(tile) < 0.3).map(|(id, _)| id)
+    }
+
+    fn controls(&mut self, engine: &mut Engine, data: &GameData, view: &ViewParams, settings: &UserSettings, dt: f32) {
+        let input = &engine.input;
+        let scale = view.pixel_scale as f32;
+        // Kamera.
+        // Kamera: Pfeiltasten, Bildschirmrand, mittlere Maustaste (Buchstaben sind Befehlen vorbehalten).
+        let mut pan = Vec2::ZERO;
+        if input.key_down(KeyCode::ArrowUp) {
+            pan.y -= 1.0;
+        }
+        if input.key_down(KeyCode::ArrowDown) {
+            pan.y += 1.0;
+        }
+        if input.key_down(KeyCode::ArrowLeft) {
+            pan.x -= 1.0;
+        }
+        if input.key_down(KeyCode::ArrowRight) {
+            pan.x += 1.0;
+        }
+        if settings.edge_scroll && input.cursor_inside && input.focused && !input.ui_wants_pointer {
+            let m = input.mouse;
+            let edge = 6.0;
+            let (w, h) = (engine.size.0 as f32, engine.size.1 as f32);
+            if m.x < edge {
+                pan.x -= 1.0;
+            }
+            if m.x > w - edge {
+                pan.x += 1.0;
+            }
+            if m.y < edge {
+                pan.y -= 1.0;
+            }
+            if m.y > h - edge {
+                pan.y += 1.0;
+            }
+        }
+        let speed = 420.0 * settings.scroll_speed * (self.camera.target_lines / 330.0);
+        self.camera.center += pan.normalize_or_zero() * speed * dt;
+        if input.mouse_down(MouseButton::Middle) {
+            self.camera.center -= input.mouse_delta / scale;
+        }
+        if input.wheel != 0.0 && !input.ui_wants_pointer {
+            self.camera.target_lines = (self.camera.target_lines * (1.0 - input.wheel * 0.1)).clamp(220.0, 480.0);
+        }
+        // Kamera auf Kartengrenzen beschränken.
+        let max = self.world.map.width as f32;
+        let tile = world_to_tile(self.camera.center).clamp(Vec2::splat(2.0), Vec2::splat(max - 2.0));
+        self.camera.center = tile_to_world(tile);
+
+        let mouse = input.mouse;
+        let mouse_tile = world_to_tile(view.screen_to_world(mouse));
+        self.hovered = if input.ui_wants_pointer { None } else { self.pick_unit(data, view, mouse) };
+
+        // Tastenkürzel.
+        let shift = input.shift;
+        let cmd_mod = input.command_mod();
+        if input.key_pressed(KeyCode::Escape) {
+            if self.mode != CommandMode::Normal {
+                self.mode = CommandMode::Normal;
+            } else {
+                self.menu_open = true;
+                self.menu_page = crate::hud::MenuPage::Main;
+            }
+        }
+        if input.key_pressed(KeyCode::F10) {
+            self.menu_open = true;
+        }
+        if input.key_pressed(KeyCode::Pause) || input.key_pressed(KeyCode::Backquote) {
+            self.speed = if self.speed > 0.0 { 0.0 } else { 1.0 };
+        }
+        if input.key_pressed(KeyCode::Equal) || input.key_pressed(KeyCode::NumpadAdd) {
+            self.speed = (self.speed + 1.0).min(3.0);
+        }
+        if input.key_pressed(KeyCode::Minus) || input.key_pressed(KeyCode::NumpadSubtract) {
+            self.speed = (self.speed - 1.0).max(0.0);
+        }
+        if input.key_pressed(KeyCode::F5) {
+            self.save(data, "schnellspeicher");
+        }
+        if input.key_pressed(KeyCode::F9) {
+            self.action = SceneAction::Load(saves_dir().join(format!("schnellspeicher.{}", ashen_sim::save::EXTENSION)));
+        }
+        if input.key_pressed(KeyCode::Space)
+            && let Some(u) = self.selection.first().and_then(|id| self.world.units.get(*id))
+        {
+            self.camera.center = tile_to_world(u.pos);
+        }
+        if (input.key_pressed(KeyCode::KeyH) && !cmd_mod && self.selection.is_empty()
+            || input.key_pressed(KeyCode::Home))
+            && let Some(h) = self.world.hero_of(data, PLAYER) {
+                self.selection = vec![h];
+                self.selected_building = None;
+                if let Some(u) = self.world.units.get(h) {
+                    self.camera.center = tile_to_world(u.pos);
+                }
+            }
+        let digits = [KeyCode::Digit0, KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9];
+        for (i, k) in digits.iter().enumerate() {
+            if input.key_pressed(*k) {
+                if cmd_mod {
+                    self.groups[i] = self.own_selection();
+                    self.status = Some(format!("Gruppe {i} gespeichert ({} Einheiten)", self.groups[i].len()));
+                } else if !self.groups[i].is_empty() {
+                    if self.selection == self.groups[i]
+                        && let Some(u) = self.selection.first().and_then(|id| self.world.units.get(*id))
+                    {
+                        self.camera.center = tile_to_world(u.pos);
+                    }
+                    self.selection = self.groups[i].clone();
+                    self.selected_building = None;
+                }
+            }
+        }
+        let has_units = !self.own_selection().is_empty();
+        if has_units && !cmd_mod {
+            if self.mode == CommandMode::BuildMenu {
+                for (key, id) in [(KeyCode::KeyF, "farmstead"), (KeyCode::KeyB, "barracks"), (KeyCode::KeyT, "watchtower")] {
+                    if input.key_pressed(key)
+                        && let Some(bt) = data.building_id(id)
+                    {
+                        self.mode = CommandMode::Place(bt);
+                    }
+                }
+            } else {
+                if input.key_pressed(KeyCode::KeyA) {
+                    self.mode = CommandMode::AttackMove;
+                }
+                if input.key_pressed(KeyCode::KeyS) {
+                    self.command_stop();
+                }
+                if input.key_pressed(KeyCode::KeyH) {
+                    self.command_hold();
+                }
+                if input.key_pressed(KeyCode::KeyP) {
+                    self.mode = CommandMode::Patrol;
+                }
+                if input.key_pressed(KeyCode::KeyB) && self.has_workers(data) {
+                    self.mode = CommandMode::BuildMenu;
+                }
+                for (i, k) in [KeyCode::KeyQ, KeyCode::KeyW, KeyCode::KeyE].iter().enumerate() {
+                    if input.key_pressed(*k) && self.selected_hero(data).is_some() {
+                        self.use_ability(data, i as u8);
+                    }
+                }
+            }
+        }
+        if let Some(b) = self.selected_building
+            && let Some(bld) = self.world.buildings.get(b)
+            && bld.owner == PLAYER
+            && bld.complete
+            && !cmd_mod
+        {
+            let def = data.building(bld.kind);
+            for t in &def.trains {
+                if let Some(ut) = data.unit_id(t)
+                    && let Some(hk) = data.unit(ut).hotkey
+                    && let Some(code) = letter_key(hk)
+                    && input.key_pressed(code)
+                {
+                    self.train(b, ut);
+                }
+            }
+            if input.key_pressed(KeyCode::KeyR) {
+                self.mode = CommandMode::Rally;
+            }
+        }
+
+        if input.ui_wants_pointer {
+            if input.mouse_released(MouseButton::Left) {
+                self.drag_start = None;
+            }
+            return;
+        }
+
+        // Platzierungsmodus.
+        if let CommandMode::Place(bt) = self.mode {
+            if input.mouse_pressed(MouseButton::Left) {
+                let def = data.building(bt);
+                let tile = place_tile(mouse_tile, def.size);
+                let builders: Vec<UnitId> = self.own_selection().into_iter().filter(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).build_speed > 0.0)).collect();
+                self.cmd(Command::Build { units: builders, kind: bt, tile });
+                engine.audio.play("voice.worker.work");
+                if !shift {
+                    self.mode = CommandMode::Normal;
+                }
+            }
+            if input.mouse_pressed(MouseButton::Right) {
+                self.mode = CommandMode::Normal;
+            }
+            return;
+        }
+
+        // Linksklick: Auswahl bzw. Zielbefehle.
+        if input.mouse_pressed(MouseButton::Left) {
+            match self.mode {
+                CommandMode::AttackMove | CommandMode::Patrol => {
+                    let units = self.own_selection();
+                    if let Some(t) = self.hovered.filter(|t| self.world.units.get(*t).is_some_and(|u| u.owner == ENEMY)) {
+                        self.cmd(Command::Attack { units, target: EntityRef::Unit(t) });
+                    } else if self.mode == CommandMode::AttackMove {
+                        self.cmd(Command::Move { units, target: mouse_tile, attack_move: true, queue: shift });
+                    } else {
+                        self.cmd(Command::Patrol { units, target: mouse_tile });
+                    }
+                    self.view.add_marker(mouse_tile, true);
+                    self.select_voice(data, &mut engine.audio, "attack");
+                    self.mode = CommandMode::Normal;
+                    return;
+                }
+                CommandMode::Rally => {
+                    if let Some(b) = self.selected_building {
+                        self.cmd(Command::SetRally { building: b, point: mouse_tile });
+                    }
+                    self.mode = CommandMode::Normal;
+                    return;
+                }
+                _ => {
+                    self.drag_start = Some(mouse);
+                }
+            }
+        }
+        if input.mouse_released(MouseButton::Left)
+            && let Some(start) = self.drag_start.take()
+        {
+            let rect_sel = (start - mouse).abs().max_element() > 6.0;
+            if rect_sel {
+                let min = start.min(mouse);
+                let max = start.max(mouse);
+                let mut picked: Vec<UnitId> = self
+                    .world
+                    .units
+                    .iter()
+                    .filter(|(_, u)| u.owner == PLAYER)
+                    .filter(|(_, u)| {
+                        let s = view.world_to_screen(tile_to_world(u.pos) - Vec2::new(0.0, 6.0));
+                        s.x >= min.x && s.y >= min.y && s.x <= max.x && s.y <= max.y
+                    })
+                    .map(|(id, _)| id)
+                    .collect();
+                // Kampfeinheiten bevorzugen, wenn gemischt mit Arbeitern.
+                let has_military = picked.iter().any(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).class != UnitClass::Worker));
+                if has_military {
+                    picked.retain(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).class != UnitClass::Worker));
+                }
+                if shift {
+                    for p in picked {
+                        if !self.selection.contains(&p) {
+                            self.selection.push(p);
+                        }
+                    }
+                } else if !picked.is_empty() {
+                    self.selection = picked;
+                    self.selected_building = None;
+                }
+                self.select_voice(data, &mut engine.audio, "select");
+            } else if let Some(u) = self.hovered {
+                let now = self.time_alive;
+                let double = self.last_click.1 == Some(u) && now - self.last_click.0 < 0.35;
+                self.last_click = (now, Some(u));
+                if double {
+                    let kind = self.world.units.get(u).map(|x| x.kind);
+                    let (vmin, vmax) = view.visible_world(0.0);
+                    self.selection = self
+                        .world
+                        .units
+                        .iter()
+                        .filter(|(_, x)| Some(x.kind) == kind && x.owner == PLAYER)
+                        .filter(|(_, x)| {
+                            let w = tile_to_world(x.pos);
+                            w.x >= vmin.x && w.y >= vmin.y && w.x <= vmax.x && w.y <= vmax.y
+                        })
+                        .map(|(id, _)| id)
+                        .collect();
+                } else if shift {
+                    if let Some(i) = self.selection.iter().position(|x| *x == u) {
+                        self.selection.remove(i);
+                    } else {
+                        self.selection.push(u);
+                    }
+                } else {
+                    self.selection = vec![u];
+                }
+                self.selected_building = None;
+                self.select_voice(data, &mut engine.audio, "select");
+                engine.audio.play("sfx.ui_click");
+            } else if let Some(b) = self.pick_building(mouse_tile) {
+                self.selected_building = Some(b);
+                self.selection.clear();
+                engine.audio.play("sfx.ui_click");
+            } else if !shift {
+                self.selection.clear();
+                self.selected_building = None;
+            }
+        }
+
+        // Rechtsklick: kontextabhängiger Befehl.
+        if input.mouse_pressed(MouseButton::Right) {
+            if self.mode != CommandMode::Normal {
+                self.mode = CommandMode::Normal;
+                return;
+            }
+            let units = self.own_selection();
+            if units.is_empty() {
+                if let Some(b) = self.selected_building
+                    && self.world.buildings.get(b).is_some_and(|x| x.owner == PLAYER)
+                {
+                    self.cmd(Command::SetRally { building: b, point: mouse_tile });
+                    self.view.add_marker(mouse_tile, false);
+                }
+                return;
+            }
+            let enemy_unit = self.hovered.filter(|t| self.world.units.get(*t).is_some_and(|u| u.owner == ENEMY));
+            let building = self.pick_building(mouse_tile);
+            if let Some(t) = enemy_unit {
+                self.cmd(Command::Attack { units, target: EntityRef::Unit(t) });
+                self.view.add_marker(mouse_tile, true);
+                self.select_voice(data, &mut engine.audio, "attack");
+            } else if let Some(b) = building.filter(|b| self.world.buildings.get(*b).is_some_and(|x| x.owner == ENEMY)) {
+                self.cmd(Command::Attack { units, target: EntityRef::Building(b) });
+                self.view.add_marker(mouse_tile, true);
+                self.select_voice(data, &mut engine.audio, "attack");
+            } else if let (Some(node), true) = (self.pick_node(mouse_tile), self.has_workers(data)) {
+                let workers: Vec<UnitId> = units.iter().copied().filter(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).carry > 0)).collect();
+                let others: Vec<UnitId> = units.iter().copied().filter(|id| !workers.contains(id)).collect();
+                self.cmd(Command::Gather { units: workers, node });
+                if !others.is_empty() {
+                    self.cmd(Command::Move { units: others, target: mouse_tile, attack_move: false, queue: shift });
+                }
+                self.view.add_marker(mouse_tile, false);
+                engine.audio.play("voice.worker.work");
+            } else if let Some(b) = building.filter(|b| self.world.buildings.get(*b).is_some_and(|x| x.owner == PLAYER && (!x.complete || x.hp < x.max_hp)))
+                && self.has_workers(data)
+            {
+                self.cmd(Command::Repair { units, building: b });
+                engine.audio.play("voice.worker.work");
+            } else {
+                self.cmd(Command::Move { units, target: mouse_tile, attack_move: false, queue: shift });
+                self.view.add_marker(mouse_tile, false);
+                self.select_voice(data, &mut engine.audio, "move");
+            }
+        }
+    }
+
+    /// Füllt den Render-Frame.
+    pub fn render(&mut self, engine: &mut Engine, data: &GameData, art: &ArtLibrary) {
+        engine.frame.camera = self.camera;
+        let view = self.camera.view(engine.size, engine.renderer.settings.min_lines);
+        let mut overlay = Overlay { selected_units: self.selection.iter().copied().collect(), selected_building: self.selected_building, hovered: self.hovered, ghost: None, show_all_bars: engine.input.alt };
+        if let CommandMode::Place(bt) = self.mode {
+            let def = data.building(bt);
+            let mouse_tile = world_to_tile(view.screen_to_world(engine.input.mouse));
+            let tile = place_tile(mouse_tile, def.size);
+            let ok = self.world.can_place(data, bt, tile, PLAYER).is_ok() && self.world.players[0].resources.covers(&def.cost);
+            overlay.ghost = Some((def.id.clone(), tile, def.size, ok));
+        }
+        let alpha = self.step.alpha();
+        self.view.render(&self.world, data, art, &mut engine.frame, &view, alpha, &overlay, self.fog_enabled);
+        engine.fow_enabled = self.fog_enabled;
+        engine.fow_size = (self.world.fog.width as u32, self.world.fog.height as u32);
+        if self.fog_enabled {
+            engine.renderer.set_fog_of_war(&engine.gpu, engine.fow_size, &self.world.fog.cells, self.world.fog.revision);
+        }
+    }
+}
+
+/// Obere linke Kachel eines Gebäudes, zentriert unter dem Mauszeiger.
+pub fn place_tile(mouse_tile: Vec2, size: (u8, u8)) -> IVec2 {
+    let p = mouse_tile - Vec2::new(size.0 as f32 * 0.5, size.1 as f32 * 0.5) + Vec2::splat(0.5);
+    TileMap::tile_of(p)
+}
+
+pub fn letter_key(c: char) -> Option<KeyCode> {
+    Some(match c.to_ascii_uppercase() {
+        'A' => KeyCode::KeyA,
+        'B' => KeyCode::KeyB,
+        'C' => KeyCode::KeyC,
+        'D' => KeyCode::KeyD,
+        'E' => KeyCode::KeyE,
+        'F' => KeyCode::KeyF,
+        'G' => KeyCode::KeyG,
+        'K' => KeyCode::KeyK,
+        'M' => KeyCode::KeyM,
+        'P' => KeyCode::KeyP,
+        'Q' => KeyCode::KeyQ,
+        'S' => KeyCode::KeyS,
+        'T' => KeyCode::KeyT,
+        'V' => KeyCode::KeyV,
+        'W' => KeyCode::KeyW,
+        'X' => KeyCode::KeyX,
+        'Z' => KeyCode::KeyZ,
+        _ => return None,
+    })
+}

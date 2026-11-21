@@ -1,0 +1,11 @@
+// Mod-Gebäude: die Kaserne bildet zusätzlich die Glutmiliz aus.
+(
+    buildings: [
+        (
+            id: "barracks", name: "Kaserne", faction: EmberCrown, size: (3, 2),
+            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen, Ritter und (Mod) Glutmiliz aus.",
+            hp: 1300.0, armor: 4.0, armor_type: Fortified, cost: (gold: 160.0, wood: 120.0, stone: 40.0),
+            build_time: 45.0, sight: 6.0, trains: ["swordsman", "spearman", "archer", "knight", "ember_militia"], hotkey: Some('B'),
+        ),
+    ],
+)

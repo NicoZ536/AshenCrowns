@@ -1,0 +1,26 @@
+[package]
+name = "ashen_game"
+description = "ASHEN CROWNS – The Age of the Fallen (game executable)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+default-run = "ashen_crowns"
+
+[[bin]]
+name = "ashen_crowns"
+path = "src/main.rs"
+
+[features]
+default = ["audio"]
+audio = ["ashen_engine/audio"]
+
+[dependencies]
+ashen_core.workspace = true
+ashen_sim.workspace = true
+ashen_engine.workspace = true
+glam.workspace = true
+egui.workspace = true
+serde.workspace = true
+ron.workspace = true
+log.workspace = true
+env_logger.workspace = true

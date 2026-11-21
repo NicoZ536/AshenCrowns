@@ -1,0 +1,12 @@
+[package]
+name = "ashen_tools"
+description = "Command line tools: audio asset scanner/validator/converter, data and mod validation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ashen_sim.workspace = true
+ashen_engine.workspace = true
+log.workspace = true
+env_logger.workspace = true

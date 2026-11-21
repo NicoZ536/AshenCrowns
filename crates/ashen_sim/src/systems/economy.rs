@@ -1,0 +1,148 @@
+//! Wirtschaft: Einkommen, Unterhalt (Nahrung), Ausbildung, Bevölkerung, Heldenrückkehr.
+
+use crate::chronicle::ChronicleKind;
+use crate::data::{GameData, ResourceKind, UnitClass};
+use crate::entity::*;
+use crate::events::SimEvent;
+use crate::map::TileMap;
+use crate::world::SimWorld;
+use glam::{IVec2, Vec2};
+
+/// Bevölkerung (lebende Einheiten) und Wohnraum (fertige Gebäude) neu berechnen.
+pub fn recompute_population(world: &mut SimWorld, data: &GameData) {
+    for p in &mut world.players {
+        p.pop = 0;
+    }
+    world.players[PLAYER as usize].pop_cap = 0;
+    for (_, u) in world.units.iter() {
+        world.players[u.owner as usize].pop += data.unit(u.kind).pop;
+    }
+    for (_, b) in world.buildings.iter() {
+        if b.complete && b.owner == PLAYER {
+            world.players[PLAYER as usize].pop_cap += data.building(b.kind).pop_provided;
+        }
+    }
+    let cap = data.rules.max_population;
+    let p = &mut world.players[PLAYER as usize];
+    p.pop_cap = p.pop_cap.min(cap);
+}
+
+/// Austrittspunkt eines Gebäudes (vordere, dem Betrachter zugewandte Ecke).
+pub fn exit_point(world: &SimWorld, b: &Building, toward: Option<Vec2>) -> Vec2 {
+    let front = b.tile + b.size;
+    let candidates = [front, IVec2::new(b.tile.x + b.size.x / 2, front.y), IVec2::new(front.x, b.tile.y + b.size.y / 2)];
+    let mut best = None;
+    for c in candidates {
+        if let Some(t) = world.map.nearest_walkable(c, 4) {
+            let p = TileMap::center_of(t);
+            let score = toward.map(|tw| (tw - p).length()).unwrap_or(0.0);
+            if best.is_none_or(|(s, _)| score < s) {
+                best = Some((score, p));
+            }
+        }
+    }
+    best.map(|b| b.1).unwrap_or(b.center())
+}
+
+pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
+    // Passives Einkommen.
+    for (_, b) in world.buildings.iter_mut() {
+        if !b.complete {
+            continue;
+        }
+        let def = data.building(b.kind);
+        let p = &mut world.players[b.owner as usize];
+        if def.food_per_sec > 0.0 {
+            p.resources.food += def.food_per_sec * dt;
+            p.stats.gathered.food += def.food_per_sec * dt;
+        }
+        if def.gold_per_sec > 0.0 {
+            p.resources.gold += def.gold_per_sec * dt;
+            p.stats.gathered.gold += def.gold_per_sec * dt;
+        }
+    }
+
+    // Unterhalt: Nahrung.
+    let upkeep: f32 = world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| data.unit(u.kind).upkeep).sum();
+    let p = &mut world.players[PLAYER as usize];
+    p.resources.food -= upkeep * dt;
+    if p.resources.food <= 0.0 {
+        p.resources.food = 0.0;
+        if !p.starving {
+            p.starving = true;
+            world.events.push(SimEvent::Starvation { owner: PLAYER, active: true });
+            world.record(ChronicleKind::Omen, "Die Kornspeicher von Brennhollow waren leer. Hunger ging um.");
+        }
+    } else if p.starving && p.resources.food > 10.0 {
+        p.starving = false;
+        world.events.push(SimEvent::Starvation { owner: PLAYER, active: false });
+    }
+
+    // Ausbildung.
+    let starving = world.players[PLAYER as usize].starving;
+    let bids = world.buildings.ids();
+    for bid in bids {
+        let Some(b) = world.buildings.get_mut(bid) else { continue };
+        if !b.complete || b.queue.is_empty() || (b.owner == PLAYER && starving) {
+            continue;
+        }
+        let item = &mut b.queue[0];
+        let def = data.unit(item.unit);
+        item.progress += dt / def.train_time;
+        if item.progress < 1.0 {
+            continue;
+        }
+        let kind = item.unit;
+        b.queue.remove(0);
+        let owner = b.owner;
+        let rally = b.rally;
+        let b = world.buildings.get(bid).expect("exists").clone();
+        let exit = exit_point(world, &b, rally);
+        let uid = world.spawn_unit(data, kind, owner, exit);
+        world.players[owner as usize].stats.units_trained += 1;
+        world.events.push(SimEvent::TrainCompleted { unit: uid, kind, owner, pos: exit });
+        if let Some(r) = rally {
+            let is_worker = data.unit(kind).class == UnitClass::Worker;
+            let node = if is_worker {
+                world.nodes.iter().filter(|(_, n)| n.distance_to(r) < 1.5).map(|(id, _)| id).next()
+            } else {
+                None
+            };
+            if let Some(u) = world.units.get_mut(uid) {
+                match node {
+                    Some(n) => u.order = Order::Gather { node: n },
+                    None => {
+                        u.order = Order::Move { target: r, attack_move: false };
+                        u.request_path(r);
+                    }
+                }
+            }
+        }
+        recompute_population(world, data);
+    }
+}
+
+/// Rückkehr des Helden im Hauptgebäude nach Ablauf der Wartezeit.
+pub fn hero_respawn(world: &mut SimWorld, data: &GameData, dt: f32) {
+    let Some((kind, t)) = world.hero_respawn else { return };
+    let t = t - dt;
+    if t > 0.0 {
+        world.hero_respawn = Some((kind, t));
+        return;
+    }
+    let keep = world.building_with_tag(&world.mission_def.defeat_tag).and_then(|b| world.buildings.get(b).cloned());
+    let Some(keep) = keep else {
+        world.hero_respawn = None;
+        return;
+    };
+    world.hero_respawn = None;
+    let p = exit_point(world, &keep, None);
+    let id = world.spawn_unit(data, kind, PLAYER, p);
+    if let Some(u) = world.units.get_mut(id) {
+        // Erfahrung bleibt im Kanon erhalten: der Held kehrt geschwächt, aber erfahren zurück.
+        u.hp = u.max_hp * 0.6;
+    }
+    world.events.push(SimEvent::HeroRespawned { unit: id, pos: p });
+    recompute_population(world, data);
+    let _ = ResourceKind::Food;
+}

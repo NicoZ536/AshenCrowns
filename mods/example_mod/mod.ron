@@ -1,0 +1,9 @@
+// Beispiel-Mod für ASHEN CROWNS. Siehe docs/tech/modding.md
+(
+    id: "example_mod",
+    name: "Glutmiliz (Beispiel-Mod)",
+    version: "1.0.0",
+    author: "Ashen Crowns Team",
+    description: "Fügt die Glutmiliz hinzu und macht Speerträger etwas robuster. Dient als Vorlage für eigene Mods.",
+    load_order: 100,
+)

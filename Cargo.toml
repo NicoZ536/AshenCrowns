@@ -1,0 +1,54 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/ashen_core",
+    "crates/ashen_sim",
+    "crates/ashen_engine",
+    "crates/ashen_game",
+    "crates/ashen_tools",
+]
+default-members = ["crates/ashen_game"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-Proprietary"
+authors = ["Ashen Crowns Team"]
+rust-version = "1.88"
+
+[workspace.dependencies]
+ashen_core = { path = "crates/ashen_core" }
+ashen_sim = { path = "crates/ashen_sim" }
+ashen_engine = { path = "crates/ashen_engine", default-features = false }
+wgpu = "30.0"
+winit = "0.30"
+egui = { version = "0.37", features = ["default_fonts"] }
+egui-wgpu = "0.37"
+egui-winit = { version = "0.37", default-features = false, features = ["links", "wayland", "x11"] }
+glam = { version = "0.34", features = ["serde", "bytemuck"] }
+bytemuck = { version = "1.25", features = ["derive"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.12"
+serde_json = "1.0"
+bincode = { version = "2.0", features = ["serde"] }
+uuid = { version = "1.29", features = ["v4", "serde"] }
+rand = "0.10"
+rand_chacha = { version = "0.10", features = ["serde"] }
+kira = { version = "0.12", default-features = false, features = ["cpal", "cpal-realtime", "ogg", "vorbis", "wav", "flac", "mp3"] }
+pollster = "1.0"
+log = "0.4"
+env_logger = "0.11"
+crc32fast = "1.4"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+panic = "abort"
+debug = false

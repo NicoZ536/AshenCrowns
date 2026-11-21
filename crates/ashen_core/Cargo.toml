@@ -1,0 +1,10 @@
+[package]
+name = "ashen_core"
+description = "Shared math, noise, isometric projection and colour utilities for Ashen Crowns"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glam.workspace = true
+serde.workspace = true

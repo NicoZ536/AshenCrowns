@@ -1,0 +1,41 @@
+// ASHEN CROWNS – Fähigkeiten, zusammengesetzt aus elementaren Effekten.
+(
+    abilities: [
+        (
+            id: "ember_cleave", name: "Glutspalter", hotkey: Some('Q'),
+            description: "Ein Hieb aus glühender Asche trifft alle Feinde im Umkreis (95 magischer Schaden).",
+            mana: 70.0, cooldown: 10.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 2.4, amount: 95.0, damage_type: Magic)],
+        ),
+        (
+            id: "rallying_banner", name: "Sammelbanner", hotkey: Some('W'),
+            description: "Verbündete im Umkreis erhalten 12 s lang +25 % Schaden, +2 Rüstung und neue Moral. Beendet Flucht.",
+            mana: 90.0, cooldown: 30.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 7.0, damage_mult: 1.25, armor_bonus: 2.0, morale: 40.0, duration: 12.0)],
+        ),
+        (
+            id: "ashen_ward", name: "Aschenschild", hotkey: Some('E'),
+            description: "Ein Schild aus Asche absorbiert 12 s lang bis zu 220 Schaden.",
+            mana: 60.0, cooldown: 20.0, range: 0.0, targeting: SelfCentered,
+            effects: [Shield(amount: 220.0, duration: 12.0)],
+        ),
+        (
+            id: "soul_drain", name: "Seelenentzug", hotkey: None,
+            description: "Entzieht allen Feinden in der Nähe Lebenskraft und heilt den Vogt.",
+            mana: 60.0, cooldown: 9.0, range: 0.0, targeting: SelfCentered,
+            effects: [Drain(radius: 3.5, amount: 45.0)],
+        ),
+        (
+            id: "summon_thralls", name: "Ruf der Gräber", hotkey: None,
+            description: "Vier Hohlknechte erheben sich aus der Erde.",
+            mana: 100.0, cooldown: 25.0, range: 0.0, targeting: SelfCentered,
+            effects: [Summon(unit: "hollow_thrall", count: 4)],
+        ),
+        (
+            id: "dread_wail", name: "Schreckensklage", hotkey: None,
+            description: "Ein Schrei aus dem Tief erschüttert Leib und Moral.",
+            mana: 80.0, cooldown: 18.0, range: 0.0, targeting: SelfCentered,
+            effects: [Terror(radius: 6.0, morale: 45.0), Damage(radius: 3.0, amount: 40.0, damage_type: Magic)],
+        ),
+    ],
+)

@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+.DS_Store
+/screenshots/*.png
+!/screenshots/vertical_slice_*.png
+/saves
+*.log
+/assets/audio/audio_report.md

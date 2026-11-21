@@ -1,0 +1,42 @@
+// ASHEN CROWNS – Gebäudedefinitionen (Vertical Slice). Größe in Kacheln (x, y).
+(
+    buildings: [
+        (
+            id: "keep", name: "Bergfried", faction: EmberCrown, size: (3, 3),
+            description: "Herz der Siedlung. Bildet Arbeiter aus, nimmt Ressourcen an und erhebt Abgaben.",
+            hp: 2200.0, armor: 5.0, armor_type: Fortified, cost: (), build_time: 120.0, sight: 10.0,
+            pop_provided: 10, trains: ["worker"], dropoff: true, gold_per_sec: 0.6, buildable: false,
+        ),
+        (
+            id: "farmstead", name: "Gehöft", faction: EmberCrown, size: (2, 2),
+            description: "Wohnraum für acht Einwohner. Die Felder liefern stetig Nahrung.",
+            hp: 700.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 80.0), build_time: 30.0,
+            sight: 5.0, pop_provided: 8, food_per_sec: 0.45, hotkey: Some('F'),
+        ),
+        (
+            id: "barracks", name: "Kaserne", faction: EmberCrown, size: (3, 2),
+            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen und Ritter aus.",
+            hp: 1300.0, armor: 4.0, armor_type: Fortified, cost: (gold: 160.0, wood: 120.0, stone: 40.0),
+            build_time: 45.0, sight: 6.0, trains: ["swordsman", "spearman", "archer", "knight"], hotkey: Some('B'),
+        ),
+        (
+            id: "watchtower", name: "Wachturm", faction: EmberCrown, size: (1, 1),
+            description: "Hölzerner Turm mit Glutbecken. Beschießt Feinde in weitem Umkreis.",
+            hp: 600.0, armor: 5.0, armor_type: Fortified, cost: (gold: 70.0, wood: 60.0, stone: 60.0),
+            build_time: 30.0, sight: 11.0,
+            attack: Some((damage: 18.0, damage_type: Pierce, range: 7.5, cooldown: 1.6, projectile: Arrow)),
+            hotkey: Some('T'),
+        ),
+        (
+            id: "hollow_shrine", name: "Hohlschrein", faction: Hollowed, size: (3, 3),
+            description: "Ein Riss im Schleier, gefasst in die Steine einer Aureth-Kapelle. Quelle der Hohlen.",
+            hp: 3500.0, armor: 6.0, armor_type: Fortified, sight: 10.0, buildable: false,
+        ),
+        (
+            id: "bone_spire", name: "Knochenturm", faction: Hollowed, size: (1, 1),
+            description: "Ein Turm aus verschmolzenem Gebein, der Seelenblitze schleudert.",
+            hp: 900.0, armor: 5.0, armor_type: Fortified, sight: 9.0, buildable: false,
+            attack: Some((damage: 16.0, damage_type: Magic, range: 7.0, cooldown: 1.8, projectile: SoulBolt)),
+        ),
+    ],
+)

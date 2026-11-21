@@ -1,0 +1,28 @@
+[package]
+name = "ashen_engine"
+description = "Custom modular 2D engine of Ashen Crowns (wgpu renderer, input, audio, UI, assets)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["audio"]
+## Echte Audioausgabe über kira. Ohne dieses Feature läuft das Audiosystem stumm
+## (Manifest, Scanner und Event-Logik bleiben voll funktionsfähig).
+audio = ["dep:kira"]
+
+[dependencies]
+ashen_core.workspace = true
+wgpu.workspace = true
+winit.workspace = true
+egui.workspace = true
+egui-wgpu.workspace = true
+egui-winit.workspace = true
+glam.workspace = true
+bytemuck.workspace = true
+image.workspace = true
+serde.workspace = true
+ron.workspace = true
+pollster.workspace = true
+log.workspace = true
+kira = { workspace = true, optional = true }
