@@ -1,5 +1,6 @@
 //! Laden der Spielinhalte inklusive Mods.
 
+use ashen_sim::campaign::CampaignDef;
 use ashen_sim::data::GameData;
 use ashen_sim::challenge::ChallengeDef;
 use ashen_sim::mission::MissionDef;
@@ -57,6 +58,9 @@ pub struct Content {
     /// Mitgelieferte und Mod-Szenarien (eigene Szenarien liegen im Benutzerordner, siehe [`Content::user_scenarios`]).
     pub scenarios: Vec<ScenarioEntry>,
     pub challenges: Vec<ChallengeDef>,
+    /// Kampagnenplan „Das Zeitalter der Gefallenen“ und die zugehörigen Missionen.
+    pub campaign: Option<CampaignDef>,
+    pub campaign_missions: Vec<MissionDef>,
     scenario_dirs: Vec<(PathBuf, ScenarioSource)>,
 }
 
@@ -73,7 +77,12 @@ impl Content {
 
     /// Mission oder Szenario nach ID (Basis von Herausforderungen).
     pub fn find_base(&self, id: &str) -> Option<MissionDef> {
-        self.missions.iter().find(|m| m.id == id).cloned().or_else(|| self.scenarios.iter().find(|s| s.def.id == id).map(|s| s.def.clone()))
+        self.missions.iter().find(|m| m.id == id).cloned().or_else(|| self.scenarios.iter().find(|s| s.def.id == id).map(|s| s.def.clone())).or_else(|| self.campaign_mission(id).cloned())
+    }
+
+    /// Kampagnenmission nach ID (Mission 1 liegt bei den Basismissionen).
+    pub fn campaign_mission(&self, id: &str) -> Option<&MissionDef> {
+        self.campaign_missions.iter().find(|m| m.id == id).or_else(|| self.missions.iter().find(|m| m.id == id))
     }
 
     pub fn load(assets: &Path, enabled: &[String]) -> Result<Content, String> {
@@ -123,6 +132,27 @@ impl Content {
                 challenges.push(c);
             }
         }
-        Ok(Content { data, missions, mods, active_mods: active, errors, scenarios, challenges, scenario_dirs })
+        // Kampagne: Plan und Missionen (fehlt der Plan, bleibt der Menüpunkt leer, ohne das Spiel zu stören).
+        let mut campaign_missions: Vec<MissionDef> = Vec::new();
+        let mut campaign = None;
+        let cdir = assets.join("data/campaign");
+        if let Ok(rd) = std::fs::read_dir(&cdir) {
+            let mut files: Vec<PathBuf> = rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "ron")).collect();
+            files.sort();
+            for f in files {
+                if f.file_name().is_some_and(|n| n == "campaign.ron") {
+                    match CampaignDef::load(&f) {
+                        Ok(c) => campaign = Some(c),
+                        Err(e) => errors.push(e),
+                    }
+                } else {
+                    match MissionDef::load(&f) {
+                        Ok(m) => campaign_missions.push(m),
+                        Err(e) => errors.push(e),
+                    }
+                }
+            }
+        }
+        Ok(Content { data, missions, mods, active_mods: active, errors, scenarios, challenges, campaign, campaign_missions, scenario_dirs })
     }
 }

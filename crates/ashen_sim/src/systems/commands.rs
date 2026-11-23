@@ -348,6 +348,7 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
         Command::Research { building, upgrade } => economy::start_research(world, data, player, building, upgrade as usize),
         Command::CancelResearch { building } => economy::cancel_research(world, data, player, building),
         Command::ReviveHero { building, hero } => heroes::revive(world, data, player, building, hero),
+        Command::Decide { decision, option } => crate::systems::script::decide(world, data, &decision, option),
         Command::Demolish { building } => {
             let Some(b) = world.buildings.get_mut(building) else { return };
             if b.owner != player || b.tag.as_deref() == Some(world.mission_def.defeat_tag.as_str()) {

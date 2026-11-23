@@ -481,8 +481,9 @@ Ein Wechsel aufwärts darf die Mindestverweildauer immer unterbrechen, ein Wechs
 
 ### 3.4 Vorgeschlagene Manifest-Einträge für zukünftige Tracks
 
-Die folgenden Einträge sind **nicht** in `manifest.ron` eingetragen; sie dienen der Audio-Integration als
-Vorlage, sobald die Dateien existieren. Linear gespielte Story-Tracks sind als `Calm` mit `looped: false`
+Die folgenden Einträge dienen der Audio-Integration als Vorlage. Die Tracks, die Kampagnenmissionen über ihr Feld `music`
+referenzieren, stehen inzwischen in `manifest.ron` (Abschnitt „Kampagne“ der Musikliste); die übrigen sind noch
+**nicht** eingetragen und werden ergänzt, sobald die Dateien existieren. Linear gespielte Story-Tracks sind als `Calm` mit `looped: false`
 und Skript-Auslösung vorgesehen.
 
 ```ron
@@ -586,6 +587,10 @@ Legende Dateien: **I+L** = `<id>_intro.ogg` + `<id>_loop.ogg` · **L** = nur `<i
 | 46 | `endgame_last_crown` | Zeitalter VII, Weltkarte/Aufbau | Tension | E | D-äolisch → dorisch | 66 | I+L | P3 |
 | 47 | `endgame_final_battle` | Letzte Schlacht vor Solmere | Battle | E | D-phrygisch → Dur | 132 | I+L | P3 |
 | 48 | `credits_theme` | Abspann | Menu | A | D-dorisch → D-Dur | 72 | Lin | P3 |
+| 49 | `boss_stone_oath` | Boss Gharun (Kampagne, Mission 21) | Boss | S | C-phrygisch | 96 | I+L | P2 |
+| 50 | `boss_reef_mistress` | Boss Isarre Mol (Kampagne, Mission 14) | Boss | S | E-dorisch | 88 | I+L | P2 |
+| 51 | `escort_march` | Eskortmissionen (Kampagne) | Tension | A | D-äolisch | 72 | L | P1 |
+| 52 | `campaign_chronicle` | Kampagnenmenü | Menu | A | D-dorisch | 72 | I+L | P1 |
 
 **Taktdauern zur Orientierung (4/4):** 60 BPM = 4,000 s · 66 = 3,636 s · 72 = 3,333 s · 80 = 3,000 s ·
 88 = 2,727 s · 104 = 2,308 s · 120 = 2,000 s · 132 = 1,818 s · 144 = 1,667 s · 152 = 1,579 s.
@@ -3437,6 +3442,183 @@ Kael rha-na, nos veth
 - *Kurzfassung:* T. 1–16 + T. 49–72 + T. 89–96 (ca. 2:40) für einen kurzen Abspann im Gefecht.
 
 ---
+### 4.12 Kampagnenmissionen (Echtzeit-Kampagne)
+
+Missionsspezifische Stücke der Echtzeit-Kampagne „Das Zeitalter der Gefallenen“. Die Missionen wählen über das Feld
+`music` ihrer Missionsdatei bevorzugte Tracks; je Intensitätsstufe spielt das Spiel zuerst den bevorzugten Track der Mission,
+sonst den Standardtrack (Boss-Missionen: Boss-Thema der Mission). Alle Tracks dieses Abschnitts stehen im Manifest
+(`assets/audio/manifest.ron`). Die übrigen von Missionen referenzierten Tracks (`boss_hollow_king`, `boss_root_mother`,
+`siege_assault`, `siege_defense`, `explore_wilds`, `mystery_*`, `faction_*`, `endgame_*` u. a.) sind in 4.1 bis 4.11 beschrieben.
+
+#### 4.12.1 `boss_stone_oath` – „Der Steinerne Eid“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `boss_stone_oath` → `assets/audio/music/boss_stone_oath_intro.ogg`, `assets/audio/music/boss_stone_oath_loop.ogg` |
+| Manifest | intensity: Boss · intro: Some · looped: true · Set S |
+| Zweck / Spielsituation | Bosskampf gegen Gharun, den Steinernen Eid, im Schreinsaal Oruuns (Mission 21, Zeitalter VI). Ein Wächter aus Runenstein, dessen Eid das Tiefe verdreht hat: Pflicht ohne Hass. |
+| Genre | Schwerer, langsamer Boss-Marsch mit Männerchor |
+| Instrumentierung | Tiefe Steintrommeln (Taiko-artig, aber aus Fels), Amboss, Kontrabässe, tiefe Posaunen, Männerchor (Skarn-Ahnenlieder in Old Aurethi), Rahmentrommeln, Steinglocken |
+| Tempo / Takt | 96 BPM, 6/4 (zwei breite Dreiergruppen, „mahlender“ Mühlsteinpuls) |
+| Tonart / Motivform | C-phrygisch; Aschenkrone-Motiv in den Posaunen verlangsamt, Ahnenruf (Skarnheim-Kennung) im Chor |
+| Stimmung | Unerbittlich, ehrfürchtig, feierlich-traurig |
+| Dynamikverlauf | p (Intro, T. 1–4) → mf (T. 5–12) → f (T. 13–20) → ff (T. 21–28) → mf (T. 29–32, Rückführung) |
+| Soundcharakter / Mix | Steinhalle, Hall 3,5 s, trockene tiefe Impacts, Chor weit; Tiefen bis 40 Hz |
+| Loop-Eignung | Hoch. Loop T. 5–32 (28 Takte = 70 s). Naht: T. 32 auf G (V) → c in T. 5. |
+| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 4 Takte = 10 s · Loop 28 Takte = 70 s |
+
+**Suno-Style-Prompt**
+```text
+slow heavy dark fantasy boss march, C phrygian, 96 bpm, 6/4, deep stone drums, anvil, double basses, low trombones, male choir in invented language, solemn and relentless
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Single anvil strike, low stone drums enter]
+
+[Verse]
+[Instrumental: grinding 6/4 pulse, double basses, low trombones]
+
+[Chorus]
+[Male choir, slow and heavy]
+Orun mah-ren, ka esk
+Veth-ka orun, ka esk
+
+[Climax]
+[Full choir, anvil and stone drums, trombones with the crown theme slowed]
+Orun, orun, esk ar!
+
+[Verse]
+[Instrumental: stone drums, basses]
+```
+
+*Textbedeutung:* „Stein, der bewahrt, nicht fällt. Eid des Steins, nicht fällt. Stein, Stein – kein Fall!“
+
+**Varianten**
+- *Erlösung (Cover):* nach dem Sieg ruhige Fassung nur mit Chor und Steinglocken (ca. 0:40) als Übergang zum Sieg-Sting.
+
+#### 4.12.2 `boss_reef_mistress` – „Das Schwarze Riff“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `boss_reef_mistress` → `assets/audio/music/boss_reef_mistress_intro.ogg`, `assets/audio/music/boss_reef_mistress_loop.ogg` |
+| Manifest | intensity: Boss · intro: Some · looped: true · Set S |
+| Zweck / Spielsituation | Bosskampf gegen Isarre Mol, Herrin des Schwarzen Riffs, auf der Riffinsel (Mission 14, Zeitalter IV): eine ertrunkene Gezeitenpriesterin, mütterlich und bedrohlich. |
+| Genre | Maritimer Dark-Fantasy-Boss mit Frauenchor und Wellenrhythmik |
+| Instrumentierung | Verstimmte Hackbrett-Arpeggien (Saelith-Kennung), tiefe Streicher mit langen Glissandi, Muschelhorn, Frauenchor, Wasser-Percussion (Taucherglocke, Kesselpauken), Harfe unter Wasser (Tiefpass) |
+| Tempo / Takt | 12/8, ♩. = 88 (Wellenpuls) |
+| Tonart / Motivform | E-dorisch mit tiefer zweiter Stufe (Riss); Saelith-Kennung im Hackbrett, Asche-Form im Frauenchor, verzerrt |
+| Stimmung | Wogend, mütterlich-bedrohlich, nass, schwermütig |
+| Dynamikverlauf | p (Intro, T. 1–8) → mf (T. 9–16) → f (T. 17–28) → ff (T. 29–36) → mf (T. 37–40) |
+| Soundcharakter / Mix | Weiter, feuchter Hall (2,6 s), Chorus auf Streichern, Tiefpass-Wellen als Zwischenschicht, Brandungsrauschen leise im Hintergrund |
+| Loop-Eignung | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 auf B (V) → e in T. 9. |
+| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 21,8 s · Loop 32 Takte = 87,3 s |
+
+**Suno-Style-Prompt**
+```text
+dark fantasy sea boss, E dorian, 12/8, 88 bpm, detuned dulcimer arpeggios, long cello glissandi, conch horn, female choir in invented language, diving bell percussion, wet and menacing
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Surf, diving bell, conch horn]
+
+[Verse]
+[Instrumental: detuned dulcimer arpeggios, 12/8 wave pulse, low strings]
+
+[Chorus]
+[Female choir, layered like waves]
+Tha-lel nor mah-ren
+Thal ka-lun, ar-esh
+
+[Climax]
+[Full choir, timpani, glissandi]
+Tha-lel, tha-lel, esk ar!
+
+[Verse]
+[Instrumental: dulcimer and strings]
+```
+
+*Textbedeutung:* „Flut, die zurückkehrt. Thal (Gott des Meeres), tief, hoch! Flut, Flut, kein Fall!“
+
+**Varianten**
+- *Ebbe:* nach dem Sieg der Wellenpuls ohne Chor als Abklang (ca. 0:30).
+
+#### 4.12.3 `escort_march` – „Der lange Zug“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `escort_march` → `assets/audio/music/escort_march_loop.ogg` |
+| Manifest | intensity: Tension · intro: None · looped: true · Set A |
+| Zweck / Spielsituation | Eskortmissionen (Mission 2, Zeitalter I): Flüchtlinge durch das Aschmoor führen; Spannung ohne Schlachtlärm. |
+| Genre | Leiser Marsch mit gedämpfter Trommel und Solostreichern |
+| Instrumentierung | Gedämpfte Rahmentrommel (Fußmarsch), Solo-Bratsche, Drehleier-Bordun, Holzflöte, entfernte Glocke; kein Blech |
+| Tempo / Takt | 72 BPM, 4/4 (Schrittpuls) |
+| Tonart / Motivform | D-äolisch; Asche-Form in Bratsche, Glut-Form andeutungsweise in der Flöte |
+| Stimmung | Erschöpft, wachsam, leise Hoffnung |
+| Dynamikverlauf | pp (T. 1–8) → p (T. 9–24) → mp (T. 25–32) → p (T. 33–40) |
+| Soundcharakter / Mix | Trocken-nah, leichter Hall 1,6 s, Wind-Layer leise; viel Raum für Sprachausgabe (Mittenbereich 1–3 kHz zurückgenommen) |
+| Loop-Eignung | Hoch. Loop T. 1–40 (40 Takte = 133 s), kein Intro. |
+| Ziellänge | Suno-Rohtake 2:30–3:00 |
+
+**Suno-Style-Prompt**
+```text
+quiet dark fantasy marching theme, D minor, 72 bpm, muffled frame drum steps, solo viola, hurdy gurdy drone, wooden flute, distant bell, weary and watchful, no brass
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Instrumental: muffled frame drum steps, hurdy gurdy drone]
+[Solo viola plays the ash motif, wooden flute answers]
+[Distant bell every eight bars]
+[Instrumental: quiet theme repeats, softer]
+```
+
+#### 4.12.4 `campaign_chronicle` – „Die Chronik der Wächterin“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `campaign_chronicle` → `assets/audio/music/campaign_chronicle_intro.ogg`, `assets/audio/music/campaign_chronicle_loop.ogg` |
+| Manifest | intensity: Menu · intro: Some · looped: true · Set A |
+| Zweck / Spielsituation | Kampagnenmenü (Pergamentkarte, Briefing, Zusammenfassung): ruhige Chronikmusik, die zwischen den Missionen trägt. |
+| Genre | Kammermusikalisches Dark-Fantasy-Thema mit Chor-Andeutung |
+| Instrumentierung | Solo-Cello, Harfe, Laute, Holzflöte, leiser Frauenchor (Old Aurethi), Glockenspiel |
+| Tempo / Takt | 72 BPM, 4/4 |
+| Tonart / Motivform | D-dorisch; Aschenkrone-Motiv in Asche-Form (Cello), Glut-Form in der Flöte beim Auswahlwechsel des Zeitalters |
+| Stimmung | Nachdenklich, würdevoll, wehmütig |
+| Dynamikverlauf | p (Intro, T. 1–4) → mp (T. 5–20) → mf (T. 21–28) → p (T. 29–32) |
+| Soundcharakter / Mix | Intimer Raum, Hall 2,0 s; Pergament-Knistern nicht in der Musik (kommt als UI-Effekt) |
+| Loop-Eignung | Hoch. Loop T. 5–32 (28 Takte = 93 s). Naht: T. 32 auf A (V) → d in T. 5. |
+| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 4 Takte = 13,3 s · Loop 28 Takte = 93,3 s |
+
+**Suno-Style-Prompt**
+```text
+reflective dark fantasy chamber theme, D dorian, 72 bpm, solo cello, harp, lute, wooden flute, soft female choir in invented language, glockenspiel, dignified and wistful
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Harp arpeggio, solo cello enters]
+
+[Verse]
+[Instrumental: cello with the ash motif, lute accompaniment]
+
+[Chorus]
+[Soft female choir]
+Li-ra-en sa do-mae
+Kael rha-na, nos veth
+
+[Verse]
+[Instrumental: flute and harp, glockenspiel]
+```
+
+*Textbedeutung:* „Erinnerung an die Heimat. Krone, erhebe dich, wir schwören.“
+
+---
+
 ## 5. Produktions-Checkliste
 
 ### 5.1 Vor Produktionsbeginn (einmalig)

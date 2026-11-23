@@ -4,8 +4,13 @@
 //! cargo run -p ashen_tools -- audio-scan [--assets <dir>] [--apply-renames] [--convert] [--report <datei.md>]
 //! cargo run -p ashen_tools -- validate-data [--assets <dir>] [--mod <mod-verzeichnis> ...]
 //! cargo run -p ashen_tools -- forge-scenarios [--assets <dir>]
+//! cargo run -p ashen_tools -- forge-campaign [--assets <dir>]
 //! ```
 
+mod campaign_forge;
+mod campaign_missions;
+mod campaign_missions_b;
+mod campaign_missions_c;
 mod forge;
 
 use ashen_engine::audio::manifest::AudioManifest;
@@ -28,6 +33,8 @@ Befehle:
       --assets <dir>
       --mod <dir>         Mod-Verzeichnis zusätzlich anwenden (mehrfach möglich)
   forge-scenarios  Die mitgelieferten historischen Szenarien neu erzeugen (assets/data/scenarios/)
+      --assets <dir>
+  forge-campaign   Die Echtzeit-Kampagne neu erzeugen (assets/data/campaign/, Audio-Manifest, Sprechskript)
       --assets <dir>"
 }
 
@@ -119,6 +126,7 @@ fn validate_data(assets: &Path, mods: &[PathBuf]) -> Result<(), String> {
         count += 1;
     }
     println!("{count} Mission(en) geprüft – alles konsistent.");
+    validate_campaign(&data, assets)?;
 
     // Szenarien: laden, Karte prüfen, Welt aufbauen.
     let mut errors = Vec::new();
@@ -148,6 +156,41 @@ fn validate_data(assets: &Path, mods: &[PathBuf]) -> Result<(), String> {
         println!("Herausforderung {} ({}) ok", c.id, c.name);
     }
     println!("{} Szenario(en), {} Herausforderung(en) geprüft.", scenarios.len(), challenges.len());
+    Ok(())
+}
+
+/// Kampagnenplan und -missionen: Dateien laden, Platzierungen und Karten prüfen, Varianten und Flags anwenden.
+fn validate_campaign(data: &GameData, assets: &Path) -> Result<(), String> {
+    let dir = assets.join("data/campaign");
+    let plan = ashen_sim::campaign::CampaignDef::load(&dir.join("campaign.ron"))?;
+    let mut missions: Vec<MissionDef> = Vec::new();
+    for e in std::fs::read_dir(&dir).map_err(|e| format!("{}: {e}", dir.display()))?.flatten() {
+        let p = e.path();
+        if p.extension().is_none_or(|x| x != "ron") || p.file_name().is_some_and(|n| n == "campaign.ron") {
+            continue;
+        }
+        missions.push(MissionDef::load(&p)?);
+    }
+    let first = MissionDef::load(&assets.join("data/missions/m01_last_settlement.ron"))?;
+    missions.push(first);
+    let errs = plan.validate(&missions);
+    if !errs.is_empty() {
+        return Err(format!("Kampagnenplan: {}", errs.join("; ")));
+    }
+    let mut decisions = 0;
+    for m in &missions {
+        for pl in m.placements.iter().chain(m.variants.iter().flat_map(|v| v.placements.iter())) {
+            if data.unit_id(&pl.id).is_none() && data.building_id(&pl.id).is_none() {
+                return Err(format!("{}: unbekannte Platzierung {}", m.id, pl.id));
+            }
+        }
+        let flags: Vec<String> = m.variants.iter().flat_map(|v| v.requires.iter().cloned()).collect();
+        for variant in [m.clone(), m.with_flags(&flags)] {
+            ashen_sim::SimWorld::new(data, variant, Default::default()).map_err(|e| format!("{}: {e}", m.id))?;
+        }
+        decisions += ashen_sim::campaign::decision_flags(m).len();
+    }
+    println!("Kampagne {}: {} Zeitalter, {} Missionen, {} Entscheidungsoptionen, {} Enden – ok.", plan.name, plan.chapters.len(), plan.mission_count(), decisions, plan.endings.len());
     Ok(())
 }
 
@@ -204,6 +247,14 @@ fn main() -> ExitCode {
                 println!("geschrieben: {}", f.display());
             }
         }),
+        "forge-campaign" => {
+            let repo = assets.parent().map(Path::to_path_buf).unwrap_or_else(|| PathBuf::from("."));
+            campaign_forge::forge_campaign(&assets, &repo).map(|files| {
+                for f in files {
+                    println!("geschrieben: {}", f.display());
+                }
+            })
+        }
         _ => {
             println!("{}", usage());
             return ExitCode::from(2);

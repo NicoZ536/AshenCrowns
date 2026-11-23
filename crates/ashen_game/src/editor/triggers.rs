@@ -3,7 +3,7 @@
 use super::doc::EditDoc;
 use ashen_sim::data::{Cost, GameData};
 use ashen_sim::env::Weather;
-use ashen_sim::mission::{Action, Condition, GameMode, ObjectiveDef, TriggerDef};
+use ashen_sim::mission::{Action, Condition, DecisionDef, DecisionOption, DialogueLine, GameMode, ObjectiveDef, TriggerDef};
 use egui::{Color32, RichText, Ui};
 
 use ashen_engine::ui::theme;
@@ -37,7 +37,7 @@ impl Lists {
     }
 }
 
-const COND_KINDS: [&str; 21] = [
+const COND_KINDS: [&str; 27] = [
     "Zeit erreicht",
     "Gebäude fertig",
     "Gebäudeanzahl",
@@ -59,6 +59,12 @@ const COND_KINDS: [&str; 21] = [
     "Nicht …",
     "Alle …",
     "Eine von …",
+    "Flag gesetzt",
+    "Markierte Einheit im Bereich",
+    "Soldaten höchstens",
+    "Markierte Einheit verwundet",
+    "Einheiten einer Art im Bereich",
+    "Dialog beendet",
 ];
 
 fn cond_kind(c: &Condition) -> usize {
@@ -84,6 +90,12 @@ fn cond_kind(c: &Condition) -> usize {
         Condition::Not(_) => 18,
         Condition::All(_) => 19,
         Condition::Any(_) => 20,
+        Condition::Flag(_) => 21,
+        Condition::TagInArea { .. } => 22,
+        Condition::ArmyAtMost(_) => 23,
+        Condition::TagHealthBelow { .. } => 24,
+        Condition::UnitKindInArea { .. } => 25,
+        Condition::DialogueDone => 26,
     }
 }
 
@@ -117,11 +129,17 @@ fn cond_default(kind: usize, l: &Lists) -> Condition {
         17 => Condition::TagDamaged(first_or(&l.tags, "")),
         18 => Condition::Not(Box::new(Condition::AtTime(60.0))),
         19 => Condition::All(vec![Condition::AtTime(60.0)]),
+        21 => Condition::Flag(String::new()),
+        22 => Condition::TagInArea { tag: first_or(&l.tags, "hero"), area: first_or(&l.areas, "") },
+        23 => Condition::ArmyAtMost(0),
+        26 => Condition::DialogueDone,
+        25 => Condition::UnitKindInArea { unit: first_id(&l.units, "worker"), area: first_or(&l.areas, ""), count: 5 },
+        24 => Condition::TagHealthBelow { tag: first_or(&l.tags, "boss"), percent: 30.0 },
         _ => Condition::Any(vec![Condition::AtTime(60.0)]),
     }
 }
 
-const ACTION_KINDS: [&str; 11] = ["Nachricht", "Ziel hinzufügen", "Ziel abschließen", "Sieg", "Niederlage", "Welle auslösen", "Ressourcen schenken", "Wellen ein/aus", "Wetter setzen", "Chronik-Eintrag", "Einheiten erscheinen"];
+const ACTION_KINDS: [&str; 16] = ["Nachricht", "Ziel hinzufügen", "Ziel abschließen", "Sieg", "Niederlage", "Welle auslösen", "Ressourcen schenken", "Wellen ein/aus", "Wetter setzen", "Chronik-Eintrag", "Einheiten erscheinen", "Flag setzen", "Dialogfolge", "Entscheidung", "Einheiten übergeben", "Einheiten losschicken"];
 
 fn action_kind(a: &Action) -> usize {
     match a {
@@ -136,6 +154,11 @@ fn action_kind(a: &Action) -> usize {
         Action::SetWeather(_) => 8,
         Action::Chronicle(_) => 9,
         Action::SpawnUnits { .. } => 10,
+        Action::SetFlag(_) => 11,
+        Action::Dialogue(_) => 12,
+        Action::Decision(_) => 13,
+        Action::ChangeOwner { .. } => 14,
+        Action::MoveTag { .. } => 15,
     }
 }
 
@@ -151,7 +174,19 @@ fn action_default(kind: usize, l: &Lists) -> Action {
         7 => Action::EnableWaves(true),
         8 => Action::SetWeather(Weather::Fog),
         9 => Action::Chronicle("Ein Ereignis wurde festgehalten.".into()),
-        _ => Action::SpawnUnits { unit: first_id(&l.units, "hollow_thrall"), owner: 1, area: first_or(&l.areas, ""), count: 5, attack: true },
+        11 => Action::SetFlag(String::new()),
+        12 => Action::Dialogue(vec![DialogueLine { speaker: "Erzähler".into(), text: "…".into(), voice: None }]),
+        13 => Action::Decision(DecisionDef {
+            id: "entscheidung".into(),
+            speaker: "Erzähler".into(),
+            title: "Eine Entscheidung".into(),
+            text: "…".into(),
+            voice: None,
+            options: vec![DecisionOption { flag: "wahl_a".into(), label: "Option A".into(), detail: String::new(), requires: vec![], actions: vec![] }, DecisionOption { flag: "wahl_b".into(), label: "Option B".into(), detail: String::new(), requires: vec![], actions: vec![] }],
+        }),
+        14 => Action::ChangeOwner { tag: first_or(&l.tags, ""), owner: 0 },
+        15 => Action::MoveTag { tag: first_or(&l.tags, ""), area: first_or(&l.areas, ""), attack: false },
+        _ => Action::SpawnUnits { unit: first_id(&l.units, "hollow_thrall"), owner: 1, area: first_or(&l.areas, ""), count: 5, attack: true, tag: None },
     }
 }
 
@@ -262,7 +297,24 @@ pub fn condition_ui(ui: &mut Ui, salt: u64, c: &mut Condition, l: &Lists, depth:
                 ui.label("mindestens");
                 changed |= num_u32(ui, count, 1..=500);
             }
-            Condition::Not(_) | Condition::All(_) | Condition::Any(_) => {}
+            Condition::Flag(f) => changed |= ui.add(egui::TextEdit::singleline(f).desired_width(160.0).hint_text("Flag")).changed(),
+            Condition::TagInArea { tag, area } => {
+                changed |= pick(ui, (salt, "t"), tag, &l.tags);
+                ui.label("in");
+                changed |= pick(ui, (salt, "a"), area, &l.areas);
+            }
+            Condition::ArmyAtMost(n) => changed |= num_u32(ui, n, 0..=10_000),
+            Condition::UnitKindInArea { unit, area, count } => {
+                changed |= pick_named(ui, (salt, "u"), unit, &l.units);
+                ui.label("in");
+                changed |= pick(ui, (salt, "a"), area, &l.areas);
+                changed |= num_u32(ui, count, 1..=500);
+            }
+            Condition::TagHealthBelow { tag, percent } => {
+                changed |= pick(ui, (salt, "t"), tag, &l.tags);
+                changed |= ui.add(egui::DragValue::new(percent).range(1.0..=99.0).suffix(" %")).changed();
+            }
+            Condition::DialogueDone | Condition::Not(_) | Condition::All(_) | Condition::Any(_) => {}
         }
     });
     // Verschachtelte Bedingungen.
@@ -336,7 +388,7 @@ pub fn action_ui(ui: &mut Ui, salt: u64, a: &mut Action, l: &Lists) -> bool {
                     }
                 });
             }
-            Action::SpawnUnits { unit, owner, area, count, attack } => {
+            Action::SpawnUnits { unit, owner, area, count, attack, .. } => {
                 changed |= pick_named(ui, (salt, "u"), unit, &l.units);
                 ui.label("×");
                 changed |= num_u32(ui, count, 1..=200);
@@ -349,9 +401,61 @@ pub fn action_ui(ui: &mut Ui, salt: u64, a: &mut Action, l: &Lists) -> bool {
                 }
                 changed |= ui.checkbox(attack, "greift an").changed();
             }
-            Action::Victory | Action::Defeat | Action::Chronicle(_) => {}
+            Action::SetFlag(f) => changed |= ui.add(egui::TextEdit::singleline(f).desired_width(160.0).hint_text("Flag")).changed(),
+            Action::ChangeOwner { tag, owner } => {
+                changed |= pick(ui, (salt, "t"), tag, &l.tags);
+                let mut side = *owner == 0;
+                if ui.checkbox(&mut side, "an den Spieler").changed() {
+                    *owner = if side { 0 } else { 1 };
+                    changed = true;
+                }
+            }
+            Action::MoveTag { tag, area, attack } => {
+                changed |= pick(ui, (salt, "t"), tag, &l.tags);
+                ui.label("nach");
+                changed |= pick(ui, (salt, "a"), area, &l.areas);
+                changed |= ui.checkbox(attack, "kämpfend").changed();
+            }
+            Action::Decision(d) => {
+                changed |= ui.add(egui::TextEdit::singleline(&mut d.id).desired_width(120.0).hint_text("ID")).changed();
+                changed |= ui.add(egui::TextEdit::singleline(&mut d.speaker).desired_width(120.0).hint_text("Sprecher")).changed();
+            }
+            Action::Victory | Action::Defeat | Action::Chronicle(_) | Action::Dialogue(_) => {}
         }
     });
+    match a {
+        Action::Dialogue(lines) => {
+            let mut remove = None;
+            for (i, line) in lines.iter_mut().enumerate() {
+                ui.horizontal(|ui| {
+                    changed |= ui.add(egui::TextEdit::singleline(&mut line.speaker).desired_width(120.0).hint_text("Sprecher")).changed();
+                    changed |= ui.add(egui::TextEdit::singleline(&mut line.text).desired_width(f32::INFINITY).hint_text("Text")).changed();
+                    if ui.small_button("×").clicked() {
+                        remove = Some(i);
+                    }
+                });
+            }
+            if let Some(i) = remove {
+                lines.remove(i);
+                changed = true;
+            }
+            if ui.small_button("+ Zeile").clicked() {
+                lines.push(DialogueLine { speaker: "Erzähler".into(), text: "…".into(), voice: None });
+                changed = true;
+            }
+        }
+        Action::Decision(d) => {
+            changed |= ui.add(egui::TextEdit::singleline(&mut d.title).desired_width(f32::INFINITY).hint_text("Titel")).changed();
+            changed |= ui.add(egui::TextEdit::multiline(&mut d.text).desired_rows(2).desired_width(f32::INFINITY).hint_text("Frage")).changed();
+            for o in d.options.iter_mut() {
+                ui.horizontal(|ui| {
+                    changed |= ui.add(egui::TextEdit::singleline(&mut o.flag).desired_width(120.0).hint_text("Flag")).changed();
+                    changed |= ui.add(egui::TextEdit::singleline(&mut o.label).desired_width(f32::INFINITY).hint_text("Antwort")).changed();
+                });
+            }
+        }
+        _ => {}
+    }
     match a {
         Action::Message { text, .. } | Action::Chronicle(text) => {
             changed |= ui.add(egui::TextEdit::multiline(text).desired_rows(2).desired_width(f32::INFINITY).hint_text("Text")).changed();
@@ -385,6 +489,12 @@ pub fn describe_condition(c: &Condition) -> String {
         Condition::Not(c) => format!("nicht ({})", describe_condition(c)),
         Condition::All(v) => v.iter().map(describe_condition).collect::<Vec<_>>().join(" UND "),
         Condition::Any(v) => format!("({})", v.iter().map(describe_condition).collect::<Vec<_>>().join(" ODER ")),
+        Condition::Flag(f) => format!("Flag {f}"),
+        Condition::TagInArea { tag, area } => format!("{tag} in {area}"),
+        Condition::ArmyAtMost(n) => format!("höchstens {n} Soldaten"),
+        Condition::TagHealthBelow { tag, percent } => format!("{tag} unter {percent:.0} % Leben"),
+        Condition::UnitKindInArea { unit, area, count } => format!("{count}× {unit} in {area}"),
+        Condition::DialogueDone => "Dialog beendet".into(),
     }
 }
 
@@ -401,6 +511,11 @@ pub fn describe_action(a: &Action) -> String {
         Action::SetWeather(w) => format!("Wetter {}", w.label()),
         Action::Chronicle(_) => "Chronik".into(),
         Action::SpawnUnits { unit, count, area, .. } => format!("{count}× {unit} in {area}"),
+        Action::SetFlag(f) => format!("Flag {f}"),
+        Action::Dialogue(l) => format!("Dialogfolge ({} Zeilen)", l.len()),
+        Action::Decision(d) => format!("Entscheidung {}", d.id),
+        Action::ChangeOwner { tag, owner } => format!("{tag} → Besitzer {owner}"),
+        Action::MoveTag { tag, area, .. } => format!("{tag} nach {area}"),
     }
 }
 

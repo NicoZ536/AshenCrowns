@@ -71,6 +71,55 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
     }
     if let Some(o) = scene.world.mission.outcome {
         outcome(scene, ui, engine, cx, o);
+    } else if scene.world.mission.open_decision(scene.world.time).is_some() {
+        decision(scene, ui, engine, cx);
+    }
+}
+
+/// Entscheidungsfenster der Kampagne: Frage der Figur und die Antworten; die Simulation ruht währenddessen.
+fn decision(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &mut HudCtx) {
+    let Some(d) = scene.world.mission.open_decision(scene.world.time).cloned() else { return };
+    let ctx = ui.ctx().clone();
+    let art = cx.ui;
+    let fx_layer = dim(&ctx, art, Color32::from_rgb(30, 14, 6), 150);
+    let t = ui.input(|i| i.time) as f32;
+    ui_art::embers(art, &fx_layer, ctx.content_rect(), t, 36, 11);
+    let mut chosen: Option<usize> = None;
+    egui::Area::new(Id::unique("decision")).order(Order::Foreground).anchor(Align2::CENTER_CENTER, Vec2::ZERO).show(&ctx, |ui| {
+        art.panel(ui, PanelKind::Ornate, egui::Margin::symmetric(40, 30), |ui| {
+            ui.set_width(660.0);
+            ui.vertical_centered(|ui| {
+                ui.label(RichText::new("Entscheidung").font(theme::caps_font(13.0)).color(theme::PARCHMENT_DIM));
+                ui.label(RichText::new(&d.title).font(theme::title_bold_font(26.0)).color(theme::GOLD));
+                let (r, _) = ui.allocate_exact_size(Vec2::new(620.0, 22.0), Sense::hover());
+                art.divider(ui.painter(), r.center().x - 200.0, r.center().x + 200.0, r.center().y);
+            });
+            art.panel(ui, PanelKind::Parchment, egui::Margin { left: 26, right: 26, top: 18, bottom: 18 }, |ui| {
+                ui.set_width(ui.available_width());
+                ui.label(RichText::new(&d.speaker).font(theme::caps_font(13.0)).color(theme::INK_RED));
+                ui.label(RichText::new(&d.text).font(theme::italic_font(17.0)).color(theme::INK));
+            });
+            ui.add_space(10.0);
+            for (i, o) in d.options.iter().enumerate() {
+                let open = o.requires.iter().all(|f| scene.world.mission.has_flag(f));
+                ui.vertical_centered(|ui| {
+                    let r = ui_art::button(ui, art, &o.label, Vec2::new(600.0, 40.0), open);
+                    ui_common::sfx(engine, ui, &r);
+                    let detail = if open { o.detail.clone() } else { format!("Verschlossen: {}", o.detail) };
+                    let r = ui_art::tip(r, art, &o.label, &detail);
+                    if r.clicked() && open {
+                        chosen = Some(i);
+                    }
+                    if !o.detail.is_empty() {
+                        ui.label(RichText::new(&o.detail).font(theme::italic_font(13.5)).color(if open { theme::PARCHMENT_DIM } else { theme::EMBER }));
+                    }
+                });
+                ui.add_space(4.0);
+            }
+        });
+    });
+    if let Some(i) = chosen {
+        scene.decide(&d.id, i);
     }
 }
 
@@ -1114,7 +1163,8 @@ fn pause_menu(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, 
                     });
                 }
                 MenuPage::Chronicle => {
-                    ui_art::heading(ui, art, "Chronik von Brennhollow", 24.0);
+                    let title = if scene.world.mission_def.chronicle_title.is_empty() { format!("Chronik – {}", scene.world.mission_def.name) } else { scene.world.mission_def.chronicle_title.clone() };
+                    ui_art::heading(ui, art, &title, 24.0);
                     chronicle(ui, art, &scene.world, 340.0);
                     ui.add_space(8.0);
                     ui.vertical_centered(|ui| {
@@ -1178,7 +1228,13 @@ fn outcome(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
                 ui.label(RichText::new(&scene.world.mission_def.name).font(theme::title_bold_font(18.0)).color(if victory { theme::GOLD } else { Color32::from_rgb(190, 120, 110) }));
                 let (r2, _) = ui.allocate_exact_size(Vec2::new(600.0, 24.0), Sense::hover());
                 art.divider(ui.painter(), r2.center().x - 200.0, r2.center().x + 200.0, r2.center().y);
-                let flavour = if victory { "Brennhollow steht. Die Glut der Siedlung brennt weiter." } else { "Brennhollow ist gefallen. Asche bedeckt die Mark." };
+                let def = &scene.world.mission_def;
+                let flavour = match (victory, def.victory_text.is_empty(), def.defeat_text.is_empty()) {
+                    (true, false, _) => def.victory_text.as_str(),
+                    (false, _, false) => def.defeat_text.as_str(),
+                    (true, true, _) => "Der Einsatz endete im Sieg. Die Aschmark erinnert sich daran.",
+                    (false, _, true) => "Der Einsatz endete in Asche und Schweigen.",
+                };
                 ui.label(RichText::new(flavour).font(theme::italic_font(16.0)).color(theme::PARCHMENT_DIM));
             });
             ui.add_space(10.0);
@@ -1219,12 +1275,15 @@ fn outcome(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
             chronicle(ui, art, &scene.world, 170.0);
             ui.add_space(10.0);
             ui.horizontal(|ui| {
-                ui.add_space(60.0);
-                if ui_common::button(ui, engine, art, "Erneut spielen", 220.0) {
+                ui.add_space(if scene.campaign { 20.0 } else { 60.0 });
+                if scene.campaign && ui_common::button(ui, engine, art, if victory { "Weiter" } else { "Zum Briefing" }, 180.0) {
+                    scene.action = SceneAction::CampaignContinue;
+                }
+                if ui_common::button(ui, engine, art, "Erneut spielen", if scene.campaign { 180.0 } else { 220.0 }) {
                     scene.action = SceneAction::Restart;
                 }
-                ui.add_space(20.0);
-                if ui_common::button(ui, engine, art, "Hauptmenü", 220.0) {
+                ui.add_space(if scene.campaign { 4.0 } else { 20.0 });
+                if ui_common::button(ui, engine, art, "Hauptmenü", if scene.campaign { 180.0 } else { 220.0 }) {
                     scene.action = SceneAction::MainMenu;
                 }
             });

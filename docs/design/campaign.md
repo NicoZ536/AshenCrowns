@@ -6,8 +6,89 @@
 | Dokument | `docs/design/campaign.md` |
 | Status | Verbindliche Designgrundlage, Version 1.0 |
 | Bezug | `docs/canon.md` (Namen und IDs), `docs/design/game_design_document.md` (Systeme, Werte) |
-| Umfang | Prolog, 7 Zeitalter, 29 Missionen, 16 Entscheidungspunkte, 6 Enden |
+| Umfang | Prolog, 7 Zeitalter, 29 Missionen, 16 Entscheidungspunkte, 6 Enden (Gesamtentwurf); **umgesetzt als Echtzeit-Kampagne: 18 Missionen, 14 Entscheidungen, 4 Enden – siehe Abschnitt 0** |
 | Spieldauer | 40–60 Stunden (Story-Missionen ca. 22 h, freies Weltkartenspiel zwischen den Missionen ca. 20–35 h) |
+
+---
+
+## 0. Umgesetzt: Die Echtzeit-Kampagne „Das Zeitalter der Gefallenen“
+
+Dieser Abschnitt beschreibt den **spielbaren Stand** der Kampagne (Echtzeit-Missionen). Der Rest des Dokuments (ab Abschnitt 1)
+bleibt der Gesamtentwurf der Grand Campaign mit Weltkarte; die Echtzeit-Kampagne verwendet daraus die Missions-IDs, Entscheidungen
+und Enden, verdichtet aber den Zeitstrahl (Isolde führt durchgehend; die Jahre der Missionen liegen zwischen 897 und 923 n.F.).
+
+### 0.1 Aufbau und Technik
+
+| Bestandteil | Beschreibung |
+|---|---|
+| Plan | `assets/data/campaign/campaign.ron`: sieben Zeitalter, je 2–3 Missionen, Voraussetzungen (`needs`), Flag-Bedingungen (`if_flags`/`unless_flags`), Schlussmission (`finale`), Enden mit Flag-Bedingungen |
+| Missionen | `assets/data/campaign/<id>.ron` (Mission 1 liegt unter `assets/data/missions/`); jede Mission hat eine eigene, handgeformte Karte, Briefing, Haupt- und Nebenziele, Trigger, Typ (`kind`), Siegs-/Niederlagetexte und bevorzugte Musik (`music`) |
+| Erzeugung | `cargo run -p ashen_tools -- forge-campaign` (Quelle: `crates/ashen_tools/src/campaign_*.rs`); schreibt Missionen, Plan, die Sprach-Events im Audio-Manifest und das Sprechskript (`docs/audio/elevenlabs_dialogues.md`, Teil 3) aus denselben Daten |
+| Flags | Kampagnenvariablen sind Flags (z. B. `torvald_blood`). Entscheidungen setzen sie, `Condition::Flag` liest sie, `MissionDef::variants` ändern eine Mission bei gesetzten (`requires`) bzw. fehlenden (`forbids`) Flags: zusätzliche Einheiten, Helden, Startressourcen, Gegner, Bereiche, Ziele, Trigger, entfernte Platzierungen (`remove_tags`) |
+| Entscheidungen | `Action::Decision`: Dialogfrage mit Optionen (`flag`, `label`, `detail`, optionale `requires`, Folgeaktionen). Die Simulation pausiert, bis `Command::Decide` die Wahl trifft; gesperrte Optionen bleiben sichtbar, aber nicht wählbar |
+| Dialoge | `Action::Dialogue`: Zeilenfolgen mit Sprecher und Audio-Event; Pausen ergeben sich aus der Textlänge. Jede Zeile hat ein Event `<sprecher>.<mission>_<szene>_<buchstabe>` (Manifest, ElevenLabs-Zeile) |
+| Heldenfortschritt | Nach jedem Sieg werden Stufe, Erfahrung, Talente, Ausrüstung und Inventar aller lebenden Helden im Profil gespeichert (`HeroRecord`) und beim Start der nächsten Mission auf die Helden übertragen; Helden, die später beitreten (z. B. Torvald), erhalten ihren gespeicherten Stand |
+| Profile | Bis zu fünf Profile als `profil_<n>.ron` im Benutzerordner (`<Nutzerdaten>/campaign/`); atomar geschrieben; fehlende Dateien gelten als leer, beschädigte werden gemeldet, nie überschrieben und lassen sich beiseitelegen; alte Dateien (fehlende Felder) werden mit Standardwerten gelesen, unbekannte Missionen bereinigt |
+| Schwierigkeit | je Profil wählbar; skaliert Wellen und gegnerische Verstärkungen (`SpawnUnits` ohne Markierung) |
+
+### 0.2 Missionsliste
+
+| Nr. | Zeitalter | ID | Titel | Typ | Jahr | Besonderheit |
+|---|---|---|---|---|---|---|
+| 1 | I | `m01_last_settlement` | Die letzte Siedlung | Aufbau & Verteidigung | 897 | Boss Fahler Vogt (`boss_pale_reeve`) |
+| 2 | I | `m02_harrowmere` | Die Flüchtlinge von Harrowmere | Eskorte | 897 | Moor mit Furt und Hinterhalten; **Entscheidungen** Aschglas-Kern und Nel |
+| 3 | I | `m03_grey_road` | Die Graue Straße | Heldenmission ohne Basis | 898 | drei Straßenposten; **Entscheidung** Ser Wendel (Verhandlung mit neutral gestellten Gegnern) |
+| 4 | II | `m04_long_night` | Die Lange Nacht | Überleben bis zum Morgengrauen | 899 | ausgebaute Stadt, neun Wellen; **Entscheidung** Treueeid oder Mireille |
+| 5 | II | `m06_tourney_kaldris` | Das Turnier von Kaldris | Wettlauf | 900 | zwei Zweikampfrunden, dann Jagd auf drei Attentäter; **Entscheidung** Kassians Geheimnis |
+| 6 | II | `m07_iron_hills` | Eisen in den Hügeln | Belagerung | 902 | Rammen, Katapulte, Torbruch; Folgen aus drei früheren Entscheidungen |
+| 7 | III | `m09_black_winter` | Der Schwarze Winter | Verteidigung mit Verbündeten | 905 | Torvald Eisenhand; **Entscheidung** Blutschwur oder Gold |
+| 8 | III | `m10_root_and_ash` | Wurzel und Asche | Heldenmission ohne Basis | 906 | Dornwald; **Entscheidung** Wurzelmutter (Boss oder Traumprüfung) |
+| 9 | III | `m11_marrowfen_rift` | Der Riss von Marrowfen | Rettung | 907 | drei Weiler, Damm; **Entscheidung** Riss versiegeln oder ernten |
+| 10 | IV | `m13_ashglass_fields` | Die Aschglasfelder | Eroberung | 910 | drei Außenposten der Aschenlegion (`ashen_legionnaire`) |
+| 11 | IV | `m14_black_reef` | Das Schwarze Riff | Bossjagd an der Küste | 912 | Boss Isarre Mol (`boss_reef_mistress`); **Entscheidung** Ophiras Flotte |
+| 12 | V | `m17_death_of_a_king` | Tod eines Königs | Ermittlung (Heldenmission) | 916 | drei Beweise, gesperrte Option „Wahrheit“; **Entscheidung** Anklage |
+| 13 | V | `m19_kaldris_ford` | Die Furt von Kaldris | Feldschlacht | 917 | **Entscheidung** Thron (Mireille oder Aldrens Linie) bestimmt die Seiten |
+| 14 | VI | `m21_shrine_oruun` | Der Schrein Oruuns | Stollen und Bosskampf | 920 | Boss Gharun (`boss_stone_oath`) |
+| 15 | VI | `m25_ithren_light` | Ithrens letztes Licht | Erkundung in Solmere | 922 | **Entscheidung** Tagebuch des Sonnenkönigs |
+| 16 | VII | `m26_ashen_march` | Der Aschenmarsch | Halten oder Evakuieren | 923 | **Entscheidung** wählt zwischen Überlebensmission und Rettungsmission |
+| 17 | VII | `m28_gates_of_solmere` | Die Tore von Solmere | Belagerung (Bund der Letzten Flamme) | 923 | Verbündete und Gegner aus bis zu 13 Flag-Varianten |
+| 18 | VII | `m29_hollow_throne` | Der Hohle Thron | Endschlacht | 923 | vier Höfe, Boss Hohler König (`boss_hollow_king`); letzte Entscheidung |
+
+Zeitalter I: Nr. 1–3 · II: Nr. 4–6 · III: Nr. 7–9 · IV: Nr. 10–11 · V: Nr. 12–13 · VI: Nr. 14–15 · VII: Nr. 16–18.
+
+### 0.3 Entscheidungsbaum
+
+| Entscheidung (ID) | Ort | Optionen (gesetzte Flags) | Folgen in späteren Missionen |
+|---|---|---|---|
+| `core` | m02 | Kern zerschlagen (`core_smashed`) / bergen (`core_kept`) | Kampfmagier in m02, m09, m13, m28; zusätzliche Hexen und Hinterhalte in m10, m21; Priester in m09/m10 bei zerschlagenem Kern; Option „Das Tiefe verbrennen“ im Finale |
+| `nel` | m02 | Nel aufnehmen (`nel_sheltered`) / wegschicken (`nel_sent`) | Hinterhalt entfällt in m10 und m11 (bzw. zusätzlicher Hinterhalt), Wache in m04/m26; Option „Varkhan erlösen“ im Finale |
+| `wendel` | m03 | hängen (`wendel_hanged`) / Graue Kompanie (`wendel_recruited`) | Verbündete Schwertkämpfer und Schützen in m04, m07, m10, m13, m14; Gold in m04 bei „gehängt“ |
+| `oath` | m04 | Eid auf die Krone (`oath_crown`) / Mireille (`oath_corvane`) | Ritter und Katapult bzw. Nordmarker Speere in m06, m07, m09, m13, m17 |
+| `kassian_secret` | m06 | warnen (`kassian_warned_king`) / Pfand (`kassian_leverage`) / schweigen (`kassian_silent`) | m07: Garnison geschwächt; m17: freier Beweis (Krypta) bzw. zusätzliche Häretiker; m19: Königsgarde |
+| `torvald_oath` | m09 | Blutschwur (`torvald_blood`) / Gold (`torvald_gold`) | Torvald und Clankrieger als Held und Heer in m13, m14, m19, m21, m25, m26, m28, m29; sonst Söldner |
+| `rootmother` | m10 | verbrennen (`rootmother_burned`, Boss) / Traum (`rootmother_pact`, Prüfung) | Waldläufer und Wurzelheiler in m11, m21, m25, m26, m28, m29; sonst zusätzliche Hohle |
+| `rift` | m11 | versiegeln (`rift_sealed`) / ernten (`rift_harvested`, Beute) | Hohlung wächst in m14, m25, m26, m29 bei „geerntet“; Priester in m14 bei „versiegelt“; Option „Das Tiefe verbrennen“ im Finale |
+| `fleet` | m14 | Flotte (`fleet_pact`) / allein (`fleet_none`) | Söldner und Katapulte in m26, m28, m29; sonst bessere Verteidigung in m28 |
+| `blame` | m17 | Kassian / Mireille / Häretiker / Wahrheit (nur mit Beweis aus der Krypta) | m19 und m25: Gegnerzusammensetzung, Zeugen und Priester |
+| `throne` | m19 | Mireille stützen (`throne_mireille`) / Aldrens Linie (`throne_aldren`) | Wechselt in m19 die Seite von Mireilles Heer; Ritter bzw. Königsgarde in m28, m29 |
+| `sun` | m25 | Wahrheit (`sun_truth`) / Glauben bewahren (`sun_faith`) / nutzen (`sun_used`) | m28: Häretiker legen Waffen nieder / öffnen das Tor / kämpfen mit; Option „Erlösung“ im Finale nur bei `sun_truth` |
+| `march` | m26 | halten (`march_hold`) / evakuieren (`march_evacuate`) | m26 selbst wird zur Überlebens- bzw. Rettungsmission; Veteranen oder Hilfskräfte in m28, m29 |
+| `final` | m29 | versiegeln / Krone / erlösen (nur mit `nel_sheltered` und `sun_truth`) / verbrennen (nur mit `core_smashed` und `rift_sealed`) | bestimmt das Ende |
+
+### 0.4 Enden
+
+| Ende | Bedingung | Inhalt |
+|---|---|---|
+| Erlösung (`end_redeem`) | `final_redeem` | Varkhan hört den Namen seiner Tochter; das Tiefe verliert seinen Schlüssel |
+| Das Ende der Glut (`end_destroy`) | `final_destroy` | Das Feuer der Wächterin verbrennt das Tiefe – und sie selbst |
+| Die Aschenkrone (`end_crown`) | `final_crown` | Die Toten bewachen die Grenzen; die neue Herrin spricht nachts mit dem Tiefen |
+| Das versiegelte Tor (`end_seal`) | Standard (`final_seal`) | Der Schleier wird geschlossen; in Brennhollow brennt jede Nacht ein Feuer |
+
+### 0.5 Prüfung
+
+`crates/ashen_sim/tests/campaign.rs` (Plan, Missionsdaten, Flag-Fluss, Entscheidungen verändern Missionen, Heldenfortschritt,
+Speichern/Laden, Audio-Events im Manifest, je Mission ein deterministischer Testspieler, beide Wege der verzweigten Missionen,
+alle vier Enden), der Editor-Validierungstest in `crates/ashen_game/src/editor/validate.rs` und `ashen_tools validate-data`.
 
 ---
 

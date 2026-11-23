@@ -53,6 +53,8 @@ pub enum Command {
     CancelResearch { building: BuildingId },
     /// Gefallenen Helden am Bergfried oder Altar gegen Gold wiederbeleben.
     ReviveHero { building: BuildingId, hero: UnitTypeId },
+    /// Wählt eine Option der offenen Entscheidung (Dialogauswahl der Kampagne).
+    Decide { decision: String, option: usize },
 }
 
 /// Ein Befehl mit Absender.

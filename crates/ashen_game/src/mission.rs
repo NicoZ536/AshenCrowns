@@ -44,6 +44,8 @@ pub enum SceneAction {
     MainMenu,
     Load(std::path::PathBuf),
     Restart,
+    /// Kampagnenmission beendet: Ergebnis übernehmen und zur Zusammenfassung wechseln.
+    CampaignContinue,
     Quit,
 }
 
@@ -73,6 +75,8 @@ pub struct MissionScene {
     pub autosave_timer: f32,
     /// Eiserner Mann: Speichern und Laden sind gesperrt.
     pub no_save: bool,
+    /// Die Mission läuft innerhalb der Kampagne (Ergebnisbildschirm mit „Weiter“).
+    pub campaign: bool,
     pub last_click: (f32, Option<UnitId>),
     pub hovered: Option<UnitId>,
     pub minimap: Option<egui::TextureHandle>,
@@ -130,6 +134,7 @@ impl MissionScene {
             show_objectives: true,
             autosave_timer: 0.0,
             no_save: false,
+            campaign: false,
             last_click: (-10.0, None),
             hovered: None,
             minimap: None,
@@ -320,6 +325,17 @@ impl MissionScene {
         self.cmd(Command::ReviveHero { building, hero });
     }
 
+    /// Name der Siedlung in Meldungen: Brennhollow in den Brennhollow-Missionen, sonst allgemein.
+    fn town_name(&self) -> &'static str {
+        let d = &self.world.mission_def;
+        if d.map.is_none() || d.id == "m04_long_night" || d.id == "m26_ashen_march" { "Brennhollow" } else { "der Siedlung" }
+    }
+
+    /// Wählt eine Option der offenen Entscheidung (Kampagne).
+    pub fn decide(&mut self, decision: &str, option: usize) {
+        self.cmd(Command::Decide { decision: decision.to_string(), option });
+    }
+
     pub fn train(&mut self, building: BuildingId, unit: ashen_sim::data::UnitTypeId) {
         self.cmd(Command::Train { building, unit });
     }
@@ -393,7 +409,7 @@ impl MissionScene {
             self.controls(engine, data, &view, settings, dt);
         }
         // Simulation.
-        let paused = self.menu_open || self.speed <= 0.0 || self.world.mission.outcome.is_some();
+        let paused = self.menu_open || self.speed <= 0.0 || self.world.mission.outcome.is_some() || self.world.mission.open_decision(self.world.time).is_some();
         let steps = if paused { 0 } else { self.step.advance(dt * self.speed) };
         for _ in 0..steps {
             self.world.step(data);
@@ -458,10 +474,14 @@ impl MissionScene {
             SimEvent::HeroRespawned { .. } => self.toast = Some(("Isolde Raventhorn ist zurückgekehrt.".into(), 3.0)),
             SimEvent::LevelUp { level, .. } => self.toast = Some((format!("Isolde erreicht Stufe {level}!"), 3.0)),
             SimEvent::BuildingCompleted { kind, owner: PLAYER, .. } => self.status = Some(format!("{} fertiggestellt", data.building(*kind).name)),
-            SimEvent::Unrest { .. } => self.toast = Some(("Unruhe in Brennhollow! Senkt die Steuern oder stillt die Bedürfnisse.".into(), 5.0)),
+            SimEvent::Unrest { .. } => {
+                let town = self.town_name();
+                self.toast = Some((format!("Unruhe in {town}! Senkt die Steuern oder stillt die Bedürfnisse."), 5.0));
+            }
             SimEvent::EraAdvanced { era, .. } => {
                 let name = data.rules.eras.get(*era as usize - 1).map(|e| e.name.as_str()).unwrap_or("?");
-                self.toast = Some((format!("Brennhollow ist nun eine {name}!"), 5.0));
+                let town = if self.town_name() == "Brennhollow" { "Brennhollow" } else { "Die Siedlung" };
+                self.toast = Some((format!("{town} ist nun eine {name}!"), 5.0));
             }
             SimEvent::HouseChanged { kind, up, .. } => {
                 let n = &data.building(*kind).name;

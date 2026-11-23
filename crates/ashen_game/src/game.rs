@@ -11,6 +11,7 @@ use crate::settings::UserSettings;
 use crate::ui_art::UiArt;
 use ashen_engine::ui::theme;
 use ashen_engine::{Engine, Game, WindowRequest};
+use ashen_sim::campaign::{self, CampaignProgress};
 use ashen_sim::challenge::ChallengeDef;
 use ashen_sim::mission::{MatchSettings, MissionDef};
 use egui::RichText;
@@ -27,6 +28,13 @@ struct LastRun {
     mission: MissionDef,
     settings: MatchSettings,
     challenge: Option<(ChallengeDef, bool)>,
+}
+
+/// Laufende Kampagnenmission: Profil und Missionsdefinition (ohne angewandte Varianten).
+#[derive(Clone)]
+struct CampaignRun {
+    slot: usize,
+    def: MissionDef,
 }
 
 /// Laufende Herausforderung samt Auswertungsstand.
@@ -57,6 +65,14 @@ pub struct AutoRun {
     pub scenario: Option<String>,
     /// Herausforderung (ID) starten.
     pub challenge: Option<String>,
+    /// Kampagnenseite öffnen (`slots`, `overview`, `briefing`, `summary`, `ending`).
+    pub campaign_stage: Option<String>,
+    /// Kampagnenmission für Briefing oder Zusammenfassung.
+    pub campaign_mission: Option<String>,
+    /// Anzahl der als abgeschlossen vorgetäuschten Missionen (nur Anzeige, wird nicht gespeichert).
+    pub campaign_done: usize,
+    /// Kampagnen-Flags für Missionsstart und Briefing (`--flags a,b`).
+    pub flags: Vec<String>,
     /// Ergebnis erzwingen (`victory`, `defeat`), um die Auswertung zu zeigen.
     pub outcome: Option<String>,
     /// Karteneditor statt Mission öffnen.
@@ -84,6 +100,7 @@ pub struct AshenGame {
     scene: Option<Scene>,
     last_run: Option<LastRun>,
     challenge: Option<ActiveChallenge>,
+    campaign_run: Option<CampaignRun>,
     report: Option<ChallengeReport>,
     /// Editor, der während eines Testspiels im Hintergrund wartet.
     parked_editor: Option<Box<EditorScene>>,
@@ -93,7 +110,7 @@ pub struct AshenGame {
 
 impl AshenGame {
     pub fn new(settings: UserSettings, auto: AutoRun) -> AshenGame {
-        AshenGame { settings, content: None, art: None, atlas_tex: None, ui_art: None, scene: None, last_run: None, challenge: None, report: None, parked_editor: None, auto, fatal: None }
+        AshenGame { settings, content: None, art: None, atlas_tex: None, ui_art: None, scene: None, last_run: None, challenge: None, campaign_run: None, report: None, parked_editor: None, auto, fatal: None }
     }
 
     fn max_particles(engine: &Engine) -> usize {
@@ -113,6 +130,8 @@ impl AshenGame {
         let Some(content) = &self.content else { return Err("Keine Spieldaten geladen.".into()) };
         let mut scene = MissionScene::new(&content.data, mission.clone(), settings.clone(), Self::max_particles(engine))?;
         scene.no_save = challenge.as_ref().is_some_and(|c| c.1);
+        scene.campaign = self.campaign_run.is_some();
+        engine.audio.set_preferred_music(mission.music.clone());
         self.last_run = Some(LastRun { mission, settings, challenge: challenge.clone() });
         self.challenge = challenge.map(|(def, iron_man)| ActiveChallenge { def, iron_man, reported: false });
         self.report = None;
@@ -131,6 +150,8 @@ impl AshenGame {
             self.parked_editor = None;
             self.challenge = None;
             self.report = None;
+            self.campaign_run = None;
+            engine.audio.set_preferred_music(Vec::new());
             self.scene = Some(Scene::Menu(Box::new(MenuScene::new(c, Self::max_particles(engine)))));
         }
     }
@@ -151,6 +172,8 @@ impl AshenGame {
                 return;
             };
             let settings = MatchSettings { mode: ashen_sim::mission::GameMode::Campaign, seed: def.map_seed, ..Default::default() };
+            let mut def = def;
+            def.carry.flags = self.auto.flags.clone();
             if let Err(e) = self.start_def(engine, def, settings, None) {
                 self.fatal = Some(e);
                 return;
@@ -266,8 +289,36 @@ impl AshenGame {
         m.page = match page {
             "scenarios" => Page::Scenarios,
             "challenges" => Page::Challenges,
+            "campaign" => Page::Campaign,
             _ => Page::Skirmish,
         };
+        if page == "campaign"
+            && let Some(plan) = content.campaign.clone()
+        {
+            // Vorführprofil: die ersten Missionen gelten als abgeschlossen (wird nicht gespeichert).
+            let mut p = CampaignProgress::new("Isolde");
+            p.flags = self.auto.flags.clone();
+            for (_, cm) in plan.missions().take(self.auto.campaign_done) {
+                p.completed.push(campaign::MissionResult { id: cm.id.clone(), time: 600.0, ..Default::default() });
+            }
+            if self.auto.campaign_stage.as_deref() == Some("slots") {
+                m.campaign = Default::default();
+            } else {
+                m.campaign.open_slot(&plan, 0, p);
+                if let Some(id) = &self.auto.campaign_mission {
+                    m.campaign.show_briefing(id);
+                }
+                match self.auto.campaign_stage.as_deref() {
+                    Some("briefing") => {
+                        if let Some(id) = plan.next(&m.campaign.progress).map(str::to_string).filter(|_| self.auto.campaign_mission.is_none()) {
+                            m.campaign.show_briefing(&id);
+                        }
+                    }
+                    Some("ending") => m.campaign.show_ending(),
+                    _ => {}
+                }
+            }
+        }
         if page == "scenarios-user" {
             m.page = Page::Scenarios;
         }
@@ -340,12 +391,28 @@ impl Game for AshenGame {
         match &mut self.scene {
             Some(Scene::Menu(m)) => {
                 m.update(content, dt);
+                engine.audio.set_preferred_music(if m.page == Page::Campaign { vec!["campaign_chronicle".to_string()] } else { Vec::new() });
                 engine.audio.set_music_intensity(ashen_engine::audio::Intensity::Menu);
                 let action = std::mem::replace(&mut m.action, MenuAction::None);
                 match action {
                     MenuAction::None => {}
-                    MenuAction::Start { mission, settings } => self.start_mission(engine, mission, settings),
+                    MenuAction::Start { mission, settings } => {
+                        self.campaign_run = None;
+                        self.start_mission(engine, mission, settings)
+                    }
+                    MenuAction::StartCampaign { slot, mission, settings } => {
+                        // Das Briefing zeigt die Varianten; gespielt wird die Mission mit den übernommenen Flags.
+                        let base = content.campaign_mission(&mission.id).cloned().unwrap_or_else(|| (*mission).clone());
+                        self.campaign_run = Some(CampaignRun { slot, def: base });
+                        if let Err(e) = self.start_def(engine, *mission, settings, None) {
+                            self.campaign_run = None;
+                            if let Some(Scene::Menu(m)) = &mut self.scene {
+                                m.error = Some(e);
+                            }
+                        }
+                    }
                     MenuAction::StartDef { mission, settings, challenge } => {
+                        self.campaign_run = None;
                         if let Err(e) = self.start_def(engine, *mission, settings, challenge.map(|c| *c))
                             && let Some(Scene::Menu(m)) = &mut self.scene
                         {
@@ -405,6 +472,36 @@ impl Game for AshenGame {
                             self.open_menu(engine);
                         }
                     }
+                    SceneAction::CampaignContinue => {
+                        let Some(run) = self.campaign_run.clone() else {
+                            self.open_menu(engine);
+                            return;
+                        };
+                        let Some(plan) = content.campaign.clone() else {
+                            self.open_menu(engine);
+                            return;
+                        };
+                        let path = campaign::slot_path(&crate::settings::campaign_dir(), run.slot);
+                        let mut progress = CampaignProgress::load(&path).unwrap_or_default();
+                        progress.sanitize(&plan);
+                        let before = plan.available(&progress).into_iter().map(str::to_string).collect::<Vec<_>>();
+                        let victory = s.world.mission.outcome == Some(ashen_sim::mission::Outcome::Victory);
+                        let summary = crate::campaign_ui::summarize(content, &plan, &run.def, &s.world, &mut progress, &before);
+                        if victory && let Err(e) = progress.save(&path) {
+                            log::warn!("Kampagnenstand nicht gespeichert: {e}");
+                        }
+                        let (id, slot) = (run.def.id.clone(), run.slot);
+                        self.open_menu(engine);
+                        if let Some(Scene::Menu(m)) = &mut self.scene {
+                            m.page = Page::Campaign;
+                            if victory {
+                                m.campaign.show_summary(&plan, slot, progress, summary);
+                            } else {
+                                m.campaign.open_slot(&plan, slot, progress);
+                                m.campaign.show_briefing(&id);
+                            }
+                        }
+                    }
                     SceneAction::Restart => {
                         if let Some(r) = self.last_run.clone()
                             && let Err(e) = self.start_def(engine, r.mission, r.settings, r.challenge)
@@ -418,6 +515,7 @@ impl Game for AshenGame {
                     SceneAction::Load(p) => match MissionScene::load(&p, &content.data, Self::max_particles(engine)) {
                         Ok(ns) => {
                             self.challenge = None;
+                            self.campaign_run = None;
                             self.scene = Some(Scene::Mission(Box::new(ns)));
                         }
                         Err(e) => s.status = Some(format!("Laden fehlgeschlagen: {e}")),

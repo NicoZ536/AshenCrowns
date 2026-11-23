@@ -630,7 +630,7 @@ mod tests {
         doc.def.triggers.push(TriggerDef {
             id: "warnung".into(),
             condition: Condition::All(vec![Condition::AtTime(5.0), Condition::Not(Box::new(Condition::EnemyUnitsAtMost(0)))]),
-            actions: vec![Action::Message { speaker: "Wache".into(), text: "Feinde in Sicht!".into(), voice: None }, Action::SpawnUnits { unit: "hollow_thrall".into(), owner: 1, area: "tor".into(), count: 2, attack: true }],
+            actions: vec![Action::Message { speaker: "Wache".into(), text: "Feinde in Sicht!".into(), voice: None }, Action::SpawnUnits { unit: "hollow_thrall".into(), owner: 1, area: "tor".into(), count: 2, attack: true, tag: None }],
             modes: vec![],
         });
         let mission = doc.to_mission();
