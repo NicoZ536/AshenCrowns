@@ -1,0 +1,108 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Politik, Adel, Diplomatie.
+(
+    events: [
+        (
+            id: "council_dispute", scope: Realm, category: "Adel",
+            title: "Streit im Adelsrat von {realm}",
+            text: "Die Häuser murren über Abgaben und Ämter. Ein Redner verlangt, gehört zu werden – und alle schauen auf den Herrscher.",
+            conditions: [VarBelow("house_loyalty_min", 42.0)],
+            mtth_months: 2.0, cooldown_months: 18, chronicle_weight: 26,
+            options: [
+                (id: "grant_right", text: "Dem Haus ein Recht gewähren", effects: [HouseLoyalty(12.0), AddLegitimacy(-2.0)], ai_weight: 4.0),
+                (id: "bribe_houses", text: "Mit Gold beschwichtigen (200 Gold)", cost: 200.0, effects: [AddGold(-200.0), HouseLoyalty(8.0)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 1500.0), 5.0)]),
+                (id: "threaten_houses", text: "Drohen", effects: [HouseLoyalty(-8.0), AddTyranny(5.0), AddPrestige(20.0)], ai_weight: 1.0, ai_when: [(RulerTrait("cruel"), 6.0), (RulerTrait("wrathful"), 4.0)]),
+            ],
+        ),
+        (
+            id: "succession_whispers", scope: Realm, category: "Dynastie",
+            title: "Nachfolgegerüchte in {realm}",
+            text: "Der Herrscher altert, und der Hof flüstert Namen. Wer wird die Krone tragen, wenn die Kerze erlischt?",
+            conditions: [VarAbove("ruler_age", 58.0), Chance(0.5)],
+            mtth_months: 12.0, cooldown_months: 48, chronicle_weight: 22,
+            options: [
+                (id: "affirm_heir", text: "Den Erben öffentlich bestätigen", effects: [AddLegitimacy(4.0), HouseLoyalty(-2.0)], ai_weight: 5.0),
+                (id: "reward_houses_succ", text: "Die Häuser mit Ämtern binden (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), HouseLoyalty(6.0)], ai_weight: 3.0),
+            ],
+        ),
+        (
+            id: "pretender_appears", scope: Realm, category: "Dynastie",
+            title: "Ein Prätendent erhebt Anspruch in {realm}",
+            text: "Ein Mann mit einem alten Siegelring behauptet, der wahre Erbe zu sein. Er findet Zuhörer.",
+            conditions: [VarBelow("legitimacy", 40.0), Chance(0.5)],
+            mtth_months: 20.0, cooldown_months: 60, chronicle_weight: 30,
+            options: [
+                (id: "denounce", text: "Als Betrüger brandmarken", effects: [AddLegitimacy(3.0), AddPrestige(10.0), AddUnrest(2.0)], ai_weight: 4.0),
+                (id: "imprison_pretender", text: "Festnehmen lassen", effects: [AddTyranny(4.0), AddLegitimacy(2.0), HouseLoyalty(-3.0)], ai_weight: 3.0, ai_when: [(RulerTrait("paranoid"), 5.0)]),
+                (id: "buy_silence", text: "Das Schweigen erkaufen (250 Gold)", cost: 250.0, effects: [AddGold(-250.0), AddLegitimacy(1.0)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "envoy_gifts", scope: Realm, category: "Diplomatie",
+            title: "Gesandte beschenken {realm}",
+            text: "Fremde Gesandte erscheinen mit Seide und Wein, um den Hof freundlich zu stimmen.",
+            conditions: [VarAbove("prestige", 100.0), Chance(0.4), AtWar(false)],
+            mtth_months: 30.0, cooldown_months: 48, chronicle_weight: 12,
+            options: [
+                (id: "receive_envoys", text: "Mit Ehren empfangen", effects: [NeighborOpinion(5.0), AddGold(100.0), AddPrestige(10.0)], ai_weight: 4.0),
+                (id: "snub_envoys", text: "Kühl abfertigen", effects: [NeighborOpinion(-5.0), AddPrestige(5.0)], ai_weight: 1.0, ai_when: [(RulerTrait("wrathful"), 4.0)]),
+            ],
+        ),
+        (
+            id: "border_incident", scope: Realm, category: "Diplomatie",
+            title: "Grenzzwischenfall bei {realm}",
+            text: "Eine Patrouille hat einen Hirten erschlagen. Ob eigene oder fremde Soldaten, sagt jede Seite anders.",
+            conditions: [Chance(0.25), AtWar(false), VarAbove("provinces", 1.0)],
+            mtth_months: 40.0, cooldown_months: 36, chronicle_weight: 14,
+            options: [
+                (id: "apologize", text: "Entschuldigen", effects: [NeighborOpinion(8.0), AddPrestige(-20.0)], ai_weight: 4.0, ai_when: [(RulerTrait("content"), 5.0)]),
+                (id: "stand_firm", text: "Hart bleiben", effects: [NeighborOpinion(-8.0), AddPrestige(10.0)], ai_weight: 2.0, ai_when: [(RulerTrait("wrathful"), 5.0)]),
+            ],
+        ),
+        (
+            id: "mercenary_offer", scope: Realm, category: "Krieg",
+            title: "Söldner bieten {realm} ihre Dienste an",
+            text: "Eine Kompanie erfahrener Söldner wartet vor dem Tor. Ihr Hauptmann nennt einen Preis, der nicht verhandelbar scheint.",
+            conditions: [AtWar(true), VarAbove("gold", 600.0), Chance(0.4)],
+            mtth_months: 10.0, cooldown_months: 24, chronicle_weight: 12,
+            options: [
+                (id: "hire_company", text: "Anwerben (300 Gold)", cost: 300.0, effects: [AddGold(-300.0), SpawnArmyPct(0.6)], ai_weight: 5.0),
+                (id: "decline_company", text: "Ablehnen", effects: [], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "great_power_pressure", scope: Realm, category: "Endzeit",
+            title: "Der Druck der Kronen auf {realm}",
+            text: "Gesandte flüstern von einem Pakt der Kronen. Die Nachbarn rechnen aus, wie lange man der Größe noch zusehen kann.",
+            conditions: [VarAbove("great_power", 0.5), Chance(0.5)],
+            mtth_months: 12.0, cooldown_months: 36, chronicle_weight: 28,
+            options: [
+                (id: "assure_peace", text: "Frieden beteuern und Geschenke senden (300 Gold)", cost: 300.0, effects: [AddGold(-300.0), NeighborOpinion(10.0), AddPrestige(10.0)], ai_weight: 5.0),
+                (id: "grant_rights_power", text: "Den Häusern Rechte gewähren", effects: [HouseLoyalty(10.0), AddLegitimacy(-2.0)], ai_weight: 3.0),
+                (id: "defy_kings", text: "Trotzen", effects: [NeighborOpinion(-6.0), AddPrestige(30.0)], ai_weight: 1.0, ai_when: [(RulerTrait("ambitious"), 5.0)]),
+            ],
+        ),
+        (
+            id: "war_weary_demands", scope: Realm, category: "Krieg",
+            title: "Kriegsmüdigkeit in {realm}",
+            text: "Die Witwen der Gefallenen stehen vor dem Palast. Die Händler zählen verlorene Märkte.",
+            conditions: [VarAbove("war_weariness", 60.0), AtWar(true)],
+            mtth_months: 3.0, cooldown_months: 18, chronicle_weight: 24,
+            options: [
+                (id: "seek_peace", text: "Frieden suchen", effects: [AddWarWeariness(-25.0), AddPrestige(-25.0)], ai_weight: 5.0),
+                (id: "war_bonds", text: "Kriegsanleihe ausgeben", effects: [AddGold(400.0), AddWarWeariness(-8.0), AddSatisfaction(-2.0)], ai_weight: 3.0),
+                (id: "press_on", text: "Durchhalten", effects: [AddSatisfaction(-4.0), AddUnrest(3.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "noble_feud", scope: Realm, category: "Adel",
+            title: "Fehde zweier Häuser in {realm}",
+            text: "Zwei Adelshäuser streiten um eine Furt, ein Weiderecht, eine Beleidigung. Die ersten Knechte sind schon gefallen.",
+            conditions: [VarAbove("provinces", 3.0), Chance(0.4)],
+            mtth_months: 40.0, cooldown_months: 48, chronicle_weight: 16,
+            options: [
+                (id: "arbitrate", text: "Schlichten", effects: [AddPrestige(15.0), HouseLoyalty(3.0)], ai_weight: 4.0, ai_when: [(RulerTrait("just"), 5.0)]),
+                (id: "side_with_stronger", text: "Dem Stärkeren recht geben", effects: [HouseLoyalty(-4.0), AddLegitimacy(-1.0)], ai_weight: 2.0),
+            ],
+        ),
+    ],
+)
