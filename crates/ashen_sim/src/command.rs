@@ -2,6 +2,7 @@
 //! gesendet (Lockstep) oder für Wiederholungen aufgezeichnet werden können.
 
 use crate::data::{BuildingTypeId, Item, UnitTypeId};
+use crate::rpg::Formation;
 use crate::entity::{BuildingId, EntityRef, NodeId, PlayerId, UnitId};
 use glam::{IVec2, Vec2};
 use serde::{Deserialize, Serialize};
@@ -35,6 +36,23 @@ pub enum Command {
     Trade { item: Item, amount: i32 },
     /// Siedlung zur nächsten Ausbaustufe ausbauen.
     AdvanceEra,
+    /// Aufstellung der Einheiten setzen (wirkt auf Kampfwerte und spätere Bewegungsbefehle).
+    SetFormation { units: Vec<UnitId>, formation: Formation },
+    /// Talentpunkt verteilen (Index im Talentbaum des Helden).
+    LearnTalent { unit: UnitId, talent: u16 },
+    /// Gegenstand aus dem Inventar anlegen (Index im Inventar).
+    EquipItem { unit: UnitId, index: u8 },
+    /// Ausrüstung ablegen (Ausrüstungsplatz 0..5).
+    UnequipItem { unit: UnitId, slot: u8 },
+    /// Gegenstand aus dem Inventar auf den Boden werfen.
+    DropItem { unit: UnitId, index: u8 },
+    /// Trank aus dem Inventar verwenden.
+    UseItem { unit: UnitId, index: u8 },
+    /// Schmiede-Upgrade erforschen (Index in `GameData::upgrades`).
+    Research { building: BuildingId, upgrade: u8 },
+    CancelResearch { building: BuildingId },
+    /// Gefallenen Helden am Bergfried oder Altar gegen Gold wiederbeleben.
+    ReviveHero { building: BuildingId, hero: UnitTypeId },
 }
 
 /// Ein Befehl mit Absender.

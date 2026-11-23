@@ -89,6 +89,19 @@ Glutkrone: `worker` (Leibeigener/Arbeiter), `swordsman` (Schwertkämpfer), `spea
 `archer` (Bogenschütze), `knight` (Ritter, schwere Kavallerie), Held `hero_isolde`.
 Hohle: `hollow_thrall` (Hohlknecht), `hollow_archer` (Knochenschütze), `grave_brute` (Grabkoloss), `boss_pale_reeve`.
 
+## Echtzeit-Militär (IDs, Details in `docs/design/rts_military.md`)
+Einheiten der Glutkrone: `crossbowman` (Armbrustschütze), `halberdier` (Hellebardier), `shieldbearer` (Schildträger), `scout_rider` (Spähreiter),
+`horse_archer` (Berittener Bogenschütze), `battle_mage` (Kampfmagier, Feuerschule), `priest` (Priester der Flamme), `battering_ram` (Rammbock), `catapult` (Katapult).
+Helden: `hero_isolde`, `hero_hal_venn` (Bruder Hal Venn), `hero_torvald` (Torvald Eisenhand).
+Hohle: `hollow_digger` (Grabgräber), `ghoul` (Ghul), `ash_witch` (Aschhexe), `bat_swarm` (Fledermausschwarm).
+Gebäude: `shooting_range` (Schießstand), `stable` (Stall), `chapel` (Kapelle der Flamme), `mage_tower` (Magierturm), `siege_workshop` (Belagerungswerkstatt), `altar` (Altar der Flamme);
+Hohle: `bone_pit` (Knochengrube), `ghoul_den` (Ghulbau), `ash_altar` (Aschaltar), `grave_forge` (Grabschmiede), `bone_cache` (Knochenlager); `bone_spire` ist baubar.
+Fähigkeiten: `shield_wall`, `fireball`, `flame_nova`, `holy_heal`, `blessing`, `raise_dead`, `flame_mend`, `sacred_flame`, `beacon_of_faith`, `clan_roar`, `ground_slam`, `iron_vow`;
+Talentfähigkeiten `phoenix_cut`, `war_cry`, `last_stand`, `pillar_of_fire`, `resurgence`, `aegis_of_flame`, `ancestral_fury`, `stone_skin`, `war_horns`.
+Artefakte (Gegenstände): `edran_blade` (Edrans Grenzklinge), `grauwall_aegis`, `ashglass_heart`, `varkhan_signet`, `vael_dorn_seal`.
+Schmiede-Upgrades: `forge_weapons`, `forge_armor`, `fletching`. Schadensart `Fire` (Feuer); Klassen `Siege`, `Support`, `Flyer`.
+Schwierigkeitsgrade: Leicht, Normal, Schwer, Albtraum (`Difficulty::{Easy, Normal, Hard, Nightmare}`).
+
 ## Gebäude der Vertical Slice (IDs)
 `keep` (Bergfried – Hauptgebäude), `farmstead` (Gehöft), `barracks` (Kaserne), `watchtower` (Wachturm),
 Gegner: `hollow_shrine` (Hohlschrein), `bone_spire` (Knochenturm).

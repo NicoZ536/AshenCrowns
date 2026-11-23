@@ -27,9 +27,9 @@
         ),
         (
             id: "barracks", name: "Kaserne", faction: EmberCrown, size: (3, 2),
-            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen und Ritter aus. Waffen und Rüstungen kommen aus dem Lager.",
+            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen und Ritter aus, ab der Burg auch Hellebardiere und Schildträger. Waffen und Rüstungen kommen aus dem Lager.",
             hp: 1300.0, armor: 4.0, armor_type: Fortified, cost: (gold: 160.0, wood: 120.0, stone: 40.0),
-            build_time: 45.0, sight: 6.0, trains: ["swordsman", "spearman", "archer", "knight"], hotkey: Some('B'),
+            build_time: 45.0, sight: 6.0, trains: ["swordsman", "spearman", "archer", "knight", "halberdier", "shieldbearer"], hotkey: Some('B'),
             service: Some((kind: Safety, radius: 10.0)), category: Military,
         ),
         (
@@ -268,12 +268,89 @@
             id: "hollow_shrine", name: "Hohlschrein", faction: Hollowed, size: (3, 3),
             description: "Ein Riss im Schleier, gefasst in die Steine einer Aureth-Kapelle. Quelle der Hohlen.",
             hp: 3500.0, armor: 6.0, armor_type: Fortified, sight: 10.0, buildable: false,
+            dropoff: true, trains: ["hollow_digger"],
         ),
         (
             id: "bone_spire", name: "Knochenturm", faction: Hollowed, size: (1, 1),
             description: "Ein Turm aus verschmolzenem Gebein, der Seelenblitze schleudert.",
-            hp: 900.0, armor: 5.0, armor_type: Fortified, sight: 9.0, buildable: false,
+            hp: 900.0, armor: 5.0, armor_type: Fortified, sight: 9.0,
+            cost: (gold: 120.0, wood: 60.0), build_time: 30.0, category: Military,
             attack: Some((damage: 16.0, damage_type: Magic, range: 7.0, cooldown: 1.8, projectile: SoulBolt)),
+        ),
+
+        // ------------------------------------------------------------------ Militär (Echtzeit-Ausbau)
+        (
+            id: "shooting_range", name: "Schießstand", faction: EmberCrown, size: (3, 2),
+            description: "Übungsplatz der Schützen. Bildet Bogen- und Armbrustschützen aus (Armbrust ab Burg) und erforscht bessere Geschosse.",
+            hp: 1000.0, armor: 3.0, armor_type: Fortified, cost: (gold: 140.0, wood: 120.0, stone: 20.0),
+            build_time: 40.0, sight: 6.0, trains: ["archer", "crossbowman"], requires: ["barracks"],
+            hotkey: Some('R'), category: Military, service: Some((kind: Safety, radius: 9.0)),
+        ),
+        (
+            id: "stable", name: "Stall", faction: EmberCrown, size: (3, 2),
+            description: "Zucht und Ausbildung schneller Reiter: Spähreiter, ab der Burg Berittene Bogenschützen.",
+            hp: 1000.0, armor: 3.0, armor_type: Fortified, cost: (gold: 150.0, wood: 160.0, stone: 10.0),
+            build_time: 42.0, sight: 6.0, trains: ["scout_rider", "horse_archer"], requires: ["barracks"],
+            hotkey: Some('E'), category: Military,
+        ),
+        (
+            id: "chapel", name: "Kapelle der Flamme", faction: EmberCrown, size: (2, 2),
+            description: "Heiligtum der Ewigen Flamme. Bildet Priester aus, die das Heer heilen und segnen.",
+            hp: 900.0, armor: 3.0, armor_type: Fortified, cost: (gold: 130.0, wood: 80.0, stone: 90.0),
+            build_time: 38.0, sight: 6.0, trains: ["priest"], hotkey: Some('K'), category: Military,
+        ),
+        (
+            id: "mage_tower", name: "Magierturm", faction: EmberCrown, size: (2, 2),
+            description: "Hoher Turm der Feuerschule. Bildet Kampfmagier aus. Benötigt eine Kapelle und die Burg.",
+            hp: 1100.0, armor: 4.0, armor_type: Fortified, cost: (gold: 220.0, wood: 100.0, stone: 160.0),
+            goods_cost: [("bricks", 10.0)], build_time: 50.0, sight: 9.0, trains: ["battle_mage"], requires: ["chapel"],
+            era: 1, hotkey: Some('M'), category: Military,
+        ),
+        (
+            id: "siege_workshop", name: "Belagerungswerkstatt", faction: EmberCrown, size: (3, 3),
+            description: "Werkstatt für Rammböcke und Katapulte. Benötigt Kaserne und Schmiede sowie die Burg.",
+            hp: 1300.0, armor: 4.0, armor_type: Fortified, cost: (gold: 200.0, wood: 220.0, stone: 60.0),
+            goods_cost: [("planks", 20.0), ("tools", 4.0)], build_time: 55.0, sight: 6.0, trains: ["battering_ram", "catapult"],
+            requires: ["barracks", "smithy"], era: 1, hotkey: Some('Z'), category: Military,
+        ),
+        (
+            id: "altar", name: "Altar der Flamme", faction: EmberCrown, size: (2, 2),
+            description: "Heiliger Ort der Helden. Hier schließen sich Bruder Hal Venn und Torvald Eisenhand an; gefallene Helden kehren gegen Gold zurück. Benötigt eine Kapelle.",
+            hp: 1000.0, armor: 4.0, armor_type: Fortified, cost: (gold: 200.0, wood: 100.0, stone: 100.0),
+            build_time: 45.0, sight: 7.0, trains: ["hero_hal_venn", "hero_torvald"], requires: ["chapel"],
+            hotkey: Some('V'), category: Military,
+        ),
+
+        // ------------------------------------------------------------------ Die Hohlen (gebaut von der KI)
+        (
+            id: "bone_pit", name: "Knochengrube", faction: Hollowed, size: (3, 2),
+            description: "Eine Grube voller Gebein. Hohlknechte und Knochenschützen steigen aus ihr empor.",
+            hp: 900.0, armor: 3.0, armor_type: Fortified, cost: (gold: 90.0, wood: 70.0), build_time: 35.0, sight: 6.0,
+            trains: ["hollow_thrall", "hollow_archer"], category: Military,
+        ),
+        (
+            id: "ghoul_den", name: "Ghulbau", faction: Hollowed, size: (2, 2),
+            description: "Höhle der Leichenfresser. Ghule und Fledermausschwärme sammeln sich hier.",
+            hp: 750.0, armor: 2.0, armor_type: Fortified, cost: (gold: 110.0, wood: 80.0), build_time: 40.0, sight: 6.0,
+            trains: ["ghoul", "bat_swarm"], category: Military,
+        ),
+        (
+            id: "ash_altar", name: "Aschaltar", faction: Hollowed, size: (3, 2),
+            description: "Ein Altar aus Aschglas. Hier erwachen Aschhexen, die die Toten rufen.",
+            hp: 800.0, armor: 3.0, armor_type: Fortified, cost: (gold: 170.0, wood: 90.0), build_time: 50.0, sight: 7.0,
+            trains: ["ash_witch"], category: Military,
+        ),
+        (
+            id: "grave_forge", name: "Grabschmiede", faction: Hollowed, size: (3, 3),
+            description: "Aus Gebein, Rost und Leichenteilen fügt die Grabschmiede Kolosse zusammen.",
+            hp: 1400.0, armor: 5.0, armor_type: Fortified, cost: (gold: 220.0, wood: 140.0), build_time: 60.0, sight: 6.0,
+            trains: ["grave_brute"], category: Military,
+        ),
+        (
+            id: "bone_cache", name: "Knochenlager", faction: Hollowed, size: (2, 2),
+            description: "Ein Haufen aus Gebein und Fellen, an dem die Grabgräber ihre Last abliefern.",
+            hp: 500.0, armor: 2.0, armor_type: Fortified, cost: (gold: 40.0, wood: 30.0), build_time: 20.0, sight: 5.0,
+            dropoff: true, category: Civic,
         ),
     ],
 )

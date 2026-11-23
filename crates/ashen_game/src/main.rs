@@ -11,6 +11,7 @@ mod editor;
 mod game;
 mod hud;
 mod hud_city;
+mod hud_hero;
 mod menu;
 mod mission;
 mod play_modes;
@@ -23,7 +24,7 @@ mod view;
 use ashen_engine::render::GraphicsProfile;
 use ashen_engine::AppConfig;
 use ashen_sim::env::Weather;
-use ashen_sim::mission::{GameMode, MatchSettings};
+use ashen_sim::mission::{Difficulty, GameMode, MatchSettings};
 use game::{AshenGame, AutoRun};
 
 fn usage() -> &'static str {
@@ -44,6 +45,8 @@ fn usage() -> &'static str {
   --zoom <zeilen>                 Sichtbare Bildzeilen (220–480)
   --ui <liste>                    Fenster öffnen: storage, city, build[:rubrik], select:<gebäude-id>
   --demo-city                     Sandbox mit Vorführstadt (Produktion, Wohnhäuser, Mauern) füllen
+  --demo <army|siege|hero|reveal> Militär-Vorführung: alle Einheiten/Gebäude, Belagerungsschlacht, Heldenfenster; reveal = Kriegsnebel aus
+  --difficulty <easy|normal|hard|nightmare>   Schwierigkeit (Gefecht: Gegner-KI)
   --no-ui                         Oberfläche ausblenden
   --scenario <id>                 Szenario statt Mission 1 starten (z. B. sc_fall_of_grauwall)
   --challenge <id>                Herausforderung starten (z. B. ch_shrine_breaker)
@@ -64,6 +67,7 @@ fn main() {
     let mut frames = 90;
     let mut size = (1600, 900);
     let mut auto = AutoRun::default();
+    let mut difficulty = Difficulty::Normal;
     let mut i = 0;
     let next = |i: &mut usize| -> String {
         *i += 1;
@@ -108,7 +112,7 @@ fn main() {
                     "skirmish-setup" => auto.menu_page = Some("skirmish".into()),
                     _ => {}
                 }
-                auto.start_mission = mode.map(|m| MatchSettings { mode: m, ..Default::default() });
+                auto.start_mission = mode.map(|m| MatchSettings { mode: m, difficulty, ..Default::default() });
             }
             "--sim-seconds" => auto.sim_seconds = next(&mut i).parse().unwrap_or(0.0),
             "--time" => auto.time_of_day = next(&mut i).parse().ok(),
@@ -132,6 +136,15 @@ fn main() {
             }
             "--zoom" => auto.zoom_lines = next(&mut i).parse().ok(),
             "--demo-city" => auto.demo_city = true,
+            "--demo" => auto.demo = Some(next(&mut i)),
+            "--difficulty" => {
+                difficulty = match next(&mut i).as_str() {
+                    "easy" => Difficulty::Easy,
+                    "hard" => Difficulty::Hard,
+                    "nightmare" => Difficulty::Nightmare,
+                    _ => Difficulty::Normal,
+                };
+            }
             "--ui" => auto.ui_open = next(&mut i).split(',').map(str::to_string).collect(),
             "--no-ui" => auto.hide_ui = true,
             "--scenario" => {

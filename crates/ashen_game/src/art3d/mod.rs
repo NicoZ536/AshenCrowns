@@ -2,6 +2,7 @@
 //! (5 Blickrichtungen, die übrigen 3 durch Spiegelung), nachbearbeitet und in den Atlas gelegt.
 
 pub mod city;
+pub mod military;
 pub mod rig;
 pub mod structures;
 pub mod units3d;
@@ -122,6 +123,6 @@ pub fn bake_all(gpu: &GpuContext, atlas: &mut AtlasBuilder) -> Result<HashMap<St
 /// Animationen der gebackenen Einheiten (Name, Bildzahl, FPS, Schleife).
 pub fn unit_anim_specs() -> Vec<(&'static str, Vec<Anim>)> {
     let mut v: Vec<(&'static str, Vec<Anim>)> = units3d::looks().into_iter().map(|(id, _, _, anims)| (id, anims)).collect();
-    v.push(("knight", vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death]));
+    v.extend(units3d::special_anims());
     v
 }

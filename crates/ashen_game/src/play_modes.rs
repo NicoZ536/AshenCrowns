@@ -350,7 +350,7 @@ fn list_row(ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt, title: &str, su
 
 fn difficulty_row(ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt, current: &mut Difficulty) {
     ui.horizontal(|ui| {
-        for d in [Difficulty::Story, Difficulty::Normal, Difficulty::Hard] {
+        for d in [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard] {
             let r = ui_art::choice(ui, art, d.label(), *current == d);
             ui_common::sfx(engine, ui, &r);
             if r.clicked() {

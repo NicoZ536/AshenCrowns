@@ -39,10 +39,10 @@
         (id: "hollow_archer", owner: 1, x: 58.0, y: 11.0, count: 3, guard: true),
         (id: "grave_brute", owner: 1, x: 62.5, y: 16.5, guard: true),
         // Lager an der Ruinenmine in der Kartenmitte
-        (id: "hollow_thrall", owner: 1, x: 52.5, y: 44.0, count: 3, guard: true),
-        (id: "hollow_archer", owner: 1, x: 53.0, y: 46.5, count: 2, guard: true),
+        (id: "hollow_thrall", owner: 1, x: 52.5, y: 44.0, count: 3, guard: true, camp: Some("camp_mine")),
+        (id: "hollow_archer", owner: 1, x: 53.0, y: 46.5, count: 2, guard: true, camp: Some("camp_mine")),
         // Vorposten an der nördlichen Furt
-        (id: "hollow_thrall", owner: 1, x: 24.0, y: 9.5, count: 2, guard: true),
+        (id: "hollow_thrall", owner: 1, x: 24.0, y: 9.5, count: 2, guard: true, camp: Some("camp_ford")),
     ],
     objectives: [
         (id: "obj_farm", text: "Errichtet ein zweites Gehöft, um Nahrung und Wohnraum zu sichern."),

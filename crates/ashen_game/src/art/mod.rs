@@ -5,6 +5,7 @@ pub mod buildings;
 pub mod fx;
 pub mod goods_icons;
 pub mod icons;
+pub mod military_icons;
 pub mod palette;
 pub mod props;
 pub mod terrain;
@@ -36,6 +37,7 @@ impl ArtLibrary {
         fx::build(&mut b);
         icons::build(&mut b);
         goods_icons::build(&mut b);
+        military_icons::build(&mut b);
         let metas = art3d::bake_all(gpu, &mut b)?;
         let mut overrides = 0;
         if let Some(dir) = assets_dir {

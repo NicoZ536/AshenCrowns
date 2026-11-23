@@ -124,19 +124,19 @@ impl EditDoc {
             pl.tag = Some(t.into());
             pl
         };
-        let mk = |id: &str, owner: u8, x: f32, y: f32, count: u32, guard: bool| Placement { id: id.into(), owner, x: x.floor(), y: y.floor(), count, tag: None, guard };
+        let mk = |id: &str, owner: u8, x: f32, y: f32, count: u32, guard: bool| Placement { id: id.into(), owner, x: x.floor(), y: y.floor(), count, tag: None, guard, camp: None };
         doc.def.placements = vec![
             tag(mk("keep", 0, p.x - 2.0, p.y - 2.0, 0, false), "player_keep"),
             mk("farmstead", 0, p.x + 2.0, p.y + 2.0, 0, false),
             mk("hut", 0, p.x - 6.0, p.y + 2.0, 0, false),
-            Placement { id: "worker".into(), owner: 0, x: p.x + 2.5, y: p.y - 1.5, count: 5, tag: None, guard: false },
-            Placement { id: "swordsman".into(), owner: 0, x: p.x + 4.5, y: p.y, count: 3, tag: None, guard: false },
-            tag(Placement { id: "hero_isolde".into(), owner: 0, x: p.x + 3.5, y: p.y - 2.5, count: 0, tag: None, guard: false }, "hero"),
+            Placement { id: "worker".into(), owner: 0, x: p.x + 2.5, y: p.y - 1.5, count: 5, tag: None, guard: false, camp: None },
+            Placement { id: "swordsman".into(), owner: 0, x: p.x + 4.5, y: p.y, count: 3, tag: None, guard: false, camp: None },
+            tag(Placement { id: "hero_isolde".into(), owner: 0, x: p.x + 3.5, y: p.y - 2.5, count: 0, tag: None, guard: false, camp: None }, "hero"),
             tag(mk("hollow_shrine", 1, e.x - 2.0, e.y - 2.0, 0, false), "enemy_shrine"),
             mk("bone_spire", 1, e.x - 6.0, e.y, 0, false),
             mk("bone_spire", 1, e.x + 2.0, e.y + 4.0, 0, false),
-            Placement { id: "hollow_thrall".into(), owner: 1, x: e.x - 3.0, y: e.y + 3.0, count: 4, tag: None, guard: true },
-            Placement { id: "hollow_archer".into(), owner: 1, x: e.x + 1.0, y: e.y - 4.0, count: 3, tag: None, guard: true },
+            Placement { id: "hollow_thrall".into(), owner: 1, x: e.x - 3.0, y: e.y + 3.0, count: 4, tag: None, guard: true, camp: None },
+            Placement { id: "hollow_archer".into(), owner: 1, x: e.x + 1.0, y: e.y - 4.0, count: 3, tag: None, guard: true, camp: None },
         ];
         doc.def.objectives = vec![ObjectiveDef { id: "obj_shrine".into(), text: "Zerstört den Hohlschrein.".into(), optional: false }];
         doc.def.triggers = vec![
@@ -354,10 +354,10 @@ impl EditDoc {
         if data.building_id(id).is_some() {
             let tile = IVec2::new(p.x.floor() as i32, p.y.floor() as i32);
             self.can_place_building(data, id, tile, None)?;
-            self.def.placements.push(Placement { id: id.into(), owner, x: tile.x as f32, y: tile.y as f32, count: 0, tag: None, guard: false });
+            self.def.placements.push(Placement { id: id.into(), owner, x: tile.x as f32, y: tile.y as f32, count: 0, tag: None, guard: false, camp: None });
         } else if data.unit_id(id).is_some() {
             self.can_place_unit(p)?;
-            self.def.placements.push(Placement { id: id.into(), owner, x: (p.x * 2.0).round() / 2.0, y: (p.y * 2.0).round() / 2.0, count: count.max(1), tag: None, guard: false });
+            self.def.placements.push(Placement { id: id.into(), owner, x: (p.x * 2.0).round() / 2.0, y: (p.y * 2.0).round() / 2.0, count: count.max(1), tag: None, guard: false, camp: None });
         } else {
             return Err(format!("Unbekannte ID {id}."));
         }

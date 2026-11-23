@@ -102,6 +102,14 @@ pub const UNITS: &[UnitDef] = &[
     u("mangonel", "Mangonel", "ember_crown", Siege, 300.0, 2.0, 55.0, 4.5, 12.0, 220.0, 3.0, 4),
     u("trebuchet", "Tribok", "ember_crown", Siege, 400.0, 3.0, 140.0, 7.0, 18.0, 350.0, 4.0, 4),
     u("hero_isolde", "Isolde Raventhorn", "ember_crown", Hero, 620.0, 5.0, 28.0, 1.1, 0.8, 0.0, 5.0, 0),
+    // Militärausbau der Echtzeitebene (Werte aus assets/data/units.ron)
+    rng(u("shieldbearer", "Schildträger", "ember_crown", Infantry, 340.0, 5.0, 11.5, 1.3, 0.8, 90.0, 1.2, 1), 1.6),
+    u("horse_archer", "Berittener Bogenschütze", "ember_crown", Cavalry, 220.0, 1.0, 11.5, 1.5, 5.0, 150.0, 1.8, 2),
+    u("battle_mage", "Kampfmagier", "ember_crown", Mage, 150.0, 0.0, 20.0, 2.2, 6.0, 140.0, 2.0, 2),
+    u("priest", "Priester der Flamme", "ember_crown", Support, 140.0, 0.0, 6.0, 1.6, 0.9, 100.0, 1.4, 1),
+    u("catapult", "Katapult", "ember_crown", Siege, 260.0, 1.0, 80.0, 4.5, 10.5, 200.0, 3.0, 3),
+    vsund(u("hero_hal_venn", "Bruder Hal Venn", "ember_crown", Hero, 520.0, 2.0, 21.0, 1.5, 0.8, 0.0, 4.0, 0), 1.5),
+    u("hero_torvald", "Torvald Eisenhand", "ember_crown", Hero, 820.0, 6.0, 38.0, 1.7, 0.85, 0.0, 5.0, 0),
     // Skarnheim
     u("skarn_ironguard", "Eisengarde", "skarn_clans", Infantry, 300.0, 6.0, 20.0, 1.6, 0.8, 150.0, 2.0, 2),
     u("skarn_rune_thrower", "Runenwerfer", "skarn_clans", Ranged, 130.0, 1.0, 14.0, 2.0, 5.0, 90.0, 1.2, 1),
@@ -117,6 +125,10 @@ pub const UNITS: &[UnitDef] = &[
     und(u("grave_brute", "Grabkoloss", "hollowed", Monster, 650.0, 4.0, 32.0, 2.4, 1.0, 0.0, 0.0, 3)),
     und(u("veil_wraith", "Schleiergeist", "hollowed", Monster, 200.0, 0.0, 14.0, 1.6, 0.8, 0.0, 0.0, 2)),
     und(u("hollow_priest", "Leerpriester", "hollowed", Support, 180.0, 1.0, 12.0, 2.0, 6.0, 0.0, 0.0, 2)),
+    und(u("hollow_digger", "Grabgräber", "hollowed", Worker, 120.0, 0.0, 5.0, 2.0, 0.5, 0.0, 0.0, 1)),
+    und(u("ghoul", "Ghul", "hollowed", Monster, 170.0, 0.0, 12.5, 0.9, 0.55, 0.0, 0.0, 1)),
+    und(u("ash_witch", "Aschhexe", "hollowed", Mage, 160.0, 0.0, 16.0, 2.0, 5.5, 0.0, 0.0, 2)),
+    und(u("bat_swarm", "Fledermausschwarm", "hollowed", Monster, 90.0, 0.0, 6.0, 0.6, 0.5, 0.0, 0.0, 1)),
     // Aschenlegion
     und(u("ashen_legionnaire", "Aschenlegionär", "ashen_legion", Infantry, 340.0, 5.0, 18.0, 1.3, 0.8, 0.0, 0.0, 2)),
     und(u("cinder_knight", "Glutritter Aureths", "ashen_legion", Cavalry, 520.0, 6.0, 26.0, 1.4, 0.8, 0.0, 0.0, 4)),
@@ -157,13 +169,13 @@ impl UnitDef {
 /// Anwerbbare Einheiten je Kultur (für KI-Rekrutierung und Spielerliste).
 pub fn roster(culture: Culture) -> &'static [&'static str] {
     match culture {
-        Culture::Valemarker | Culture::Aschmaerker => &["spearman", "swordsman", "archer", "crossbowman", "halberdier", "knight", "scout_rider", "ember_adept", "mangonel", "battering_ram"],
+        Culture::Valemarker | Culture::Aschmaerker => &["spearman", "swordsman", "archer", "crossbowman", "halberdier", "shieldbearer", "knight", "scout_rider", "horse_archer", "battle_mage", "priest", "ember_adept", "catapult", "mangonel", "battering_ram"],
         Culture::Skarn => &["skarn_ironguard", "skarn_rune_thrower", "spearman", "worker", "battering_ram"],
         Culture::Dornwaldler | Culture::Veyl => &["thorn_warden", "veyl_stalker", "archer", "worker"],
         Culture::Saelith => &["saelith_marine", "saelith_arbalest", "crossbowman", "swordsman", "scout_rider", "mangonel"],
         Culture::GraueNomaden | Culture::Aurethisch => &["scout_rider", "archer", "spearman", "swordsman"],
         Culture::Schlackenbrut => &["spearman", "glow_salamander", "worker"],
-        Culture::Hohl => &["hollow_thrall", "hollow_archer", "grave_brute", "veil_wraith"],
+        Culture::Hohl => &["hollow_thrall", "hollow_archer", "ghoul", "ash_witch", "bat_swarm", "grave_brute", "veil_wraith"],
     }
 }
 

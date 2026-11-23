@@ -8,19 +8,18 @@ use crate::world::SimWorld;
 use glam::Vec2;
 use rand::RngExt;
 
-fn projectile_speed(kind: ProjectileKind) -> f32 {
-    match kind {
-        ProjectileKind::Arrow => 11.0,
-        ProjectileKind::BoneBolt => 8.0,
-        ProjectileKind::SoulBolt => 7.0,
-    }
+/// Geschossparameter, die nicht aus dem Ziel folgen.
+#[derive(Clone, Copy, Default)]
+struct Shot {
+    splash: f32,
+    building_mult: f32,
 }
 
 #[allow(clippy::too_many_arguments)]
-fn spawn_projectile(world: &mut SimWorld, kind: ProjectileKind, owner: PlayerId, from: Vec2, target: EntityRef, damage: f32, dtype: crate::data::DamageType, bonus: Vec<(UnitClass, f32)>, source: Option<EntityRef>) {
+fn spawn_projectile(world: &mut SimWorld, kind: ProjectileKind, owner: PlayerId, from: Vec2, target: EntityRef, damage: f32, dtype: crate::data::DamageType, bonus: Vec<(UnitClass, f32)>, source: Option<EntityRef>, shot: Shot) {
     let Some(tp) = world.entity_pos(target) else { return };
     let dist = (tp - from).length().max(0.5);
-    let speed = projectile_speed(kind);
+    let speed = kind.speed();
     world.projectiles.push(Projectile {
         kind,
         owner,
@@ -34,9 +33,16 @@ fn spawn_projectile(world: &mut SimWorld, kind: ProjectileKind, owner: PlayerId,
         damage_type: dtype,
         bonus_class_mult: bonus,
         source,
-        arc: if kind == ProjectileKind::Arrow { (dist * 0.18).min(1.6) } else { 0.15 },
+        arc: match kind {
+            ProjectileKind::Arrow => (dist * 0.18).min(1.6),
+            ProjectileKind::Boulder => (dist * 0.45).clamp(1.5, 4.5),
+            ProjectileKind::Fireball => (dist * 0.1).min(0.8),
+            _ => 0.15,
+        },
         progress: 0.0,
         total: dist / speed,
+        splash: shot.splash,
+        building_mult: if shot.building_mult > 0.0 { shot.building_mult } else { 1.0 },
     });
     world.events.push(SimEvent::ProjectileFired { kind, from, owner });
 }
@@ -57,28 +63,36 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
         let def = data.unit(u.kind);
         u.attack_cd = def.cooldown;
         let (pos, owner, kind) = (u.pos, u.owner, u.kind);
-        let level_bonus = (u.level.saturating_sub(1)) as f32 * def.damage_per_level;
-        let mult = u.damage_mult();
+        let level_bonus = (u.level.saturating_sub(1)) as f32 * def.damage_per_level + u.mods.damage;
+        let mult = world.units.get(id).map(|u| world.damage_factor(data, u)).unwrap_or(1.0);
         if !world.entity_alive(target) {
             continue;
         }
-        let in_reach = world.entity_distance(data, target, pos).is_some_and(|d| d - def.radius <= def.range + 0.8);
+        let reach = world.entity_distance(data, target, pos).map(|d| d - def.radius);
+        let in_reach = reach.is_some_and(|d| d <= def.range + 0.8 && d + 0.3 >= def.min_range);
         if !in_reach {
             continue;
         }
         let roll: f32 = world.rng.random();
         let mut dmg = (def.damage_min + (def.damage_max - def.damage_min) * roll + level_bonus) * mult;
+        if matches!(target, EntityRef::Building(_)) {
+            dmg *= def.building_mult;
+        }
         match def.projectile {
             Some(pk) => {
                 if rain {
                     dmg *= data.rules.rain_ranged_mult;
                 }
-                spawn_projectile(world, pk, owner, pos, target, dmg, def.damage_type, def.bonus_vs.clone(), Some(EntityRef::Unit(id)));
+                let shot = Shot { splash: def.splash, building_mult: def.building_mult };
+                spawn_projectile(world, pk, owner, pos, target, dmg, def.damage_type, def.bonus_vs.clone(), Some(EntityRef::Unit(id)), shot);
             }
             None => {
                 world.events.push(SimEvent::MeleeSwing { attacker: id, kind, pos });
                 let bonus = def.bonus_vs.clone();
                 world.deal_damage(data, target, dmg, def.damage_type, &bonus, Some(EntityRef::Unit(id)));
+                if def.splash > 0.0 {
+                    splash_damage(world, data, owner, world.entity_pos(target).unwrap_or(pos), def.splash, dmg * 0.5, def.damage_type, &def.bonus_vs, Some(EntityRef::Unit(id)), Some(target), def.building_mult);
+                }
             }
         }
     }
@@ -96,10 +110,18 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
         p.pos = p.origin.lerp(p.target_pos, t);
         if t >= 1.0 {
             let p = world.projectiles.swap_remove(i);
+            if p.splash > 0.0 {
+                // Flächengeschoss: schlägt immer am Zielpunkt ein und trifft alle Feinde im Radius.
+                world.events.push(SimEvent::ProjectileImpact { kind: p.kind, pos: p.target_pos, hit: true });
+                world.events.push(SimEvent::Splash { pos: p.target_pos, radius: p.splash, kind: p.kind });
+                splash_damage(world, data, p.owner, p.target_pos, p.splash, p.damage, p.damage_type, &p.bonus_class_mult, p.source, None, p.building_mult);
+                continue;
+            }
             let hit = world.entity_alive(p.target) && world.entity_distance(data, p.target, p.pos).is_some_and(|d| d < 0.9);
             world.events.push(SimEvent::ProjectileImpact { kind: p.kind, pos: p.pos, hit });
             if hit {
-                world.deal_damage(data, p.target, p.damage, p.damage_type, &p.bonus_class_mult, p.source);
+                let mult = if matches!(p.target, EntityRef::Building(_)) { p.building_mult } else { 1.0 };
+                world.deal_damage(data, p.target, p.damage * mult, p.damage_type, &p.bonus_class_mult, p.source);
             }
             continue;
         }
@@ -130,11 +152,40 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
         world.scratch = found;
         if let Some(t) = target {
             let from = center + Vec2::new(-0.6, -0.6);
-            spawn_projectile(world, att.projectile, owner, from, EntityRef::Unit(t), att.damage, att.damage_type, Vec::new(), Some(EntityRef::Building(bid)));
+            spawn_projectile(world, att.projectile, owner, from, EntityRef::Unit(t), att.damage, att.damage_type, Vec::new(), Some(EntityRef::Building(bid)), Shot::default());
             if let Some(b) = world.buildings.get_mut(bid) {
                 b.attack_cd = att.cooldown;
             }
         }
+    }
+}
+
+/// Flächenschaden um `center`: Feinde von `owner` im Radius erhalten bis zu `damage` (zum Rand hin
+/// abnehmend bis 50 %), Gebäude zusätzlich den Gebäudefaktor. `skip` wird ausgelassen (bereits getroffen).
+#[allow(clippy::too_many_arguments)]
+pub fn splash_damage(world: &mut SimWorld, data: &GameData, owner: PlayerId, center: Vec2, radius: f32, damage: f32, dtype: crate::data::DamageType, bonus: &[(UnitClass, f32)], source: Option<EntityRef>, skip: Option<EntityRef>, building_mult: f32) {
+    let mut near = Vec::new();
+    world.spatial.query(center, radius + 0.5, &mut near);
+    let targets: Vec<(UnitId, f32)> = near
+        .iter()
+        .filter_map(|&o| world.units.get(o).map(|u| (o, u)))
+        .filter(|(o, u)| u.hp > 0.0 && SimWorld::hostile(owner, u.owner) && skip != Some(EntityRef::Unit(*o)))
+        .map(|(o, u)| (o, (u.pos - center).length()))
+        .filter(|(_, d)| *d <= radius + 0.3)
+        .collect();
+    for (o, d) in targets {
+        let falloff = 1.0 - 0.5 * (d / radius.max(0.1)).clamp(0.0, 1.0);
+        world.deal_damage(data, EntityRef::Unit(o), damage * falloff, dtype, bonus, source);
+    }
+    let bids: Vec<(BuildingId, f32)> = world
+        .buildings
+        .iter()
+        .filter(|(id, b)| b.hp > 0.0 && SimWorld::hostile(owner, b.owner) && skip != Some(EntityRef::Building(*id)) && b.distance_to(center) <= radius)
+        .map(|(id, b)| (id, b.distance_to(center)))
+        .collect();
+    for (b, d) in bids {
+        let falloff = 1.0 - 0.5 * (d / radius.max(0.1)).clamp(0.0, 1.0);
+        world.deal_damage(data, EntityRef::Building(b), damage * falloff * building_mult.max(0.0), dtype, bonus, source);
     }
 }
 
@@ -149,6 +200,14 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
         if let Some(tag) = &u.tag {
             world.mission.dead_tags.push(tag.clone());
         }
+        crate::systems::heroes::on_unit_death(world, data, &u);
+        // Beschworene Diener vergehen mit ihrem Herrn.
+        let servants: Vec<UnitId> = world.units.iter().filter(|(_, x)| x.master == Some(id) && x.hp > 0.0).map(|(sid, _)| sid).collect();
+        for sid in servants {
+            if let Some(x) = world.units.get_mut(sid) {
+                x.hp = 0.0;
+            }
+        }
         // Erfahrung für Helden des Gegners in der Nähe.
         let killer_owner = u.last_attacker.and_then(|a| world.entity_owner(a));
         if let Some(ko) = killer_owner {
@@ -156,7 +215,8 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
             if let Some(hid) = world.hero_of(data, ko) {
                 let near = world.units.get(hid).is_some_and(|h| (h.pos - u.pos).length() < 14.0);
                 if near {
-                    grant_xp(world, data, hid, def.xp_value);
+                    let pct = world.units.get(hid).map(|h| h.mods.xp_pct).unwrap_or(0.0);
+                    grant_xp(world, data, hid, (def.xp_value as f32 * (1.0 + pct)).round() as u32);
                 }
             }
         }
@@ -179,7 +239,7 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
             world.events.push(SimEvent::HeroFallen { kind: u.kind, pos: u.pos });
             world.record(ChronicleKind::Death, format!("{} fiel im Kampf.", def.name));
             if u.owner == PLAYER && !world.settings.hero_permadeath {
-                world.hero_respawn = Some((u.kind, data.rules.hero_respawn_time));
+                world.fallen.push(FallenHero { unit: u.clone(), timer: data.rules.hero_respawn_time });
             }
         }
         if def.class == UnitClass::Boss {
@@ -213,11 +273,14 @@ pub fn grant_xp(world: &mut SimWorld, data: &GameData, id: UnitId, amount: u32) 
     let mut gained = Vec::new();
     while (u.level as usize) < levels.len() && u.xp >= levels[u.level as usize] {
         u.level += 1;
-        u.max_hp += def.hp_per_level;
-        u.hp += def.hp_per_level;
-        u.max_mana += 15.0;
-        u.mana = u.max_mana;
         gained.push(u.level);
+    }
+    if !gained.is_empty() {
+        crate::systems::heroes::recompute(world, data, id);
+        if let Some(u) = world.units.get_mut(id) {
+            u.hp = (u.hp + def.hp_per_level * gained.len() as f32).min(u.max_hp);
+            u.mana = u.max_mana;
+        }
     }
     for lvl in gained {
         world.events.push(SimEvent::LevelUp { unit: id, level: lvl });

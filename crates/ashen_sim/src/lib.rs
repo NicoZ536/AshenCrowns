@@ -18,6 +18,7 @@ pub mod genmap;
 pub mod mapgen;
 pub mod mission;
 pub mod path;
+pub mod rpg;
 pub mod save;
 pub mod scenario;
 pub mod spatial;

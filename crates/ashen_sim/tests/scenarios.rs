@@ -336,7 +336,7 @@ fn challenge_victory_condition_scores_and_ranks() {
 fn skirmish_hands_difficulty_through() {
     let d = data();
     let base = MissionDef::load(&assets().join("missions/m01_last_settlement.ron")).unwrap();
-    for diff in [ashen_sim::mission::Difficulty::Story, ashen_sim::mission::Difficulty::Hard] {
+    for diff in [ashen_sim::mission::Difficulty::Easy, ashen_sim::mission::Difficulty::Hard] {
         let w = SimWorld::new(&d, base.clone(), MatchSettings { mode: GameMode::Skirmish, difficulty: diff, ..Default::default() }).unwrap();
         assert_eq!(w.settings.difficulty, diff);
     }

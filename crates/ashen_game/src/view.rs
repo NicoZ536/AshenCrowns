@@ -218,8 +218,52 @@ impl WorldView {
                 if let ashen_sim::entity::EntityRef::Unit(u) = target {
                     self.hit_flash.insert(*u, 0.12);
                 }
-                let col = if *blocked { Vec4::new(1.0, 0.7, 0.3, 1.0) } else if matches!(damage_type, ashen_sim::data::DamageType::Magic) { Vec4::new(0.6, 1.0, 0.7, 1.0) } else { Vec4::new(1.0, 0.9, 0.7, 1.0) };
+                let col = if *blocked {
+                    Vec4::new(1.0, 0.7, 0.3, 1.0)
+                } else if matches!(damage_type, ashen_sim::data::DamageType::Magic) {
+                    Vec4::new(0.6, 1.0, 0.7, 1.0)
+                } else if matches!(damage_type, ashen_sim::data::DamageType::Fire) {
+                    Vec4::new(1.0, 0.55, 0.2, 1.0)
+                } else {
+                    Vec4::new(1.0, 0.9, 0.7, 1.0)
+                };
                 self.burst(art, *pos, 3, "fx_dot", col, 26.0, 8.0, 0.8, seed);
+            }
+            SimEvent::Splash { pos, radius, kind } => {
+                let px = radius * 22.0;
+                match kind {
+                    ProjectileKind::Boulder => {
+                        self.burst(art, *pos, 18, "fx_dust", Vec4::new(0.5, 0.44, 0.36, 0.9), px, 6.0, 0.0, seed);
+                        self.burst(art, *pos, 10, "fx_dot", Vec4::new(0.6, 0.56, 0.5, 1.0), 38.0, 16.0, 0.0, seed + 3);
+                        self.flash(*pos, Vec3::new(1.0, 0.7, 0.4), 70.0, 0.3);
+                    }
+                    _ => {
+                        self.burst(art, *pos, 22, "fx_glow", Vec4::new(1.0, 0.55, 0.18, 1.0), px * 1.2, 8.0, 1.0, seed);
+                        self.burst(art, *pos, 10, "fx_smoke", Vec4::new(0.3, 0.26, 0.24, 0.7), 14.0, 6.0, 0.0, seed + 5);
+                        self.flash(*pos, Vec3::new(1.0, 0.55, 0.2), 100.0, 0.5);
+                    }
+                }
+            }
+            SimEvent::Healed { pos, amount } => {
+                if *amount > 0.0 {
+                    self.burst(art, *pos, 18, "fx_glow", Vec4::new(0.55, 1.0, 0.6, 1.0), 26.0, 12.0, 1.0, seed);
+                    self.burst(art, *pos, 6, "fx_dot", Vec4::new(1.0, 0.95, 0.6, 1.0), 20.0, 18.0, 1.0, seed + 1);
+                    self.flash(*pos, Vec3::new(0.5, 1.0, 0.6), 80.0, 0.5);
+                }
+            }
+            SimEvent::Summoned { pos, .. } => {
+                self.burst(art, *pos, 14, "fx_glow", Vec4::new(0.45, 1.0, 0.6, 1.0), 24.0, 8.0, 1.0, seed);
+                self.burst(art, *pos, 8, "fx_dust", Vec4::new(0.35, 0.34, 0.3, 0.8), 16.0, 3.0, 0.0, seed + 2);
+            }
+            SimEvent::TalentLearned { pos, .. } | SimEvent::ItemUsed { pos, .. } | SimEvent::ItemPickedUp { pos, .. } => {
+                self.burst(art, *pos, 16, "fx_glow", Vec4::new(1.0, 0.88, 0.45, 1.0), 26.0, 18.0, 1.0, seed);
+                self.flash(*pos, Vec3::new(1.0, 0.85, 0.5), 60.0, 0.6);
+            }
+            SimEvent::ItemDropped { pos, .. } => {
+                self.burst(art, *pos, 10, "fx_dot", Vec4::new(1.0, 0.9, 0.5, 1.0), 28.0, 14.0, 1.0, seed);
+            }
+            SimEvent::ProjectileImpact { kind: ProjectileKind::Bolt, pos, hit: true } => {
+                self.burst(art, *pos, 3, "fx_dot", Vec4::new(0.85, 0.85, 0.9, 1.0), 24.0, 8.0, 0.4, seed);
             }
             SimEvent::ProjectileImpact { kind: ProjectileKind::SoulBolt, pos, .. } => {
                 self.burst(art, *pos, 8, "fx_glow", Vec4::new(0.5, 1.0, 0.6, 1.0), 20.0, 6.0, 1.0, seed);
@@ -258,9 +302,26 @@ impl WorldView {
                     self.burst(art, *pos, 20, "fx_dot", Vec4::new(1.0, 0.8, 0.4, 1.0), 50.0, 6.0, 1.0, seed);
                     self.flash(*pos, Vec3::new(1.0, 0.55, 0.2), 110.0, 0.6);
                 }
-                "rallying_banner" => {
+                "rallying_banner" | "blessing" | "beacon_of_faith" | "war_cry" | "war_horns" | "clan_roar" | "shield_wall" => {
                     self.burst(art, *pos, 30, "fx_glow", Vec4::new(1.0, 0.85, 0.4, 1.0), 40.0, 10.0, 1.0, seed);
                     self.flash(*pos, Vec3::new(1.0, 0.8, 0.4), 140.0, 1.0);
+                }
+                "fireball" | "flame_nova" | "sacred_flame" | "phoenix_cut" | "pillar_of_fire" => {
+                    for i in 0..24 {
+                        let a = i as f32 / 24.0 * std::f32::consts::TAU;
+                        let p = *pos + Vec2::new(a.cos(), a.sin()) * 1.6;
+                        self.burst(art, p, 1, "fx_glow", Vec4::new(1.0, 0.5, 0.15, 1.0), 12.0, 4.0, 1.0, seed + i);
+                    }
+                    self.burst(art, *pos, 14, "fx_dot", Vec4::new(1.0, 0.7, 0.25, 1.0), 40.0, 8.0, 1.0, seed);
+                    self.flash(*pos, Vec3::new(1.0, 0.5, 0.2), 120.0, 0.6);
+                }
+                "holy_heal" | "flame_mend" | "resurgence" => {
+                    self.burst(art, *pos, 24, "fx_glow", Vec4::new(0.55, 1.0, 0.65, 1.0), 30.0, 14.0, 1.0, seed);
+                    self.flash(*pos, Vec3::new(0.5, 1.0, 0.6), 100.0, 0.7);
+                }
+                "ground_slam" | "ancestral_fury" => {
+                    self.burst(art, *pos, 20, "fx_dust", Vec4::new(0.5, 0.44, 0.36, 0.9), 34.0, 4.0, 0.0, seed);
+                    self.flash(*pos, Vec3::new(1.0, 0.8, 0.5), 90.0, 0.4);
                 }
                 "ashen_ward" => {
                     self.burst(art, *pos, 18, "fx_smoke", Vec4::new(0.5, 0.45, 0.42, 0.7), 18.0, 8.0, 0.0, seed);
@@ -830,6 +891,25 @@ impl WorldView {
             frame.world.push((depth_of(c.pos) - 0.3, SpriteInstance::new(&rect, tile_to_world(c.pos)).flip(flip).alpha(fade)));
         }
 
+        // --- Beute am Boden
+        for d in &world.drops {
+            if !in_view(d.pos) || !visible(d.pos) {
+                continue;
+            }
+            let item = data.item_def(d.item);
+            let bob = (self.time * 2.5 + d.pos.x * 1.7).sin() * 1.5;
+            let name = format!("icon_item_{}", item.id);
+            let rect = art.atlas.try_get(&name).unwrap_or_else(|| art.get("icon_itemslot_ring"));
+            let wp = tile_to_world(d.pos);
+            let [r, g, b] = item.rarity.color();
+            let col = Vec3::new(r as f32, g as f32, b as f32) / 255.0;
+            frame.world.push((depth_of(d.pos) + 0.1, SpriteInstance::new(&rect, wp - Vec2::new(0.0, 9.0 + bob)).material(Material::Emissive).emissive(0.5)));
+            frame.lights.push(Light::new(wp - Vec2::new(0.0, 6.0), 26.0, col, 0.9).flicker(0.2, d.pos.y));
+            if item.rarity >= ashen_sim::rpg::Rarity::Rare && rand2((self.time * 8.0) as i32, (d.pos.x * 10.0) as i32, 4) > 0.82 {
+                self.spawn_ember(art, wp - Vec2::new(0.0, 8.0), col, (d.pos.x * 100.0) as u32 + (self.time * 20.0) as u32);
+            }
+        }
+
         // --- Projektile
         for p in &world.projectiles {
             let pos = p.prev_pos.lerp(p.pos, alpha);
@@ -844,11 +924,20 @@ impl WorldView {
                 ProjectileKind::Arrow => ("proj_arrow", Material::Lit),
                 ProjectileKind::BoneBolt => ("proj_bone", Material::Lit),
                 ProjectileKind::SoulBolt => ("proj_soul", Material::Emissive),
+                ProjectileKind::Bolt => ("proj_bolt", Material::Lit),
+                ProjectileKind::Fireball => ("proj_fireball", Material::Emissive),
+                ProjectileKind::Boulder => ("proj_boulder", Material::Lit),
             };
             let rect = art.get(name);
             frame.world.push((depth_of(pos) + 0.5, SpriteInstance::new(&rect, wp - Vec2::new(0.0, z)).flip(dir.x < 0.0).material(mat).emissive(if mat == Material::Emissive { 1.0 } else { 0.0 })));
             if p.kind == ProjectileKind::SoulBolt {
                 frame.lights.push(Light::new(wp - Vec2::new(0.0, z), 40.0, Vec3::new(0.4, 1.0, 0.55), 1.0));
+            }
+            if p.kind == ProjectileKind::Fireball {
+                frame.lights.push(Light::new(wp - Vec2::new(0.0, z), 52.0, Vec3::new(1.0, 0.55, 0.2), 1.2).flicker(0.2, 3.0));
+                let mut sp = Particle::new(art.get("fx_dot"), wp - Vec2::new(0.0, z), 0.0, 0.3);
+                sp.color = (Vec4::new(1.0, 0.6, 0.2, 0.9), Vec4::new(0.6, 0.2, 0.05, 0.0));
+                self.particles.spawn(sp);
             }
         }
 

@@ -3,6 +3,7 @@
 use crate::data::{BuildingTypeId, DamageType, Item, ProjectileKind, ResourceKind, UnitTypeId};
 use crate::entity::{BuildingId, EntityRef, PlayerId, UnitId};
 use crate::env::Weather;
+use crate::rpg::ItemId;
 use glam::Vec2;
 use serde::{Deserialize, Serialize};
 
@@ -46,6 +47,18 @@ pub enum SimEvent {
     /// Unruhe in der Bevölkerung (zu hohe Steuern oder Mangel).
     Unrest { owner: PlayerId },
     Error { owner: PlayerId, text: String },
+    /// Heilung von Verbündeten (Fähigkeit); `amount` = Gesamtheilung.
+    Healed { pos: Vec2, amount: f32 },
+    /// Ein Diener wurde beschworen.
+    Summoned { unit: UnitId, pos: Vec2 },
+    TalentLearned { unit: UnitId, talent: String, pos: Vec2 },
+    ItemUsed { unit: UnitId, item: ItemId, pos: Vec2 },
+    ItemDropped { item: ItemId, pos: Vec2 },
+    ItemPickedUp { unit: UnitId, item: ItemId, pos: Vec2 },
+    /// Eine Forschung (Schmiede-Upgrade) ist abgeschlossen.
+    UpgradeResearched { owner: PlayerId, upgrade: String, level: u8 },
+    /// Katapult- oder Magiegeschoss mit Flächenwirkung schlägt ein.
+    Splash { pos: Vec2, radius: f32, kind: ProjectileKind },
     Victory,
     Defeat,
 }

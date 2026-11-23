@@ -296,7 +296,7 @@ impl MenuScene {
             ui.end_row();
             label(ui, "Schwierigkeit");
             ui.horizontal(|ui| {
-                for d in [Difficulty::Story, Difficulty::Normal, Difficulty::Hard] {
+                for d in Difficulty::ALL {
                     let r = ui_art::choice(ui, art, d.label(), self.new_difficulty == d);
                     ui_common::sfx(engine, ui, &r);
                     if r.clicked() {

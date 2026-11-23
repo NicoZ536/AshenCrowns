@@ -1,0 +1,52 @@
+// ASHEN CROWNS – Talentbäume der Helden (3 Pfade je Held, Stufen bis 10).
+// Ein Talentpunkt je Stufe über 1 (insgesamt 9). Reihe 0 ist frei wählbar, Reihe 1 verlangt 2 Punkte, Reihe 2
+// verlangt 4 Punkte im selben Pfad. mods gelten je Rang; ability schaltet mit dem ersten Rang eine Fähigkeit frei.
+(
+    heroes: [
+        (
+            hero: "hero_isolde",
+            paths: ["Glutklinge", "Bannerträgerin", "Aschenwacht"],
+            talents: [
+                (id: "edge_of_embers", name: "Glühende Schneide", path: 0, tier: 0, max_rank: 3, description: "+6 % Schaden je Rang.", mods: (damage_pct: 0.06)),
+                (id: "searing_strikes", name: "Sengende Hiebe", path: 0, tier: 1, max_rank: 2, description: "+5 Schaden je Treffer je Rang.", mods: (damage: 5.0)),
+                (id: "phoenix_cut", name: "Phönixhieb", path: 0, tier: 2, max_rank: 1, description: "Schaltet die Fähigkeit Phönixhieb frei (160 Feuerschaden im Umkreis) und gibt +8 % Schaden.", mods: (damage_pct: 0.08), ability: Some("phoenix_cut")),
+                (id: "steadfast_banner", name: "Standhaftes Banner", path: 1, tier: 0, max_rank: 3, description: "+40 Leben je Rang.", mods: (hp: 40.0)),
+                (id: "crimson_resolve", name: "Karmesinroter Wille", path: 1, tier: 1, max_rank: 2, description: "Fähigkeiten laden 8 % schneller je Rang.", mods: (cooldown_pct: 0.08)),
+                (id: "war_standard", name: "Kriegsstandarte", path: 1, tier: 2, max_rank: 1, description: "Schaltet den Schlachtruf frei (+35 % Schaden, +3 Rüstung für das Heer) und gibt +30 Mana.", mods: (mana: 30.0), ability: Some("war_cry")),
+                (id: "ashen_plate", name: "Aschenplatte", path: 2, tier: 0, max_rank: 3, description: "+1 Rüstung je Rang.", mods: (armor: 1.0)),
+                (id: "ember_vigor", name: "Glutkraft", path: 2, tier: 1, max_rank: 2, description: "+0,8 Leben pro Sekunde je Rang.", mods: (hp_regen: 0.8)),
+                (id: "unyielding", name: "Unbeugsam", path: 2, tier: 2, max_rank: 1, description: "Schaltet das Letzte Aufgebot frei (400 Schutz) und gibt +80 Leben.", mods: (hp: 80.0), ability: Some("last_stand")),
+            ],
+        ),
+        (
+            hero: "hero_hal_venn",
+            paths: ["Flammenlicht", "Heilende Hände", "Glaubenswall"],
+            talents: [
+                (id: "kindled_flame", name: "Entfachte Flamme", path: 0, tier: 0, max_rank: 3, description: "+7 % Schaden je Rang.", mods: (damage_pct: 0.07)),
+                (id: "purifying_fire", name: "Läuterndes Feuer", path: 0, tier: 1, max_rank: 2, description: "+25 Mana je Rang und +4 Schaden je Treffer.", mods: (mana: 25.0, damage: 4.0)),
+                (id: "pillar_of_fire", name: "Feuersäule", path: 0, tier: 2, max_rank: 1, description: "Schaltet die Feuersäule frei (220 Feuerschaden im Radius 4).", mods: (), ability: Some("pillar_of_fire")),
+                (id: "gentle_hands", name: "Sanfte Hände", path: 1, tier: 0, max_rank: 3, description: "+0,5 Mana pro Sekunde je Rang.", mods: (mana_regen: 0.5)),
+                (id: "divine_grace", name: "Göttliche Gnade", path: 1, tier: 1, max_rank: 2, description: "Fähigkeiten laden 8 % schneller je Rang.", mods: (cooldown_pct: 0.08)),
+                (id: "resurgence", name: "Neuerwachen", path: 1, tier: 2, max_rank: 1, description: "Schaltet Neuerwachen frei (260 Leben für alle im Umkreis 9).", mods: (), ability: Some("resurgence")),
+                (id: "blessed_vestments", name: "Gesegnete Gewänder", path: 2, tier: 0, max_rank: 3, description: "+1 Rüstung je Rang.", mods: (armor: 1.0)),
+                (id: "unshaken_faith", name: "Unerschütterlicher Glaube", path: 2, tier: 1, max_rank: 2, description: "+50 Leben je Rang.", mods: (hp: 50.0)),
+                (id: "aegis_of_flame", name: "Flammenaegis", path: 2, tier: 2, max_rank: 1, description: "Schaltet die Flammenaegis frei (350 Schutz, +3 Rüstung für das Umfeld).", mods: (), ability: Some("aegis_of_flame")),
+            ],
+        ),
+        (
+            hero: "hero_torvald",
+            paths: ["Axt der Ahnen", "Eisenhaut", "Clanruf"],
+            talents: [
+                (id: "ancestral_edge", name: "Ahnenschneide", path: 0, tier: 0, max_rank: 3, description: "+6 % Schaden je Rang.", mods: (damage_pct: 0.06)),
+                (id: "cleaving_blows", name: "Spaltende Hiebe", path: 0, tier: 1, max_rank: 2, description: "+7 Schaden je Treffer je Rang.", mods: (damage: 7.0)),
+                (id: "ancestral_fury", name: "Zorn der Ahnen", path: 0, tier: 2, max_rank: 1, description: "Schaltet den Zorn der Ahnen frei (200 Schaden im Radius 3,5).", mods: (), ability: Some("ancestral_fury")),
+                (id: "iron_hide", name: "Eisenhaut", path: 1, tier: 0, max_rank: 3, description: "+1 Rüstung je Rang.", mods: (armor: 1.0)),
+                (id: "mountain_heart", name: "Herz des Berges", path: 1, tier: 1, max_rank: 2, description: "+70 Leben je Rang.", mods: (hp: 70.0)),
+                (id: "stone_skin", name: "Steinhaut", path: 1, tier: 2, max_rank: 1, description: "Schaltet die Steinhaut frei (450 Schutz für 15 s).", mods: (), ability: Some("stone_skin")),
+                (id: "swift_clans", name: "Flinke Clans", path: 2, tier: 0, max_rank: 3, description: "+5 % Geschwindigkeit je Rang.", mods: (speed_pct: 0.05)),
+                (id: "seasoned_warlord", name: "Erfahrener Kriegsherr", path: 2, tier: 1, max_rank: 2, description: "+15 % Erfahrung je Rang.", mods: (xp_pct: 0.15)),
+                (id: "war_horns", name: "Kriegshörner", path: 2, tier: 2, max_rank: 1, description: "Schaltet die Kriegshörner frei (+25 % Schaden für das Heer, Feinde verlieren Moral).", mods: (), ability: Some("war_horns")),
+            ],
+        ),
+    ],
+)

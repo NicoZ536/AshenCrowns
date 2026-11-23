@@ -167,15 +167,15 @@ impl Canvas {
 }
 
 fn pl(id: &str, owner: u8, x: f32, y: f32) -> Placement {
-    Placement { id: id.into(), owner, x, y, count: 0, tag: None, guard: false }
+    Placement { id: id.into(), owner, x, y, count: 0, tag: None, guard: false, camp: None }
 }
 
 fn group(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
-    Placement { id: id.into(), owner, x, y, count, tag: None, guard: false }
+    Placement { id: id.into(), owner, x, y, count, tag: None, guard: false, camp: None }
 }
 
 fn guard(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
-    Placement { id: id.into(), owner, x, y, count, tag: None, guard: true }
+    Placement { id: id.into(), owner, x, y, count, tag: None, guard: true, camp: None }
 }
 
 fn tagged(mut p: Placement, tag: &str) -> Placement {
