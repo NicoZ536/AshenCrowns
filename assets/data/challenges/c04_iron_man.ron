@@ -1,0 +1,12 @@
+// Herausforderung: Eiserner Mann.
+(
+    id: "ch_iron_man",
+    name: "Eiserner Mann",
+    description: "Schwere Wellen, kein Speichern, kein Laden, kein Wiederbeleben der Heldin. Jeder Fehler gilt.",
+    base: "m01_last_settlement",
+    mode: Campaign,
+    difficulty: Hard,
+    modifiers: [IronMan, HeroPermadeath],
+    goal_text: "Gewinnt Mission 1 auf Schwer, ohne zu speichern. Fällt Isolde, ist sie verloren.",
+    scoring: (victory_bonus: 4000.0, per_kill: 8.0, per_unit_lost: -20.0, per_building: 5.0, par_time: 2400.0, time_bonus_per_sec: 1.0, rank_by: Score),
+)

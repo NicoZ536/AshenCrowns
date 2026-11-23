@@ -22,8 +22,12 @@ mods/
         ├── buildings.ron      optional: Gebäude (Hülle  (buildings: [ ... ]) )
         ├── abilities.ron      optional: Fähigkeiten (Hülle  (abilities: [ ... ]) )
         ├── goods.ron          optional: Waren (Hülle  (goods: [ ... ]) ), siehe docs/design/rts_economy.md
-        └── missions/
-            └── *.ron          optional: zusätzliche Missionen (je eine MissionDef)
+        ├── missions/
+        │   └── *.ron          optional: zusätzliche Missionen (je eine MissionDef)
+        ├── scenarios/
+        │   └── *.ron          optional: Szenarien (MissionDef mit eigener Karte), siehe Abschnitt 4a
+        └── challenges/
+            └── *.ron          optional: Herausforderungen (ChallengeDef), siehe Abschnitt 4a
 ```
 
 Mods werden an zwei Orten gesucht (`content::discover_mods`):
@@ -213,6 +217,33 @@ Mod-Menü und werden nicht geladen. Prüfen Sie Missionen daher vor dem Spielen 
 
 ---
 
+## 4a. Szenarien und Herausforderungen als Mods
+
+Szenarien sind Missionen mit **eigener Karte** (`map`, `areas`, `starts`, `briefing`, `year` …, siehe
+[`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md)). Damit lassen sie sich ohne Codeänderung
+verteilen – auch Karten sind also **nicht mehr fest**, wenn die Mission ein `map`-Feld trägt.
+
+**Ablauf für Autoren:**
+
+1. Im Karteneditor (Hauptmenü → Karteneditor) Karte, Aufstellung, Ziele und Auslöser bauen, prüfen, im Testspiel erproben und
+   speichern. Die Datei liegt unter `<Benutzerordner>/scenarios/<id>.ron`.
+2. Die Datei nach `<mod>/data/scenarios/` kopieren (Ordner anlegen). Fertig – kein weiterer Eintrag nötig.
+3. Mod aktivieren: Das Szenario erscheint in **Szenarien** (Herkunft „Mod“) und in der Gefecht-Einrichtung unter
+   *Szenario*. Szenarien in `<Benutzerordner>/scenarios/` laden dagegen immer, ohne Mod.
+
+**Regeln:**
+
+* Szenarien eines Mods laden nur, wenn der Mod aktiv ist (`content::Content::load`). Verweist ein Szenario auf Einheiten
+  oder Gebäude des Mods, müssen diese Daten im selben Mod liegen; ist der Mod nicht aktiv, scheitert das Szenario beim Start.
+* Fehlerhafte Szenarien (RON-Fehler, ungültiges Kartenformat) werden mit Pfad im Mod-Menü gemeldet und übersprungen.
+* `Placement::id`, Tags, Bereiche und Ziele prüft der Editor (Prüfung) vor dem Speichern; `validate-data` prüft die
+  mitgelieferten Szenarien und Herausforderungen unter `assets/data/` (Laden, Welt aufbauen, `base` auflösen).
+* Herausforderungen (`<mod>/data/challenges/*.ron`) dürfen auf Missionen und Szenarien verweisen (`base`: ID); eine Mod-Herausforderung
+  mit der ID einer vorhandenen **ersetzt** diese. Format und Modifikatoren: Editor-Handbuch, Abschnitt 4.
+* Mod-Szenarien benötigen keine zusätzlichen Sprites; Dekoration und Quellen stammen aus der festen Liste der Editorobjekte.
+
+---
+
 ## 5. Validierung
 
 ```text
@@ -226,7 +257,9 @@ Verzeichnis, das `data/` enthält). Ablauf:
 2. Jeden `--mod` in der angegebenen Reihenfolge anwenden (`apply_overlay`) und die Anzahl der Einträge ausgeben.
 3. Alle Missionen in `assets/data/missions/*.ron` laden, jede Platzierungs-ID prüfen und die Mission **einmal starten**
    (`SimWorld::new`), um Karte und Aufstellung zu testen. Ausgabe je Mission: Ziele und Auslöser.
-4. Abschluss `<n> Mission(en) geprüft – alles konsistent.`
+4. Alle Szenarien (`assets/data/scenarios`) laden, Karte prüfen und die Welt aufbauen; alle Herausforderungen
+   (`assets/data/challenges`) laden, `base` auflösen, Modifikatoren anwenden und starten.
+5. Abschluss `<n> Mission(en) geprüft – alles konsistent.` sowie die Zahl geprüfter Szenarien und Herausforderungen.
 
 Exit-Code `0` bei Erfolg, `1` bei Fehler (mit Dateipfad und Grund, z. B. `Datei … fehlerhaft: …` oder
 `Ungültige Spieldaten: Gebäude barracks trainiert unbekannte Einheit …`), `2` bei falscher Bedienung.
@@ -279,7 +312,7 @@ Der Test `mod_overlay_overrides_and_adds` (`crates/ashen_sim/tests/simulation.rs
 | **Kein Code** | Mods sind RON-Dateien; es gibt keine Skriptsprache und keine Plug-in-Schnittstelle. Logik lässt sich nur über die vorhandenen `Condition`/`Action`-Varianten (Missionen) und die Effekttypen (Fähigkeiten) ausdrücken. |
 | **Keine Engine-Änderungen** | Rendering, Shader, Simulationsregeln, Schadens-/Rüstungstabelle (`DamageType::multiplier`) sind im Code fest. Neue Schadensarten, Rüstungsarten, Einheitenklassen, Ressourcen, Effekt- oder Befehlsarten sind nur durch Codeänderung möglich. |
 | `Rules` fest | `rules.ron` kann nicht per Mod überlagert werden (Tickrate, Tageslänge, Ressourcenmengen, Bevölkerungsgrenze, XP-Stufen). |
-| Karte fest | Die Karte entsteht aus `mapgen` mit festem Layout (Fluss, Straße, Basen, Minen); Missionen steuern nur `map_seed`. |
+| Karte | Ohne `map`-Feld entsteht die Karte aus `mapgen` mit festem Layout (Fluss, Straße, Basen, Minen); die Mission steuert nur `map_seed`. Szenarien liefern ihre Karte selbst mit (Abschnitt 4a). Gelände, Dekoration und Quellenarten sind feste Listen. |
 | Spielerslots fest | Drei Spieler (Spieler, Hohle, neutral); Feindschaft ist fest verdrahtet. |
 | Wellen-KI | Der Wellen-Direktor erzeugt ausschließlich `hollow_thrall`, `hollow_archer` und `grave_brute` (feste IDs). Wer diese Einheiten per Mod ersetzt, verändert die Wellen. Fehlt eine dieser IDs in den Daten, bricht die Wellenerzeugung ab, sobald diese Art gewürfelt wird (die Welle fällt kleiner aus oder entfällt). |
 | Bau-Menü | Das Baumenü der Arbeiter zeigt alle Gebäude mit `buildable: true` und `faction: EmberCrown` (inklusive Mod-Gebäuden, `mission::player_buildables`); das Tastenkürzel kommt aus `hotkey`. Ohne eigenes Sprite erscheint ein Mod-Gebäude als magentafarbenes Ersatz-Sprite. |
@@ -297,7 +330,7 @@ Der Menüpunkt „Modifikationen“ bietet heute nur Ein-/Ausschalten; die Lader
 
 * Mod-Manager-Oberfläche mit Ladereihenfolge, Abhängigkeiten und Konfliktanzeige,
 * erweiterte Validierung (Missionen aus Mods, Verweise in Auslösern),
-* Karten- und Szenario-Editor, mit dem Autoren Missionen und Karten ohne Handarbeit an RON-Dateien erstellen.
+* ~~Karten- und Szenario-Editor~~ – umgesetzt, siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md).
 
 Ob Mods künftig eigene Sprites und Audiodateien mitbringen dürfen, ist noch nicht entschieden und wäre eine
 Erweiterung der Asset-Pipeline (siehe Produktionsplan, Stufe 0).

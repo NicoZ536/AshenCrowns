@@ -14,14 +14,14 @@ use glam::{IVec2, Vec2};
 pub const MAP_SIZE: i32 = 72;
 
 /// Mittellinie des Flusses (Kachelkoordinaten).
-const RIVER: [(f32, f32); 6] = [(12.0, -2.0), (24.0, 16.0), (33.0, 30.0), (40.0, 42.0), (50.0, 58.0), (58.0, 74.0)];
+pub(crate) const RIVER: [(f32, f32); 6] = [(12.0, -2.0), (24.0, 16.0), (33.0, 30.0), (40.0, 42.0), (50.0, 58.0), (58.0, 74.0)];
 /// Straße vom Bergfried über die Brücke Richtung Ruinen.
-const ROAD: [(f32, f32); 6] = [(15.0, 56.0), (22.0, 50.0), (30.0, 42.0), (38.0, 36.5), (46.0, 28.0), (55.0, 18.0)];
+pub(crate) const ROAD: [(f32, f32); 6] = [(15.0, 56.0), (22.0, 50.0), (30.0, 42.0), (38.0, 36.5), (46.0, 28.0), (55.0, 18.0)];
 
 pub const PLAYER_BASE: Vec2 = Vec2::new(14.0, 56.0);
 pub const ENEMY_BASE: Vec2 = Vec2::new(61.5, 13.5);
 
-fn dist_to_polyline(p: Vec2, line: &[(f32, f32)]) -> (f32, f32) {
+pub(crate) fn dist_to_polyline(p: Vec2, line: &[(f32, f32)]) -> (f32, f32) {
     let mut best = (f32::MAX, 0.0);
     let n = line.len() - 1;
     for i in 0..n {

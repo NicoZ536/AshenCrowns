@@ -128,6 +128,11 @@ impl WorldView {
         }
     }
 
+    /// Verwirft die vorberechneten Karteneigenschaften (der Karteneditor ändert das Gelände zur Laufzeit).
+    pub fn invalidate_map(&mut self) {
+        self.map_size = (0, 0);
+    }
+
     /// Statische Karteneigenschaften vorberechnen (Farbvariation, Wassertiefe, Brücken).
     fn prepare(&mut self, map: &TileMap) {
         if self.map_size == (map.width, map.height) && !self.tint.is_empty() {

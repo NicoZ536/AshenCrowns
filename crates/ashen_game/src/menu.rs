@@ -24,6 +24,9 @@ pub enum Page {
     Settings,
     Mods,
     Credits,
+    Scenarios,
+    Challenges,
+    Skirmish,
 }
 
 /// Wunsch des Menüs an das Spiel.
@@ -31,6 +34,9 @@ pub enum Page {
 pub enum MenuAction {
     None,
     Start { mission: usize, settings: MatchSettings },
+    /// Mission aus Daten (Szenario, Gefecht, Herausforderung); `challenge` trägt Definition und Eiserner-Mann-Flag.
+    StartDef { mission: Box<ashen_sim::mission::MissionDef>, settings: MatchSettings, challenge: Option<Box<(ashen_sim::challenge::ChallengeDef, bool)>> },
+    OpenEditor(crate::editor::EditorInit),
     Load(std::path::PathBuf),
     ReloadContent,
     Quit,
@@ -48,6 +54,7 @@ pub struct MenuScene {
     pub new_mission: usize,
     pub action: MenuAction,
     pub error: Option<String>,
+    pub modes: crate::play_modes::ModesState,
 }
 
 impl MenuScene {
@@ -72,6 +79,7 @@ impl MenuScene {
             new_mission: 0,
             action: MenuAction::None,
             error: None,
+            modes: crate::play_modes::ModesState::new(),
         }
     }
 
@@ -138,7 +146,7 @@ impl MenuScene {
         egui::Area::new(Id::unique("menu_panel")).anchor(Align2::CENTER_TOP, Vec2::new(0.0, top - screen.min.y)).show(&ctx, |ui| {
             art.panel(ui, PanelKind::Ornate, egui::Margin::symmetric(36, 30), |ui| {
                 match self.page {
-                    Page::Main => self.main_page(ui, engine, art),
+                    Page::Main => self.main_page(ui, engine, content, art),
                     Page::NewGame => self.new_game_page(ui, engine, content, settings, art),
                     Page::Load => {
                         ui.set_width(560.0);
@@ -155,6 +163,9 @@ impl MenuScene {
                         self.back(ui, engine, art, Some(settings));
                     }
                     Page::Mods => self.mods_page(ui, engine, content, settings, art),
+                    Page::Scenarios => crate::play_modes::scenarios_page(self, ui, engine, content, settings, art),
+                    Page::Challenges => crate::play_modes::challenges_page(self, ui, engine, content, settings, art),
+                    Page::Skirmish => crate::play_modes::skirmish_page(self, ui, engine, content, settings, art),
                     Page::Credits => {
                         ui.set_width(520.0);
                         ui_art::heading(ui, art, "Credits", 26.0);
@@ -199,7 +210,7 @@ impl MenuScene {
         });
     }
 
-    fn main_page(&mut self, ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt) {
+    fn main_page(&mut self, ui: &mut egui::Ui, engine: &mut Engine, content: &Content, art: &UiArt) {
         ui.vertical_centered(|ui| {
             ui.spacing_mut().item_spacing.y = 4.0;
             let mut b = |ui: &mut egui::Ui, t: &str, enabled: bool, tip: &str| {
@@ -224,14 +235,25 @@ impl MenuScene {
             if b(ui, "Spiel laden", true, "Gespeicherte Partien") {
                 self.page = Page::Load;
             }
-            if b(ui, "Gefecht", true, "Schneller Kampf (Skirmish): Zerstört den Hohlschrein") {
-                self.action = MenuAction::Start { mission: 0, settings: MatchSettings { mode: GameMode::Skirmish, difficulty: self.new_difficulty, seed: self.new_seed, hero_permadeath: false } };
+            if b(ui, "Gefecht", true, "Karte, Schwierigkeit, Startressourcen und Siegbedingung wählen") {
+                self.modes.refresh_scenarios(content);
+                self.page = Page::Skirmish;
+            }
+            if b(ui, "Szenarien", true, "Historische Szenarien, Mod-Szenarien und eigene Karten") {
+                self.modes.refresh_scenarios(content);
+                self.page = Page::Scenarios;
+            }
+            if b(ui, "Herausforderungen", true, "Regelvarianten mit Wertung und Bestenliste") {
+                self.modes.refresh_challenges();
+                self.page = Page::Challenges;
             }
             b(ui, "Grand Campaign", false, "Geplant: Weltkarte, Dynastien und Diplomatie (Phasen 3, 8, 10 der Roadmap)");
             if b(ui, "Sandbox", true, "Freies Bauen ohne Angriffe, reichlich Rohstoffe, kein Kriegsnebel") {
                 self.action = MenuAction::Start { mission: 0, settings: MatchSettings { mode: GameMode::Sandbox, difficulty: Difficulty::Normal, seed: self.new_seed, hero_permadeath: false } };
             }
-            b(ui, "Karteneditor", false, "Geplant: Phase 14 der Roadmap");
+            if b(ui, "Karteneditor", true, "Karten und Szenarien gestalten, prüfen und im Testspiel erproben") {
+                self.action = MenuAction::OpenEditor(crate::editor::EditorInit::New { width: 72, height: 72, seed: 897, preset: ashen_sim::genmap::GenPreset::Aschmark, blank: false });
+            }
             if b(ui, "Modifikationen", true, "Daten-Mods aktivieren oder deaktivieren") {
                 self.page = Page::Mods;
             }

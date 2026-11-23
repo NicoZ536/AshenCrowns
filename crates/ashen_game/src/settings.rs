@@ -59,6 +59,16 @@ pub fn saves_dir() -> PathBuf {
     data_dir().join("saves")
 }
 
+/// Ordner der selbst erstellten Szenarien.
+pub fn scenarios_dir() -> PathBuf {
+    data_dir().join("scenarios")
+}
+
+/// Lokale Bestenliste der Herausforderungen.
+pub fn leaderboard_path() -> PathBuf {
+    data_dir().join("leaderboard.ron")
+}
+
 fn settings_path() -> PathBuf {
     data_dir().join("settings.ron")
 }

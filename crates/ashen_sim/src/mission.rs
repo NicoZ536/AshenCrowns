@@ -4,6 +4,7 @@
 
 use crate::data::Cost;
 use crate::env::Weather;
+use crate::scenario::{AreaDef, MapData, StartPos};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -137,6 +138,13 @@ pub enum Condition {
     Residents(u32),
     /// Mindestvorrat einer Ware oder Ressource (Item-ID).
     Stock { item: String, amount: f32 },
+    /// Mindestens `count` eigene Einheiten stehen im benannten Bereich.
+    UnitsInArea { area: String, count: u32 },
+    /// Höchstens so viele gegnerische Einheiten leben noch.
+    EnemyUnitsAtMost(u32),
+    /// Das Gebäude mit diesem Tag hat Schaden genommen.
+    TagDamaged(String),
+    Not(Box<Condition>),
     All(Vec<Condition>),
     Any(Vec<Condition>),
 }
@@ -153,6 +161,8 @@ pub enum Action {
     EnableWaves(bool),
     SetWeather(Weather),
     Chronicle(String),
+    /// Erzeugt Einheiten im benannten Bereich; `attack` schickt sie gegen die Spielersiedlung.
+    SpawnUnits { unit: String, owner: u8, area: String, count: u32, #[serde(default)] attack: bool },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -166,7 +176,7 @@ pub struct TriggerDef {
 }
 
 /// Definition einer Mission.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MissionDef {
     pub id: String,
     pub name: String,
@@ -184,12 +194,39 @@ pub struct MissionDef {
     pub defeat_tag: String,
     /// Tag des gegnerischen Hauptgebäudes (Ziel in Gefecht/Kampagne, Spawnpunkt der Wellen).
     pub enemy_base_tag: String,
+    /// Explizite Karte (Szenarien); ohne Angabe wird die Karte aus `map_seed` erzeugt.
+    #[serde(default)]
+    pub map: Option<MapData>,
+    /// Benannte Bereiche für Auslöser und Aktionen.
+    #[serde(default)]
+    pub areas: Vec<AreaDef>,
+    /// Startpositionen der Spieler (Editor, Gefechtseinrichtung, Validierung).
+    #[serde(default)]
+    pub starts: Vec<StartPos>,
+    /// Ausführliche Einsatzbesprechung (Szenarienliste).
+    #[serde(default)]
+    pub briefing: String,
+    #[serde(default)]
+    pub author: String,
+    /// Jahr n.F. des historischen Ereignisses (Anzeige).
+    #[serde(default)]
+    pub year: Option<u32>,
+    /// Obergrenze für Streitkräfte (alle Einheiten außer Arbeitern) des Spielers.
+    #[serde(default)]
+    pub unit_cap: Option<u32>,
+    /// Tageszeit (0..1) bei Spielbeginn; ohne Angabe der Standard der Umgebung.
+    #[serde(default)]
+    pub start_time: Option<f32>,
 }
 
 impl MissionDef {
     pub fn load(path: &Path) -> Result<MissionDef, String> {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         ron::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))
+    }
+
+    pub fn area(&self, id: &str) -> Option<&AreaDef> {
+        self.areas.iter().find(|a| a.id == id)
     }
 
     pub fn objective(&self, id: &str) -> Option<&ObjectiveDef> {

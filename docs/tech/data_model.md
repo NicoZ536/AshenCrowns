@@ -434,8 +434,8 @@ Das Beispiel ist `assets/data/missions/m01_last_settlement.ron`.
 
 ### 4.1 `MissionDef`
 
-Alle Felder sind erforderlich (kein `#[serde(default)]` auf Strukturebene; `WaveRules` selbst ist aber
-`#[serde(default)]`).
+Die Felder bis `enemy_base_tag` sind erforderlich (kein `#[serde(default)]` auf Strukturebene; `WaveRules` selbst
+ist aber `#[serde(default)]`). Die Szenario-Felder darunter sind optional (`#[serde(default)]`).
 
 | Feld | Typ | Bedeutung |
 |---|---|---|
@@ -450,6 +450,16 @@ Alle Felder sind erforderlich (kein `#[serde(default)]` auf Strukturebene; `Wave
 | `triggers` | `Vec<TriggerDef>` | Auslöser |
 | `defeat_tag` | `String` | Tag des Gebäudes, dessen Zerstörung zur Niederlage führt (Vertical Slice: `player_keep`) |
 | `enemy_base_tag` | `String` | Tag des Gegnerhauptgebäudes (Wellen-Spawn, Gefechtsziel; Vertical Slice: `enemy_shrine`) |
+| `map` | `Option<MapData>` | Explizite Karte (Szenarien); `None` = Generator aus `map_seed` |
+| `areas` | `Vec<AreaDef>` | Benannte Bereiche (Auslöser, Erscheinen von Einheiten) |
+| `starts` | `Vec<StartPos>` | Startpositionen der Spieler (Editor, Prüfung, Kamerastart) |
+| `briefing`, `author` | `String` | Einsatzbesprechung und Autor (Szenarienliste) |
+| `year` | `Option<u32>` | Jahr n.F. |
+| `unit_cap` | `Option<u32>` | Obergrenze für Streitkräfte des Spielers (`systems/commands.rs`, Befehl `Train`) |
+| `start_time` | `Option<f32>` | Tageszeit bei Spielbeginn |
+
+Ein leerer `defeat_tag` deaktiviert die Regel „Hauptgebäude verloren“. Details zu `MapData` (Kachelcodes, Dekoration,
+Quellen), den neuen Bedingungen und Aktionen sowie zum Editor: [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md).
 
 `WaveRules` (alle Standardwerte): `enabled = true`, `first_wave = 200.0`, `interval_day = 150.0`,
 `interval_night = 95.0`, `base_budget = 3.0`, `budget_per_wave = 1.7`, `night_mult = 1.5`.
@@ -484,6 +494,10 @@ Modi aktiv. Jeder Auslöser feuert **höchstens einmal** (`MissionState::fired`)
 | `EraReached(u8)` | Ausbaustufe der Siedlung ≥ n |
 | `Residents(u32)` | Mindestens n Bewohner |
 | `Stock { item, amount }` | Vorrat einer Ware/Ressource ≥ amount |
+| `UnitsInArea { area, count }` | Mindestens `count` eigene Einheiten im benannten Bereich |
+| `EnemyUnitsAtMost(u32)` | Höchstens so viele gegnerische Einheiten leben |
+| `TagDamaged(String)` | Das Gebäude mit diesem Tag hat Schaden genommen |
+| `Not(Box<Condition>)` | Verneinung |
 | `All(Vec<Condition>)` / `Any(Vec<Condition>)` | Alle / mindestens eine |
 
 | `Action` | Wirkung |
@@ -497,6 +511,7 @@ Modi aktiv. Jeder Auslöser feuert **höchstens einmal** (`MissionState::fired`)
 | `EnableWaves(bool)` | Wellen-Direktor ein-/ausschalten (außer Sandbox) |
 | `SetWeather(Weather)` | Wetter setzen (150 s) |
 | `Chronicle(String)` | Chronikeintrag (`Omen`) |
+| `SpawnUnits { unit, owner, area, count, attack }` | Einheiten in der Mitte des Bereichs erzeugen; `attack` schickt sie gegen die Siedlung |
 
 Eingebaute Regeln (`systems/script.rs`, unabhängig von Triggern): Niederlage, wenn das Gebäude mit `defeat_tag`
 fehlt oder der Spieler weder Gebäude noch Einheiten hat (außer Sandbox); im Modus Gefecht Sieg, wenn der
