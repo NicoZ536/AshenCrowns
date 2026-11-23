@@ -5,6 +5,13 @@
     id: "m01_last_settlement",
     name: "Die letzte Siedlung",
     description: "Brennhollow, Aschmark, Jahr 897 n.F. Die Grenzsiedlung ist auf sich allein gestellt. Sichert Nahrung und Holz, bildet Soldaten aus, übersteht die Nächte – und findet die Quelle der Hohlen, bevor sie Brennhollow verschlingt.",
+    kind: "Aufbau und Verteidigung",
+    briefing: "Brennhollow, Aschmark, Jahr 897 n.F. Die Grenzsiedlung ist auf sich allein gestellt: dreißig Seelen, ein Bergfried, ein Gehöft – und jede Nacht kommt der Nebel näher. Isolde Raventhorn, Wächterin der Aschmark, hat Brennhollow mit einer Handvoll Getreuer erreicht. Sichert Nahrung und Holz, errichtet ein zweites Gehöft und eine Kaserne, bildet Soldaten aus und übersteht die erste Nacht. Danach gilt es, die Quelle der Hohlen jenseits des Flusses im Nordosten zu finden: einen Schrein in den Ruinen von Vael Dorn, den der Fahle Vogt hütet. Zerstört den Hohlschrein, bevor Brennhollow verschlungen wird.",
+    victory_text: "Brennhollow steht. Die Glut der Siedlung brennt weiter.",
+    defeat_text: "Brennhollow ist gefallen. Asche bedeckt die Mark.",
+    chronicle_title: "Chronik von Brennhollow",
+    year: Some(897),
+    music: ["build_calm", "boss_pale_reeve"],
     map_seed: 897,
     start_resources: (gold: 300.0, wood: 200.0, stone: 100.0, food: 150.0),
     // Vorräte der Siedlung: Ausrüstung für die ersten Soldaten, etwas Baumaterial und Kleidung.

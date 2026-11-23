@@ -63,6 +63,7 @@ fn collect_condition(c: &Condition, r: &mut Refs) {
         Condition::TagDead(t) | Condition::TagDiscovered(t) | Condition::TagDamaged(t) => r.tags.push(t.clone()),
         Condition::Stock { item, .. } => r.items.push(item.clone()),
         Condition::UnitsInArea { area, .. } => r.areas.push(area.clone()),
+        Condition::TagInArea { area, .. } | Condition::UnitKindInArea { area, .. } => r.areas.push(area.clone()),
         Condition::Not(c) => collect_condition(c, r),
         Condition::All(v) | Condition::Any(v) => v.iter().for_each(|c| collect_condition(c, r)),
         _ => {}
@@ -82,6 +83,22 @@ fn collect(doc: &EditDoc) -> Refs {
                 Action::SpawnUnits { unit, area, .. } => {
                     r.units.push(unit.clone());
                     r.areas.push(area.clone());
+                }
+                Action::MoveTag { area, .. } => r.areas.push(area.clone()),
+                Action::Decision(d) => {
+                    for o in &d.options {
+                        for a in &o.actions {
+                            match a {
+                                Action::SpawnUnits { unit, area, .. } => {
+                                    r.units.push(unit.clone());
+                                    r.areas.push(area.clone());
+                                }
+                                Action::Victory => r.victory = true,
+                                Action::Defeat => r.defeat = true,
+                                _ => {}
+                            }
+                        }
+                    }
                 }
                 _ => {}
             }
@@ -327,7 +344,7 @@ mod tests {
         doc.def.triggers.push(ashen_sim::mission::TriggerDef {
             id: "kaputt".into(),
             condition: Condition::UnitsInArea { area: "nirgends".into(), count: 1 },
-            actions: vec![Action::SpawnUnits { unit: "drache".into(), owner: 1, area: "nirgends".into(), count: 1, attack: false }],
+            actions: vec![Action::SpawnUnits { unit: "drache".into(), owner: 1, area: "nirgends".into(), count: 1, attack: false, tag: None }],
             modes: vec![],
         });
         let issues = validate(&doc, &d);
@@ -336,5 +353,32 @@ mod tests {
         assert!(errors.iter().any(|e| e.contains("Niederlage-Tag")), "{errors:?}");
         assert!(errors.iter().any(|e| e.contains("Bereich 'nirgends'")), "{errors:?}");
         assert!(errors.iter().any(|e| e.contains("Einheit 'drache'")), "{errors:?}");
+    }
+
+    /// Jede Kampagnenmission besteht die Editor-Validierung (Fehler machen eine Mission unspielbar), auch mit allen Flags.
+    #[test]
+    fn campaign_missions_pass_editor_validation() {
+        let d = data();
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/data/campaign");
+        let mut checked = 0;
+        let mut failures: Vec<String> = Vec::new();
+        for e in std::fs::read_dir(&dir).expect("Kampagnenordner").flatten() {
+            let path = e.path();
+            if path.extension().is_none_or(|x| x != "ron") || path.file_name().is_some_and(|n| n == "campaign.ron") {
+                continue;
+            }
+            let def = ashen_sim::mission::MissionDef::load(&path).expect("Mission");
+            let flags: Vec<String> = def.variants.iter().flat_map(|v| v.requires.iter().cloned()).collect();
+            for variant in [def.clone(), def.with_flags(&flags)] {
+                let doc = EditDoc::from_mission(&d, &variant).unwrap_or_else(|e| panic!("{}: {e}", def.id));
+                let issues = validate(&doc, &d);
+                if has_errors(&issues) {
+                    failures.push(format!("{}: {:?}", def.id, texts(&issues, Level::Error)));
+                }
+            }
+            checked += 1;
+        }
+        assert!(failures.is_empty(), "{failures:#?}");
+        assert!(checked >= 16, "{checked} Kampagnenmissionen geprüft");
     }
 }

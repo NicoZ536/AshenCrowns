@@ -6,6 +6,7 @@
 mod art;
 mod art3d;
 mod audio_bridge;
+mod campaign_ui;
 mod content;
 mod editor;
 mod game;
@@ -37,7 +38,7 @@ fn usage() -> &'static str {
   --screenshot <datei.png>        Ohne Fenster rendern und Bild speichern
   --size <BxH>                    Bildgröße für Screenshots (Standard 1600x900)
   --frames <n>                    Gerenderte Frames vor dem Screenshot (Standard 90)
-  --scene <menu|mission|skirmish|sandbox|editor|scenarios|challenges|skirmish-setup|worldmap|battle|siege>
+  --scene <menu|mission|skirmish|sandbox|editor|scenarios|challenges|skirmish-setup|campaign|campaign-slots|campaign-briefing|campaign-ending|worldmap|battle|siege>
                                   worldmap = Große Kampagne, battle/siege = aus einer Weltkarten-Schlacht erzeugte Echtzeitschlacht
   --sim-seconds <s>               Simulation vor dem Screenshot vorlaufen lassen
   --time <0..1>                   Tageszeit (0.25 Morgen, 0.5 Mittag, 0.76 Dämmerung, 0.9 Nacht)
@@ -68,7 +69,10 @@ fn usage() -> &'static str {
   --editor-dialog <name>          Editor: Dialog öffnen (data, new, load)
   --editor-tab <name>             Editor: Reiter der Missionsdaten (general, objectives, triggers, rules, areas, validation)
   --editor-demo                   Editor: einige Pinselstriche und Objekte setzen (für Screenshots)
-  --select <n>                    Szenarien-/Herausforderungsliste: Eintrag vorwählen"
+  --select <n>                    Szenarien-/Herausforderungsliste: Eintrag vorwählen
+  --campaign-mission <id>         Kampagne: Mission für das Briefing wählen (z. B. m09_black_winter)
+  --campaign-done <n>             Kampagne: die ersten n Missionen als abgeschlossen anzeigen (Vorführprofil, wird nicht gespeichert)
+  --flags <a,b,...>               Kampagnen-Flags setzen (Entscheidungen früherer Missionen), auch für --scenario <Kampagnenmission>"
 }
 
 fn main() {
@@ -139,6 +143,10 @@ fn main() {
                 match scene.as_str() {
                     "editor" => auto.editor = true,
                     "scenarios" | "challenges" => auto.menu_page = Some(scene.clone()),
+                    "campaign" | "campaign-slots" | "campaign-briefing" | "campaign-ending" => {
+                        auto.menu_page = Some("campaign".into());
+                        auto.campaign_stage = Some(scene.trim_start_matches("campaign").trim_start_matches('-').to_string());
+                    }
                     "skirmish-setup" => auto.menu_page = Some("skirmish".into()),
                     _ => {}
                 }
@@ -200,6 +208,9 @@ fn main() {
             "--editor-tab" => auto.editor_tab = Some(next(&mut i)),
             "--editor-demo" => auto.editor_demo = true,
             "--select" => auto.menu_select = next(&mut i).parse().unwrap_or(0),
+            "--campaign-mission" => auto.campaign_mission = Some(next(&mut i)),
+            "--campaign-done" => auto.campaign_done = next(&mut i).parse().unwrap_or(0),
+            "--flags" => auto.flags = next(&mut i).split(',').filter(|f| !f.is_empty()).map(str::to_string).collect(),
             other => {
                 eprintln!("Unbekannte Option {other}\n{}", usage());
                 std::process::exit(2);

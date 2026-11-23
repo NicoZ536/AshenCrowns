@@ -43,6 +43,8 @@ struct MusicPlayer {
     pending_down: Option<(Intensity, f32)>,
     duck_db: f32,
     sting: Option<HandleId>,
+    /// Bevorzugte Stücke (z. B. das Boss-Thema der Mission); gilt je Intensität vor dem Standardstück.
+    preferred: Vec<String>,
 }
 
 struct SeqItem {
@@ -114,7 +116,7 @@ impl AudioSystem {
             last_play: HashMap::new(),
             last_variant: HashMap::new(),
             active: HashMap::new(),
-            music: MusicPlayer { current: None, intro: None, intensity: Intensity::Menu, pending_down: None, duck_db: 0.0, sting: None },
+            music: MusicPlayer { current: None, intro: None, intensity: Intensity::Menu, pending_down: None, duck_db: 0.0, sting: None, preferred: Vec::new() },
             ambience: HashMap::new(),
             sequence: VecDeque::new(),
             seq_handle: None,
@@ -218,6 +220,19 @@ impl AudioSystem {
         self.play_at(event_id, 0.0, 0.0)
     }
 
+    /// Bevorzugte Musikstücke der laufenden Mission (Track-IDs aus dem Manifest); leer = Standard.
+    pub fn set_preferred_music(&mut self, ids: Vec<String>) {
+        if self.music.preferred == ids {
+            return;
+        }
+        self.music.preferred = ids;
+        // Läuft schon Musik, wechselt ein bevorzugtes Stück der aktuellen Intensität sofort ein.
+        if self.music.current.is_some() {
+            let intensity = self.music.intensity;
+            self.switch_music(intensity);
+        }
+    }
+
     /// Gewünschte Musikintensität. Steigerungen wirken sofort, Absenkungen nach 8 s Ruhe.
     pub fn set_music_intensity(&mut self, intensity: Intensity) {
         if intensity == self.music.intensity && self.music.current.is_some() {
@@ -234,7 +249,8 @@ impl AudioSystem {
 
     fn switch_music(&mut self, intensity: Intensity) {
         self.music.intensity = intensity;
-        let Some(track) = self.manifest.music.iter().find(|m| m.intensity == intensity).cloned() else { return };
+        let preferred = self.manifest.music.iter().find(|m| m.intensity == intensity && self.music.preferred.contains(&m.id));
+        let Some(track) = preferred.or_else(|| self.manifest.music.iter().find(|m| m.intensity == intensity)).cloned() else { return };
         if self.music.current.as_ref().is_some_and(|(id, _)| *id == track.id) {
             return;
         }

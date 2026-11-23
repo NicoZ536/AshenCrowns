@@ -163,6 +163,18 @@ pub enum Condition {
     EnemyUnitsAtMost(u32),
     /// Das Gebäude mit diesem Tag hat Schaden genommen.
     TagDamaged(String),
+    /// Kampagnen-/Missionsflag ist gesetzt (aus früheren Missionen oder per [`Action::SetFlag`]).
+    Flag(String),
+    /// Mindestens eine lebende Einheit (beliebiger Seite) mit diesem Tag steht im benannten Bereich.
+    TagInArea { tag: String, area: String },
+    /// Eine lebende Einheit mit diesem Tag hat weniger als `percent` Prozent ihrer Lebenspunkte (Bossphasen).
+    TagHealthBelow { tag: String, percent: f32 },
+    /// Höchstens so viele Soldaten (ohne Arbeiter und Helden) stehen noch auf Spielerseite.
+    ArmyAtMost(u32),
+    /// Alle zuvor ausgelösten Dialogzeilen sind gesprochen (zeitliche Abfolge von Szenen).
+    DialogueDone,
+    /// Mindestens `count` eigene Einheiten dieser Art stehen im Bereich (z. B. gerettete Zivilisten).
+    UnitKindInArea { unit: String, area: String, count: u32 },
     Not(Box<Condition>),
     All(Vec<Condition>),
     Any(Vec<Condition>),
@@ -181,7 +193,55 @@ pub enum Action {
     SetWeather(Weather),
     Chronicle(String),
     /// Erzeugt Einheiten im benannten Bereich; `attack` schickt sie gegen die Spielersiedlung.
-    SpawnUnits { unit: String, owner: u8, area: String, count: u32, #[serde(default)] attack: bool },
+    /// `tag` kennzeichnet die Einheiten (für Bedingungen und [`Action::ChangeOwner`]).
+    SpawnUnits { unit: String, owner: u8, area: String, count: u32, #[serde(default)] attack: bool, #[serde(default)] tag: Option<String> },
+    /// Setzt ein Flag; Flags bleiben in der Kampagne erhalten.
+    SetFlag(String),
+    /// Spricht eine Zeilenfolge nacheinander (Erzähler und Figuren); Pausen ergeben sich aus der Textlänge.
+    Dialogue(Vec<DialogueLine>),
+    /// Öffnet eine Entscheidung; die Wahl setzt das Flag der Option und führt deren Aktionen aus.
+    Decision(DecisionDef),
+    /// Übergibt alle lebenden Einheiten mit diesem Tag an einen anderen Besitzer (Rettung, Beitritt, Verrat).
+    ChangeOwner { tag: String, owner: u8 },
+    /// Befiehlt allen Einheiten mit diesem Tag, zum Bereich zu laufen (`attack` = angreifend unterwegs).
+    MoveTag { tag: String, area: String, attack: bool },
+}
+
+/// Eine gesprochene Zeile (Erzähler oder Figur) mit optionaler Audio-Event-ID.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DialogueLine {
+    pub speaker: String,
+    pub text: String,
+    #[serde(default)]
+    pub voice: Option<String>,
+}
+
+/// Wahlmöglichkeit einer Entscheidung.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DecisionOption {
+    /// Flag, das bei Wahl gesetzt wird (Kampagnenvariable).
+    pub flag: String,
+    pub label: String,
+    /// Hinweis auf die Folgen (Tooltip im Entscheidungsfenster).
+    #[serde(default)]
+    pub detail: String,
+    /// Die Option ist nur wählbar, wenn alle diese Flags gesetzt sind.
+    #[serde(default)]
+    pub requires: Vec<String>,
+    #[serde(default)]
+    pub actions: Vec<Action>,
+}
+
+/// Entscheidung, die der Spieler per Dialogauswahl trifft.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DecisionDef {
+    pub id: String,
+    pub speaker: String,
+    pub title: String,
+    pub text: String,
+    #[serde(default)]
+    pub voice: Option<String>,
+    pub options: Vec<DecisionOption>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -240,6 +300,88 @@ pub struct MissionDef {
     /// Gedacht für Schlachten aus der Großen Kampagne, die ohne Stadt und Nachschub beginnen.
     #[serde(default)]
     pub free_economy: bool,
+    /// Missionstyp zur Anzeige (z. B. „Eskorte“, „Belagerung“).
+    #[serde(default)]
+    pub kind: String,
+    /// Schlusstext im Siegbildschirm; leer = Standardtext.
+    #[serde(default)]
+    pub victory_text: String,
+    /// Schlusstext im Niederlagebildschirm; leer = Standardtext.
+    #[serde(default)]
+    pub defeat_text: String,
+    /// Chronikeintrag beim Missionsstart; leer = Standardtext.
+    #[serde(default)]
+    pub intro_chronicle: String,
+    /// Überschrift der Chronik im Menü; leer = Missionsname.
+    #[serde(default)]
+    pub chronicle_title: String,
+    /// Änderungen je nach Kampagnen-Flags (Entscheidungen früherer Missionen).
+    #[serde(default)]
+    pub variants: Vec<FlagVariant>,
+    /// Zustand aus der Kampagne: gesetzte Flags und übernommene Helden.
+    #[serde(default)]
+    pub carry: Carry,
+    /// Bevorzugte Musikstücke (Track-IDs aus dem Audio-Manifest), z. B. das Boss-Thema der Mission.
+    #[serde(default)]
+    pub music: Vec<String>,
+}
+
+/// Aus früheren Missionen übernommener Kampagnenzustand.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct Carry {
+    #[serde(default)]
+    pub flags: Vec<String>,
+    #[serde(default)]
+    pub heroes: Vec<HeroRecord>,
+}
+
+/// Fortschritt eines Helden (Stufe, Talente, Ausrüstung), der zwischen Missionen übernommen wird.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct HeroRecord {
+    /// Einheiten-ID des Helden (z. B. `hero_isolde`).
+    pub unit: String,
+    pub level: u32,
+    pub xp: u32,
+    pub talents: Vec<u8>,
+    /// Ausrüstungsplätze (Waffe, Rüstung, Amulett, zwei Ringe) als Gegenstands-IDs.
+    pub equipment: Vec<Option<String>>,
+    pub inventory: Vec<String>,
+}
+
+/// Änderung der Mission, wenn bestimmte Flags gesetzt (`requires`) beziehungsweise nicht gesetzt (`forbids`) sind.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct FlagVariant {
+    #[serde(default)]
+    pub requires: Vec<String>,
+    #[serde(default)]
+    pub forbids: Vec<String>,
+    /// Satz für das Briefing („Weil Ihr …“).
+    #[serde(default)]
+    pub note: String,
+    #[serde(default)]
+    pub grant: Cost,
+    #[serde(default)]
+    pub goods: Vec<(String, f32)>,
+    /// Entfernt Platzierungen mit diesen Tags.
+    #[serde(default)]
+    pub remove_tags: Vec<String>,
+    #[serde(default)]
+    pub placements: Vec<Placement>,
+    #[serde(default)]
+    pub objectives: Vec<ObjectiveDef>,
+    #[serde(default)]
+    pub areas: Vec<AreaDef>,
+    #[serde(default)]
+    pub triggers: Vec<TriggerDef>,
+    /// Faktor auf das Wellenbudget (0 = unverändert).
+    #[serde(default)]
+    pub wave_mult: f32,
+}
+
+impl FlagVariant {
+    pub fn applies(&self, flags: &[String]) -> bool {
+        self.requires.iter().all(|f| flags.contains(f)) && !self.forbids.iter().any(|f| flags.contains(f))
+    }
 }
 
 impl MissionDef {
@@ -254,6 +396,30 @@ impl MissionDef {
 
     pub fn objective(&self, id: &str) -> Option<&ObjectiveDef> {
         self.objectives.iter().find(|o| o.id == id)
+    }
+
+    /// Varianten, die bei diesen Flags wirken.
+    pub fn active_variants<'a>(&'a self, flags: &[String]) -> Vec<&'a FlagVariant> {
+        self.variants.iter().filter(|v| v.applies(flags)).collect()
+    }
+
+    /// Wendet alle zu den Flags passenden Varianten an und liefert die spielbereite Mission.
+    pub fn with_flags(&self, flags: &[String]) -> MissionDef {
+        let mut m = self.clone();
+        for v in self.active_variants(flags) {
+            m.start_resources.add(&v.grant);
+            m.start_goods.extend(v.goods.iter().cloned());
+            m.placements.retain(|p| p.tag.as_ref().is_none_or(|t| !v.remove_tags.contains(t)));
+            m.placements.extend(v.placements.iter().cloned());
+            m.objectives.extend(v.objectives.iter().cloned());
+            m.areas.extend(v.areas.iter().cloned());
+            m.triggers.extend(v.triggers.iter().cloned());
+            if v.wave_mult > 0.0 {
+                m.waves.base_budget *= v.wave_mult;
+                m.waves.budget_per_wave *= v.wave_mult;
+            }
+        }
+        m
     }
 }
 
@@ -278,6 +444,21 @@ pub struct MissionState {
     pub discovered_tags: Vec<String>,
     pub dead_tags: Vec<String>,
     pub waves_survived: u32,
+    /// Gesetzte Flags (übernommene und in dieser Mission gesetzte).
+    #[serde(default)]
+    pub flags: Vec<String>,
+    /// Offene Entscheidungen; die erste ist die aktuell angezeigte.
+    #[serde(default)]
+    pub decisions: Vec<DecisionDef>,
+    /// Getroffene Entscheidungen: (Entscheidungs-ID, gewähltes Flag).
+    #[serde(default)]
+    pub choices: Vec<(String, String)>,
+    /// Noch nicht gesprochene Dialogzeilen: (Zeitpunkt in Sekunden, Zeile).
+    #[serde(default)]
+    pub line_queue: Vec<(f32, DialogueLine)>,
+    /// Zeitpunkt, ab dem die nächste Zeile gesprochen werden darf.
+    #[serde(default)]
+    pub line_ready: f32,
 }
 
 impl MissionState {
@@ -287,5 +468,15 @@ impl MissionState {
 
     pub fn has_objective(&self, id: &str) -> bool {
         self.objectives.iter().any(|(o, _)| o == id)
+    }
+
+    pub fn has_flag(&self, flag: &str) -> bool {
+        self.flags.iter().any(|f| f == flag)
+    }
+
+    /// Die Entscheidung, die dem Spieler gerade zur Wahl steht: erst nachdem alle vorangehenden
+    /// Dialogzeilen gesprochen sind.
+    pub fn open_decision(&self, time: f32) -> Option<&DecisionDef> {
+        if self.line_queue.is_empty() && time >= self.line_ready { self.decisions.first() } else { None }
     }
 }

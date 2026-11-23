@@ -708,6 +708,10 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 | `AC_boss_ashen_dragon` | `boss_ashen_dragon` | – | v2/v3 | uralt / m | archaisch |
 | `AC_boss_root_mother` | `boss_root_mother` | thorn_covenant (korrumpiert) | v2/v3 | uralt / w | keiner |
 | `AC_boss_pale_reeve` | `boss_pale_reeve` | hollowed | v3 | untot / m | bürokratisch britisch |
+| `AC_char_wendel` | `char_wendel` | – (Graue Kompanie) | v3 | ~55 / m | rau, nordenglisch gefärbt |
+| `AC_char_nel` | `char_nel` | – | v3 | ~8 / w | neutral, leise |
+| `AC_boss_stone_oath` | `boss_stone_oath` | – (Skarnheim, verdreht) | v2/v3 | zeitlos / m | archaisch |
+| `AC_boss_reef_mistress` | `boss_reef_mistress` | hollowed (Saelith) | v3 | zeitlos / w | mediterran, unter Wasser |
 | `AC_unit_worker` | `worker` | ember_crown | v3 | ~45 / m | West Country |
 | `AC_unit_swordsman` | `swordsman` | ember_crown | v3 | ~28 / m | nordenglisch Stadt |
 | `AC_unit_spearman` | `spearman` | ember_crown | v3 | ~55 / m | Yorkshire-artig |
@@ -719,3 +723,97 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 
 **Unterscheidbarkeit Glutkrone prüfen:** worker (tief-gemütlich, langsam) ≠ spearman (tiefst, ruhig, wortkarg) ≠ swordsman
 (mittel, zackig) ≠ knight (voll, edel) ≠ archer (hell, schnell) ≠ Isolde (rau-tief weiblich, trocken).
+
+---
+
+## Teil F – Zusätzliche Sprecher der Echtzeit-Kampagne
+
+Vier Sprecher, die erst die Kampagnenmissionen (`assets/data/campaign/`) einführen. Ihre Zeilen stehen in
+`docs/audio/elevenlabs_dialogues.md`, Teil 3. Alle Texte werden **auf Deutsch** generiert; die englischen Voice-Design-Prompts
+beschreiben nur die Stimme.
+
+### F1 `char_wendel` – Ser Wendel der Graue (Raubritter, später Hauptmann der Grauen Kompanie)
+
+| Merkmal | Festlegung |
+|---|---|
+| Rolle | Banditenhauptmann der Grauen Straße (Mission 3); je nach Entscheidung gehängt oder Verbündeter |
+| Alter | Mitte 50 |
+| Timbre | heiser, rauchig, tiefer Bariton mit Kratzen; klingt, als habe er zu lange im Freien geschlafen |
+| Akzent | rau, bodenständig, leicht nordenglisch gefärbt |
+| Tempo | gemächlich, trockene Pausen vor Pointen |
+| Emotion | müde, spöttisch, ehrlich bis zur Selbstverachtung |
+| Do | trockener Galgenhumor, kurze Seufzer |
+| Don't | Schurkengelächter, Pathos |
+
+**Voice-Design-Prompt:**
+> A weathered man in his mid fifties with a hoarse, smoky baritone, gravel in the throat, a dry and tired tone with
+> sarcastic edges. Slow, unhurried pacing with pauses before the punchline. A rough, down-to-earth northern accent.
+> Studio-quality recording, close microphone, no background noise.
+
+**Beispieltext:** „Ich habe Befehle befolgt, die mit Gold kamen. Das ist kein Freispruch, ich weiß. Aber ich kenne jeden Pfad bis Kaldris.“
+
+**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,95. **Nachbearbeitung:** Standardkette, leichte Wärme (200 Hz), kein Effekt.
+
+### F2 `char_nel` – Nel (Waise aus Harrowmere, hört das Tiefe)
+
+| Merkmal | Festlegung |
+|---|---|
+| Rolle | Mädchen, das im Schlaf mit der Stimme aus dem Tief spricht; später „Hörerin“ am Riss und beim Hohlen König |
+| Alter | etwa 8 Jahre (in späteren Missionen derselbe Charakter, Stimme unverändert, da im Spiel nur Kurzzeilen) |
+| Timbre | helle, ruhige Kinderstimme, fast ohne Betonung; leicht abwesend |
+| Akzent | neutral, leise |
+| Tempo | langsam, gleichmäßig; Sätze enden ohne Frage-Intonation |
+| Emotion | still, nicht ängstlich; unheimlich durch Gelassenheit |
+| Do | monotone Gelassenheit, flüsternahe Nähe |
+| Don't | niedliches Kichern, Weinen |
+
+**Voice-Design-Prompt:**
+> A quiet eight-year-old girl with a clear, calm child's voice, almost flat intonation, slightly distant and dreamlike,
+> speaking slowly and evenly without rising question tones. Studio-quality recording, close microphone, no background noise.
+
+**Beispieltext:** „Der Mann im Moor hat gesagt, ich soll dir ausrichten: Es war nett, dich kennenzulernen.“
+
+**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,92; Stability hoch. **Nachbearbeitung:** Standardkette, bei Szenen mit der Stimme aus dem Tief ein leichter Hall-Schweif (0,6 s).
+
+### F3 `boss_stone_oath` – Gharun, der Steinerne Eid (Wächter von Oruuns Schrein)
+
+| Merkmal | Festlegung |
+|---|---|
+| Rolle | Boss der Mission 21; ein in Runenstein gebundener Eid, vom Tiefen verdreht |
+| Alter | zeitlos |
+| Timbre | extrem tiefer, langsamer Bass, mahlend wie Mühlstein, mit natürlichem Höhlenhall |
+| Akzent | keiner; archaisch, wenige Silben je Atemzug |
+| Tempo | sehr langsam, gewichtige Pausen |
+| Emotion | unerbittlich, pflichttreu bis zur Selbstvergessenheit; kein Hass |
+| Do | langgezogene Vokale, Stein-Resonanz (Nachbearbeitung) |
+| Don't | Schreien, Geflüster |
+
+**Voice-Design-Prompt:**
+> An immensely deep, ancient bass voice, slow and grinding like a millstone, with long vowels and heavy pauses, stern and
+> dutiful without hatred. Sounds as if spoken inside a stone hall. Studio-quality recording, no background noise.
+
+**Beispieltext:** „Wer wagt es, den Eid zu stören? Ich wurde gebunden, zu bewahren – und ich bewahre.“
+
+**Modell & Einstellungen:** Eleven v2 (stabiler) oder v3 *Robust*; Speed 0,85. **Nachbearbeitung:** Pitch −3 Halbtöne, Hall 2,8 s (Steinhalle), Tiefpass 6 kHz, leichter Kompressor.
+
+### F4 `boss_reef_mistress` – Isarre Mol, Herrin des Schwarzen Riffs
+
+| Merkmal | Festlegung |
+|---|---|
+| Rolle | Boss der Mission 14; ertrunkene Gezeitenpriesterin im Bund mit dem Hohlen Tief |
+| Alter | zeitlos (zu Lebzeiten Mitte 40) |
+| Timbre | tiefe Altstimme, nass und gurgelnd, mehrstimmig überlagert wie Wellen, die einander überlaufen |
+| Akzent | leicht mediterran gefärbt (Saelith), unter dem Wasser verschliffen |
+| Tempo | gleitend, Wellenrhythmus; Sätze enden mit auslaufendem Atem |
+| Emotion | mütterlich-bedrohlich, belustigt; Fürsorge als Drohung |
+| Do | Unterwasser-Textur, Flüstern neben Gesang |
+| Don't | Zischeln, Monsterknurren |
+
+**Voice-Design-Prompt:**
+> A low contralto woman's voice, wet and gurgling, as if speaking from under shallow water, layered with a faint second voice
+> that follows a beat behind like waves washing back. A trace of a Mediterranean lilt. Flowing, motherly and menacing.
+> Studio-quality recording, no background noise.
+
+**Beispieltext:** „Ihr kommt auf trockenen Füßen zu meiner Tür. Wie rührend. Das Meer hat mir jedes meiner Kinder zurückgegeben.“
+
+**Modell & Einstellungen:** Eleven v3 *Creative* (`[whispers]`); zusätzlich dieselbe Zeile auf −5 Halbtöne als zweite Schicht. **Nachbearbeitung:** Chorus 12 %, Wasser-Hall (1,8 s), Tiefpass 8 kHz.

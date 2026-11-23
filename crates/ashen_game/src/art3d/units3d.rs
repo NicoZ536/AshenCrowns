@@ -300,6 +300,89 @@ pub fn looks() -> Vec<UnitSpec> {
         bulk: 1.2,
         ..base(2.5)
     };
+    let legionnaire = Look {
+        skin: 0x6b5e52,
+        torso: (0x1d1d22, Mat::Metal),
+        arms: (0x26262c, Mat::Metal),
+        legs: (0x18181c, Mat::Metal),
+        boots: 0x111114,
+        tabard: Some(0x2a1208),
+        trim: Some(0xe0661c),
+        helm: Helm::Great,
+        helm_color: 0x26262c,
+        cape: Some(0x14110f),
+        weapon: Weapon::Sword,
+        shield: Some(0x25201c),
+        pauldrons: Some(0x34343c),
+        undead: true,
+        ..base(1.65)
+    };
+    let stone_oath = Look {
+        skin: 0x8a8c84,
+        torso: (0x72746b, Mat::Metal),
+        arms: (0x676960, Mat::Metal),
+        legs: (0x5a5c54, Mat::Metal),
+        boots: 0x45463f,
+        tabard: Some(0x3a4a58),
+        trim: Some(0x86d0f2),
+        helm: Helm::Horned,
+        helm_color: 0x8a8c84,
+        weapon: Weapon::GreatAxe,
+        pauldrons: Some(0x9a9c92),
+        bulk: 1.75,
+        ..base(2.6)
+    };
+    let reef_mistress = Look {
+        skin: 0x9fb8b0,
+        torso: (0x1f3a46, Mat::Cloth),
+        arms: (0x18303a, Mat::Cloth),
+        legs: (0x1f3a46, Mat::Cloth),
+        tabard: Some(0x0e2a33),
+        trim: Some(0x6fe0d0),
+        helm: Helm::Circlet,
+        helm_color: 0x6fe0d0,
+        hair: Some(0x20404a),
+        weapon: Weapon::Staff,
+        cape: Some(0x15343e),
+        undead: true,
+        body: Body::Robe,
+        bulk: 1.1,
+        ..base(2.1)
+    };
+    let root_mother = Look {
+        skin: 0x6d7a5a,
+        torso: (0x3d4a2e, Mat::Leather),
+        arms: (0x56653f, Mat::Leather),
+        legs: (0x2c3a24, Mat::Leather),
+        tabard: Some(0x3a4a2a),
+        trim: Some(0xa8d06a),
+        helm: Helm::SpikedCrown,
+        helm_color: 0x6a5a3a,
+        hair: Some(0x4a5a34),
+        weapon: Weapon::Staff,
+        cape: Some(0x2c3a24),
+        undead: true,
+        body: Body::Robe,
+        bulk: 1.55,
+        ..base(2.8)
+    };
+    let hollow_king = Look {
+        skin: 0xcfc8a8,
+        torso: (0x1d1b18, Mat::Metal),
+        arms: (0x26231e, Mat::Metal),
+        legs: (0x18160f, Mat::Metal),
+        boots: 0x100e0a,
+        tabard: Some(0x3a2a08),
+        trim: Some(0xcfa23f),
+        helm: Helm::SpikedCrown,
+        helm_color: 0xcfa23f,
+        cape: Some(0x14100c),
+        weapon: Weapon::EmberSword,
+        pauldrons: Some(0xcfa23f),
+        undead: true,
+        bulk: 1.4,
+        ..base(2.6)
+    };
     vec![
         ("worker", worker, (56, 64), vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death, Anim::Work, Anim::Carry]),
         ("swordsman", swordsman, (60, 66), std_anims.clone()),
@@ -319,7 +402,12 @@ pub fn looks() -> Vec<UnitSpec> {
         ("ghoul", ghoul, (62, 62), std_anims.clone()),
         ("ash_witch", witch, (60, 72), cast_anims.clone()),
         ("grave_brute", brute, (84, 84), std_anims.clone()),
-        ("boss_pale_reeve", reeve, (92, 108), cast_anims),
+        ("boss_pale_reeve", reeve, (92, 108), cast_anims.clone()),
+        ("ashen_legionnaire", legionnaire, (64, 70), std_anims.clone()),
+        ("boss_stone_oath", stone_oath, (98, 112), cast_anims.clone()),
+        ("boss_reef_mistress", reef_mistress, (88, 104), cast_anims.clone()),
+        ("boss_root_mother", root_mother, (100, 118), cast_anims.clone()),
+        ("boss_hollow_king", hollow_king, (98, 112), cast_anims),
     ]
 }
 

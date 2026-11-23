@@ -159,6 +159,9 @@ pub struct SimWorld {
 impl SimWorld {
     /// Erzeugt eine neue Partie aus Missionsdefinition und Startoptionen.
     pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings) -> Result<SimWorld, String> {
+        // Entscheidungen früherer Missionen verändern die Mission (Varianten je Flag).
+        let carried = mission.carry.flags.clone();
+        let mission = if mission.variants.is_empty() { mission } else { mission.with_flags(&carried) };
         let map = match &mission.map {
             Some(md) => md.to_tilemap()?,
             None => crate::mapgen::generate(mission.map_seed, settings.seed),
@@ -169,7 +172,7 @@ impl SimWorld {
             time: 0.0,
             rng: ChaCha8Rng::seed_from_u64(settings.seed ^ 0xA5_4E_C0_0D),
             settings,
-            mission: MissionState::default(),
+            mission: MissionState { flags: carried, ..Default::default() },
             map,
             units: Arena::default(),
             buildings: Arena::default(),
@@ -201,11 +204,17 @@ impl SimWorld {
             crate::mapgen::populate_resources(&mut world, data);
         }
         world.apply_placements(data)?;
+        let heroes: Vec<UnitId> = world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(id, _)| id).collect();
+        for id in heroes {
+            world.apply_hero_record(data, id);
+        }
         systems::economy::recompute_population(&mut world, data);
         systems::city::recompute_capacity(&mut world, data);
         systems::fog::update(&mut world, data);
         let name = world.mission_def.name.clone();
-        let founding = if world.mission_def.map.is_some() {
+        let founding = if !world.mission_def.intro_chronicle.is_empty() {
+            world.mission_def.intro_chronicle.clone()
+        } else if world.mission_def.map.is_some() {
             format!("Die Wächterin der Aschmark übernimmt den Befehl. ({name})")
         } else {
             format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})")
@@ -493,6 +502,66 @@ impl SimWorld {
             }
         }
         s
+    }
+
+    /// Überträgt gespeicherten Heldenfortschritt (Stufe, Talente, Ausrüstung) auf einen frischen Helden.
+    pub fn apply_hero_record(&mut self, data: &GameData, id: UnitId) {
+        let Some(u) = self.units.get(id) else { return };
+        let def = data.unit(u.kind);
+        if def.class != UnitClass::Hero || u.owner != PLAYER {
+            return;
+        }
+        let Some(rec) = self.mission_def.carry.heroes.iter().find(|r| r.unit == def.id).cloned() else { return };
+        let n = data.talent_tree(&def.id).map(|t| t.talents.len()).unwrap_or(0);
+        let max = data.rules.xp_levels.len() as u32;
+        let Some(u) = self.units.get_mut(id) else { return };
+        u.level = rec.level.clamp(1, max.max(1));
+        u.xp = rec.xp;
+        u.talents = (0..n).map(|i| rec.talents.get(i).copied().unwrap_or(0)).collect();
+        u.equipment = Default::default();
+        for (slot, item) in rec.equipment.iter().enumerate().take(crate::rpg::EQUIP_SLOTS) {
+            u.equipment[slot] = item.as_deref().and_then(|i| data.item_def_id(i));
+        }
+        u.inventory = rec.inventory.iter().filter_map(|i| data.item_def_id(i)).collect();
+        systems::heroes::recompute(self, data, id);
+        if let Some(u) = self.units.get_mut(id) {
+            u.hp = u.max_hp;
+            u.mana = u.max_mana;
+        }
+    }
+
+    /// Heldenfortschritt aller lebenden Helden der Spielerseite für die Kampagne.
+    pub fn capture_heroes(&self, data: &GameData) -> Vec<crate::mission::HeroRecord> {
+        let mut out: Vec<crate::mission::HeroRecord> = Vec::new();
+        for (_, u) in self.units.iter() {
+            let def = data.unit(u.kind);
+            if u.owner != PLAYER || def.class != UnitClass::Hero || u.hp <= 0.0 {
+                continue;
+            }
+            out.push(crate::mission::HeroRecord {
+                unit: def.id.clone(),
+                level: u.level,
+                xp: u.xp,
+                talents: u.talents.clone(),
+                equipment: u.equipment.iter().map(|e| e.map(|i| data.item_def(i).id.clone())).collect(),
+                inventory: u.inventory.iter().map(|i| data.item_def(*i).id.clone()).collect(),
+            });
+        }
+        // Gefallene Helden behalten ihren Stand, solange sie nicht lebend vorhanden sind.
+        for f in &self.fallen {
+            let def = data.unit(f.unit.kind);
+            if !out.iter().any(|r| r.unit == def.id) {
+                out.push(crate::mission::HeroRecord {
+                    unit: def.id.clone(),
+                    level: f.unit.level,
+                    xp: f.unit.xp,
+                    talents: f.unit.talents.clone(),
+                    equipment: f.unit.equipment.iter().map(|e| e.map(|i| data.item_def(i).id.clone())).collect(),
+                    inventory: f.unit.inventory.iter().map(|i| data.item_def(*i).id.clone()).collect(),
+                });
+            }
+        }
+        out
     }
 
     pub fn hero_of(&self, data: &GameData, owner: PlayerId) -> Option<UnitId> {

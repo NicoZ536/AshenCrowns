@@ -38,6 +38,25 @@
             effects: [Terror(radius: 6.0, morale: 45.0), Damage(radius: 3.0, amount: 40.0, damage_type: Magic)],
         ),
 
+        (
+            id: "tidal_surge", name: "Flutwoge", hotkey: None,
+            description: "Eine schwarze Flutwelle schlägt über alle Feinde im Umkreis zusammen.",
+            mana: 70.0, cooldown: 14.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 4.0, amount: 75.0, damage_type: Magic)],
+        ),
+        (
+            id: "root_grasp", name: "Wurzelgriff", hotkey: None,
+            description: "Graue Wurzeln brechen aus dem Boden, packen alle Feinde im Umkreis und lähmen ihren Mut.",
+            mana: 60.0, cooldown: 12.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 3.6, amount: 60.0, damage_type: Normal), Terror(radius: 5.0, morale: 30.0)],
+        ),
+        (
+            id: "ashen_command", name: "Aschenbefehl", hotkey: None,
+            description: "Der Hohle König ruft die Legion: Drei Aschenlegionäre steigen aus dem Boden.",
+            mana: 120.0, cooldown: 30.0, range: 0.0, targeting: SelfCentered,
+            effects: [Summon(unit: "ashen_legionnaire", count: 3, max: 6)],
+        ),
+
         // ------------------------------------------------------------------ Einheiten
         (
             id: "shield_wall", name: "Schildwall", hotkey: Some('Q'),
