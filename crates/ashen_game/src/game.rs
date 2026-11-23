@@ -30,6 +30,8 @@ pub struct AutoRun {
     pub zoom_lines: Option<f32>,
     pub hide_ui: bool,
     pub demo_city: bool,
+    /// Militär-Vorführung: `army`, `siege` oder `hero`.
+    pub demo: Option<String>,
     /// Fenster für Screenshots öffnen (`storage`, `city`, `build[:Rubrik]`, `select:<id>`).
     pub ui_open: Vec<String>,
 }
@@ -90,6 +92,17 @@ impl AshenGame {
         if self.auto.demo_city {
             crate::showcase::city(&mut m.world, data);
         }
+        match self.auto.demo.as_deref() {
+            Some("army") => crate::showcase::army(&mut m.world, data),
+            Some("siege") => crate::showcase::siege(&mut m.world, data),
+            Some("hero") => crate::showcase::hero(&mut m.world, data),
+            // Kriegsnebel aus (z. B. um die Basis der Gefechts-KI zu zeigen).
+            Some("reveal") => {
+                m.world.fog.disabled = true;
+                m.fog_enabled = false;
+            }
+            _ => {}
+        }
         let steps = (self.auto.sim_seconds * data.rules.tick_rate as f32) as u32;
         if self.auto.battle {
             // Eine Welle direkt vor die Basis setzen, damit Kampfgeschehen sichtbar ist.
@@ -136,6 +149,7 @@ impl AshenGame {
                         m.build_cat = *c;
                     }
                 }
+                "hero" => m.show_hero = true,
                 "select" => {
                     m.selected_building = m.world.buildings.iter().find(|(_, b)| b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg).map(|(id, _)| id);
                 }

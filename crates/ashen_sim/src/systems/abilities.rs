@@ -1,16 +1,21 @@
 //! Ausführung von Fähigkeiten aus elementaren Effekten.
 
-use crate::data::{Effect, GameData};
+use crate::data::{AbilityDef, Effect, GameData};
 use crate::entity::*;
 use crate::events::SimEvent;
+use crate::systems::heroes::ability_list;
 use crate::world::SimWorld;
 use glam::Vec2;
 
+/// Fähigkeit einer Einheit nach Index (Grund- und Talentfähigkeiten).
+pub fn ability_at<'a>(data: &'a GameData, u: &'a Unit, index: u8) -> Option<&'a AbilityDef> {
+    let name = ability_list(data, u).nth(index as usize)?;
+    data.ability_id(name).map(|a| data.ability(a))
+}
+
 pub fn cast(world: &mut SimWorld, data: &GameData, caster: UnitId, ability: u8, point: Vec2) {
     let Some(u) = world.units.get(caster) else { return };
-    let def = data.unit(u.kind);
-    let Some(aid) = def.abilities.get(ability as usize).and_then(|a| data.ability_id(a)) else { return };
-    let adef = data.ability(aid).clone();
+    let Some(adef) = ability_at(data, u, ability).cloned() else { return };
     if u.mana < adef.mana || u.ability_cd.get(ability as usize).copied().unwrap_or(0.0) > 0.0 {
         return;
     }
@@ -19,8 +24,9 @@ pub fn cast(world: &mut SimWorld, data: &GameData, caster: UnitId, ability: u8, 
     {
         let u = world.units.get_mut(caster).expect("exists");
         u.mana -= adef.mana;
+        let cd_mult = (1.0 - u.mods.cooldown_pct).clamp(0.3, 1.5);
         if let Some(cd) = u.ability_cd.get_mut(ability as usize) {
-            *cd = adef.cooldown;
+            *cd = adef.cooldown * cd_mult;
         }
         u.set_activity(Activity::Cast);
         u.face(point - origin);
@@ -68,6 +74,24 @@ pub fn cast(world: &mut SimWorld, data: &GameData, caster: UnitId, ability: u8, 
                     }
                 }
             }
+            Effect::Heal { radius, amount } => {
+                world.spatial.query(point, *radius, &mut near);
+                if !near.contains(&caster) && (origin - point).length() <= *radius {
+                    near.push(caster);
+                }
+                let mut total = 0.0;
+                for &o in &near {
+                    if let Some(a) = world.units.get_mut(o)
+                        && a.owner == owner
+                        && a.hp > 0.0
+                    {
+                        let heal = (amount * level_mult).min(a.max_hp - a.hp).max(0.0);
+                        a.hp += heal;
+                        total += heal;
+                    }
+                }
+                world.events.push(SimEvent::Healed { pos: point, amount: total });
+            }
             Effect::Drain { radius, amount } => {
                 world.spatial.query(origin, *radius, &mut near);
                 let mut total = 0.0;
@@ -84,15 +108,19 @@ pub fn cast(world: &mut SimWorld, data: &GameData, caster: UnitId, ability: u8, 
                     u.hp = (u.hp + total * 0.6).min(u.max_hp);
                 }
             }
-            Effect::Summon { unit, count } => {
+            Effect::Summon { unit, count, max } => {
                 if let Some(ut) = data.unit_id(unit) {
-                    for i in 0..*count {
-                        let a = i as f32 / *count as f32 * std::f32::consts::TAU;
+                    let alive = world.units.iter().filter(|(_, x)| x.master == Some(caster) && x.hp > 0.0).count() as u32;
+                    let room = if *max == 0 { *count } else { max.saturating_sub(alive).min(*count) };
+                    for i in 0..room {
+                        let a = i as f32 / (*count).max(1) as f32 * std::f32::consts::TAU;
                         let p = origin + Vec2::new(a.cos(), a.sin()) * 1.4;
                         let id = world.spawn_unit(data, ut, owner, p);
                         if let Some(s) = world.units.get_mut(id) {
+                            s.master = Some(caster);
                             s.order = Order::Guard { post: origin, radius: 8.0 };
                         }
+                        world.events.push(SimEvent::Summoned { unit: id, pos: p });
                     }
                 }
             }

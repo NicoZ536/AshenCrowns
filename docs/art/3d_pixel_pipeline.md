@@ -75,6 +75,13 @@ Beine oder Robe, Rucksack).
 | cast | 6 | 10 | nein | Arme heben (Heldin, Boss) |
 | death | 6 | 10 | nein | Rückwärts fallen |
 
+Weitere Rig-Elemente (Echtzeit-Militär): Waffen *Armbrust*, *Hellebarde*, *Feuerstab*, *Priesterstab*, *Streitkolben*, *Streitaxt*, *Krallen*, *Spitzhacke*; Helme *Spitzhut*, *Kettenhaube*,
+*Nordhelm mit Hörnern*, *Mitra*; Körperform *Gown* (langes Gewand über animierten Beinen), Turmschild (`big_shield`).
+Berittene (Ritter, Spähreiter, Berittene Bogenschützen) teilen das Pferdeskelett (`mounted()`, Fell- und Schabrackenfarbe als Parameter).
+**Belagerungsmaschinen** (`Kind::Machine`): Körper, beweglicher Teil (Rammbaum als Pendel unter dem Dach, Wurfarm des Katapults) und vier Räder; Lauf = Raddrehung,
+Angriff = Rückschwung–Stoß bzw. Spannen–Auslösen, Tod = Einsturz. **Fledermausschwarm** (`Kind::Swarm`): vier Tiere mit je zwei Flügelknochen, V-Grundstellung ±35° Flügelschlag,
+Angriff = Sturzflug, Tod = Fallen.
+
 Sonderformen: **Ritter** = Pferdeskelett (Körper, Hals, Kopf, 4 zweigliedrige Beine, Schweif) mit eingehängtem
 Reiter; Galopp mit versetzten Beinpaaren. **Grabkoloss** = humanoid mit `bulk 1.75` und Buckel. **Fahler Vogt** =
 schwebende Robe (`Body::Robe`), Dornenkrone, Seelenstab.

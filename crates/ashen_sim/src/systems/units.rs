@@ -1,6 +1,6 @@
 //! Befehlslogik der Einheiten (Zustandsautomat je Befehl) und Statuswerte.
 
-use crate::data::{GameData, UnitClass};
+use crate::data::{GameData, UnitClass, UnitDef};
 use crate::entity::*;
 use crate::events::SimEvent;
 use crate::map::TileMap;
@@ -17,16 +17,22 @@ pub enum Engage {
     Lost,
 }
 
+/// Kann `att` das Ziel `tgt` überhaupt treffen? Flieger sind nur für Fernkämpfer und lange Stangenwaffen erreichbar.
+pub fn can_hit(att: &UnitDef, tgt: &UnitDef) -> bool {
+    !tgt.flying || att.projectile.is_some() || att.range >= 1.0
+}
+
 /// Sucht das nächste feindliche Ziel. Einheiten werden Gebäuden vorgezogen.
 pub fn acquire(world: &mut SimWorld, data: &GameData, id: UnitId, radius: f32, include_buildings: bool) -> Option<EntityRef> {
     let u = world.units.get(id)?;
     let (pos, owner) = (u.pos, u.owner);
+    let att_def = data.unit(u.kind);
     let mut found = std::mem::take(&mut world.scratch);
     world.spatial.query(pos, radius, &mut found);
     let mut best: Option<(f32, UnitId)> = None;
     for &o in &found {
         let Some(other) = world.units.get(o) else { continue };
-        if other.hp <= 0.0 || !SimWorld::hostile(owner, other.owner) {
+        if other.hp <= 0.0 || !SimWorld::hostile(owner, other.owner) || !can_hit(att_def, data.unit(other.kind)) {
             continue;
         }
         // Der Spieler sieht nur Ziele, die nicht im Kriegsnebel liegen.
@@ -76,6 +82,20 @@ pub fn engage(world: &mut SimWorld, data: &GameData, id: UnitId, target: EntityR
     let slack = if matches!(target, EntityRef::Building(_)) { 0.35 } else { 0.1 };
     let u = world.units.get_mut(id).expect("unit exists");
     u.target = Some(target);
+    // Mindestreichweite (Katapult): zu nahe Ziele werden nicht beschossen, die Einheit weicht zurück.
+    if def.min_range > 0.0 && dist < def.min_range {
+        if !can_move {
+            return Engage::Lost;
+        }
+        u.windup = None;
+        if u.path.is_empty() || u.repath_timer <= 0.0 {
+            let away = (u.pos - tpos).try_normalize().unwrap_or(Vec2::X);
+            u.request_path(u.pos + away * (def.min_range - dist + 1.5));
+            u.repath_timer = 0.6;
+        }
+        u.set_activity(Activity::Walk);
+        return Engage::Chasing;
+    }
     if dist <= def.range + slack {
         u.clear_path();
         u.vel = Vec2::ZERO;
@@ -280,7 +300,7 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
                 }
             }
             Order::Cast { ability, point } => {
-                let range = def.abilities.get(ability as usize).and_then(|a| data.ability_id(a)).map(|a| data.ability(a).range).unwrap_or(0.0);
+                let range = abilities::ability_at(data, u, ability).map(|a| a.range).unwrap_or(0.0);
                 if (u.pos - point).length() <= range {
                     u.clear_path();
                     let cd = u.ability_cd.get(ability as usize).copied().unwrap_or(0.0);
@@ -429,9 +449,11 @@ fn return_cargo(world: &mut SimWorld, data: &GameData, id: UnitId, node: Option<
     }
     u.clear_path();
     u.carry = None;
-    let accepted = world.credit(owner, crate::data::Item::Res(kind), amount as f32);
+    // Schwierigkeitsbonus der KI auf eingesammelte Ressourcen.
+    let bonus = if owner == ENEMY && world.ai.enabled { world.ai.income_mult.max(0.1) } else { 1.0 };
+    let accepted = world.credit(owner, crate::data::Item::Res(kind), amount as f32 * bonus);
     *world.players[owner as usize].stats.gathered.get_mut(kind) += accepted;
-    if accepted < amount as f32 && owner == PLAYER && world.players[owner as usize].full_cooldown <= 0.0 {
+    if accepted < amount as f32 * bonus && owner == PLAYER && world.players[owner as usize].full_cooldown <= 0.0 {
         world.players[owner as usize].full_cooldown = 10.0;
         world.error(owner, format!("Lager voll ({}) – baut ein Lagerhaus.", kind.label()));
     }

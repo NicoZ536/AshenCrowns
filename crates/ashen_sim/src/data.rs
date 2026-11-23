@@ -3,6 +3,7 @@
 //! Alle Inhalte werden aus RON-Dateien unter `assets/data/` geladen. Mods können Einträge
 //! gleicher `id` überschreiben oder neue hinzufügen (siehe [`GameData::apply_overlay`]).
 
+use crate::rpg::{ItemDef, ItemId, TalentTree, UpgradeDef};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
@@ -35,6 +36,29 @@ pub enum UnitClass {
     Hero,
     Monster,
     Boss,
+    /// Belagerungsmaschine (Ramme, Katapult): schwach im Nahkampf, verheerend gegen Gebäude.
+    Siege,
+    /// Heiler und Unterstützer.
+    Support,
+    /// Fliegende Gegner (nur von Fernkämpfern und langen Stangenwaffen zu treffen).
+    Flyer,
+}
+
+impl UnitClass {
+    pub fn label(self) -> &'static str {
+        match self {
+            UnitClass::Worker => "Arbeiter",
+            UnitClass::Infantry => "Infanterie",
+            UnitClass::Ranged => "Fernkämpfer",
+            UnitClass::Cavalry => "Kavallerie",
+            UnitClass::Hero => "Held",
+            UnitClass::Monster => "Monster",
+            UnitClass::Boss => "Boss",
+            UnitClass::Siege => "Belagerung",
+            UnitClass::Support => "Unterstützung",
+            UnitClass::Flyer => "Flieger",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -54,6 +78,8 @@ pub enum DamageType {
     Siege,
     Magic,
     Hero,
+    /// Feuerschaden (Feuerschule): stark gegen leichte Ziele und Untote in Stofffetzen.
+    Fire,
 }
 
 impl DamageType {
@@ -86,6 +112,12 @@ impl DamageType {
             (D::Magic, A::Heavy) => 2.0,
             (D::Magic, A::Fortified) => 0.35,
             (D::Magic, A::Hero) => 0.5,
+            (D::Fire, A::Unarmored) => 1.5,
+            (D::Fire, A::Light) => 1.25,
+            (D::Fire, A::Medium) => 1.0,
+            (D::Fire, A::Heavy) => 0.75,
+            (D::Fire, A::Fortified) => 0.6,
+            (D::Fire, A::Hero) => 0.75,
             (D::Hero, A::Fortified) => 0.5,
             (D::Hero, _) => 1.0,
         }
@@ -235,6 +267,26 @@ pub enum ProjectileKind {
     Arrow,
     BoneBolt,
     SoulBolt,
+    /// Armbrustbolzen.
+    Bolt,
+    /// Feuerball der Kampfmagier.
+    Fireball,
+    /// Felsbrocken des Katapults (Flugbogen, Flächenschaden).
+    Boulder,
+}
+
+impl ProjectileKind {
+    /// Fluggeschwindigkeit in Kacheln pro Sekunde.
+    pub fn speed(self) -> f32 {
+        match self {
+            ProjectileKind::Arrow => 11.0,
+            ProjectileKind::BoneBolt => 8.0,
+            ProjectileKind::SoulBolt => 7.0,
+            ProjectileKind::Bolt => 14.0,
+            ProjectileKind::Fireball => 8.5,
+            ProjectileKind::Boulder => 6.0,
+        }
+    }
 }
 
 /// Definition eines Einheitentyps.
@@ -284,6 +336,22 @@ pub struct UnitDef {
     pub hp_per_level: f32,
     pub damage_per_level: f32,
     pub hotkey: Option<char>,
+    /// Benötigte Ausbaustufe der Siedlung für die Ausbildung (0 = Siedlung, 1 = Burg).
+    pub era: u8,
+    /// Mindestreichweite in Kacheln: näher liegende Ziele können nicht beschossen werden (Katapult).
+    pub min_range: f32,
+    /// Flächenschaden-Radius am Einschlagpunkt (0 = Einzelziel).
+    pub splash: f32,
+    /// Schadensfaktor gegen Gebäude (Ramme, Katapult, Grabkoloss).
+    pub building_mult: f32,
+    /// Fliegt über Hindernisse und kann nur von Fernkämpfern und langen Stangenwaffen getroffen werden.
+    pub flying: bool,
+    /// Anteil des Pfeil-/Bolzenschadens, den Schild oder Haltung abfangen (0..1).
+    pub ranged_resist: f32,
+    /// Fähigkeiten, die die Einheit selbstständig wirkt (Heilen, Beschwören).
+    pub autocast: Vec<String>,
+    /// Beutetabelle (Gegenstands-ID, Wahrscheinlichkeit) bei Tod.
+    pub loot: Vec<(String, f32)>,
 }
 
 impl Default for UnitDef {
@@ -327,6 +395,14 @@ impl Default for UnitDef {
             hp_per_level: 0.0,
             damage_per_level: 0.0,
             hotkey: None,
+            era: 0,
+            min_range: 0.0,
+            splash: 0.0,
+            building_mult: 1.0,
+            flying: false,
+            ranged_resist: 0.0,
+            autocast: Vec::new(),
+            loot: Vec::new(),
         }
     }
 }
@@ -596,8 +672,15 @@ pub enum Effect {
     Rally { radius: f32, damage_mult: f32, armor_bonus: f32, morale: f32, duration: f32 },
     /// Lebensentzug von Gegnern im Radius, heilt den Wirker.
     Drain { radius: f32, amount: f32 },
-    /// Einheiten beschwören.
-    Summon { unit: String, count: u32 },
+    /// Einheiten beschwören. `max` begrenzt die gleichzeitig lebenden Diener des Wirkers (0 = unbegrenzt).
+    Summon {
+        unit: String,
+        count: u32,
+        #[serde(default)]
+        max: u32,
+    },
+    /// Heilt Verbündete im Radius um den Zielpunkt.
+    Heal { radius: f32, amount: f32 },
     /// Moralschaden bei Gegnern (Furcht).
     Terror { radius: f32, morale: f32 },
 }
@@ -732,6 +815,69 @@ pub struct Rules {
     pub demolish_refund: f32,
     pub city: CityRules,
     pub eras: Vec<EraDef>,
+    /// Grundkosten der Wiederbelebung eines gefallenen Helden (Gold) plus Zuschlag je Stufe.
+    pub hero_revive_base: f32,
+    pub hero_revive_per_level: f32,
+    /// Lebensanteil nach der Wiederbelebung am Altar bzw. im Bergfried.
+    pub hero_altar_hp: f32,
+    pub hero_keep_hp: f32,
+    /// Aufnahmeradius für Gegenstände am Boden.
+    pub pickup_radius: f32,
+    /// Beute eines vollständig besiegten Lagers (Gegenstands-ID, Gewicht).
+    pub camp_loot: Vec<(String, f32)>,
+    /// Einstellungen der Gegner-KI je Schwierigkeitsgrad (Leicht, Normal, Schwer, Albtraum).
+    pub ai_levels: Vec<AiLevel>,
+}
+
+/// Parameter der Gegner-KI für einen Schwierigkeitsgrad.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AiLevel {
+    pub name: String,
+    /// Sekunden zwischen zwei KI-Entscheidungen.
+    pub think: f32,
+    /// Ziel-Arbeiterzahl.
+    pub workers: u32,
+    /// Faktor auf die Einnahmen (Ausgleich bzw. Bonus).
+    pub income_mult: f32,
+    /// Faktor auf die Angriffsgröße.
+    pub army_mult: f32,
+    /// Sekunden bis zum ersten Angriff.
+    pub first_attack: f32,
+    /// Mindestabstand zwischen Angriffen in Sekunden.
+    pub attack_interval: f32,
+    /// Sekunden zwischen den Schmiede-Stufen der KI.
+    pub tech_interval: f32,
+    /// Wahrscheinlichkeit, die Armee nach Konterlogik statt zufällig zu wählen (0..1).
+    pub counter_skill: f32,
+    /// Verhältnis eigener zu gegnerischer Stärke, unter dem die KI den Angriff abbricht.
+    pub retreat_ratio: f32,
+    /// Obergrenze der Armeegröße (Einheitenzahl).
+    pub max_army: u32,
+    /// Greift mit mehreren Gruppen an und belästigt Arbeiter (nur Albtraum).
+    pub harass: bool,
+    /// Anzahl der Verteidigungstürme.
+    pub towers: u32,
+}
+
+impl Default for AiLevel {
+    fn default() -> Self {
+        AiLevel {
+            name: "Normal".into(),
+            think: 2.0,
+            workers: 8,
+            income_mult: 1.0,
+            army_mult: 1.0,
+            first_attack: 420.0,
+            attack_interval: 150.0,
+            tech_interval: 360.0,
+            counter_skill: 0.6,
+            retreat_ratio: 0.5,
+            max_army: 40,
+            harass: false,
+            towers: 2,
+        }
+    }
 }
 
 impl Default for Rules {
@@ -752,6 +898,13 @@ impl Default for Rules {
             demolish_refund: 0.5,
             city: CityRules::default(),
             eras: Vec::new(),
+            hero_revive_base: 150.0,
+            hero_revive_per_level: 60.0,
+            hero_altar_hp: 0.8,
+            hero_keep_hp: 0.5,
+            pickup_radius: 1.3,
+            camp_loot: Vec::new(),
+            ai_levels: vec![AiLevel::default()],
         }
     }
 }
@@ -772,6 +925,18 @@ struct GoodsFile {
 #[derive(Deserialize)]
 struct AbilitiesFile {
     abilities: Vec<AbilityDef>,
+}
+#[derive(Deserialize)]
+struct ItemsFile {
+    items: Vec<ItemDef>,
+}
+#[derive(Deserialize)]
+struct TalentsFile {
+    heroes: Vec<TalentTree>,
+}
+#[derive(Deserialize)]
+struct UpgradesFile {
+    upgrades: Vec<UpgradeDef>,
 }
 
 /// Fehler beim Laden der Spieldaten.
@@ -801,11 +966,15 @@ pub struct GameData {
     pub buildings: Vec<BuildingDef>,
     pub abilities: Vec<AbilityDef>,
     pub goods: Vec<GoodDef>,
+    pub items: Vec<ItemDef>,
+    pub talents: Vec<TalentTree>,
+    pub upgrades: Vec<UpgradeDef>,
     pub rules: Rules,
     unit_index: HashMap<String, UnitTypeId>,
     building_index: HashMap<String, BuildingTypeId>,
     ability_index: HashMap<String, AbilityId>,
     good_index: HashMap<String, GoodId>,
+    item_index: HashMap<String, ItemId>,
     resolve_errors: Vec<String>,
 }
 
@@ -822,7 +991,20 @@ impl GameData {
         let abilities: AbilitiesFile = read_ron(&dir.join("abilities.ron"))?;
         let rules: Rules = read_ron(&dir.join("rules.ron"))?;
         let goods: GoodsFile = read_ron(&dir.join("goods.ron"))?;
-        let mut d = GameData { units: units.units, buildings: buildings.buildings, abilities: abilities.abilities, goods: goods.goods, rules, ..Default::default() };
+        let items: ItemsFile = read_ron(&dir.join("items.ron"))?;
+        let talents: TalentsFile = read_ron(&dir.join("talents.ron"))?;
+        let upgrades: UpgradesFile = read_ron(&dir.join("upgrades.ron"))?;
+        let mut d = GameData {
+            units: units.units,
+            buildings: buildings.buildings,
+            abilities: abilities.abilities,
+            goods: goods.goods,
+            items: items.items,
+            talents: talents.heroes,
+            upgrades: upgrades.upgrades,
+            rules,
+            ..Default::default()
+        };
         d.reindex();
         d.validate()?;
         Ok(d)
@@ -884,6 +1066,39 @@ impl GameData {
                 }
             }
         }
+        let p = dir.join("items.ron");
+        if p.exists() {
+            let f: ItemsFile = read_ron(&p)?;
+            for i in f.items {
+                changes.push(format!("item:{}", i.id));
+                match self.items.iter_mut().find(|x| x.id == i.id) {
+                    Some(slot) => *slot = i,
+                    None => self.items.push(i),
+                }
+            }
+        }
+        let p = dir.join("talents.ron");
+        if p.exists() {
+            let f: TalentsFile = read_ron(&p)?;
+            for t in f.heroes {
+                changes.push(format!("talents:{}", t.hero));
+                match self.talents.iter_mut().find(|x| x.hero == t.hero) {
+                    Some(slot) => *slot = t,
+                    None => self.talents.push(t),
+                }
+            }
+        }
+        let p = dir.join("upgrades.ron");
+        if p.exists() {
+            let f: UpgradesFile = read_ron(&p)?;
+            for u in f.upgrades {
+                changes.push(format!("upgrade:{}", u.id));
+                match self.upgrades.iter_mut().find(|x| x.id == u.id) {
+                    Some(slot) => *slot = u,
+                    None => self.upgrades.push(u),
+                }
+            }
+        }
         self.reindex();
         self.validate()?;
         Ok(changes)
@@ -894,6 +1109,7 @@ impl GameData {
         self.building_index = self.buildings.iter().enumerate().map(|(i, b)| (b.id.clone(), BuildingTypeId(i as u16))).collect();
         self.ability_index = self.abilities.iter().enumerate().map(|(i, a)| (a.id.clone(), AbilityId(i as u16))).collect();
         self.good_index = self.goods.iter().enumerate().map(|(i, g)| (g.id.clone(), GoodId(i as u16))).collect();
+        self.item_index = self.items.iter().enumerate().map(|(i, it)| (it.id.clone(), ItemId(i as u16))).collect();
         // Mengenlisten auflösen; unbekannte IDs werden in `validate` gemeldet.
         let gi = self.good_index.clone();
         let mut errors = Vec::new();
@@ -943,6 +1159,11 @@ impl GameData {
         }
         for e in &mut self.rules.eras {
             e.goods_r = list(&format!("Ausbaustufe {}", e.id), &e.goods, &mut errors);
+        }
+        for up in &mut self.upgrades {
+            for (i, l) in up.levels.iter_mut().enumerate() {
+                l.goods_r = list(&format!("Upgrade {} Stufe {}", up.id, i + 1), &l.goods, &mut errors);
+            }
         }
         self.resolve_errors = errors;
     }
@@ -1004,6 +1225,52 @@ impl GameData {
                 return Err(DataError::Invalid(format!("Gebäude {} verlangt unbekannte Ausbaustufe {}", b.id, b.era)));
             }
         }
+        for u in &self.units {
+            for a in &u.autocast {
+                if !self.ability_index.contains_key(a) {
+                    return Err(DataError::Invalid(format!("Einheit {} wirkt unbekannte Fähigkeit {a} selbstständig", u.id)));
+                }
+            }
+            for (it, _) in &u.loot {
+                if !self.item_index.contains_key(it) {
+                    return Err(DataError::Invalid(format!("Einheit {} wirft unbekannten Gegenstand {it} ab", u.id)));
+                }
+            }
+        }
+        for (it, _) in &self.rules.camp_loot {
+            if !self.item_index.contains_key(it) {
+                return Err(DataError::Invalid(format!("Lagerbeute verweist auf unbekannten Gegenstand {it}")));
+            }
+        }
+        for tree in &self.talents {
+            let Some(hero) = self.unit_index.get(&tree.hero) else {
+                return Err(DataError::Invalid(format!("Talentbaum für unbekannten Helden {}", tree.hero)));
+            };
+            if self.units[hero.0 as usize].class != UnitClass::Hero {
+                return Err(DataError::Invalid(format!("{} ist kein Held, hat aber einen Talentbaum", tree.hero)));
+            }
+            for t in &tree.talents {
+                if t.path >= 3 || t.max_rank == 0 {
+                    return Err(DataError::Invalid(format!("Talent {} hat ungültigen Pfad oder Rang", t.id)));
+                }
+                if let Some(a) = &t.ability
+                    && !self.ability_index.contains_key(a)
+                {
+                    return Err(DataError::Invalid(format!("Talent {} schaltet unbekannte Fähigkeit {a} frei", t.id)));
+                }
+            }
+        }
+        for up in &self.upgrades {
+            if !self.building_index.contains_key(&up.building) {
+                return Err(DataError::Invalid(format!("Upgrade {} verweist auf unbekanntes Gebäude {}", up.id, up.building)));
+            }
+            if up.levels.is_empty() {
+                return Err(DataError::Invalid(format!("Upgrade {} hat keine Stufen", up.id)));
+            }
+        }
+        if self.rules.ai_levels.is_empty() {
+            return Err(DataError::Invalid("Keine KI-Stufen definiert".into()));
+        }
         for a in &self.abilities {
             for e in &a.effects {
                 if let Effect::Summon { unit, .. } = e
@@ -1038,6 +1305,23 @@ impl GameData {
 
     pub fn ability(&self, id: AbilityId) -> &AbilityDef {
         &self.abilities[id.0 as usize]
+    }
+
+    pub fn item_def_id(&self, id: &str) -> Option<ItemId> {
+        self.item_index.get(id).copied()
+    }
+
+    pub fn item_def(&self, id: ItemId) -> &ItemDef {
+        &self.items[id.0 as usize]
+    }
+
+    /// Talentbaum eines Helden (nach Einheitenkennung).
+    pub fn talent_tree(&self, hero: &str) -> Option<&TalentTree> {
+        self.talents.iter().find(|t| t.hero == hero)
+    }
+
+    pub fn upgrade_id(&self, id: &str) -> Option<usize> {
+        self.upgrades.iter().position(|u| u.id == id)
     }
 
     pub fn good_id(&self, id: &str) -> Option<GoodId> {
@@ -1100,6 +1384,8 @@ impl GameData {
             .chain(self.buildings.iter().map(|b| format!("b:{}", b.id)))
             .chain(self.abilities.iter().map(|a| format!("a:{}", a.id)))
             .chain(self.goods.iter().map(|g| format!("g:{}", g.id)))
+            .chain(self.items.iter().map(|i| format!("i:{}", i.id)))
+            .chain(self.upgrades.iter().map(|u| format!("p:{}", u.id)))
             .collect()
     }
 }

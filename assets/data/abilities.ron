@@ -37,5 +37,139 @@
             mana: 80.0, cooldown: 18.0, range: 0.0, targeting: SelfCentered,
             effects: [Terror(radius: 6.0, morale: 45.0), Damage(radius: 3.0, amount: 40.0, damage_type: Magic)],
         ),
+
+        // ------------------------------------------------------------------ Einheiten
+        (
+            id: "shield_wall", name: "Schildwall", hotkey: Some('Q'),
+            description: "Schilde hoch: Verbündete im Umkreis erhalten 10 s lang +4 Rüstung, verlieren aber 15 % Schaden.",
+            mana: 0.0, cooldown: 25.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 3.0, damage_mult: 0.85, armor_bonus: 4.0, morale: 15.0, duration: 10.0)],
+        ),
+        (
+            id: "fireball", name: "Feuerball", hotkey: Some('Q'),
+            description: "Ein Feuerball schlägt am Zielpunkt ein (85 Feuerschaden im Radius 2). Reichweite 7,5.",
+            mana: 45.0, cooldown: 8.0, range: 7.5, targeting: Point,
+            effects: [Damage(radius: 2.0, amount: 85.0, damage_type: Fire)],
+        ),
+        (
+            id: "flame_nova", name: "Flammenwoge", hotkey: Some('W'),
+            description: "Eine Woge aus Feuer verbrennt alle Feinde im Umkreis des Magiers (70 Feuerschaden).",
+            mana: 70.0, cooldown: 16.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 3.2, amount: 70.0, damage_type: Fire)],
+        ),
+        (
+            id: "holy_heal", name: "Heilendes Licht", hotkey: Some('Q'),
+            description: "Heilt alle Verbündeten im Umkreis um 90 Leben. Wird bei Verwundeten selbstständig gewirkt.",
+            mana: 40.0, cooldown: 6.0, range: 0.0, targeting: SelfCentered,
+            effects: [Heal(radius: 4.5, amount: 90.0)],
+        ),
+        (
+            id: "blessing", name: "Segen der Flamme", hotkey: Some('W'),
+            description: "Verbündete im Umkreis erhalten 15 s lang +20 % Schaden, +2 Rüstung und neue Moral.",
+            mana: 70.0, cooldown: 25.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 6.0, damage_mult: 1.2, armor_bonus: 2.0, morale: 30.0, duration: 15.0)],
+        ),
+        (
+            id: "raise_dead", name: "Tote erwecken", hotkey: None,
+            description: "Zwei Hohlknechte erheben sich aus der Asche (höchstens vier gleichzeitig). Sie vergehen mit der Hexe.",
+            mana: 70.0, cooldown: 20.0, range: 0.0, targeting: SelfCentered,
+            effects: [Summon(unit: "hollow_thrall", count: 2, max: 4)],
+        ),
+
+        // ------------------------------------------------------------------ Helden: Bruder Hal Venn
+        (
+            id: "flame_mend", name: "Flammenheilung", hotkey: Some('Q'),
+            description: "Heilende Flammen umhüllen alle Verbündeten im Umkreis 5 (150 Leben).",
+            mana: 70.0, cooldown: 9.0, range: 0.0, targeting: SelfCentered,
+            effects: [Heal(radius: 5.0, amount: 150.0)],
+        ),
+        (
+            id: "sacred_flame", name: "Heilige Flamme", hotkey: Some('W'),
+            description: "Eine Säule heiligen Feuers fährt am Zielpunkt nieder (120 Feuerschaden im Radius 3). Reichweite 7.",
+            mana: 85.0, cooldown: 12.0, range: 7.0, targeting: Point,
+            effects: [Damage(radius: 3.0, amount: 120.0, damage_type: Fire)],
+        ),
+        (
+            id: "beacon_of_faith", name: "Glaubensfeuer", hotkey: Some('E'),
+            description: "Ein Leuchtfeuer stärkt das Heer: 15 s lang +15 % Schaden, +3 Rüstung, neue Moral und 60 Leben für alle im Umkreis 8.",
+            mana: 120.0, cooldown: 40.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 8.0, damage_mult: 1.15, armor_bonus: 3.0, morale: 50.0, duration: 15.0), Heal(radius: 8.0, amount: 60.0)],
+        ),
+
+        // ------------------------------------------------------------------ Helden: Torvald Eisenhand
+        (
+            id: "clan_roar", name: "Ahnenruf", hotkey: Some('Q'),
+            description: "Ein Schlachtruf der Clans: Verbündete im Umkreis 6 erhalten 10 s lang +15 % Schaden und Moral, Feinde zittern.",
+            mana: 80.0, cooldown: 25.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 6.0, damage_mult: 1.15, armor_bonus: 1.0, morale: 25.0, duration: 10.0), Terror(radius: 6.0, morale: 35.0)],
+        ),
+        (
+            id: "ground_slam", name: "Erdspalter", hotkey: Some('W'),
+            description: "Ein Schlag mit dem Streithammer erschüttert den Boden (120 Schaden im Radius 2,8).",
+            mana: 70.0, cooldown: 12.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 2.8, amount: 120.0, damage_type: Normal)],
+        ),
+        (
+            id: "iron_vow", name: "Eiserner Schwur", hotkey: Some('E'),
+            description: "Ein Schwur auf die Ahnen: absorbiert 12 s lang bis zu 300 Schaden.",
+            mana: 60.0, cooldown: 22.0, range: 0.0, targeting: SelfCentered,
+            effects: [Shield(amount: 300.0, duration: 12.0)],
+        ),
+
+        // ------------------------------------------------------------------ Talentfähigkeiten
+        (
+            id: "phoenix_cut", name: "Phönixhieb", hotkey: None,
+            description: "Ein glühender Flammenbogen verbrennt alle Feinde im Umkreis 3,4 (160 Feuerschaden).",
+            mana: 100.0, cooldown: 18.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 3.4, amount: 160.0, damage_type: Fire)],
+        ),
+        (
+            id: "war_cry", name: "Schlachtruf", hotkey: None,
+            description: "12 s lang +35 % Schaden, +3 Rüstung und frische Moral für alle Verbündeten im Umkreis 8.",
+            mana: 110.0, cooldown: 45.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 8.0, damage_mult: 1.35, armor_bonus: 3.0, morale: 60.0, duration: 12.0)],
+        ),
+        (
+            id: "last_stand", name: "Letztes Aufgebot", hotkey: None,
+            description: "Absorbiert 10 s lang bis zu 400 Schaden und stärkt Verbündete in der Nähe (+2 Rüstung).",
+            mana: 90.0, cooldown: 40.0, range: 0.0, targeting: SelfCentered,
+            effects: [Shield(amount: 400.0, duration: 10.0), Rally(radius: 4.0, damage_mult: 1.0, armor_bonus: 2.0, morale: 20.0, duration: 10.0)],
+        ),
+        (
+            id: "pillar_of_fire", name: "Feuersäule", hotkey: None,
+            description: "Eine gewaltige Feuersäule verheert den Zielpunkt (220 Feuerschaden im Radius 4). Reichweite 8.",
+            mana: 140.0, cooldown: 30.0, range: 8.0, targeting: Point,
+            effects: [Damage(radius: 4.0, amount: 220.0, damage_type: Fire)],
+        ),
+        (
+            id: "resurgence", name: "Neuerwachen", hotkey: None,
+            description: "Heilt alle Verbündeten im Umkreis 9 um 260 Leben.",
+            mana: 150.0, cooldown: 50.0, range: 0.0, targeting: SelfCentered,
+            effects: [Heal(radius: 9.0, amount: 260.0)],
+        ),
+        (
+            id: "aegis_of_flame", name: "Flammenaegis", hotkey: None,
+            description: "Schild aus Flamme: absorbiert 12 s lang 350 Schaden; Verbündete im Umkreis 5 erhalten +3 Rüstung.",
+            mana: 100.0, cooldown: 35.0, range: 0.0, targeting: SelfCentered,
+            effects: [Shield(amount: 350.0, duration: 12.0), Rally(radius: 5.0, damage_mult: 1.0, armor_bonus: 3.0, morale: 20.0, duration: 10.0)],
+        ),
+        (
+            id: "ancestral_fury", name: "Zorn der Ahnen", hotkey: None,
+            description: "Die Geister der Ahnen entfesseln sich: 200 Schaden im Radius 3,5.",
+            mana: 100.0, cooldown: 25.0, range: 0.0, targeting: SelfCentered,
+            effects: [Damage(radius: 3.5, amount: 200.0, damage_type: Normal)],
+        ),
+        (
+            id: "stone_skin", name: "Steinhaut", hotkey: None,
+            description: "Die Haut wird zu Fels: absorbiert 15 s lang bis zu 450 Schaden.",
+            mana: 80.0, cooldown: 40.0, range: 0.0, targeting: SelfCentered,
+            effects: [Shield(amount: 450.0, duration: 15.0)],
+        ),
+        (
+            id: "war_horns", name: "Kriegshörner", hotkey: None,
+            description: "Die Hörner der Clans erschallen: 14 s lang +25 % Schaden, +2 Rüstung für alle im Umkreis 9; Feinde im Umkreis 6 verlieren Moral.",
+            mana: 120.0, cooldown: 45.0, range: 0.0, targeting: SelfCentered,
+            effects: [Rally(radius: 9.0, damage_mult: 1.25, armor_bonus: 2.0, morale: 50.0, duration: 14.0), Terror(radius: 6.0, morale: 30.0)],
+        ),
     ],
 )

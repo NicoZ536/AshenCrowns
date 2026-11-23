@@ -30,35 +30,43 @@ Ladereihenfolge abhängig (relevant für Spielstände, siehe Typtabelle in Absch
 | `buildings` | `Vec<BuildingDef>` | `assets/data/buildings.ron` (Hülle `(buildings: [...])`) |
 | `abilities` | `Vec<AbilityDef>` | `assets/data/abilities.ron` (Hülle `(abilities: [...])`) |
 | `goods` | `Vec<GoodDef>` | `assets/data/goods.ron` (Hülle `(goods: [...])`) |
+| `items` | `Vec<ItemDef>` | `assets/data/items.ron` (Hülle `(items: [...])`) – Gegenstände der Helden |
+| `talents` | `Vec<TalentTree>` | `assets/data/talents.ron` (Hülle `(heroes: [...])`) – Talentbaum je Held |
+| `upgrades` | `Vec<UpgradeDef>` | `assets/data/upgrades.ron` (Hülle `(upgrades: [...])`) – Schmiede-Upgrades |
 | `rules` | `Rules` | `assets/data/rules.ron` |
 
-Funktionen: `GameData::load_dir(dir)` (lädt alle fünf Dateien, `reindex`, `validate`),
+Funktionen: `GameData::load_dir(dir)` (lädt alle acht Dateien, `reindex`, `validate`),
 `apply_overlay(dir)` (Mods; gibt Liste wie `unit:spearman` zurück), `validate()`, `unit_id`/`building_id`/`ability_id`,
-`unit`/`building`/`ability`, `good_id`/`good`, `item(id)` (Grundressource oder Ware), `item_name`, `base_price`,
+`unit`/`building`/`ability`, `good_id`/`good`, `item(id)` (Grundressource oder Ware), `item_def_id`/`item_def` (Gegenstände), `talent_tree(held)`, `upgrade_id`, `item_name`, `base_price`,
 `type_table()`.
 
 `validate()` prüft: Einheiten (`hp > 0`, `speed >= 0`, `damage_max >= damage_min`, Fähigkeiten existieren),
 Gebäude (`trains` verweist auf Einheiten, `requires` auf Gebäude, Größe > 0, Wohnstufen `upgrade_to`/`downgrade_to`
 existieren, Rezepte haben `cycle > 0`, `era` ≤ Anzahl der Ausbaustufen), alle Mengenlisten (`goods_cost`, Rezepte,
 Bedürfnisse, Ausbaustufen) verweisen auf bekannte Items, Steuerstufen vorhanden, Ausbaustufen verlangen bekannte
-Gebäude, Fähigkeiten (`Summon` verweist auf existierende Einheit).
+Gebäude, Fähigkeiten (`Summon` verweist auf existierende Einheit), Einheiten (`autocast`, `loot` verweisen auf Fähigkeiten/Gegenstände),
+Talentbäume (Held existiert und ist `Hero`, Pfad < 3, Rang ≥ 1, freigeschaltete Fähigkeit existiert), Upgrades (Gebäude existiert, mindestens eine Stufe),
+Lagerbeute (`camp_loot`), mindestens eine KI-Stufe.
 
 ### 1.1 Aufzählungen
 
 | Typ | Werte |
 |---|---|
 | `Faction` | `EmberCrown`, `Hollowed`, `Neutral` |
-| `UnitClass` | `Worker`, `Infantry`, `Ranged`, `Cavalry`, `Hero`, `Monster`, `Boss` |
+| `UnitClass` | `Worker`, `Infantry`, `Ranged`, `Cavalry`, `Hero`, `Monster`, `Boss`, `Siege`, `Support`, `Flyer` |
 | `ArmorType` | `Unarmored`, `Light`, `Medium`, `Heavy`, `Fortified`, `Hero` |
-| `DamageType` | `Normal`, `Pierce`, `Siege`, `Magic`, `Hero` |
+| `DamageType` | `Normal`, `Pierce`, `Siege`, `Magic`, `Hero`, `Fire` |
 | `ResourceKind` | `Gold`, `Wood`, `Stone`, `Food` |
-| `ProjectileKind` | `Arrow`, `BoneBolt`, `SoulBolt` |
+| `ProjectileKind` | `Arrow`, `BoneBolt`, `SoulBolt`, `Bolt`, `Fireball`, `Boulder` (`speed()` je Art) |
 | `Item` | `Res(ResourceKind)` oder `Good(GoodId)`; einheitlicher Index (`Item::index`): Gold 0, Holz 1, Stein 2, Nahrung 3, danach Waren |
 | `BuildCategory` | `Housing`, `Raw`, `Craft`, `Food`, `Civic`, `Military`, `Wall` (Rubrik im Baumenü) |
 | `Fort` | `Wall`, `Gate`, `Tower` |
 | `NeedKind` | `Item(String)`, `Faith`, `Safety` |
 | `ServiceKind` | `Faith`, `Safety` |
-| `AbilityTargeting` | `SelfCentered`, `Point` (Hinweis: Alle Fähigkeiten der Vertical Slice sind `SelfCentered`; `Point` ist im Datenmodell vorhanden, wird von keiner Fähigkeit genutzt) |
+| `AbilityTargeting` | `SelfCentered`, `Point` (Zielzauber: Feuerball, Heilige Flamme, Feuersäule; die Oberfläche wechselt in den Zielmodus `CommandMode::Cast`) |
+| `Difficulty` | `Easy` (alias `Story`), `Normal`, `Hard`, `Nightmare` – Index in `Rules::ai_levels`, Wellenfaktor 0,65 / 1,0 / 1,4 / 1,8 |
+| `Formation` | `Block`, `Line`, `Wedge`, `Column`, `Square` (`rpg.rs`) |
+| `ItemSlot`, `Rarity` | `Weapon`, `Armor`, `Amulet`, `Ring`, `Potion`; `Common`, `Uncommon`, `Rare`, `Epic`, `Unique` (`rpg.rs`) |
 
 ### 1.2 `Cost`
 
@@ -112,6 +120,14 @@ Die 17 Waren: `clay`, `iron_ore`, `coal`, `grain`, `wool`, `herbs` (Stufe 1); `p
 | `build_speed` | `f32` | 0 | Baugeschwindigkeit (> 0 = kann bauen) |
 | `xp_value` | `u32` | 10 | Erfahrung beim Töten |
 | `hp_per_level`, `damage_per_level` | `f32` | 0 | Zuwächse je Stufe (Helden) |
+| `era` | `u8` | 0 | Benötigte Ausbaustufe der Siedlung für die Ausbildung (1 = Burg) |
+| `min_range` | `f32` | 0 | Mindestreichweite: nähere Ziele werden nicht beschossen, die Einheit weicht zurück (Katapult) |
+| `splash` | `f32` | 0 | Flächenschaden-Radius am Einschlagpunkt (Geschoss oder Treffer); zum Rand −50 % |
+| `building_mult` | `f32` | 1 | Schadensfaktor gegen Gebäude (Ramme 3,2, Katapult 1,6, Grabkoloss 2,2) |
+| `flying` | `bool` | `false` | Flieger: gerade Linie über Hindernisse; nur Fernkämpfer und Waffen mit `range ≥ 1` können ihn treffen |
+| `ranged_resist` | `f32` | 0 | Anteil des Pierce-Schadens, den die Einheit abfängt (Schildträger 0,4) |
+| `autocast` | `Vec<String>` | leer | Fähigkeiten, die die Einheit selbstständig wirkt (Heilen, Beschwören, Flächenzauber) |
+| `loot` | `Vec<(String, f32)>` | leer | Beutetabelle: Gegenstands-ID und Wahrscheinlichkeit bei Tod |
 | `hotkey` | `Option<char>` | `None` | Taste zum Ausbilden (nur Buchstaben A B C D E F G K M P Q S T V W X Z werden vom Spiel verarbeitet, siehe `mission::letter_key`) |
 
 Einheiten der Vertical Slice (`assets/data/units.ron`):
@@ -128,6 +144,10 @@ Einheiten der Vertical Slice (`assets/data/units.ron`):
 | `hollow_archer` | Knochenschütze | Hollowed | Ranged | 150 | 0 / Light | 10–13 Pierce | 5,0 | 2,4 | – | 0 |
 | `grave_brute` | Grabkoloss | Hollowed | Monster | 700 | 2 / Heavy | 28–36 Siege | 0,8 | 1,9 | – | 0 |
 | `boss_pale_reeve` | Der Fahle Vogt | Hollowed | Boss | 2 400 | 5 / Hero | 34–42 Hero | 0,9 | 2,6 | – | 0 |
+
+Einheiten des Echtzeit-Militärs (Werte und Kosten: `docs/design/rts_military.md` Abschnitt 2):
+`crossbowman`, `halberdier`, `shieldbearer`, `scout_rider`, `horse_archer`, `battle_mage`, `priest`, `battering_ram`, `catapult`; Helden
+`hero_hal_venn`, `hero_torvald`; Hohle `hollow_digger`, `ghoul`, `ash_witch`, `bat_swarm`.
 
 ### 1.4 `BuildingDef` (`#[serde(default)]`) und `TowerAttack`
 
@@ -221,6 +241,9 @@ Wirkung skaliert mit der Stufe des Wirkers um 8 % je Stufe über Stufe 1 (`level
 | `summon_thralls` | Ruf der Gräber | 100 | 25 s | `Summon(hollow_thrall, 4)` |
 | `dread_wail` | Schreckensklage | 80 | 18 s | `Terror(radius 6, 45)`, `Damage(radius 3, 40, Magic)` |
 
+`Effect` kennt zusätzlich `Heal { radius, amount }` (Verbündete um den Zielpunkt) und `Summon { unit, count, max }` (`max` = gleichzeitig lebende Diener des Wirkers,
+0 = unbegrenzt). Die Fähigkeitenliste einer Einheit ist `def.abilities` gefolgt von `Unit::extra_abilities` (durch Talente freigeschaltet); `UseAbility { ability }` indiziert diese Gesamtliste.
+
 ### 1.6 `Rules` (`#[serde(default)]`, `assets/data/rules.ron`)
 
 | Feld | Standard / Wert | Bedeutung |
@@ -243,14 +266,20 @@ Wirkung skaliert mit der Stufe des Wirkers um 8 % je Stufe über Stufe 1 (`level
 
 `TaxLevel { name, income, happiness }` – fünf Steuersätze (Keine, Niedrig, Normal, Hoch, Drückend).
 
+Zusatzfelder der Regeln (Echtzeit-Militär): `hero_revive_base` (150), `hero_revive_per_level` (60), `hero_altar_hp` (0,8), `hero_keep_hp` (0,5), `pickup_radius` (1,3),
+`camp_loot` (Gegenstand, Gewicht) und `ai_levels: Vec<AiLevel>` – `name`, `think`, `workers`, `income_mult`, `army_mult`, `first_attack`, `attack_interval`, `tech_interval`,
+`counter_skill`, `retreat_ratio`, `max_army`, `harass`, `towers` (vier Einträge: Leicht, Normal, Schwer, Albtraum).
+
 ### 1.7 Schadens- und Rüstungsmodell
 
 Schaden gegen Einheiten (`SimWorld::deal_damage`):
 
 ```text
-armor      = def.armor + Buff-Rüstung + (Stufe − 1) · 0,5
+armor      = def.armor + Buff-Rüstung + (Stufe − 1) · 0,5 + Ausrüstung/Talente + Upgrades + Formation   (SimWorld::armor_of)
 reduction  = armor ≥ 0 ? armor·0,06 / (1 + 0,06·armor) : −(1 − 0,94^(−armor))
 amount     = roh · DamageType::multiplier(armor_type) · Klassenbonus · (1 − reduction)
+Pierce:    amount ·= (1 − ranged_resist) · Formation.pierce_taken
+roh (Treffer) = (Schaden + Stufenbonus + Ausrüstung) · damage_factor (Buffs · (1 + Talente + Upgrade) · Formation) · building_mult (nur gegen Gebäude)
 ```
 
 Der Schaden geht zuerst in den Schild, dann in die LP. Nicht-furchtlose Einheiten verlieren Moral
@@ -265,11 +294,43 @@ Schadensart gegen Rüstungsart (`DamageType::multiplier`):
 | **Pierce** | 1,5 | 2,0 | 0,75 | 0,8 | 0,35 | 0,5 |
 | **Siege** | 1,5 | 1,0 | 0,5 | 1,0 | 1,5 | 0,5 |
 | **Magic** | 1,0 | 1,25 | 0,75 | 2,0 | 0,35 | 0,5 |
+| **Fire** | 1,5 | 1,25 | 1,0 | 0,75 | 0,6 | 0,75 |
 | **Hero** | 1,0 | 1,0 | 1,0 | 1,0 | 0,5 | 1,0 |
 
 Moral: Fällt sie unter 15 % des Maximums (und die Einheit ist kein Held und nicht furchtlos), flieht die Einheit
 5 Sekunden lang (`routing`, 15 % schneller, `MoraleBroken`) und kehrt mit 40 % Moral zurück. Außerhalb des Kampfes
 regeneriert Moral mit 5 pro Sekunde; bei Hungersnot sinkt sie um 1,2 pro Sekunde.
+
+---
+
+### 1.8 `ItemDef` (`items.ron`, `rpg.rs`)
+
+| Feld | Typ | Bedeutung |
+|---|---|---|
+| `id`, `name`, `description` | `String` | Kennung und Texte |
+| `slot` | `ItemSlot` | `Weapon` (Platz 0), `Armor` (1), `Amulet` (2), `Ring` (3 und 4), `Potion` (nur Inventar) |
+| `rarity` | `Rarity` | Farbe und Beuteverhalten; `Unique` = Artefakt des Kanons |
+| `mods` | `StatMods` | `hp`, `mana`, `damage` (fest), `damage_pct`, `armor`, `speed_pct`, `hp_regen`, `mana_regen`, `xp_pct`, `cooldown_pct` – additiv |
+| `use_effect` | `Option<ItemUse>` | Trank: `heal`, `mana`, sowie `damage_mult`/`armor_bonus`/`duration` (zeitlicher Buff) |
+| `value` | `f32` | Gold-Wert (Anzeige) |
+
+Plätze: `EQUIP_SLOTS = 5`, `INVENTORY_SIZE = 12`. Der Cache `Unit::mods` entsteht aus Ausrüstung und Talenten (`systems::heroes::recompute`) und wirkt in `damage_factor`, `armor_of`,
+`speed_factor`, Regeneration und `max_hp`/`max_mana`.
+
+### 1.9 `TalentTree`, `TalentDef` (`talents.ron`)
+
+`TalentTree { hero, paths: [3 Namen], talents }`; `TalentDef { id, name, description, path 0..3, tier 0..3, max_rank, mods: StatMods (je Rang), ability: Option<String> }`.
+Regeln: Punkte = Stufe − 1 (höchstens 9); Reihe `t` verlangt `2·t` Punkte im Pfad; der erste Rang einer Talentfähigkeit hängt sie an `Unit::extra_abilities`.
+`Unit::talents` speichert den Rang je Talentindex.
+
+### 1.10 `UpgradeDef` (`upgrades.ron`)
+
+`UpgradeDef { id, name, description, building, applies_to: [UnitClass], per_level: UpgradeEffect { damage_pct, armor, hp_pct }, levels: [UpgradeLevel { cost, goods, time, era }] }`.
+Der Spielstand hält die erreichte Stufe je Upgrade in `PlayerState::upgrades`; `SimWorld::upgrade_bonus` summiert die Wirkung je Klasse. Forschung: `Building::research`.
+
+### 1.11 Formationen
+
+`Formation::mods()` liefert `FormationMods { damage_mult, ranged_damage_mult, armor, speed_mult, pierce_taken, morale_loss }`; Layouts in `systems/formation.rs` (`offsets(formation, n)`). Werte: siehe `docs/design/rts_military.md` Abschnitt 8.
 
 ---
 
@@ -306,6 +367,13 @@ Entitäten liegen in `Arena<T>` (generationelle IDs: `Id<T> { index, generation 
 | `tag` | `Option<String>` | Missions-Markierung (aus `Placement::tag`) |
 | `wave` | `Option<u32>` | Zugehörigkeit zu einer Angriffswelle |
 | `alive_time` | `f32` | Lebensdauer |
+| `formation` | `Formation` | Aufstellung (Wirkung: `FormationMods`) |
+| `master` | `Option<UnitId>` | Beschwörer; die Einheit vergeht mit ihm |
+| `camp` | `Option<String>` | Lagerzugehörigkeit (Beute bei Vernichtung des Lagers) |
+| `talents` | `Vec<u8>` | Talentränge (Index = Talent im Talentbaum des Helden) |
+| `equipment`, `inventory` | `[Option<ItemId>; 5]`, `Vec<ItemId>` | Ausrüstung (Waffe, Rüstung, Amulett, 2 Ringe) und Inventar (≤ 12) |
+| `extra_abilities` | `Vec<String>` | Durch Talente freigeschaltete Fähigkeiten (hinter `UnitDef::abilities`) |
+| `mods`, `potion_cd` | `StatMods`, `f32` | Berechnete Ausrüstungs-/Talentwerte (Cache), Trank-Abklingzeit |
 
 ### 2.2 `Order`
 
@@ -349,6 +417,7 @@ Entitäten liegen in `Arena<T>` (generationelle IDs: `Id<T> { index, generation 
 | `residents`, `happiness` | `f32` | Bewohner und Zufriedenheit (0–100) eines Wohnhauses |
 | `up_timer`, `down_timer`, `unmet` | `f32`, `f32`, `u32` | Zeitzähler für Aufstieg/Abstieg; Bitmaske unerfüllter Bedürfnisse (Index in `Housing::needs`) |
 | `gate_open` | `bool` | Tor offen für eigene Einheiten |
+| `research` | `Option<(u8, f32)>` | Laufende Forschung: Upgrade-Index und Fortschritt (s) |
 
 ### 2.5 `ResourceNode`, `NodeKind`
 
@@ -395,7 +464,9 @@ Steinbrüche: Goldminen bei (7, 47), (50, 45), (63, 30); Steinbrüche bei (22, 4
 | `director` | `Director` | ja | Wellensteuerung |
 | `chronicle` | `Chronicle` | ja | Chronik |
 | `rng` | `ChaCha8Rng` | ja | Zufallszustand |
-| `hero_respawn` | `Option<(UnitTypeId, f32)>` | ja | Wartender Held und Restzeit |
+| `fallen` | `Vec<FallenHero>` | ja | Gefallene Helden: vollständiger `Unit`-Zustand und Restzeit bis zur kostenlosen Rückkehr |
+| `drops` | `Vec<GroundItem>` | ja | Beute am Boden (`pos`, `item`) |
+| `ai` | `AiState` | ja | Zustand der Gegner-KI (Gefecht): `enabled`, `level`, `phase` (`Build`, `Attack`, `Retreat`), Zeitgeber, Zähler |
 | `events` | `Vec<SimEvent>` | nein | Ereignisse des letzten Schritts |
 | `pending` | `Vec<PlayerCommand>` | nein | Befehle für den nächsten Schritt |
 | `pathfinder`, `spatial`, `scratch` | – | nein | Hilfsstrukturen |
@@ -409,11 +480,12 @@ Zugehörige Typen:
   Waren zu. Lagerfunktionen auf `SimWorld`: `credit` (mit Kapazitätsgrenze), `take`, `afford`/`pay`/`refund`,
   `market_price`, `market_of`.
   `PlayerStats { units_trained, units_lost, kills, buildings_built, gathered: Cost }`.
-* `Director { enabled, next_wave_in, wave, warned, boss_summons_done }`.
+* `Director { enabled, next_wave_in, wave, warned, boss_summons_done }` (im Gefecht ruht der Direktor, die KI übernimmt).
+* `PlayerState` zusätzlich: `upgrades: Vec<u8>` (Stufe je Schmiede-Upgrade).
 * `MatchSettings { mode: GameMode, difficulty: Difficulty, seed: u64, hero_permadeath: bool }`, Standard:
   Kampagne, Normal, Seed 897, kein dauerhafter Heldentod.
-* `GameMode`: `Campaign`, `Skirmish`, `Survival`, `Sandbox`. `Difficulty`: `Story` (Wellenfaktor 0,65), `Normal` (1,0),
-  `Hard` (1,4).
+* `GameMode`: `Campaign`, `Skirmish`, `Survival`, `Sandbox`. `Difficulty`: `Easy` (Leicht, früher `Story`, Wellenfaktor 0,65), `Normal` (1,0),
+  `Hard` (Schwer, 1,4), `Nightmare` (Albtraum, 1,8); jede Stufe hat einen Eintrag in `Rules::ai_levels`.
 * `Environment { time_of_day (0..1; 0,25 Sonnenaufgang, 0,5 Mittag, 0,75 Sonnenuntergang), day, night, weather,
   weather_timer, weather_intensity, lightning_timer, forced_weather, was_night }`.
   `DayPhase`: `Dawn` (0,21–0,30), `Day` (0,30–0,72), `Dusk` (0,72–0,80), sonst `Night`. Startzeit 0,30.
@@ -537,6 +609,11 @@ Ereignisse sind nicht Teil des Spielstands.
 | `NodeDepleted` | `pos`, `tree` |
 | `AbilityCast` | `unit`, `ability` (ID), `pos`, `target` |
 | `LevelUp` | `unit`, `level` |
+| `Healed` / `Summoned` | `pos`, `amount` / `unit`, `pos` |
+| `Splash` | `pos`, `radius`, `kind` – Flächengeschoss (Katapult, Feuerball) schlägt ein |
+| `TalentLearned` | `unit`, `talent`, `pos` |
+| `ItemUsed` / `ItemDropped` / `ItemPickedUp` | `item`, `pos` (+ `unit`) |
+| `UpgradeResearched` | `owner`, `upgrade` (ID), `level` |
 | `MoraleBroken` | `unit`, `pos` |
 | `HeroFallen` | `kind`, `pos` |
 | `HeroRespawned` | `unit`, `pos` |
@@ -577,6 +654,11 @@ erzeugen ein `SimEvent::Error`. Einheitenlisten werden auf Besitz gefiltert.
 | `Repair` | `units`, `building` | Bauen/Reparieren |
 | `Train` | `building`, `unit` | Ausbildung einreihen (Warteschlange ≤ 5, Wohnraum, Kosten) |
 | `CancelTrain` | `building`, `index` | Eintrag abbrechen |
+| `SetFormation` | `units`, `formation` | Aufstellung setzen (Arbeiter ausgenommen) |
+| `LearnTalent` | `unit`, `talent: u16` | Talentpunkt einsetzen (Punkte, Rang, Pfadvoraussetzung) |
+| `EquipItem` / `UnequipItem` / `DropItem` / `UseItem` | `unit`, `index` bzw. `slot` | Ausrüstung anlegen/ablegen, wegwerfen, Trank trinken |
+| `Research` / `CancelResearch` | `building`, `upgrade` / `building` | Schmiede-Upgrade erforschen bzw. abbrechen (Erstattung) |
+| `ReviveHero` | `building`, `hero` | Gefallenen Helden am Bergfried oder Altar gegen Gold wiederbeleben |
 | `SetRally` | `building`, `point` | Sammelpunkt setzen |
 | `UseAbility` | `unit`, `ability: u8`, `point` | Fähigkeit des Helden (Index in `UnitDef::abilities`) |
 | `Demolish` | `building` | Abreißen (Rückerstattung `demolish_refund` = 50 % bei fertigen Gebäuden, 75 % bei Baustellen; Waren eingeschlossen) |
@@ -600,7 +682,7 @@ Datei: `<slot>.acsave` in `<Nutzerverzeichnis>/saves/`. Endung `acsave` (`save::
 ```text
 Offset  Größe     Inhalt
 0       4         Magic "ASHC"
-4       4         u32 Formatversion (little endian), derzeit FORMAT_VERSION = 3
+4       4         u32 Formatversion (little endian), derzeit FORMAT_VERSION = 4
 8       4         u32 Header-Länge in Bytes (little endian, höchstens 1 MiB)
 12      n         Header: JSON (SaveHeader)
 12+n    4         u32 CRC32 des Payloads (crc32fast)
@@ -626,7 +708,7 @@ Der JSON-Header kann ohne Dekodieren des Payloads gelesen werden (`read_header`,
 
 `SavePayload { world: SimWorld, type_table: Vec<String>, client_state: String }`:
 
-* `type_table` = `GameData::type_table()`: Liste `u:<unit-id>`, `b:<building-id>`, `a:<ability-id>`, `g:<good-id>` in Ladereihenfolge.
+* `type_table` = `GameData::type_table()`: Liste `u:<unit-id>`, `b:<building-id>`, `a:<ability-id>`, `g:<good-id>`, `i:<item-id>`, `p:<upgrade-id>` in Ladereihenfolge.
   Da Typ-IDs Vektorpositionen sind, wird sie beim Laden mit den aktuell geladenen Daten **verglichen**; weicht sie
   ab (z. B. anderer Mod-Satz), meldet `decode` `SaveError::Incompatible` und das Spiel lädt nicht.
 * `client_state` = Text (RON) des Spiels: Kamera, Zoom, Geschwindigkeit (`ClientState { camera, lines, speed }`).

@@ -522,6 +522,7 @@ pub fn build_all() -> Vec<Structure> {
     let mut v = vec![keep(), farmstead(), barracks(), watchtower(), hollow_shrine(), bone_spire(), gold_mine(), quarry()];
     v.push(keep_variant(true));
     v.extend(super::city::build_all());
+    v.extend(super::military::build_all());
     v.extend(decor());
     v
 }

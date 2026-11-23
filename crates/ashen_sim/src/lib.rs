@@ -16,6 +16,7 @@ pub mod map;
 pub mod mapgen;
 pub mod mission;
 pub mod path;
+pub mod rpg;
 pub mod save;
 pub mod spatial;
 pub mod systems;

@@ -27,6 +27,8 @@ pub enum CommandMode {
     Patrol,
     Rally,
     BuildMenu,
+    /// Zielzauber: nächster Linksklick auf den Boden wirkt die Fähigkeit mit diesem Index.
+    Cast(u8),
 }
 
 pub struct Message {
@@ -85,6 +87,9 @@ pub struct MissionScene {
     pub build_cat: BuildCategory,
     /// Startkachel einer Mauerlinie beim Ziehen im Baumodus.
     pub line_start: Option<IVec2>,
+    /// Heldenfenster (Taste H) und der Held, auf den es sich bezieht.
+    pub show_hero: bool,
+    pub hero_focus: Option<UnitId>,
     last_view: Option<ViewParams>,
     last_select_voice: f32,
     hero_greeted: bool,
@@ -133,6 +138,8 @@ impl MissionScene {
             show_city: false,
             build_cat: BuildCategory::Housing,
             line_start: None,
+            show_hero: false,
+            hero_focus: None,
             last_view: None,
             last_select_voice: -10.0,
             hero_greeted: false,
@@ -210,11 +217,98 @@ impl MissionScene {
         self.cmd(Command::Hold { units: u });
     }
 
+    /// Führender Fähigkeitsträger der Auswahl: Held bevorzugt, sonst erste eigene Einheit mit Fähigkeiten.
+    pub fn ability_lead(&self, data: &GameData) -> Option<UnitId> {
+        self.selected_hero(data).or_else(|| {
+            self.selection.iter().copied().find(|id| self.world.units.get(*id).is_some_and(|u| u.owner == PLAYER && ashen_sim::systems::heroes::ability_list(data, u).next().is_some()))
+        })
+    }
+
+    /// Wirkt die Fähigkeit `index` des führenden Einheitentyps mit allen gleichartigen, bereiten Einheiten.
+    /// Zielzauber wechseln in den Zielmodus und wirken beim nächsten Klick.
     pub fn use_ability(&mut self, data: &GameData, index: u8) {
-        if let Some(h) = self.selected_hero(data) {
-            let p = self.world.units.get(h).map(|u| u.pos).unwrap_or_default();
-            self.cmd(Command::UseAbility { unit: h, ability: index, point: p });
+        let Some(lead) = self.ability_lead(data) else { return };
+        let Some(name) = self.world.units.get(lead).and_then(|u| ashen_sim::systems::heroes::ability_list(data, u).nth(index as usize).cloned()) else { return };
+        let Some(aid) = data.ability_id(&name) else { return };
+        if data.ability(aid).targeting == ashen_sim::data::AbilityTargeting::Point {
+            self.mode = CommandMode::Cast(index);
+            return;
         }
+        for (id, pos) in self.ability_casters(data, &name, index) {
+            self.cmd(Command::UseAbility { unit: id, ability: index, point: pos });
+        }
+    }
+
+    /// Eigene ausgewählte Einheiten, die an Index `index` die Fähigkeit `name` haben.
+    fn ability_casters(&self, data: &GameData, name: &str, index: u8) -> Vec<(UnitId, Vec2)> {
+        self.selection
+            .iter()
+            .filter_map(|id| self.world.units.get(*id).map(|u| (*id, u)))
+            .filter(|(_, u)| u.owner == PLAYER && ashen_sim::systems::heroes::ability_list(data, u).nth(index as usize).is_some_and(|n| n == name))
+            .map(|(id, u)| (id, u.pos))
+            .collect()
+    }
+
+    /// Zielzauber an einem Bodenpunkt wirken (nach Klick im Zielmodus).
+    fn cast_at(&mut self, data: &GameData, index: u8, point: Vec2) {
+        let Some(lead) = self.ability_lead(data) else { return };
+        let Some(name) = self.world.units.get(lead).and_then(|u| ashen_sim::systems::heroes::ability_list(data, u).nth(index as usize).cloned()) else { return };
+        for (id, _) in self.ability_casters(data, &name, index) {
+            self.cmd(Command::UseAbility { unit: id, ability: index, point });
+        }
+    }
+
+    pub fn set_formation(&mut self, formation: ashen_sim::rpg::Formation) {
+        let units = self.own_selection();
+        self.cmd(Command::SetFormation { units, formation });
+    }
+
+    /// Wechselt zur nächsten Formation der Reihe Block → Linie → Keil → Kolonne → Karree.
+    pub fn cycle_formation(&mut self) {
+        use ashen_sim::rpg::Formation;
+        let cur = self.selection.iter().find_map(|id| self.world.units.get(*id)).map(|u| u.formation).unwrap_or_default();
+        let i = Formation::ALL.iter().position(|f| *f == cur).unwrap_or(0);
+        self.set_formation(Formation::ALL[(i + 1) % Formation::ALL.len()]);
+    }
+
+    /// Der Held, auf den sich das Heldenfenster bezieht.
+    pub fn active_hero(&self, data: &GameData) -> Option<UnitId> {
+        let alive = |id: &UnitId| self.world.units.get(*id).is_some_and(|u| u.owner == PLAYER && data.unit(u.kind).class == UnitClass::Hero);
+        self.selected_hero(data)
+            .or(self.hero_focus.filter(alive))
+            .or_else(|| self.world.units.iter().find(|(_, u)| u.owner == PLAYER && data.unit(u.kind).class == UnitClass::Hero).map(|(id, _)| id))
+    }
+
+    pub fn learn_talent(&mut self, unit: UnitId, talent: usize) {
+        self.cmd(Command::LearnTalent { unit, talent: talent as u16 });
+    }
+
+    pub fn equip_item(&mut self, unit: UnitId, index: usize) {
+        self.cmd(Command::EquipItem { unit, index: index as u8 });
+    }
+
+    pub fn unequip_item(&mut self, unit: UnitId, slot: usize) {
+        self.cmd(Command::UnequipItem { unit, slot: slot as u8 });
+    }
+
+    pub fn drop_item(&mut self, unit: UnitId, index: usize) {
+        self.cmd(Command::DropItem { unit, index: index as u8 });
+    }
+
+    pub fn use_item(&mut self, unit: UnitId, index: usize) {
+        self.cmd(Command::UseItem { unit, index: index as u8 });
+    }
+
+    pub fn research(&mut self, building: BuildingId, upgrade: usize) {
+        self.cmd(Command::Research { building, upgrade: upgrade as u8 });
+    }
+
+    pub fn cancel_research(&mut self, building: BuildingId) {
+        self.cmd(Command::CancelResearch { building });
+    }
+
+    pub fn revive_hero(&mut self, building: BuildingId, hero: ashen_sim::data::UnitTypeId) {
+        self.cmd(Command::ReviveHero { building, hero });
     }
 
     pub fn train(&mut self, building: BuildingId, unit: ashen_sim::data::UnitTypeId) {
@@ -452,6 +546,8 @@ impl MissionScene {
         if input.key_pressed(KeyCode::Escape) {
             if self.mode != CommandMode::Normal {
                 self.mode = CommandMode::Normal;
+            } else if self.show_hero {
+                self.show_hero = false;
             } else {
                 self.menu_open = true;
                 self.menu_page = crate::hud::MenuPage::Main;
@@ -486,11 +582,14 @@ impl MissionScene {
         {
             self.camera.center = tile_to_world(u.pos);
         }
-        if (input.key_pressed(KeyCode::KeyH) && !cmd_mod && self.selection.is_empty()
-            || input.key_pressed(KeyCode::Home))
+        let h_open = input.key_pressed(KeyCode::KeyH) && !cmd_mod && self.selection.is_empty() && self.selected_building.is_none();
+        if (h_open || input.key_pressed(KeyCode::Home))
             && let Some(h) = self.world.hero_of(data, PLAYER) {
                 self.selection = vec![h];
                 self.selected_building = None;
+                if h_open {
+                    self.show_hero = true;
+                }
                 if let Some(u) = self.world.units.get(h) {
                     self.camera.center = tile_to_world(u.pos);
                 }
@@ -530,7 +629,17 @@ impl MissionScene {
                     self.command_stop();
                 }
                 if input.key_pressed(KeyCode::KeyH) {
-                    self.command_hold();
+                    // Nur Helden gewählt: Heldenfenster; sonst Position halten.
+                    let own = self.own_selection();
+                    let only_heroes = !own.is_empty() && own.iter().all(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).class == UnitClass::Hero));
+                    if only_heroes {
+                        self.show_hero = !self.show_hero;
+                    } else {
+                        self.command_hold();
+                    }
+                }
+                if input.key_pressed(KeyCode::KeyF) {
+                    self.cycle_formation();
                 }
                 if input.key_pressed(KeyCode::KeyP) {
                     self.mode = CommandMode::Patrol;
@@ -538,8 +647,8 @@ impl MissionScene {
                 if input.key_pressed(KeyCode::KeyB) && self.has_workers(data) {
                     self.mode = CommandMode::BuildMenu;
                 }
-                for (i, k) in [KeyCode::KeyQ, KeyCode::KeyW, KeyCode::KeyE].iter().enumerate() {
-                    if input.key_pressed(*k) && self.selected_hero(data).is_some() {
+                for (i, k) in [KeyCode::KeyQ, KeyCode::KeyW, KeyCode::KeyE, KeyCode::KeyR, KeyCode::KeyT, KeyCode::KeyY].iter().enumerate() {
+                    if input.key_pressed(*k) && self.ability_lead(data).is_some() {
                         self.use_ability(data, i as u8);
                     }
                 }
@@ -631,6 +740,14 @@ impl MissionScene {
                         self.cmd(Command::SetRally { building: b, point: mouse_tile });
                     }
                     self.mode = CommandMode::Normal;
+                    return;
+                }
+                CommandMode::Cast(index) => {
+                    self.cast_at(data, index, mouse_tile);
+                    self.view.add_marker(mouse_tile, true);
+                    if !shift {
+                        self.mode = CommandMode::Normal;
+                    }
                     return;
                 }
                 _ => {

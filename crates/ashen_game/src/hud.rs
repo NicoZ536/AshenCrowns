@@ -47,6 +47,7 @@ const CARD_W: f32 = SLOT * 4.0 + SLOT_GAP * 3.0 + 40.0;
 pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &mut HudCtx) {
     top_bar(scene, ui, engine, cx);
     console(scene, ui, engine, cx);
+    crate::hud_hero::draw(scene, ui, engine, cx);
     crate::hud_city::draw(scene, ui, engine, cx);
     objectives(scene, ui, engine, cx);
     messages(scene, ui, cx);
@@ -471,11 +472,26 @@ fn selection_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Eng
         let def = data.unit(u.kind);
         let hero = def.class == UnitClass::Hero;
         ui.horizontal(|ui| {
-            portrait(ui, cx, cx.art.portrait(&def.id), u.owner != PLAYER, hero);
+            let prect = portrait(ui, cx, cx.art.portrait(&def.id), u.owner != PLAYER, hero);
+            if hero && u.owner == PLAYER {
+                // Klick auf das Heldenporträt öffnet das Heldenfenster.
+                let resp = ui.interact(prect, Id::unique("hero_portrait"), Sense::click());
+                ui_common::sfx(engine, ui, &resp);
+                let points = ashen_sim::systems::heroes::free_points(data, u);
+                if resp.clicked() {
+                    scene.show_hero = !scene.show_hero;
+                    scene.hero_focus = Some(units[0].0);
+                }
+                if points > 0 {
+                    shadow_text(ui.painter(), prect.right_bottom() - Vec2::new(8.0, 8.0), Align2::CENTER_CENTER, "+", theme::body_bold_font(20.0), Color32::from_rgb(150, 236, 150));
+                }
+                ui_art::tip(resp, art, "Heldenfenster [H]", "Talente, Ausrüstung und Inventar.");
+            }
             ui.add_space(14.0);
             ui.vertical(|ui| {
                 ui.add_space(2.0);
-                let sub = if hero { format!("Heldin · Stufe {}", u.level) } else if u.owner == PLAYER { "Gefolgsmann".to_string() } else { "Hohler Feind".to_string() };
+                let hero_word = if def.id == "hero_isolde" { "Heldin" } else { "Held" };
+                let sub = if hero { format!("{hero_word} · Stufe {}", u.level) } else if u.owner == PLAYER { format!("{} · Gefolgsmann", def.class.label()) } else { "Hohler Feind".to_string() };
                 title_line(ui, art, &def.name, &sub);
                 ui.add_space(2.0);
                 let w = (ui.available_width() * 0.45).clamp(180.0, 300.0);
@@ -492,7 +508,6 @@ fn selection_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Eng
                         }
                     });
                     ui.add_space(18.0);
-                    let armor = def.armor + u.armor_bonus();
                     let dmg_bonus = (u.level.saturating_sub(1)) as f32 * def.damage_per_level;
                     let state = if u.routing > 0.0 {
                         "Flieht!".to_string()
@@ -508,9 +523,12 @@ fn selection_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Eng
                             ui.end_row();
                         };
                         let c = Color32::from_rgb(222, 206, 176);
-                        row(ui, "Schaden", format!("{:.0}–{:.0} · {:?}", def.damage_min + dmg_bonus, def.damage_max + dmg_bonus, def.damage_type), c);
-                        row(ui, "Rüstung", format!("{:.0} · {:?}", armor, def.armor_type), c);
-                        row(ui, "Reichweite", format!("{:.1} · Moral {:.0}", def.range, u.morale), c);
+                        let factor = scene.world.damage_factor(data, u);
+                        let flat = u.mods.damage;
+                        row(ui, "Schaden", format!("{:.0}–{:.0} · {:?}", (def.damage_min + dmg_bonus + flat) * factor, (def.damage_max + dmg_bonus + flat) * factor, def.damage_type), c);
+                        row(ui, "Rüstung", format!("{:.0} · {:?}", scene.world.armor_of(data, u), def.armor_type), c);
+                        let range = if def.min_range > 0.0 { format!("{:.1} (min. {:.1})", def.range, def.min_range) } else { format!("{:.1}", def.range) };
+                        row(ui, "Reichweite", format!("{range} · Moral {:.0}", u.morale), c);
                         row(ui, "Zustand", state, if u.routing > 0.0 { theme::EMBER } else { c });
                     });
                 });
@@ -624,6 +642,11 @@ enum CmdAction {
     BuildMenu,
     Ability(u8),
     AdvanceEra,
+    Research(BuildingId, usize),
+    CancelResearch(BuildingId),
+    Revive(BuildingId, UnitTypeId),
+    CycleFormation,
+    HeroWindow,
 }
 
 struct Cmd {
@@ -671,6 +694,45 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
             if !def.trains.is_empty() {
                 v.push(Cmd::new("icon_rally", "R", "Sammelpunkt", "Neue Einheiten sammeln sich hier (R, oder Rechtsklick).", CmdAction::Rally));
             }
+            // Schmiede-Upgrades (Stufen 1–3) des Gebäudes.
+            for (ui_idx, up) in data.upgrades.iter().enumerate().filter(|(_, up)| up.building == def.id) {
+                let ps = &scene.world.players[PLAYER as usize];
+                let lvl = ps.upgrades.get(ui_idx).copied().unwrap_or(0) as usize;
+                let icon = format!("icon_up_{}", up.id);
+                let running = b.research.filter(|(i, _)| *i as usize == ui_idx);
+                if let Some((_, prog)) = running {
+                    let need = up.levels.get(lvl).map(|l| l.time).unwrap_or(1.0).max(0.1);
+                    let mut c = Cmd::new(icon, "", format!("{} (Stufe {}) wird erforscht", up.name, lvl + 1), "Klick: Forschung abbrechen (volle Erstattung).", CmdAction::CancelResearch(bid));
+                    c.cooldown = Some((1.0 - prog / need, need - prog));
+                    v.push(c);
+                } else if let Some(next) = up.levels.get(lvl) {
+                    let mut c = Cmd::new(icon, "", format!("{} (Stufe {})", up.name, lvl + 1), up.description.clone(), CmdAction::Research(bid, ui_idx));
+                    c.cost = Some(next.cost);
+                    c.goods = next.goods_r.clone();
+                    let era_ok = next.era <= ps.era;
+                    c.enabled = era_ok && b.research.is_none() && scene.world.afford(PLAYER, &next.cost, &next.goods_r).is_ok();
+                    let era_name = data.rules.eras.get((next.era as usize).saturating_sub(1)).map(|e| e.name.as_str()).unwrap_or("");
+                    c.extra = format!("Forschung {:.0} s · Stufe {lvl}/{} erreicht{}", next.time, up.levels.len(), if era_ok { String::new() } else { format!(" · benötigt Ausbaustufe {era_name}") });
+                    v.push(c);
+                } else {
+                    let mut c = Cmd::new(icon, "", format!("{} (Stufe {} – Maximum)", up.name, lvl), up.description.clone(), CmdAction::Move);
+                    c.enabled = false;
+                    v.push(c);
+                }
+            }
+            // Gefallene Helden gegen Gold wiederbeleben (Bergfried oder Altar).
+            if b.tag.as_deref() == Some(scene.world.mission_def.defeat_tag.as_str()) || def.id == "altar" {
+                for f in &scene.world.fallen {
+                    let hd = data.unit(f.unit.kind);
+                    let cost = ashen_sim::systems::heroes::revive_cost(data, f.unit.level);
+                    let at_altar = def.id == "altar";
+                    let mut c = Cmd::new(format!("{}_portrait", hd.id), "", format!("{} wiederbeleben", hd.name), "Der Held kehrt mit Stufe, Talenten und Ausrüstung zurück.", CmdAction::Revive(bid, f.unit.kind));
+                    c.cost = Some(Cost { gold: cost, ..Default::default() });
+                    c.enabled = scene.world.players[PLAYER as usize].resources.gold >= cost;
+                    c.extra = format!("{} % Leben nach der Rückkehr{}", (if at_altar { data.rules.hero_altar_hp } else { data.rules.hero_keep_hp } * 100.0).round(), if at_altar { String::new() } else { " · Altar: mehr Leben".into() });
+                    v.push(c);
+                }
+            }
             if b.tag.as_deref() == Some(scene.world.mission_def.defeat_tag.as_str())
                 && let Some(next) = data.rules.eras.get(scene.world.players[0].era as usize)
             {
@@ -702,24 +764,55 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
     if scene.has_workers(cx.data) {
         v.push(Cmd::new("icon_build", "B", "Bauen", "Öffnet das Baumenü mit Rubriken: Wohnen, Rohstoffe, Handwerk, Nahrung, Stadt, Militär, Mauern.", CmdAction::BuildMenu));
     }
-    if let Some(h) = scene.selected_hero(data)
-        && let Some(hero) = scene.world.units.get(h)
-    {
-        // Fähigkeiten beginnen in einer neuen Reihe.
-        while v.len() % 4 != 0 {
-            v.push(Cmd::new("", "", "", "", CmdAction::Move));
-            v.last_mut().expect("just pushed").enabled = false;
-            v.last_mut().expect("just pushed").icon.clear();
+    // Formation: ab zwei Kampfeinheiten.
+    let fighters: Vec<&ashen_sim::entity::Unit> = scene
+        .selection
+        .iter()
+        .filter_map(|id| scene.world.units.get(*id))
+        .filter(|u| u.owner == PLAYER && !matches!(data.unit(u.kind).class, UnitClass::Worker))
+        .collect();
+    if fighters.len() >= 2 {
+        use ashen_sim::rpg::Formation;
+        let cur = fighters[0].formation;
+        let next = Formation::ALL[(Formation::ALL.iter().position(|f| *f == cur).unwrap_or(0) + 1) % Formation::ALL.len()];
+        let name = match cur {
+            Formation::Block => "block",
+            Formation::Line => "line",
+            Formation::Wedge => "wedge",
+            Formation::Column => "column",
+            Formation::Square => "square",
+        };
+        let mut body = String::from("Aufstellung der Gruppe bei Bewegungsbefehlen; wirkt auf Kampfwerte.");
+        for f in Formation::ALL.iter().skip(1) {
+            body.push_str(&format!("\n{}: {}", f.label(), f.description()));
         }
-        let def = data.unit(hero.kind);
-        for (i, a) in def.abilities.iter().enumerate() {
+        let mut c = Cmd::new(format!("icon_formation_{name}"), "F", format!("Formation: {}", cur.label()), body, CmdAction::CycleFormation);
+        c.extra = format!("Klick: wechselt zu {}", next.label());
+        v.push(c);
+    }
+    if scene.selected_hero(data).is_some() {
+        v.push(Cmd::new("icon_hero", "H", "Heldenfenster", "Talente, Ausrüstung und Inventar (H, oder Klick auf das Porträt).", CmdAction::HeroWindow));
+    }
+    // Fähigkeiten des führenden Einheitentyps (Held bevorzugt), inklusive Talentfähigkeiten.
+    if let Some(lead) = scene.ability_lead(data)
+        && let Some(hero) = scene.world.units.get(lead)
+    {
+        let names: Vec<&String> = ashen_sim::systems::heroes::ability_list(data, hero).collect();
+        let start = if names.len() <= 4 { v.len().max(8) } else { v.len() };
+        while v.len() < start {
+            let mut blank = Cmd::new("", "", "", "", CmdAction::Move);
+            blank.enabled = false;
+            v.push(blank);
+        }
+        for (i, a) in names.iter().enumerate().take(12usize.saturating_sub(start)) {
             let Some(aid) = data.ability_id(a) else { continue };
             let ad = data.ability(aid);
             let cd = hero.ability_cd.get(i).copied().unwrap_or(0.0);
-            let hk = ad.hotkey.map(|c| c.to_string()).unwrap_or_default();
+            let hk = ["Q", "W", "E", "R", "T", "Y"].get(i).copied().unwrap_or("");
             let mut c = Cmd::new(format!("icon_{}", ad.id), hk, ad.name.clone(), ad.description.clone(), CmdAction::Ability(i as u8));
             c.enabled = cd <= 0.0 && hero.mana >= ad.mana;
-            c.extra = format!("Mana {:.0} · Abklingzeit {:.0} s{}", ad.mana, ad.cooldown, if cd > 0.0 { format!(" · Bereit in {cd:.0} s") } else if hero.mana < ad.mana { " · Zu wenig Mana".into() } else { String::new() });
+            let target = if ad.targeting == ashen_sim::data::AbilityTargeting::Point { format!(" · Zielzauber, Reichweite {:.1}", ad.range) } else { String::new() };
+            c.extra = format!("Mana {:.0} · Abklingzeit {:.0} s{target}{}", ad.mana, ad.cooldown, if cd > 0.0 { format!(" · Bereit in {cd:.0} s") } else if hero.mana < ad.mana { " · Zu wenig Mana".into() } else { String::new() });
             if cd > 0.0 {
                 c.cooldown = Some((cd / ad.cooldown.max(0.01), cd));
             }
@@ -802,6 +895,11 @@ fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine
         CmdAction::BuildMenu => scene.mode = CommandMode::BuildMenu,
         CmdAction::Ability(a) => scene.use_ability(cx.data, *a),
         CmdAction::AdvanceEra => scene.advance_era(),
+        CmdAction::Research(b, i) => scene.research(*b, *i),
+        CmdAction::CancelResearch(b) => scene.cancel_research(*b),
+        CmdAction::Revive(b, k) => scene.revive_hero(*b, *k),
+        CmdAction::CycleFormation => scene.cycle_formation(),
+        CmdAction::HeroWindow => scene.show_hero = !scene.show_hero,
     }
 }
 
@@ -914,6 +1012,7 @@ fn mode_hint(scene: &MissionScene, ui: &mut egui::Ui, cx: &HudCtx) {
         CommandMode::Patrol => "Patrouillenziel: Linksklick",
         CommandMode::Rally => "Sammelpunkt: Linksklick",
         CommandMode::BuildMenu => "Bauen: Rubrik und Gebäude im Baumenü wählen · Esc zurück",
+        CommandMode::Cast(_) => "Zielzauber: Linksklick auf das Ziel · Shift: mehrfach · Rechtsklick/Esc: abbrechen",
     };
     egui::Area::new(Id::unique("modehint")).anchor(Align2::CENTER_BOTTOM, Vec2::new(0.0, -(CONSOLE_H + 16.0))).interactable(false).show(ui.ctx(), |ui| {
         cx.ui.panel(ui, PanelKind::Thin, egui::Margin::symmetric(22, 14), |ui| {

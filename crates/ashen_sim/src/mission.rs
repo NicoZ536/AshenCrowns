@@ -29,25 +29,41 @@ impl GameMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Difficulty {
-    Story,
+    #[serde(alias = "Story")]
+    Easy,
     Normal,
     Hard,
+    Nightmare,
 }
 
 impl Difficulty {
+    pub const ALL: [Difficulty; 4] = [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard, Difficulty::Nightmare];
+
     pub fn wave_mult(self) -> f32 {
         match self {
-            Difficulty::Story => 0.65,
+            Difficulty::Easy => 0.65,
             Difficulty::Normal => 1.0,
             Difficulty::Hard => 1.4,
+            Difficulty::Nightmare => 1.8,
         }
     }
 
     pub fn label(self) -> &'static str {
         match self {
-            Difficulty::Story => "Erzählung",
+            Difficulty::Easy => "Leicht",
             Difficulty::Normal => "Normal",
             Difficulty::Hard => "Schwer",
+            Difficulty::Nightmare => "Albtraum",
+        }
+    }
+
+    /// Index in `Rules::ai_levels`.
+    pub fn index(self) -> usize {
+        match self {
+            Difficulty::Easy => 0,
+            Difficulty::Normal => 1,
+            Difficulty::Hard => 2,
+            Difficulty::Nightmare => 3,
         }
     }
 }
@@ -107,6 +123,9 @@ pub struct Placement {
     pub tag: Option<String>,
     #[serde(default)]
     pub guard: bool,
+    /// Lagerkennung: fällt die letzte Einheit des Lagers, lässt es Beute fallen.
+    #[serde(default)]
+    pub camp: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

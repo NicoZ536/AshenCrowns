@@ -1,0 +1,40 @@
+// ASHEN CROWNS – Schmiede-Upgrades (je 3 Stufen). Erforscht im genannten Gebäude (Befehlskarte), wirkt auf
+// alle Einheiten der genannten Klassen. per_level: Zuwachs je erreichter Stufe. Stufen 2 und 3 verlangen die
+// Burg (era: 1). Die Gegner-KI erhält dieselben Upgrades zeitgesteuert (rules.ron → ai_levels → tech_interval).
+(
+    upgrades: [
+        (
+            id: "forge_weapons", name: "Schärfere Klingen", building: "smithy",
+            description: "Besser geschmiedete Waffen: +10 % Nahkampfschaden je Stufe für Infanterie, Kavallerie und Belagerung.",
+            applies_to: [Infantry, Cavalry, Siege, Monster, Flyer],
+            per_level: (damage_pct: 0.10),
+            levels: [
+                (cost: (gold: 120.0), goods: [("iron", 4.0)], time: 40.0, era: 0),
+                (cost: (gold: 220.0), goods: [("iron", 8.0), ("weapons", 4.0)], time: 60.0, era: 1),
+                (cost: (gold: 380.0), goods: [("iron", 14.0), ("weapons", 8.0)], time: 90.0, era: 1),
+            ],
+        ),
+        (
+            id: "forge_armor", name: "Härtere Rüstung", building: "armory",
+            description: "Dickere Panzerung: +1 Rüstung je Stufe für alle Soldaten.",
+            applies_to: [Infantry, Cavalry, Ranged, Support, Siege, Monster],
+            per_level: (armor: 1.0),
+            levels: [
+                (cost: (gold: 150.0), goods: [("iron", 6.0), ("armor", 2.0)], time: 50.0, era: 1),
+                (cost: (gold: 260.0), goods: [("iron", 10.0), ("armor", 4.0)], time: 75.0, era: 1),
+                (cost: (gold: 420.0), goods: [("iron", 16.0), ("armor", 8.0)], time: 100.0, era: 1),
+            ],
+        ),
+        (
+            id: "fletching", name: "Bessere Geschosse", building: "shooting_range",
+            description: "Sorgfältig gefertigte Pfeile und Bolzen: +8 % Schaden je Stufe für Fernkämpfer.",
+            applies_to: [Ranged],
+            per_level: (damage_pct: 0.08),
+            levels: [
+                (cost: (gold: 100.0), goods: [("planks", 6.0)], time: 35.0, era: 0),
+                (cost: (gold: 180.0), goods: [("planks", 10.0), ("iron", 2.0)], time: 55.0, era: 1),
+                (cost: (gold: 300.0), goods: [("planks", 16.0), ("iron", 5.0)], time: 80.0, era: 1),
+            ],
+        ),
+    ],
+)

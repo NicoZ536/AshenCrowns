@@ -41,8 +41,10 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
                     at(audio, "sfx.horse_charge", *pos);
                     "sfx.spear_hit"
                 }
-                "spearman" => "sfx.spear_hit",
+                "spearman" | "halberdier" => "sfx.spear_hit",
                 "grave_brute" => "sfx.bone_crunch",
+                "battering_ram" => "sfx.ram_hit",
+                "ghoul" | "bat_swarm" | "hollow_digger" => "sfx.bone_crunch",
                 _ => "sfx.sword_hit",
             };
             at(audio, sfx, *pos);
@@ -76,7 +78,12 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
         SimEvent::ProjectileFired { kind, from, .. } => match kind {
             ProjectileKind::Arrow | ProjectileKind::BoneBolt => at(audio, "sfx.arrow_fire", *from),
             ProjectileKind::SoulBolt => at(audio, "sfx.reeve_soul_drain", *from),
+            ProjectileKind::Bolt => at(audio, "sfx.crossbow_fire", *from),
+            ProjectileKind::Fireball => at(audio, "sfx.fire_spell", *from),
+            ProjectileKind::Boulder => at(audio, "sfx.catapult_launch", *from),
         },
+        SimEvent::Splash { pos, kind, .. } => at(audio, if *kind == ProjectileKind::Boulder { "sfx.boulder_impact" } else { "sfx.fireball_impact" }, *pos),
+        SimEvent::ProjectileImpact { kind: ProjectileKind::Boulder | ProjectileKind::Fireball, .. } => {}
         SimEvent::ProjectileImpact { pos, hit: true, .. } => at(audio, "sfx.arrow_impact", *pos),
         SimEvent::UnitDied { kind, owner, pos, .. } => {
             let def = data.unit(*kind);
@@ -128,8 +135,15 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
         SimEvent::AbilityCast { ability, pos, unit, .. } => {
             let sfx = match ability.as_str() {
                 "soul_drain" => "sfx.reeve_soul_drain".to_string(),
-                "summon_thralls" => "sfx.hollow_summon".to_string(),
+                "summon_thralls" | "raise_dead" => "sfx.hollow_summon".to_string(),
                 "dread_wail" => "voice.boss_pale_reeve.taunt".to_string(),
+                // Fähigkeitsfamilien teilen sich ihre Klänge.
+                "fireball" | "flame_nova" | "sacred_flame" | "phoenix_cut" | "pillar_of_fire" => "sfx.fire_spell".to_string(),
+                "holy_heal" | "flame_mend" | "resurgence" => "sfx.heal_spell".to_string(),
+                "blessing" | "beacon_of_faith" | "war_cry" => "sfx.bless_spell".to_string(),
+                "clan_roar" | "war_horns" => "sfx.war_horn".to_string(),
+                "shield_wall" | "iron_vow" | "last_stand" | "aegis_of_flame" | "stone_skin" => "sfx.shield_spell".to_string(),
+                "ground_slam" | "ancestral_fury" => "sfx.ground_slam".to_string(),
                 other => format!("sfx.{other}"),
             };
             at(audio, &sfx, *pos);
@@ -138,9 +152,21 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
                 at(audio, &format!("voice.{id}.ability"), *pos);
             }
         }
-        SimEvent::LevelUp { .. } => {
-            audio.play("voice.hero_isolde.levelup");
+        SimEvent::LevelUp { unit, .. } => {
+            if let Some(u) = world.units.get(*unit) {
+                audio.play(&format!("voice.{}.levelup", data.unit(u.kind).id));
+            }
+            audio.play("sfx.talent_learn");
         }
+        SimEvent::TalentLearned { .. } => {
+            audio.play("sfx.talent_learn");
+        }
+        SimEvent::ItemPickedUp { pos, .. } => at(audio, "sfx.item_pickup", *pos),
+        SimEvent::ItemUsed { pos, .. } => at(audio, "sfx.potion_drink", *pos),
+        SimEvent::UpgradeResearched { owner: PLAYER, .. } => {
+            audio.play("sfx.upgrade_complete");
+        }
+        SimEvent::HeroRespawned { pos, .. } => at(audio, "sfx.hero_revive", *pos),
         SimEvent::WaveIncoming { size, .. } => {
             if *size == 0 {
                 audio.play("sfx.horn_alarm");
@@ -174,8 +200,8 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
                 at(audio, &format!("voice.{}.retreat", data.unit(u.kind).id), *pos);
             }
         }
-        SimEvent::HeroFallen { .. } => {
-            audio.play("voice.hero_isolde.death");
+        SimEvent::HeroFallen { kind, .. } => {
+            audio.play(&format!("voice.{}.death", data.unit(*kind).id));
         }
         _ => {}
     }

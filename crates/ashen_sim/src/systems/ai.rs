@@ -142,7 +142,8 @@ fn boss_and_casters(world: &mut SimWorld, data: &GameData) {
             continue;
         }
         let def = data.unit(u.kind);
-        if def.abilities.is_empty() {
+        // Nur Bosse folgen dem Skript des Direktors; andere Zauberer wirken per Autocast.
+        if def.abilities.is_empty() || def.class != UnitClass::Boss {
             continue;
         }
         let (pos, hp_frac, mana) = (u.pos, u.hp / u.max_hp, u.mana);
