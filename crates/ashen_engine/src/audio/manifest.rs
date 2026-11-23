@@ -9,6 +9,10 @@ use std::path::Path;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub enum Intensity {
     Menu,
+    /// Weltkarte: Friedenszeit, Krieg und Hohlung (aufsteigend, Reihenfolge ist für das Überblenden wichtig).
+    WorldPeace,
+    WorldWar,
+    WorldHollow,
     Calm,
     Tension,
     Combat,

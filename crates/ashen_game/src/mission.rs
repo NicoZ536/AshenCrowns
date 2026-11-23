@@ -50,6 +50,9 @@ struct ClientState {
     camera: (f32, f32),
     lines: f32,
     speed: f32,
+    /// Verknüpfung mit dem Rückkehrpunkt der Weltkarte, wenn die Schlacht aus der Grand Campaign stammt.
+    #[serde(default)]
+    battle: Option<crate::worldmap::battle::BattleLink>,
 }
 
 pub struct MissionScene {
@@ -85,6 +88,8 @@ pub struct MissionScene {
     pub build_cat: BuildCategory,
     /// Startkachel einer Mauerlinie beim Ziehen im Baumodus.
     pub line_start: Option<IVec2>,
+    /// Verknüpfung mit der Weltkarte (nur bei Schlachten der Grand Campaign).
+    pub battle: Option<crate::worldmap::battle::BattleLink>,
     last_view: Option<ViewParams>,
     last_select_voice: f32,
     hero_greeted: bool,
@@ -133,6 +138,7 @@ impl MissionScene {
             show_city: false,
             build_cat: BuildCategory::Housing,
             line_start: None,
+            battle: None,
             last_view: None,
             last_select_voice: -10.0,
             hero_greeted: false,
@@ -147,13 +153,14 @@ impl MissionScene {
             scene.camera.center = Vec2::new(cs.camera.0, cs.camera.1);
             scene.camera.target_lines = cs.lines.clamp(220.0, 480.0);
             scene.speed = cs.speed.clamp(0.0, 3.0);
+            scene.battle = cs.battle;
         }
         scene.status = Some(format!("Geladen: {}", path.file_stem().map(|s| s.to_string_lossy()).unwrap_or_default()));
         Ok(scene)
     }
 
     fn client_state(&self) -> String {
-        ron::to_string(&ClientState { camera: (self.camera.center.x, self.camera.center.y), lines: self.camera.target_lines, speed: self.speed }).unwrap_or_default()
+        ron::to_string(&ClientState { camera: (self.camera.center.x, self.camera.center.y), lines: self.camera.target_lines, speed: self.speed, battle: self.battle.clone() }).unwrap_or_default()
     }
 
     pub fn save(&mut self, data: &GameData, slot: &str) {

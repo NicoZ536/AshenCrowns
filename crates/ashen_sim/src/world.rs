@@ -152,6 +152,16 @@ impl SimWorld {
     /// Erzeugt eine neue Partie aus Missionsdefinition und Startoptionen.
     pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings) -> Result<SimWorld, String> {
         let map = crate::mapgen::generate(mission.map_seed, settings.seed);
+        Self::build(data, mission, settings, map, true)
+    }
+
+    /// Erzeugt eine Partie auf einer vorgegebenen Karte (z. B. generierte Weltkarten-Schlacht):
+    /// keine Standard-Rohstoffquellen, alles Weitere stammt aus den Platzierungen der Mission.
+    pub fn new_with_map(data: &GameData, mission: MissionDef, settings: MatchSettings, map: crate::map::TileMap) -> Result<SimWorld, String> {
+        Self::build(data, mission, settings, map, false)
+    }
+
+    fn build(data: &GameData, mission: MissionDef, settings: MatchSettings, map: crate::map::TileMap, default_resources: bool) -> Result<SimWorld, String> {
         let (w, h) = (map.width, map.height);
         let mut world = SimWorld {
             tick: 0,
@@ -182,7 +192,9 @@ impl SimWorld {
             mission_def: mission,
         };
         world.apply_mode_rules(data);
-        crate::mapgen::populate_resources(&mut world, data);
+        if default_resources {
+            crate::mapgen::populate_resources(&mut world, data);
+        }
         world.apply_placements(data)?;
         systems::economy::recompute_population(&mut world, data);
         systems::city::recompute_capacity(&mut world, data);

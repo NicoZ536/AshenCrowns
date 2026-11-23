@@ -250,6 +250,7 @@ dependencies = [
  "ashen_core",
  "ashen_engine",
  "ashen_sim",
+ "ashen_strategy",
  "egui",
  "env_logger",
  "glam",

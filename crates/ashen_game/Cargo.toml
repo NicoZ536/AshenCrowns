@@ -17,6 +17,7 @@ audio = ["ashen_engine/audio"]
 [dependencies]
 ashen_core.workspace = true
 ashen_sim.workspace = true
+ashen_strategy.workspace = true
 ashen_engine.workspace = true
 glam.workspace = true
 egui.workspace = true

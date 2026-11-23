@@ -13,6 +13,7 @@ use ashen_engine::Engine;
 use ashen_sim::env::Weather;
 use ashen_sim::mission::{Difficulty, GameMode, MatchSettings};
 use ashen_sim::SimWorld;
+use ashen_strategy::{Difficulty as SDifficulty, PlayerStart, RuleSet, StrategyOptions, VictoryKind};
 use egui::{Align2, Color32, Id, Order, Pos2, Rect, RichText, Vec2};
 use glam::Vec2 as GVec2;
 
@@ -24,6 +25,8 @@ pub enum Page {
     Settings,
     Mods,
     Credits,
+    /// Optionen der Großen Kampagne (Weltkarte).
+    GrandCampaign,
 }
 
 /// Wunsch des Menüs an das Spiel.
@@ -32,6 +35,10 @@ pub enum MenuAction {
     None,
     Start { mission: usize, settings: MatchSettings },
     Load(std::path::PathBuf),
+    /// Neue Große Kampagne mit den gewählten Optionen.
+    NewCampaign(Box<StrategyOptions>),
+    /// Spielstand der Großen Kampagne (`.acstrat`) laden.
+    LoadStrategy(std::path::PathBuf),
     ReloadContent,
     Quit,
 }
@@ -46,6 +53,14 @@ pub struct MenuScene {
     pub new_difficulty: Difficulty,
     pub new_seed: u64,
     pub new_mission: usize,
+    /// Optionen der Großen Kampagne.
+    pub gc_seed: u64,
+    pub gc_realm: usize,
+    pub gc_difficulty: SDifficulty,
+    pub gc_sandbox: bool,
+    pub gc_ironman: bool,
+    pub gc_permadeath: bool,
+    pub gc_auto_battles: bool,
     pub action: MenuAction,
     pub error: Option<String>,
 }
@@ -70,6 +85,13 @@ impl MenuScene {
             new_difficulty: Difficulty::Normal,
             new_seed: 897,
             new_mission: 0,
+            gc_seed: 897,
+            gc_realm: 0,
+            gc_difficulty: SDifficulty::Lord,
+            gc_sandbox: false,
+            gc_ironman: false,
+            gc_permadeath: true,
+            gc_auto_battles: false,
             action: MenuAction::None,
             error: None,
         }
@@ -146,6 +168,13 @@ impl MenuScene {
                         if let Some(p) = ui_common::save_list(ui, engine, art, &saves_dir()) {
                             self.action = MenuAction::Load(p);
                         }
+                        if !ashen_strategy::save::list(&saves_dir()).is_empty() {
+                            ui.add_space(8.0);
+                            ui.label(RichText::new("Große Kampagne").font(theme::caps_font(13.0)).color(theme::GOLD_DIM));
+                            if let Some(p) = crate::worldmap::store::save_list(ui, engine, art, &saves_dir()) {
+                                self.action = MenuAction::LoadStrategy(p);
+                            }
+                        }
                         self.back(ui, engine, art, None);
                     }
                     Page::Settings => {
@@ -155,6 +184,7 @@ impl MenuScene {
                         self.back(ui, engine, art, Some(settings));
                     }
                     Page::Mods => self.mods_page(ui, engine, content, settings, art),
+                    Page::GrandCampaign => self.grand_campaign_page(ui, engine, art),
                     Page::Credits => {
                         ui.set_width(520.0);
                         ui_art::heading(ui, art, "Credits", 26.0);
@@ -227,7 +257,9 @@ impl MenuScene {
             if b(ui, "Gefecht", true, "Schneller Kampf (Skirmish): Zerstört den Hohlschrein") {
                 self.action = MenuAction::Start { mission: 0, settings: MatchSettings { mode: GameMode::Skirmish, difficulty: self.new_difficulty, seed: self.new_seed, hero_permadeath: false } };
             }
-            b(ui, "Grand Campaign", false, "Geplant: Weltkarte, Dynastien und Diplomatie (Phasen 3, 8, 10 der Roadmap)");
+            if b(ui, "Große Kampagne", true, "Weltkarte von Eldraeth: Reich, Dynastie, Diplomatie, Krieg und Schlachten") {
+                self.page = Page::GrandCampaign;
+            }
             if b(ui, "Sandbox", true, "Freies Bauen ohne Angriffe, reichlich Rohstoffe, kein Kriegsnebel") {
                 self.action = MenuAction::Start { mission: 0, settings: MatchSettings { mode: GameMode::Sandbox, difficulty: Difficulty::Normal, seed: self.new_seed, hero_permadeath: false } };
             }
@@ -308,6 +340,111 @@ impl MenuScene {
                     mission: self.new_mission,
                     settings: MatchSettings { mode: self.new_mode, difficulty: self.new_difficulty, seed: self.new_seed, hero_permadeath: settings.hero_permadeath },
                 };
+            }
+            if ui_common::button(ui, engine, art, "Zurück", 200.0) {
+                self.page = Page::Main;
+            }
+        });
+        ui.add_space(6.0);
+        ui.vertical_centered(|ui| {
+            if ui_common::button(ui, engine, art, "Große Kampagne …", 300.0) {
+                self.page = Page::GrandCampaign;
+            }
+        });
+    }
+
+    /// Reiche, die zum Spielstart wählbar sind: (Schlüssel für `PlayerStart`, Anzeigename, Kurzbeschreibung).
+    pub const REALMS: [(&'static str, &'static str, &'static str); 10] = [
+        ("", "Aschmark-Marken – Isolde Raventhorn", "Die Wächterin von Brennhollow, Vasallin der Glutkrone (Kampagnenstart)."),
+        ("ember_crown", "Glutkrone – König Aldric III.", "Das mächtigste Reich Valemarks; viele Häuser, viele Feinde."),
+        ("skarn_clans", "Skarnheim-Clans – Torvald Eisenhand", "Kriegerische Clans der Berge."),
+        ("wolfspass_clan", "Wolfspass-Clan", "Vasall der Clans am Wolfspass."),
+        ("thorn_covenant", "Dornenbund – Sylaen der Veyl", "Druiden und Waldwesen."),
+        ("veyl_free", "Freie Veyl", "Ungebundene Sippen am Rand des Dornwalds."),
+        ("saelith_compact", "Saelith-Kompakt – Ophira Saelith-Varo", "Händlerhäuser und Banken der Inseln."),
+        ("free_port_emberth", "Freihafen Emberth", "Handelsstadt zwischen den Mächten."),
+        ("grey_nomads", "Graue Nomaden", "Wanderndes Volk der Aschenwüste."),
+        ("slag_brood", "Schlackenbrut", "Die Gegner aus den Glutlanden."),
+    ];
+
+    fn grand_campaign_page(&mut self, ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt) {
+        ui.set_width(640.0);
+        ui_art::heading(ui, art, "Große Kampagne", 26.0);
+        let label = |ui: &mut egui::Ui, t: &str| {
+            ui.label(RichText::new(t).font(theme::caps_font(13.5)).color(Color32::from_rgb(214, 190, 146)));
+        };
+        egui::Grid::new("gcgame").num_columns(2).spacing([20.0, 12.0]).min_col_width(150.0).show(ui, |ui| {
+            label(ui, "Reich");
+            egui::ComboBox::from_id_salt("gc_realm").width(380.0).selected_text(RichText::new(Self::REALMS[self.gc_realm].1).font(theme::body_font(16.0))).show_ui(ui, |ui| {
+                for (i, r) in Self::REALMS.iter().enumerate() {
+                    ui.selectable_value(&mut self.gc_realm, i, r.1);
+                }
+            });
+            ui.end_row();
+            label(ui, "Schwierigkeit");
+            ui.horizontal_wrapped(|ui| {
+                for d in [SDifficulty::Pilgrim, SDifficulty::Vassal, SDifficulty::Lord, SDifficulty::HighKing, SDifficulty::Ashfall] {
+                    let r = ui_art::choice(ui, art, d.name(), self.gc_difficulty == d);
+                    ui_common::sfx(engine, ui, &r);
+                    if r.clicked() {
+                        self.gc_difficulty = d;
+                    }
+                }
+            });
+            ui.end_row();
+            label(ui, "Regelsatz");
+            ui.horizontal(|ui| {
+                for (n, sandbox) in [("Kampagne", false), ("Sandbox", true)] {
+                    let r = ui_art::choice(ui, art, n, self.gc_sandbox == sandbox);
+                    ui_common::sfx(engine, ui, &r);
+                    if r.clicked() {
+                        self.gc_sandbox = sandbox;
+                    }
+                }
+            });
+            ui.end_row();
+            label(ui, "Schlachten");
+            ui.horizontal(|ui| {
+                for (n, auto) in [("Selbst entscheiden", false), ("Immer automatisch", true)] {
+                    let r = ui_art::choice(ui, art, n, self.gc_auto_battles == auto);
+                    ui_common::sfx(engine, ui, &r);
+                    if r.clicked() {
+                        self.gc_auto_battles = auto;
+                    }
+                }
+            });
+            ui.end_row();
+            label(ui, "Weitere Regeln");
+            ui.vertical(|ui| {
+                ui.checkbox(&mut self.gc_permadeath, RichText::new("Dauerhafter Tod von Herrschern und Helden").font(theme::italic_font(14.0)).color(theme::PARCHMENT_DIM));
+                ui.checkbox(&mut self.gc_ironman, RichText::new("Eiserner Mann (ein Spielstand)").font(theme::italic_font(14.0)).color(theme::PARCHMENT_DIM));
+            });
+            ui.end_row();
+            label(ui, "Seed");
+            ui.horizontal(|ui| {
+                ui.add(egui::DragValue::new(&mut self.gc_seed));
+                ui.label(RichText::new("Karte, Reichsstart und Ereignisse").font(theme::italic_font(14.0)).color(theme::PARCHMENT_DIM));
+            });
+            ui.end_row();
+        });
+        ui.add_space(10.0);
+        art.panel(ui, PanelKind::Parchment, egui::Margin { left: 26, right: 26, top: 18, bottom: 18 }, |ui| {
+            ui.set_width(ui.available_width());
+            ui.label(RichText::new(Self::REALMS[self.gc_realm].1).font(theme::title_bold_font(17.0)).color(theme::INK_RED));
+            ui.label(RichText::new(Self::REALMS[self.gc_realm].2).size(15.5).color(theme::INK));
+            ui.label(RichText::new("Eldraeth, 897 n. F.: 50 bis 64 Provinzen, zwölf Reiche, Dynastien, Religionen und die Hohlen. Acht Siegziele – vom Thron von Eldraeth bis zum Siegel des Schleiers.").font(theme::italic_font(14.5)).color(theme::INK_FADED));
+        });
+        ui.add_space(12.0);
+        ui.horizontal(|ui| {
+            ui.add_space((ui.available_width() - 440.0).max(0.0) / 2.0);
+            if ui_common::button(ui, engine, art, "Weltkarte betreten", 230.0) {
+                let (key, _, _) = Self::REALMS[self.gc_realm];
+                let player = if key.is_empty() { PlayerStart::AshmarchWarden } else { PlayerStart::Realm(key.to_string()) };
+                let mut rules = if self.gc_sandbox { RuleSet::sandbox(VictoryKind::ALL.iter().copied().filter(|v| *v != VictoryKind::Survival).collect()) } else { RuleSet::campaign() };
+                rules.ironman = self.gc_ironman;
+                rules.permadeath = self.gc_permadeath;
+                rules.battle_mode = if self.gc_auto_battles { ashen_strategy::BattleMode::AutoResolveAll } else { ashen_strategy::BattleMode::PlayerBattlesRequested };
+                self.action = MenuAction::NewCampaign(Box::new(StrategyOptions { seed: self.gc_seed, player, difficulty: self.gc_difficulty, rules }));
             }
             if ui_common::button(ui, engine, art, "Zurück", 200.0) {
                 self.page = Page::Main;
