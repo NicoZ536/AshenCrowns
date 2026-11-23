@@ -4,7 +4,7 @@ use crate::chronicle::ChronicleKind;
 use crate::data::{GameData, UnitClass};
 use crate::entity::*;
 use crate::events::SimEvent;
-use crate::mission::{Action, Condition, GameMode, ObjectiveState, Outcome};
+use crate::mission::{Action, Condition, DialogueLine, GameMode, ObjectiveState, Outcome};
 use crate::systems::ai;
 use crate::world::SimWorld;
 
@@ -47,10 +47,70 @@ fn check(world: &SimWorld, data: &GameData, c: &Condition) -> bool {
             .is_some_and(|a| world.units.iter().filter(|(_, u)| u.owner == PLAYER && u.hp > 0.0 && a.contains(u.pos)).count() as u32 >= *count),
         Condition::EnemyUnitsAtMost(n) => world.units.iter().filter(|(_, u)| u.owner == ENEMY && u.hp > 0.0).count() as u32 <= *n,
         Condition::TagDamaged(t) => world.building_with_tag(t).and_then(|b| world.buildings.get(b)).is_some_and(|b| b.hp < b.max_hp * 0.999),
+        Condition::Flag(f) => world.mission.has_flag(f),
+        Condition::TagInArea { tag, area } => world.mission_def.area(area).is_some_and(|a| world.units.iter().any(|(_, u)| u.hp > 0.0 && u.tag.as_deref() == Some(tag.as_str()) && a.contains(u.pos))),
+        Condition::TagHealthBelow { tag, percent } => world.units.iter().any(|(_, u)| u.hp > 0.0 && u.tag.as_deref() == Some(tag.as_str()) && u.hp < u.max_hp * percent / 100.0),
+        Condition::DialogueDone => world.mission.line_queue.is_empty() && world.time >= world.mission.line_ready,
+        Condition::UnitKindInArea { unit, area, count } => {
+            let (Some(ut), Some(a)) = (data.unit_id(unit), world.mission_def.area(area)) else { return false };
+            world.units.iter().filter(|(_, u)| u.owner == PLAYER && u.hp > 0.0 && u.kind == ut && a.contains(u.pos)).count() as u32 >= *count
+        }
+        Condition::ArmyAtMost(n) => {
+            world
+                .units
+                .iter()
+                .filter(|(_, u)| u.owner == PLAYER && u.hp > 0.0 && !matches!(data.unit(u.kind).class, UnitClass::Worker | UnitClass::Hero))
+                .count() as u32
+                <= *n
+        }
         Condition::Not(c) => !check(world, data, c),
         Condition::All(v) => v.iter().all(|c| check(world, data, c)),
         Condition::Any(v) => v.iter().any(|c| check(world, data, c)),
     }
+}
+
+/// Führt Aktionen aus (Auslöser und Entscheidungsoptionen).
+pub fn run_actions(world: &mut SimWorld, data: &GameData, actions: &[Action]) {
+    for a in actions {
+        run(world, data, a);
+    }
+}
+
+/// Geschätzte Sprechdauer einer Zeile in Sekunden.
+pub fn line_duration(text: &str) -> f32 {
+    (1.6 + text.chars().count() as f32 * 0.058).clamp(2.4, 14.0)
+}
+
+/// Gibt fällige Dialogzeilen aus.
+fn pump_lines(world: &mut SimWorld) {
+    while let Some((_, line)) = world.mission.line_queue.first().cloned() {
+        if world.time < world.mission.line_ready {
+            break;
+        }
+        world.mission.line_queue.remove(0);
+        world.mission.line_ready = world.time + line_duration(&line.text);
+        world.events.push(SimEvent::Message { speaker: line.speaker, text: line.text, voice: line.voice });
+    }
+}
+
+/// Wählt eine Option der ersten offenen Entscheidung. Ungültige Wahlen werden ignoriert.
+pub fn decide(world: &mut SimWorld, data: &GameData, decision: &str, option: usize) {
+    let Some(d) = world.mission.open_decision(world.time).cloned() else { return };
+    if d.id != decision {
+        return;
+    }
+    let Some(o) = d.options.get(option).cloned() else { return };
+    if !o.requires.iter().all(|f| world.mission.has_flag(f)) {
+        world.error(PLAYER, "Diese Möglichkeit steht Euch nicht offen.");
+        return;
+    }
+    world.mission.decisions.remove(0);
+    world.mission.choices.push((d.id.clone(), o.flag.clone()));
+    if !world.mission.has_flag(&o.flag) {
+        world.mission.flags.push(o.flag.clone());
+    }
+    world.record(ChronicleKind::Omen, format!("{}: {}", d.title, o.label));
+    run_actions(world, data, &o.actions);
 }
 
 fn run(world: &mut SimWorld, data: &GameData, a: &Action) {
@@ -91,7 +151,7 @@ fn run(world: &mut SimWorld, data: &GameData, a: &Action) {
             world.events.push(SimEvent::WeatherChanged { weather: *w });
         }
         Action::Chronicle(t) => world.record(ChronicleKind::Omen, t.clone()),
-        Action::SpawnUnits { unit, owner, area, count, attack } => {
+        Action::SpawnUnits { unit, owner, area, count, attack, tag } => {
             let (Some(ut), Some(a)) = (data.unit_id(unit), world.mission_def.area(area).cloned()) else { return };
             let home = world
                 .building_with_tag(&world.mission_def.defeat_tag.clone())
@@ -99,15 +159,61 @@ fn run(world: &mut SimWorld, data: &GameData, a: &Action) {
                 .map(|b| b.center())
                 .or_else(|| world.buildings.iter().find(|(_, b)| b.owner == PLAYER).map(|(_, b)| b.center()))
                 .or_else(|| world.units.iter().find(|(_, u)| u.owner == PLAYER).map(|(_, u)| u.pos));
-            for i in 0..*count {
+            // Gegnerische Verstärkungen skalieren mit der Schwierigkeit (Bosse und Markierte nicht).
+            let count = if *owner == ENEMY && tag.is_none() { ((*count as f32) * world.settings.difficulty.wave_mult()).round().max(1.0) as u32 } else { *count };
+            for i in 0..count {
                 let ang = i as f32 * 2.399;
                 let off = glam::Vec2::new(ang.cos(), ang.sin()) * (0.6 * (i as f32).sqrt());
                 let id = world.spawn_unit(data, ut, *owner, a.center() + off);
+                if let Some(u) = world.units.get_mut(id) {
+                    u.tag = tag.clone();
+                }
+                if *owner == PLAYER {
+                    world.apply_hero_record(data, id);
+                }
                 if *attack
                     && let (Some(h), Some(u)) = (home, world.units.get_mut(id))
                 {
                     u.order = Order::Move { target: h, attack_move: true };
                     u.request_path(h);
+                }
+            }
+        }
+        Action::SetFlag(f) => {
+            if !world.mission.has_flag(f) {
+                world.mission.flags.push(f.clone());
+            }
+        }
+        Action::Dialogue(lines) => {
+            let base = world.time;
+            for l in lines {
+                world.mission.line_queue.push((base, DialogueLine { speaker: l.speaker.clone(), text: l.text.clone(), voice: l.voice.clone() }));
+            }
+        }
+        Action::Decision(d) => {
+            if !world.mission.decisions.iter().any(|x| x.id == d.id) && !world.mission.choices.iter().any(|(x, _)| *x == d.id) {
+                world.mission.decisions.push(d.clone());
+                world.events.push(SimEvent::Message { speaker: d.speaker.clone(), text: d.text.clone(), voice: d.voice.clone() });
+            }
+        }
+        Action::MoveTag { tag, area, attack } => {
+            let Some(a) = world.mission_def.area(area).cloned() else { return };
+            let target = a.center();
+            for (_, u) in world.units.iter_mut() {
+                if u.hp > 0.0 && u.tag.as_deref() == Some(tag.as_str()) {
+                    u.order = Order::Move { target, attack_move: *attack };
+                    u.target = None;
+                    u.request_path(target);
+                }
+            }
+        }
+        Action::ChangeOwner { tag, owner } => {
+            for (_, u) in world.units.iter_mut() {
+                if u.hp > 0.0 && u.tag.as_deref() == Some(tag.as_str()) {
+                    u.owner = *owner;
+                    u.order = Order::Idle;
+                    u.target = None;
+                    u.clear_path();
                 }
             }
         }
@@ -122,12 +228,24 @@ fn finish(world: &mut SimWorld, o: Outcome) {
     match o {
         Outcome::Victory => {
             world.events.push(SimEvent::Victory);
-            let text = if world.mission_def.map.is_some() { "Der Einsatz endete im Sieg. Die Aschmark erinnert sich daran." } else { "Brennhollow hielt stand. Die Aschmark erinnert sich an diesen Sieg." };
+            let text = if !world.mission_def.victory_text.is_empty() {
+                world.mission_def.victory_text.clone()
+            } else if world.mission_def.map.is_some() {
+                "Der Einsatz endete im Sieg. Die Aschmark erinnert sich daran.".to_string()
+            } else {
+                "Brennhollow hielt stand. Die Aschmark erinnert sich an diesen Sieg.".to_string()
+            };
             world.record(ChronicleKind::Victory, text);
         }
         Outcome::Defeat => {
             world.events.push(SimEvent::Defeat);
-            let text = if world.mission_def.map.is_some() { "Der Einsatz endete in Asche und Schweigen." } else { "Brennhollow fiel in Asche und Schweigen." };
+            let text = if !world.mission_def.defeat_text.is_empty() {
+                world.mission_def.defeat_text.clone()
+            } else if world.mission_def.map.is_some() {
+                "Der Einsatz endete in Asche und Schweigen.".to_string()
+            } else {
+                "Brennhollow fiel in Asche und Schweigen.".to_string()
+            };
             world.record(ChronicleKind::Defeat, text);
         }
     }
@@ -162,6 +280,7 @@ pub fn tick(world: &mut SimWorld, data: &GameData) {
         return;
     }
     update_discovery(world);
+    pump_lines(world);
     let mode = world.settings.mode;
     let triggers = world.mission_def.triggers.clone();
     for t in &triggers {

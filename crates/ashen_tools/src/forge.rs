@@ -16,16 +16,16 @@ use glam::Vec2;
 use std::path::Path;
 
 /// Bearbeitbare Karte beim Entwurf.
-struct Canvas {
-    w: i32,
-    h: i32,
-    terrain: Vec<Terrain>,
-    decor: Vec<DecorPlace>,
-    nodes: Vec<NodePlace>,
+pub(crate) struct Canvas {
+    pub(crate) w: i32,
+    pub(crate) h: i32,
+    pub(crate) terrain: Vec<Terrain>,
+    pub(crate) decor: Vec<DecorPlace>,
+    pub(crate) nodes: Vec<NodePlace>,
 }
 
 impl Canvas {
-    fn new(w: i32, h: i32, seed: u64, preset: GenPreset) -> Canvas {
+    pub(crate) fn new(w: i32, h: i32, seed: u64, preset: GenPreset) -> Canvas {
         let g = generate_preset(w, h, seed, preset);
         let mut c = Canvas { w, h, terrain: g.map.terrain_vec(), decor: g.map.decor, nodes: g.map.nodes };
         // Feste Minen und Steinbrüche des Generators entfallen; sie werden von Hand gesetzt.
@@ -37,14 +37,14 @@ impl Canvas {
         (x >= 0 && y >= 0 && x < self.w && y < self.h).then(|| (y * self.w + x) as usize)
     }
 
-    fn set(&mut self, x: i32, y: i32, t: Terrain) {
+    pub(crate) fn set(&mut self, x: i32, y: i32, t: Terrain) {
         if let Some(i) = self.idx(x, y) {
             self.terrain[i] = t;
         }
     }
 
     /// Fläche (inklusive) leeren: Bäume, Dekoration und Terrain.
-    fn flatten(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, t: Terrain) {
+    pub(crate) fn flatten(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, t: Terrain) {
         for y in y0..=y1 {
             for x in x0..=x1 {
                 self.set(x, y, t);
@@ -53,7 +53,7 @@ impl Canvas {
         self.clear(x0, y0, x1, y1);
     }
 
-    fn clear(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
+    pub(crate) fn clear(&mut self, x0: i32, y0: i32, x1: i32, y1: i32) {
         self.nodes.retain(|n| !(n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1));
         self.decor.retain(|d| {
             let (tx, ty) = (d.x.floor() as i32, d.y.floor() as i32);
@@ -61,7 +61,7 @@ impl Canvas {
         });
     }
 
-    fn disc(&mut self, cx: f32, cy: f32, r: f32, t: Terrain) {
+    pub(crate) fn disc(&mut self, cx: f32, cy: f32, r: f32, t: Terrain) {
         for y in 0..self.h {
             for x in 0..self.w {
                 if (Vec2::new(x as f32 + 0.5, y as f32 + 0.5) - Vec2::new(cx, cy)).length() <= r {
@@ -73,7 +73,7 @@ impl Canvas {
     }
 
     /// Breiter Streifen entlang einer Linie.
-    fn path(&mut self, pts: &[(f32, f32)], half: f32, t: Terrain) {
+    pub(crate) fn path(&mut self, pts: &[(f32, f32)], half: f32, t: Terrain) {
         for win in pts.windows(2) {
             let (a, b) = (Vec2::new(win[0].0, win[0].1), Vec2::new(win[1].0, win[1].1));
             let steps = ((b - a).length() * 2.0) as i32 + 1;
@@ -91,12 +91,12 @@ impl Canvas {
         }
     }
 
-    fn free(&self, x: i32, y: i32, size: i32) -> bool {
+    pub(crate) fn free(&self, x: i32, y: i32, size: i32) -> bool {
         (0..size).all(|dy| (0..size).all(|dx| self.idx(x + dx, y + dy).is_some_and(|i| matches!(self.terrain[i], Terrain::Grass | Terrain::DarkGrass | Terrain::Dirt | Terrain::Stone | Terrain::Ash))))
     }
 
     /// Setzt eine Mine oder einen Steinbruch am nächsten freien Platz (Spirale um den Wunschort).
-    fn node(&mut self, kind: NodeKind, x: i32, y: i32) {
+    pub(crate) fn node(&mut self, kind: NodeKind, x: i32, y: i32) {
         let size = kind.size();
         for r in 0..16_i32 {
             for dy in -r..=r {
@@ -118,12 +118,12 @@ impl Canvas {
         self.clear(x0 - 1, y0 - 1, x1 + 1, y1 + 1);
     }
 
-    fn deco(&mut self, kind: DecorKind, x: f32, y: f32) {
+    pub(crate) fn deco(&mut self, kind: DecorKind, x: f32, y: f32) {
         self.decor.push(DecorPlace { kind, x, y, variant: ((x * 7.0 + y * 3.0) as u32 % 8) as u8 });
     }
 
     /// Lichter Wald in einem Rechteck (deterministisch, ohne Zufallsquelle).
-    fn forest(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, step: i32) {
+    pub(crate) fn forest(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, step: i32) {
         for y in y0..=y1 {
             for x in x0..=x1 {
                 let h = (x.wrapping_mul(73856093) ^ y.wrapping_mul(19349663)).rem_euclid(97);
@@ -135,7 +135,7 @@ impl Canvas {
     }
 
     /// Räumt Bäume unter allen Gebäuden der Aufstellung (mit einer Kachel Rand) und schließt die Karte ab.
-    fn finish_with(mut self, placements: &[Placement], data: &GameData) -> MapData {
+    pub(crate) fn finish_with(mut self, placements: &[Placement], data: &GameData) -> MapData {
         for p in placements {
             if let Some(b) = data.building_id(&p.id) {
                 let d = data.building(b);
@@ -146,7 +146,7 @@ impl Canvas {
         self.finish()
     }
 
-    fn finish(self) -> MapData {
+    pub(crate) fn finish(self) -> MapData {
         let (w, h) = (self.w, self.h);
         let terrain = self.terrain;
         let t_at = |x: i32, y: i32| terrain.get((y * w + x) as usize).copied().filter(|_| x >= 0 && y >= 0 && x < w && y < h);
@@ -166,67 +166,79 @@ impl Canvas {
     }
 }
 
-fn pl(id: &str, owner: u8, x: f32, y: f32) -> Placement {
+pub(crate) fn pl(id: &str, owner: u8, x: f32, y: f32) -> Placement {
     Placement { id: id.into(), owner, x, y, count: 0, tag: None, guard: false, camp: None }
 }
 
-fn group(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
+pub(crate) fn group(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
     Placement { id: id.into(), owner, x, y, count, tag: None, guard: false, camp: None }
 }
 
-fn guard(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
+pub(crate) fn guard(id: &str, owner: u8, x: f32, y: f32, count: u32) -> Placement {
     Placement { id: id.into(), owner, x, y, count, tag: None, guard: true, camp: None }
 }
 
-fn tagged(mut p: Placement, tag: &str) -> Placement {
+pub(crate) fn tagged(mut p: Placement, tag: &str) -> Placement {
     p.tag = Some(tag.into());
     p
 }
 
-fn area(id: &str, name: &str, x: i32, y: i32, w: i32, h: i32) -> AreaDef {
+pub(crate) fn area(id: &str, name: &str, x: i32, y: i32, w: i32, h: i32) -> AreaDef {
     AreaDef { id: id.into(), name: name.into(), x, y, w, h }
 }
 
-fn obj(id: &str, text: &str, optional: bool) -> ObjectiveDef {
+pub(crate) fn obj(id: &str, text: &str, optional: bool) -> ObjectiveDef {
     ObjectiveDef { id: id.into(), text: text.into(), optional }
 }
 
-fn msg(speaker: &str, text: &str) -> Action {
+pub(crate) fn msg(speaker: &str, text: &str) -> Action {
     Action::Message { speaker: speaker.into(), text: text.into(), voice: None }
 }
 
-fn trig(id: &str, cond: Condition, actions: Vec<Action>) -> TriggerDef {
+pub(crate) fn trig(id: &str, cond: Condition, actions: Vec<Action>) -> TriggerDef {
     TriggerDef { id: id.into(), condition: cond, actions, modes: vec![] }
 }
 
-fn spawn(unit: &str, area_id: &str, count: u32) -> Action {
-    Action::SpawnUnits { unit: unit.into(), owner: 1, area: area_id.into(), count, attack: true }
+pub(crate) fn spawn(unit: &str, area_id: &str, count: u32) -> Action {
+    Action::SpawnUnits { unit: unit.into(), owner: 1, area: area_id.into(), count, attack: true, tag: None }
 }
 
 /// Eine Mauerlinie als Platzierungen (inklusive beider Endkacheln).
-fn wall_ring(out: &mut Vec<Placement>, x0: i32, y0: i32, x1: i32, y1: i32, gates: &[(i32, i32)], towers: &[(i32, i32)]) {
+pub(crate) fn wall_ring(out: &mut Vec<Placement>, x0: i32, y0: i32, x1: i32, y1: i32, gates: &[(i32, i32)], towers: &[(i32, i32)]) {
+    wall_ring_for(out, 0, x0, y0, x1, y1, gates, towers);
+}
+
+/// Mauerlinie für einen beliebigen Besitzer (Festungen der Gegner).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn wall_ring_for(out: &mut Vec<Placement>, owner: u8, x0: i32, y0: i32, x1: i32, y1: i32, gates: &[(i32, i32)], towers: &[(i32, i32)]) {
+    wall_ring_gaps(out, owner, (x0, y0, x1, y1), gates, towers, &[]);
+}
+
+/// Mauerlinie mit Lücken (Ausfalltore), damit jede Festung auf dem Landweg erreichbar bleibt.
+pub(crate) fn wall_ring_gaps(out: &mut Vec<Placement>, owner: u8, rect: (i32, i32, i32, i32), gates: &[(i32, i32)], towers: &[(i32, i32)], gaps: &[(i32, i32)]) {
+    let (x0, y0, x1, y1) = rect;
     let in_tower = |x: i32, y: i32| towers.iter().any(|(tx, ty)| x >= *tx && x < tx + 2 && y >= *ty && y < ty + 2);
     for y in y0..=y1 {
         for x in x0..=x1 {
             if x != x0 && x != x1 && y != y0 && y != y1 {
                 continue;
             }
-            if in_tower(x, y) {
+            if in_tower(x, y) || gaps.contains(&(x, y)) {
                 continue;
             }
             if gates.contains(&(x, y)) {
-                out.push(pl("gate", 0, x as f32, y as f32));
+                out.push(pl("gate", owner, x as f32, y as f32));
             } else {
-                out.push(pl("wall", 0, x as f32, y as f32));
+                out.push(pl("wall", owner, x as f32, y as f32));
             }
         }
     }
     for (tx, ty) in towers {
-        out.push(pl("wall_tower", 0, *tx as f32, *ty as f32));
+        out.push(pl("wall_tower", owner, *tx as f32, *ty as f32));
     }
 }
 
-fn base_mission(id: &str, name: &str, year: u32, description: &str, briefing: &str) -> MissionDef {
+pub(crate) fn base_mission(id: &str, name: &str, year: u32, description: &str, briefing: &str) -> MissionDef {
     MissionDef {
         id: id.into(),
         name: name.into(),

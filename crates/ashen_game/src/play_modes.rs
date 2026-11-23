@@ -330,11 +330,11 @@ pub fn thumbnail(map: &MapData, starts: &[glam::Vec2]) -> egui::ColorImage {
 // Gemeinsame UI-Bausteine
 // ---------------------------------------------------------------------------------------------
 
-fn label(ui: &mut egui::Ui, t: &str) {
+pub(crate) fn label(ui: &mut egui::Ui, t: &str) {
     ui.label(RichText::new(t).font(theme::caps_font(13.5)).color(Color32::from_rgb(214, 190, 146)));
 }
 
-fn list_row(ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt, title: &str, sub: &str, selected: bool, width: f32) -> bool {
+pub(crate) fn list_row(ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt, title: &str, sub: &str, selected: bool, width: f32) -> bool {
     let (rect, resp) = ui.allocate_exact_size(Vec2::new(width, 54.0), Sense::click());
     let mut st = BtnState::of(&resp, true);
     if selected && st == BtnState::Normal {
@@ -360,7 +360,7 @@ fn difficulty_row(ui: &mut egui::Ui, engine: &mut Engine, art: &UiArt, current: 
     });
 }
 
-fn parchment<R>(ui: &mut egui::Ui, art: &UiArt, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
+pub(crate) fn parchment<R>(ui: &mut egui::Ui, art: &UiArt, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
     art.panel(ui, PanelKind::Parchment, egui::Margin { left: 26, right: 26, top: 20, bottom: 20 }, |ui| {
         ui.set_width(ui.available_width());
         add(ui)
@@ -368,16 +368,16 @@ fn parchment<R>(ui: &mut egui::Ui, art: &UiArt, add: impl FnOnce(&mut egui::Ui) 
     .inner
 }
 
-fn ink_heading(ui: &mut egui::Ui, t: &str) {
+pub(crate) fn ink_heading(ui: &mut egui::Ui, t: &str) {
     ui.label(RichText::new(t).font(theme::title_bold_font(18.0)).color(theme::INK_RED));
 }
 
-fn ink_caps(ui: &mut egui::Ui, t: &str) {
+pub(crate) fn ink_caps(ui: &mut egui::Ui, t: &str) {
     ui.add_space(6.0);
     ui.label(RichText::new(t).font(theme::caps_font(13.0)).color(theme::INK_RED));
 }
 
-fn ink_text(ui: &mut egui::Ui, t: &str) {
+pub(crate) fn ink_text(ui: &mut egui::Ui, t: &str) {
     ui.label(RichText::new(t).size(15.5).color(theme::INK));
 }
 

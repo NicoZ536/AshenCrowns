@@ -64,6 +64,11 @@ pub fn scenarios_dir() -> PathBuf {
     data_dir().join("scenarios")
 }
 
+/// Ordner der Kampagnenprofile (ein Profil je Datei).
+pub fn campaign_dir() -> PathBuf {
+    data_dir().join("campaign")
+}
+
 /// Lokale Bestenliste der Herausforderungen.
 pub fn leaderboard_path() -> PathBuf {
     data_dir().join("leaderboard.ron")

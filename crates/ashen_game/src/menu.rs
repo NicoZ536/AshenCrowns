@@ -32,6 +32,8 @@ pub enum Page {
     Scenarios,
     Challenges,
     Skirmish,
+    /// Echtzeit-Kampagne „Das Zeitalter der Gefallenen“ (Profile, Zeitalter, Briefing).
+    Campaign,
 }
 
 /// Wunsch des Menüs an das Spiel.
@@ -41,6 +43,8 @@ pub enum MenuAction {
     Start { mission: usize, settings: MatchSettings },
     /// Mission aus Daten (Szenario, Gefecht, Herausforderung); `challenge` trägt Definition und Eiserner-Mann-Flag.
     StartDef { mission: Box<ashen_sim::mission::MissionDef>, settings: MatchSettings, challenge: Option<Box<(ashen_sim::challenge::ChallengeDef, bool)>> },
+    /// Kampagnenmission starten (Profil, spielbereite Mission mit Flags und Helden, Startoptionen).
+    StartCampaign { slot: usize, mission: Box<ashen_sim::mission::MissionDef>, settings: MatchSettings },
     OpenEditor(crate::editor::EditorInit),
     Load(std::path::PathBuf),
     /// Neue Große Kampagne mit den gewählten Optionen.
@@ -72,6 +76,7 @@ pub struct MenuScene {
     pub action: MenuAction,
     pub error: Option<String>,
     pub modes: crate::play_modes::ModesState,
+    pub campaign: crate::campaign_ui::CampaignUi,
 }
 
 impl MenuScene {
@@ -104,6 +109,7 @@ impl MenuScene {
             action: MenuAction::None,
             error: None,
             modes: crate::play_modes::ModesState::new(),
+            campaign: Default::default(),
         }
     }
 
@@ -198,6 +204,7 @@ impl MenuScene {
                     Page::Scenarios => crate::play_modes::scenarios_page(self, ui, engine, content, settings, art),
                     Page::Challenges => crate::play_modes::challenges_page(self, ui, engine, content, settings, art),
                     Page::Skirmish => crate::play_modes::skirmish_page(self, ui, engine, content, settings, art),
+                    Page::Campaign => crate::campaign_ui::campaign_page(self, ui, engine, content, art),
                     Page::Credits => {
                         ui.set_width(520.0);
                         ui_art::heading(ui, art, "Credits", 26.0);
@@ -258,8 +265,9 @@ impl MenuScene {
                 };
                 r.clicked()
             };
-            if b(ui, "Kampagne", true, "Zeitalter I – Mission 1: Die letzte Siedlung") {
-                self.action = MenuAction::Start { mission: 0, settings: MatchSettings { mode: GameMode::Campaign, difficulty: self.new_difficulty, seed: 897, hero_permadeath: false } };
+            if b(ui, "Kampagne", true, "Das Zeitalter der Gefallenen: sieben Zeitalter, Entscheidungen mit Folgen, mehrere Profile") {
+                self.campaign = Default::default();
+                self.page = Page::Campaign;
             }
             if b(ui, "Neues Spiel", true, "Modus, Schwierigkeit und Seed wählen") {
                 self.page = Page::NewGame;
