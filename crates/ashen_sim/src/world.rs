@@ -3,7 +3,7 @@
 use crate::arena::Arena;
 use crate::chronicle::{Chronicle, ChronicleKind};
 use crate::command::PlayerCommand;
-use crate::data::{BuildingTypeId, Cost, DamageType, GameData, ResourceKind, UnitClass, UnitTypeId};
+use crate::data::{BuildingTypeId, Cost, DamageType, Fort, GameData, Item, ResourceKind, UnitClass, UnitTypeId};
 use crate::entity::*;
 use crate::env::Environment;
 use crate::events::SimEvent;
@@ -38,6 +38,73 @@ pub struct PlayerState {
     pub pop_cap: u32,
     pub starving: bool,
     pub stats: PlayerStats,
+    /// Lagerbestand der Waren (Index = `GoodId`).
+    pub goods: Vec<f32>,
+    /// Gewählter Steuersatz (Index in `CityRules::tax_levels`).
+    pub tax_level: u8,
+    /// Ausbaustufe der Siedlung (0 = Anfangszustand).
+    pub era: u8,
+    /// Fortschritt (0..1) eines laufenden Ausbaus zur nächsten Stufe.
+    pub era_progress: Option<f32>,
+    /// Lagerkapazität je Ware und Grundressource (außer Gold).
+    pub capacity: f32,
+    /// Zusätzliche Kapazität ohne Gebäude (Sandbox).
+    pub extra_capacity: f32,
+    /// Handelsdruck je Item (Preis = Grundpreis × (1 + Druck)).
+    pub market: Vec<f32>,
+    pub residents: f32,
+    pub workforce: u32,
+    pub workers_used: u32,
+    pub avg_happiness: f32,
+    pub unrest: bool,
+    pub unrest_cooldown: f32,
+    /// Sperrzeit für die Meldung „Lager voll“.
+    pub full_cooldown: f32,
+    /// Steuereinnahmen pro Sekunde (letzte Sekunde, für die Anzeige).
+    pub tax_rate: f32,
+}
+
+impl PlayerState {
+    pub fn new(name: &str, resources: Cost, pop_cap: u32, data: &GameData) -> PlayerState {
+        PlayerState {
+            name: name.into(),
+            resources,
+            pop: 0,
+            pop_cap,
+            starving: false,
+            stats: PlayerStats::default(),
+            goods: vec![0.0; data.goods.len()],
+            tax_level: data.rules.city.default_tax,
+            era: 0,
+            era_progress: None,
+            capacity: 0.0,
+            extra_capacity: 0.0,
+            market: vec![0.0; data.item_count()],
+            residents: 0.0,
+            workforce: 0,
+            workers_used: 0,
+            avg_happiness: 0.0,
+            unrest: false,
+            unrest_cooldown: 0.0,
+            full_cooldown: 0.0,
+            tax_rate: 0.0,
+        }
+    }
+
+    /// Vorrat eines Items.
+    pub fn stock(&self, it: Item) -> f32 {
+        match it {
+            Item::Res(k) => self.resources.get(k),
+            Item::Good(g) => self.goods.get(g.0 as usize).copied().unwrap_or(0.0),
+        }
+    }
+
+    pub fn stock_mut(&mut self, it: Item) -> &mut f32 {
+        match it {
+            Item::Res(k) => self.resources.get_mut(k),
+            Item::Good(g) => &mut self.goods[g.0 as usize],
+        }
+    }
 }
 
 /// Steuerung der gegnerischen Angriffswellen.
@@ -98,9 +165,9 @@ impl SimWorld {
             nodes: Arena::default(),
             projectiles: Vec::new(),
             players: vec![
-                PlayerState { name: "Glutkrone".into(), resources: mission.start_resources, pop: 0, pop_cap: 0, starving: false, stats: PlayerStats::default() },
-                PlayerState { name: "Die Hohlen".into(), resources: Cost::default(), pop: 0, pop_cap: 999, starving: false, stats: PlayerStats::default() },
-                PlayerState { name: "Neutral".into(), resources: Cost::default(), pop: 0, pop_cap: 999, starving: false, stats: PlayerStats::default() },
+                PlayerState::new("Glutkrone", mission.start_resources, 0, data),
+                PlayerState::new("Die Hohlen", Cost::default(), 999, data),
+                PlayerState::new("Neutral", Cost::default(), 999, data),
             ],
             env: Environment::default(),
             fog: FogOfWar::new(w, h),
@@ -114,17 +181,23 @@ impl SimWorld {
             scratch: Vec::new(),
             mission_def: mission,
         };
-        world.apply_mode_rules();
+        world.apply_mode_rules(data);
         crate::mapgen::populate_resources(&mut world, data);
         world.apply_placements(data)?;
         systems::economy::recompute_population(&mut world, data);
+        systems::city::recompute_capacity(&mut world, data);
         systems::fog::update(&mut world, data);
         let name = world.mission_def.name.clone();
         world.record(ChronicleKind::Founding, format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})"));
         Ok(world)
     }
 
-    fn apply_mode_rules(&mut self) {
+    fn apply_mode_rules(&mut self, data: &GameData) {
+        for (id, n) in self.mission_def.start_goods.clone() {
+            if let Some(it) = data.item(&id) {
+                *self.players[PLAYER as usize].stock_mut(it) += n;
+            }
+        }
         let waves = self.mission_def.waves.clone();
         self.director.enabled = waves.enabled;
         self.director.next_wave_in = waves.first_wave;
@@ -139,6 +212,12 @@ impl SimWorld {
             GameMode::Sandbox => {
                 self.director.enabled = false;
                 self.players[PLAYER as usize].resources.add(&Cost { gold: 5000.0, wood: 5000.0, stone: 3000.0, food: 3000.0 });
+                for g in self.players[PLAYER as usize].goods.iter_mut() {
+                    *g += 300.0;
+                }
+                // Großzügige Lager und alle Ausbaustufen.
+                self.players[PLAYER as usize].extra_capacity = 6000.0;
+                self.players[PLAYER as usize].era = data.rules.eras.len() as u8;
                 self.fog.disabled = true;
             }
         }
@@ -215,12 +294,49 @@ impl SimWorld {
             tag: None,
             invulnerable: false,
             last_hit_time: -100.0,
+            workers: 0,
+            worker_limit: None,
+            recipe: 0,
+            cycle_active: false,
+            cycle: 0.0,
+            status: crate::entity::ProdStatus::None,
+            stall_item: None,
+            residents: 0.0,
+            happiness: 0.0,
+            up_timer: 0.0,
+            down_timer: 0.0,
+            unmet: 0,
+            gate_open: true,
         };
         let center = b.center();
         let id = self.buildings.insert(b);
+        if complete {
+            self.finish_building(data, id);
+        }
         self.push_units_out_of(tile, size);
         self.events.push(SimEvent::BuildingPlaced { id, kind, owner, pos: center });
         id
+    }
+
+    /// Zustand eines frisch fertiggestellten Gebäudes: Bewohner, Tor, Kapazität.
+    pub fn finish_building(&mut self, data: &GameData, id: BuildingId) {
+        let Some(b) = self.buildings.get_mut(id) else { return };
+        let def = data.building(b.kind);
+        if let Some(h) = &def.housing {
+            b.residents = h.capacity as f32 * 0.6;
+            b.happiness = 70.0;
+        }
+        if def.fort == Some(Fort::Gate) {
+            b.gate_open = true;
+            let (tile, owner) = (b.tile, b.owner);
+            self.map.set_gate(tile, owner, true);
+        }
+        systems::city::recompute_capacity(self, data);
+    }
+
+    /// Kachelmenge eines Gebäudes enthält `t`?
+    pub fn building_at(&self, t: IVec2) -> Option<BuildingId> {
+        self.buildings.iter().find(|(_, b)| t.x >= b.tile.x && t.x < b.tile.x + b.size.x && t.y >= b.tile.y && t.y < b.tile.y + b.size.y).map(|(id, _)| id)
     }
 
     pub fn spawn_node(&mut self, kind: NodeKind, tile: IVec2, amount: u32, variant: u8) -> Option<NodeId> {
@@ -339,6 +455,14 @@ impl SimWorld {
                 }
             }
         }
+        let era = self.players[owner as usize].era;
+        if owner == PLAYER && def.era > era {
+            let name = data.rules.eras.get(def.era as usize - 1).map(|e| e.name.as_str()).unwrap_or("?");
+            return Err(format!("Benötigt Ausbaustufe: {name}"));
+        }
+        if owner == PLAYER {
+            systems::city::check_site(self, data, def, tile)?;
+        }
         for r in &def.requires {
             let Some(req) = data.building_id(r) else { continue };
             if !self.buildings.iter().any(|(_, b)| b.owner == owner && b.kind == req && b.complete) {
@@ -441,6 +565,7 @@ impl SimWorld {
         }
         systems::environment::tick(self, data, dt);
         systems::economy::tick(self, data, dt);
+        systems::city::tick(self, data, dt);
         systems::ai::tick(self, data, dt);
         let ids: Vec<(UnitId, Vec2)> = self.units.iter().map(|(id, u)| (id, u.pos)).collect();
         self.spatial.rebuild(self.map.width, self.map.height, ids.into_iter());
@@ -469,10 +594,15 @@ impl SimWorld {
         for (_, b) in self.buildings.iter() {
             h.update(&b.hp.to_bits().to_le_bytes());
             h.update(&b.progress.to_bits().to_le_bytes());
+            h.update(&b.residents.to_bits().to_le_bytes());
+            h.update(&b.cycle.to_bits().to_le_bytes());
         }
         for p in &self.players {
             for k in ResourceKind::ALL {
                 h.update(&p.resources.get(k).to_bits().to_le_bytes());
+            }
+            for g in &p.goods {
+                h.update(&g.to_bits().to_le_bytes());
             }
         }
         h.update(&self.tick.to_le_bytes());

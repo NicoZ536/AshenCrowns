@@ -20,22 +20,22 @@ pub struct Structure {
     pub glow: Vec<Vec3>,
 }
 
-fn pt(hex: u32, mat: Mat) -> Paint {
+pub(super) fn pt(hex: u32, mat: Mat) -> Paint {
     Paint::new(hex, mat)
 }
 
-const STONE: u32 = 0x5a5a60;
-const DARK_STONE: u32 = 0x3a3a40;
-const ROOF: u32 = 0x7a2a24;
-const WOOD: u32 = 0x5f3a22;
-const DARK_WOOD: u32 = 0x2c1c13;
-const WARM: u32 = 0xf2b25a;
-const CRIMSON: u32 = 0x8f2220;
-const GOLD: u32 = 0xcfa23f;
-const HOLLOW: u32 = 0x86f2a0;
+pub(super) const STONE: u32 = 0x5a5a60;
+pub(super) const DARK_STONE: u32 = 0x3a3a40;
+pub(super) const ROOF: u32 = 0x7a2a24;
+pub(super) const WOOD: u32 = 0x5f3a22;
+pub(super) const DARK_WOOD: u32 = 0x2c1c13;
+pub(super) const WARM: u32 = 0xf2b25a;
+pub(super) const CRIMSON: u32 = 0x8f2220;
+pub(super) const GOLD: u32 = 0xcfa23f;
+pub(super) const HOLLOW: u32 = 0x86f2a0;
 
 /// Gitterausgerichtetes Gebäude: Zelle und Anker aus Grundfläche und Höhe.
-fn grid(name: &str, mesh: Mesh, w: f32, h: f32, height: f32) -> Structure {
+pub(super) fn grid(name: &str, mesh: Mesh, w: f32, h: f32, height: f32) -> Structure {
     let margin = 6.0;
     let cw = ((w + h) * 16.0 + margin * 2.0).ceil() as u32;
     let top = height * 0.866 * ashen_engine::bake::PPU + margin;
@@ -44,18 +44,18 @@ fn grid(name: &str, mesh: Mesh, w: f32, h: f32, height: f32) -> Structure {
 }
 
 /// Freistehendes Objekt (Baum, Fels) mit Fußpunkt unten mittig.
-fn free(name: &str, mesh: Mesh, yaw: f32, w: u32, h: u32) -> Structure {
+pub(super) fn free(name: &str, mesh: Mesh, yaw: f32, w: u32, h: u32) -> Structure {
     Structure { name: name.into(), mesh, yaw, cell: (w, h), anchor: Vec2::new((w / 2) as f32, (h - 6) as f32), lights: Vec::new(), smoke: Vec::new(), fires: Vec::new(), glow: Vec::new() }
 }
 
 /// Quader in Kachelkoordinaten (x0,z0)-(x1,z1), Höhe y0..y1.
 #[allow(clippy::too_many_arguments)]
-fn block(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y0: f32, y1: f32) {
+pub(super) fn block(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y0: f32, y1: f32) {
     m.cuboid(p, Vec3::new(x0, y0, z0), Vec3::new(x1, y1, z1), Mat4::IDENTITY);
 }
 
 /// Zinnen entlang einer Kante.
-fn merlons(m: &mut Mesh, p: &Paint, a: Vec2, b: Vec2, y: f32, size: f32) {
+pub(super) fn merlons(m: &mut Mesh, p: &Paint, a: Vec2, b: Vec2, y: f32, size: f32) {
     let n = ((b - a).length() / (size * 2.0)).floor().max(1.0) as i32;
     for i in 0..=n {
         let c = a.lerp(b, i as f32 / n as f32);
@@ -65,7 +65,7 @@ fn merlons(m: &mut Mesh, p: &Paint, a: Vec2, b: Vec2, y: f32, size: f32) {
 
 /// Satteldach über einem Rechteck, First entlang X (along_x) oder Z.
 #[allow(clippy::too_many_arguments)]
-fn gable(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, rise: f32, along_x: bool, over: f32) {
+pub(super) fn gable(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, rise: f32, along_x: bool, over: f32) {
     let (x0, z0, x1, z1) = (x0 - over, z0 - over, x1 + over, z1 + over);
     if along_x {
         let zm = (z0 + z1) * 0.5;
@@ -90,7 +90,7 @@ fn gable(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, ri
 
 /// Pyramidendach (quadratisch) über einem Rechteck.
 #[allow(clippy::too_many_arguments)]
-fn pyramid(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, rise: f32) {
+pub(super) fn pyramid(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, rise: f32) {
     let apex = Vec3::new((x0 + x1) * 0.5, y + rise, (z0 + z1) * 0.5);
     let c = [Vec3::new(x0, y, z0), Vec3::new(x1, y, z0), Vec3::new(x1, y, z1), Vec3::new(x0, y, z1)];
     for i in 0..4 {
@@ -98,14 +98,14 @@ fn pyramid(m: &mut Mesh, p: &Paint, x0: f32, z0: f32, x1: f32, z1: f32, y: f32, 
     }
 }
 
-fn tower(m: &mut Mesh, x: f32, z: f32, r: f32, h: f32) {
+pub(super) fn tower(m: &mut Mesh, x: f32, z: f32, r: f32, h: f32) {
     m.frustum(&pt(STONE, Mat::StoneBrick), Vec3::new(x, 0.0, z), Vec3::new(x, h, z), r * 1.05, r, 10);
     m.frustum(&pt(STONE, Mat::StoneBrick), Vec3::new(x, h, z), Vec3::new(x, h + 0.08, z), r * 1.15, r * 1.15, 10);
     m.frustum(&pt(ROOF, Mat::RoofTile).flat(), Vec3::new(x, h + 0.08, z), Vec3::new(x, h + r * 2.4, z), r * 1.3, 0.0, 10);
     m.frustum(&pt(GOLD, Mat::Gold), Vec3::new(x, h + r * 2.4, z), Vec3::new(x, h + r * 2.4 + 0.18, z), 0.02, 0.0, 4);
 }
 
-fn window(m: &mut Mesh, center: Vec3, normal_axis_x: bool, w: f32, h: f32) {
+pub(super) fn window(m: &mut Mesh, center: Vec3, normal_axis_x: bool, w: f32, h: f32) {
     let glow = pt(WARM, Mat::Glow).glow(1.0);
     let (hw, hh) = (w * 0.5, h * 0.5);
     if normal_axis_x {
@@ -115,7 +115,7 @@ fn window(m: &mut Mesh, center: Vec3, normal_axis_x: bool, w: f32, h: f32) {
     }
 }
 
-fn banner(m: &mut Mesh, top: Vec3, along_x: bool, len: f32) {
+pub(super) fn banner(m: &mut Mesh, top: Vec3, along_x: bool, len: f32) {
     let cloth = pt(CRIMSON, Mat::Cloth);
     let w = 0.18;
     if along_x {
@@ -127,11 +127,14 @@ fn banner(m: &mut Mesh, top: Vec3, along_x: bool, len: f32) {
     }
 }
 
-fn keep() -> Structure {
+pub(super) fn keep_variant(castle: bool) -> Structure {
+    // Ausbaustufe Burg: höhere Mauern, Türme und Bergfried.
+    let k = if castle { 1.0 } else { 0.0 };
+    let dh = 2.35 + 0.6 * k;
     let mut m = Mesh::default();
     let brick = pt(STONE, Mat::StoneBrick);
     block(&mut m, &pt(0x4c4a43, Mat::Rock), 0.05, 0.05, 2.95, 2.95, 0.0, 0.12);
-    let (lo, hi, t, wh) = (0.22, 2.78, 0.2, 0.85);
+    let (lo, hi, t, wh) = (0.22, 2.78, 0.2, 0.85 + 0.2 * k);
     // Ringmauer.
     block(&mut m, &brick, lo, lo, hi, lo + t, 0.12, wh);
     block(&mut m, &brick, lo, lo, lo + t, hi, 0.12, wh);
@@ -141,23 +144,23 @@ fn keep() -> Structure {
         merlons(&mut m, &brick, Vec2::new(a.0, a.1), Vec2::new(b.0, b.1), wh, 0.13);
     }
     for (x, z) in [(lo, lo), (hi, lo), (lo, hi), (hi, hi)] {
-        tower(&mut m, x, z, 0.34, 1.45);
+        tower(&mut m, x, z, 0.34 + 0.04 * k, 1.45 + 0.5 * k);
     }
     // Donjon.
-    block(&mut m, &brick, 0.85, 0.85, 2.15, 2.15, 0.12, 2.35);
+    block(&mut m, &brick, 0.85, 0.85, 2.15, 2.15, 0.12, dh);
     for (a, b) in [((0.85, 2.12), (2.15, 2.12)), ((2.12, 0.85), (2.12, 2.15)), ((0.85, 0.88), (2.15, 0.88)), ((0.88, 0.85), (0.88, 2.15))] {
-        merlons(&mut m, &brick, Vec2::new(a.0, a.1), Vec2::new(b.0, b.1), 2.35, 0.14);
+        merlons(&mut m, &brick, Vec2::new(a.0, a.1), Vec2::new(b.0, b.1), dh, 0.14);
     }
-    pyramid(&mut m, &pt(ROOF, Mat::RoofTile), 1.0, 1.0, 2.0, 2.0, 2.35, 1.1);
-    m.frustum(&pt(GOLD, Mat::Gold), Vec3::new(1.5, 3.45, 1.5), Vec3::new(1.5, 3.75, 1.5), 0.025, 0.0, 4);
+    pyramid(&mut m, &pt(ROOF, Mat::RoofTile), 1.0, 1.0, 2.0, 2.0, dh, 1.1);
+    m.frustum(&pt(GOLD, Mat::Gold), Vec3::new(1.5, dh + 1.1, 1.5), Vec3::new(1.5, dh + 1.4, 1.5), 0.025, 0.0, 4);
     for y in [1.0, 1.7] {
         window(&mut m, Vec3::new(2.15, y, 1.25), true, 0.12, 0.22);
         window(&mut m, Vec3::new(2.15, y + 0.1, 1.75), true, 0.12, 0.22);
         window(&mut m, Vec3::new(1.3, y + 0.05, 2.15), false, 0.12, 0.22);
         window(&mut m, Vec3::new(1.75, y, 2.15), false, 0.12, 0.22);
     }
-    banner(&mut m, Vec3::new(2.16, 2.25, 1.5), true, 0.75);
-    banner(&mut m, Vec3::new(1.5, 2.25, 2.16), false, 0.75);
+    banner(&mut m, Vec3::new(2.16, dh - 0.1, 1.5), true, 0.75);
+    banner(&mut m, Vec3::new(1.5, dh - 0.1, 2.16), false, 0.75);
     // Torhaus in der rechten Frontmauer.
     block(&mut m, &pt(0x0d0b0a, Mat::Plain), hi - 0.02, 1.25, hi + 0.01, 1.75, 0.12, 0.62);
     block(&mut m, &pt(DARK_WOOD, Mat::WoodPlank), hi - 0.04, 1.3, hi - 0.01, 1.7, 0.12, 0.55);
@@ -165,14 +168,18 @@ fn keep() -> Structure {
         block(&mut m, &pt(DARK_WOOD, Mat::WoodPlank), hi + 0.01, z - 0.02, hi + 0.05, z + 0.02, 0.5, 0.68);
         m.ellipsoid(&pt(0xffc24a, Mat::Glow).glow(1.0), Vec3::new(hi + 0.04, 0.73, z), Vec3::splat(0.045), 5, 3);
     }
-    let mut s = grid("bld_keep", m, 3.0, 3.0, 4.0);
+    let mut s = grid(if castle { "bld_keep_castle" } else { "bld_keep" }, m, 3.0, 3.0, 4.0 + 0.6 * k);
     s.lights = vec![(Vec3::new(hi + 0.06, 0.73, 1.18), Vec3::new(1.0, 0.6, 0.25), 70.0), (Vec3::new(hi + 0.06, 0.73, 1.82), Vec3::new(1.0, 0.6, 0.25), 70.0), (Vec3::new(2.2, 1.4, 1.5), Vec3::new(1.0, 0.7, 0.35), 46.0), (Vec3::new(1.5, 1.4, 2.2), Vec3::new(1.0, 0.7, 0.35), 46.0)];
     s.fires = vec![Vec3::new(hi + 0.04, 0.76, 1.18), Vec3::new(hi + 0.04, 0.76, 1.82)];
     s.smoke = vec![Vec3::new(0.6, 1.9, 0.6)];
     s
 }
 
-fn timber_frame(m: &mut Mesh, x0: f32, z0: f32, x1: f32, z1: f32, y0: f32, y1: f32) {
+fn keep() -> Structure {
+    keep_variant(false)
+}
+
+pub(super) fn timber_frame(m: &mut Mesh, x0: f32, z0: f32, x1: f32, z1: f32, y0: f32, y1: f32) {
     let beam = pt(DARK_WOOD, Mat::WoodPlank);
     let s = 0.035;
     for (x, z) in [(x0, z0), (x1, z0), (x0, z1), (x1, z1)] {
@@ -392,7 +399,7 @@ fn dead_tree(seed: u32) -> Mesh {
     m
 }
 
-fn rock_mound(m: &mut Mesh, center: Vec3, r: Vec3, seed: u32) {
+pub(super) fn rock_mound(m: &mut Mesh, center: Vec3, r: Vec3, seed: u32) {
     let rock = pt(0x625f56, Mat::Rock).flat();
     m.ellipsoid(&rock, center, r, 7 + seed % 3, 4);
 }
@@ -513,6 +520,8 @@ fn decor() -> Vec<Structure> {
 
 pub fn build_all() -> Vec<Structure> {
     let mut v = vec![keep(), farmstead(), barracks(), watchtower(), hollow_shrine(), bone_spire(), gold_mine(), quarry()];
+    v.push(keep_variant(true));
+    v.extend(super::city::build_all());
     v.extend(decor());
     v
 }

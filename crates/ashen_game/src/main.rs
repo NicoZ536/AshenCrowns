@@ -9,9 +9,11 @@ mod audio_bridge;
 mod content;
 mod game;
 mod hud;
+mod hud_city;
 mod menu;
 mod mission;
 mod settings;
+mod showcase;
 mod ui_art;
 mod ui_common;
 mod view;
@@ -38,6 +40,8 @@ fn usage() -> &'static str {
   --select-army                   Armee auswählen (zeigt HUD-Auswahl)
   --camera <x,y>                  Kamera auf Kachel zentrieren
   --zoom <zeilen>                 Sichtbare Bildzeilen (220–480)
+  --ui <liste>                    Fenster öffnen: storage, city, build[:rubrik], select:<gebäude-id>
+  --demo-city                     Sandbox mit Vorführstadt (Produktion, Wohnhäuser, Mauern) füllen
   --no-ui                         Oberfläche ausblenden"
 }
 
@@ -110,6 +114,8 @@ fn main() {
                 }
             }
             "--zoom" => auto.zoom_lines = next(&mut i).parse().ok(),
+            "--demo-city" => auto.demo_city = true,
+            "--ui" => auto.ui_open = next(&mut i).split(',').map(str::to_string).collect(),
             "--no-ui" => auto.hide_ui = true,
             other => {
                 eprintln!("Unbekannte Option {other}\n{}", usage());

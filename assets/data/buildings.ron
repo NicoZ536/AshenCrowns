@@ -1,32 +1,269 @@
-// ASHEN CROWNS – Gebäudedefinitionen (Vertical Slice). Größe in Kacheln (x, y).
+// ASHEN CROWNS – Gebäudedefinitionen. Größe in Kacheln (x, y); verwendet werden 1×1, 2×2, 3×2 und 3×3.
+//
+// Felder der Echtzeit-Wirtschaft (siehe docs/design/rts_economy.md):
+//   era        Mindest-Ausbaustufe der Siedlung (0 = Siedlung, 1 = Burg)
+//   category   Rubrik im Baumenü
+//   goods_cost zusätzliche Waren als Baukosten
+//   workers    Arbeitsplätze; recipes = Produktionsrezepte (inputs/outputs je Zyklus, cycle in Sekunden)
+//   site       Standortbedingung (Quellen/Gelände in der Nähe)
+//   housing    Wohnhaus-Stufe mit Bedürfnissen (rate = Verbrauch je Bewohner und Minute)
+//   storage    Lagerkapazität je Ware (und Lieferziel der Produktion)
+//   fort       Befestigung: Wall, Gate (Tor), Tower
+//   service    Wirkbereich für Bedürfnisse (Faith = Tempel, Safety = Wehranlage)
 (
     buildings: [
         (
             id: "keep", name: "Bergfried", faction: EmberCrown, size: (3, 3),
-            description: "Herz der Siedlung. Bildet Arbeiter aus, nimmt Ressourcen an und erhebt Abgaben.",
+            description: "Herz der Siedlung. Bildet Arbeiter aus, nimmt Ressourcen an, lagert Vorräte und erhebt Abgaben. Kann zur Burg ausgebaut werden.",
             hp: 2200.0, armor: 5.0, armor_type: Fortified, cost: (), build_time: 120.0, sight: 10.0,
             pop_provided: 10, trains: ["worker"], dropoff: true, gold_per_sec: 0.6, buildable: false,
+            storage: 500.0, service: Some((kind: Safety, radius: 12.0)), category: Civic,
         ),
         (
             id: "farmstead", name: "Gehöft", faction: EmberCrown, size: (2, 2),
             description: "Wohnraum für acht Einwohner. Die Felder liefern stetig Nahrung.",
             hp: 700.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 80.0), build_time: 30.0,
-            sight: 5.0, pop_provided: 8, food_per_sec: 0.45, hotkey: Some('F'),
+            sight: 5.0, pop_provided: 8, food_per_sec: 0.45, hotkey: Some('F'), category: Food,
         ),
         (
             id: "barracks", name: "Kaserne", faction: EmberCrown, size: (3, 2),
-            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen und Ritter aus.",
+            description: "Bildet Schwertkämpfer, Speerträger, Bogenschützen und Ritter aus. Waffen und Rüstungen kommen aus dem Lager.",
             hp: 1300.0, armor: 4.0, armor_type: Fortified, cost: (gold: 160.0, wood: 120.0, stone: 40.0),
             build_time: 45.0, sight: 6.0, trains: ["swordsman", "spearman", "archer", "knight"], hotkey: Some('B'),
+            service: Some((kind: Safety, radius: 10.0)), category: Military,
         ),
         (
             id: "watchtower", name: "Wachturm", faction: EmberCrown, size: (1, 1),
-            description: "Hölzerner Turm mit Glutbecken. Beschießt Feinde in weitem Umkreis.",
+            description: "Hölzerner Turm mit Glutbecken. Beschießt Feinde in weitem Umkreis und beruhigt die Bürger.",
             hp: 600.0, armor: 5.0, armor_type: Fortified, cost: (gold: 70.0, wood: 60.0, stone: 60.0),
             build_time: 30.0, sight: 11.0,
             attack: Some((damage: 18.0, damage_type: Pierce, range: 7.5, cooldown: 1.6, projectile: Arrow)),
-            hotkey: Some('T'),
+            hotkey: Some('T'), service: Some((kind: Safety, radius: 10.0)), category: Military,
         ),
+
+        // ------------------------------------------------------------------ Wohnen
+        (
+            id: "hut", name: "Hütte", faction: EmberCrown, size: (2, 2),
+            description: "Schlichte Hütte für fünf Bewohner. Sie brauchen nur Nahrung. Wer zufrieden ist, baut zum Haus aus.",
+            hp: 350.0, armor: 1.0, armor_type: Fortified, cost: (wood: 40.0), build_time: 14.0, sight: 5.0,
+            category: Housing,
+            housing: Some((
+                tier: 0, capacity: 5, tax: 0.010,
+                needs: [(kind: Item("food"), rate: 0.3, weight: 2.0)],
+                upgrade_to: Some("house"), upgrade_era: 0,
+            )),
+        ),
+        (
+            id: "house", name: "Haus", faction: EmberCrown, size: (2, 2),
+            description: "Gemauertes Haus für acht Bewohner. Sie wollen Nahrung, Kleidung und einen Tempel in der Nähe. Entsteht durch Ausbau einer Hütte.",
+            hp: 600.0, armor: 2.0, armor_type: Fortified, cost: (wood: 60.0, stone: 30.0), build_time: 22.0, sight: 5.0,
+            buildable: false, category: Housing,
+            housing: Some((
+                tier: 1, capacity: 8, tax: 0.020,
+                needs: [
+                    (kind: Item("food"), rate: 0.3, weight: 2.0),
+                    (kind: Item("clothing"), rate: 0.25, weight: 2.0),
+                    (kind: Faith, weight: 2.0),
+                ],
+                upgrade_to: Some("townhouse"), upgrade_era: 1, downgrade_to: Some("hut"),
+            )),
+        ),
+        (
+            id: "townhouse", name: "Bürgerhaus", faction: EmberCrown, size: (2, 2),
+            description: "Stattliches Bürgerhaus für zwölf Bewohner. Sie verlangen Brot, Kleidung, Bier, Glauben und Schutz – und zahlen die höchsten Steuern.",
+            hp: 900.0, armor: 3.0, armor_type: Fortified, cost: (wood: 60.0, stone: 60.0), build_time: 30.0, sight: 5.0,
+            buildable: false, era: 1, category: Housing,
+            housing: Some((
+                tier: 2, capacity: 12, tax: 0.036,
+                needs: [
+                    (kind: Item("bread"), rate: 0.4, weight: 2.0),
+                    (kind: Item("clothing"), rate: 0.3, weight: 1.5),
+                    (kind: Item("beer"), rate: 0.35, weight: 1.5),
+                    (kind: Faith, weight: 1.5),
+                    (kind: Safety, weight: 1.5),
+                ],
+                downgrade_to: Some("house"),
+            )),
+        ),
+
+        // ------------------------------------------------------------------ Rohstoffe
+        (
+            id: "woodcutter", name: "Holzfällerlager", faction: EmberCrown, size: (2, 2),
+            description: "Holzfäller schlagen die Bäume ringsum. Jeder Zyklus fällt Vorrat des nächsten Baums.",
+            hp: 450.0, armor: 2.0, armor_type: Fortified, cost: (gold: 20.0, wood: 50.0), build_time: 18.0, sight: 5.0,
+            category: Raw, workers: 2,
+            site: Some((node: Some(Tree), node_radius: 8.0, node_min: 4, consume_node: true, hint: "Ein Holzfällerlager braucht mindestens 4 Bäume im Umkreis von 8 Kacheln.")),
+            recipes: [(id: "chop", name: "Holz schlagen", outputs: [("wood", 4.0)], cycle: 30.0)],
+        ),
+        (
+            id: "clay_pit", name: "Lehmgrube", faction: EmberCrown, size: (2, 2),
+            description: "Aus Erde und Uferlehm gestochener Ton für die Ziegelei.",
+            hp: 400.0, armor: 2.0, armor_type: Fortified, cost: (gold: 40.0, wood: 40.0), build_time: 16.0, sight: 5.0,
+            category: Raw, workers: 2,
+            site: Some((terrain: [Dirt, Sand, Ford], terrain_radius: 2, terrain_min: 5, hint: "Lehm gibt es nur auf Erde, Sand und an Furten.")),
+            recipes: [(id: "dig", name: "Lehm stechen", outputs: [("clay", 3.0)], cycle: 30.0)],
+        ),
+        (
+            id: "charcoal_burner", name: "Köhlerei", faction: EmberCrown, size: (2, 2),
+            description: "Der Meiler verschwelt Holz zu Kohle, dem Treibstoff von Ziegelei, Schmelze und Schmiede.",
+            hp: 400.0, armor: 2.0, armor_type: Fortified, cost: (gold: 40.0, wood: 70.0), build_time: 18.0, sight: 5.0,
+            category: Raw, workers: 1,
+            recipes: [(id: "burn", name: "Kohle brennen", inputs: [("wood", 3.0)], outputs: [("coal", 2.0)], cycle: 60.0)],
+        ),
+        (
+            id: "iron_mine", name: "Eisenmine", faction: EmberCrown, size: (2, 2),
+            description: "Stollen in der Erzader. Braucht Werkzeug beim Bau und ein Felsvorkommen in der Nähe.",
+            hp: 600.0, armor: 4.0, armor_type: Fortified, cost: (gold: 100.0, wood: 60.0, stone: 40.0),
+            goods_cost: [("tools", 2.0)], build_time: 30.0, sight: 5.0, era: 1,
+            category: Raw, workers: 3,
+            site: Some((node: Some(StoneQuarry), node_radius: 7.0, node_min: 1, hint: "Eisenerz findet sich nur in der Nähe eines Steinbruchs (bis 7 Kacheln).")),
+            recipes: [(id: "mine", name: "Erz fördern", outputs: [("iron_ore", 2.0)], cycle: 40.0)],
+        ),
+        (
+            id: "herb_garden", name: "Kräutergarten", faction: EmberCrown, size: (2, 2),
+            description: "Heil- und Räucherkräuter für die Tempel der Siedlung.",
+            hp: 300.0, armor: 1.0, armor_type: Fortified, cost: (gold: 30.0, wood: 40.0), build_time: 14.0, sight: 5.0,
+            category: Raw, workers: 1,
+            recipes: [(id: "gather", name: "Kräuter sammeln", outputs: [("herbs", 2.0)], cycle: 40.0)],
+        ),
+
+        // ------------------------------------------------------------------ Nahrung
+        (
+            id: "farm", name: "Bauernhof", faction: EmberCrown, size: (3, 3),
+            description: "Felder und Scheune: Bauern bringen Getreide ein.",
+            hp: 600.0, armor: 2.0, armor_type: Fortified, cost: (gold: 50.0, wood: 70.0), build_time: 24.0, sight: 5.0,
+            category: Food, workers: 3,
+            recipes: [(id: "harvest", name: "Getreide ernten", outputs: [("grain", 4.0)], cycle: 40.0)],
+        ),
+        (
+            id: "windmill", name: "Mühle", faction: EmberCrown, size: (2, 2),
+            description: "Mahlt Getreide zu Mehl.",
+            hp: 500.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 90.0, stone: 20.0), build_time: 24.0, sight: 5.0,
+            category: Food, workers: 1,
+            recipes: [(id: "mill", name: "Korn mahlen", inputs: [("grain", 2.0)], outputs: [("flour", 2.0)], cycle: 20.0)],
+        ),
+        (
+            id: "bakery", name: "Bäckerei", faction: EmberCrown, size: (2, 2),
+            description: "Backt aus Mehl das Brot, das die Bürgerhäuser verlangen.",
+            hp: 500.0, armor: 3.0, armor_type: Fortified, cost: (gold: 50.0, wood: 50.0, stone: 40.0), build_time: 22.0, sight: 5.0,
+            category: Food, workers: 2,
+            recipes: [(id: "bake", name: "Brot backen", inputs: [("flour", 2.0)], outputs: [("bread", 4.0)], cycle: 30.0)],
+        ),
+        (
+            id: "brewery", name: "Brauerei", faction: EmberCrown, size: (3, 2),
+            description: "Braut aus Getreide das Bier, das Bürger froh stimmt.",
+            hp: 600.0, armor: 3.0, armor_type: Fortified, cost: (gold: 70.0, wood: 80.0, stone: 20.0), build_time: 26.0, sight: 5.0,
+            era: 1, category: Food, workers: 2,
+            recipes: [(id: "brew", name: "Bier brauen", inputs: [("grain", 3.0)], outputs: [("beer", 6.0)], cycle: 60.0)],
+        ),
+        (
+            id: "sheep_farm", name: "Schäferei", faction: EmberCrown, size: (3, 3),
+            description: "Schafweide mit Schur: liefert Wolle.",
+            hp: 400.0, armor: 1.0, armor_type: Fortified, cost: (gold: 60.0, wood: 70.0), build_time: 20.0, sight: 5.0,
+            category: Food, workers: 2,
+            recipes: [(id: "shear", name: "Schafe scheren", outputs: [("wool", 2.0)], cycle: 50.0)],
+        ),
+
+        // ------------------------------------------------------------------ Handwerk
+        (
+            id: "sawmill", name: "Sägewerk", faction: EmberCrown, size: (3, 2),
+            description: "Sägt Stämme zu Brettern.",
+            hp: 550.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 80.0), build_time: 24.0, sight: 5.0,
+            category: Craft, workers: 2,
+            recipes: [(id: "saw", name: "Bretter sägen", inputs: [("wood", 2.0)], outputs: [("planks", 3.0)], cycle: 30.0)],
+        ),
+        (
+            id: "brickworks", name: "Ziegelei", faction: EmberCrown, size: (3, 2),
+            description: "Brennt Lehm mit Kohle zu Ziegeln.",
+            hp: 600.0, armor: 3.0, armor_type: Fortified, cost: (gold: 80.0, wood: 60.0, stone: 40.0), build_time: 26.0, sight: 5.0,
+            category: Craft, workers: 2,
+            recipes: [(id: "fire", name: "Ziegel brennen", inputs: [("clay", 2.0), ("coal", 1.0)], outputs: [("bricks", 4.0)], cycle: 45.0)],
+        ),
+        (
+            id: "smelter", name: "Schmelzhütte", faction: EmberCrown, size: (2, 2),
+            description: "Schmilzt Eisenerz mit Kohle zu Barren.",
+            hp: 650.0, armor: 4.0, armor_type: Fortified, cost: (gold: 90.0, wood: 40.0, stone: 90.0), build_time: 28.0, sight: 5.0,
+            era: 1, category: Craft, workers: 2,
+            recipes: [(id: "smelt", name: "Eisen schmelzen", inputs: [("iron_ore", 2.0), ("coal", 2.0)], outputs: [("iron", 2.0)], cycle: 50.0)],
+        ),
+        (
+            id: "smithy", name: "Schmiede", faction: EmberCrown, size: (3, 2),
+            description: "Schmiedet aus Eisenbarren Waffen oder Werkzeug (Rezept wählbar).",
+            hp: 700.0, armor: 4.0, armor_type: Fortified, cost: (gold: 110.0, wood: 60.0, stone: 70.0),
+            goods_cost: [("planks", 10.0)], build_time: 30.0, sight: 5.0,
+            era: 1, category: Craft, workers: 2,
+            recipes: [
+                (id: "weapons", name: "Waffen schmieden", inputs: [("iron", 2.0), ("planks", 1.0)], outputs: [("weapons", 2.0)], cycle: 60.0),
+                (id: "tools", name: "Werkzeug schmieden", inputs: [("iron", 1.0), ("planks", 1.0)], outputs: [("tools", 2.0)], cycle: 45.0),
+            ],
+        ),
+        (
+            id: "armory", name: "Rüstkammer", faction: EmberCrown, size: (3, 2),
+            description: "Treibt aus Eisenbarren Kettenhemden und Brustpanzer.",
+            hp: 750.0, armor: 4.0, armor_type: Fortified, cost: (gold: 140.0, wood: 50.0, stone: 90.0),
+            goods_cost: [("planks", 10.0)], build_time: 32.0, sight: 5.0,
+            era: 1, category: Craft, workers: 3,
+            recipes: [(id: "armor", name: "Rüstung treiben", inputs: [("iron", 3.0), ("coal", 1.0)], outputs: [("armor", 1.0)], cycle: 75.0)],
+        ),
+        (
+            id: "weaver", name: "Weberei", faction: EmberCrown, size: (3, 2),
+            description: "Webt Wolle zu Tuch.",
+            hp: 450.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 80.0), build_time: 22.0, sight: 5.0,
+            category: Craft, workers: 2,
+            recipes: [(id: "weave", name: "Tuch weben", inputs: [("wool", 2.0)], outputs: [("cloth", 2.0)], cycle: 40.0)],
+        ),
+        (
+            id: "tailor", name: "Schneiderei", faction: EmberCrown, size: (2, 2),
+            description: "Näht aus Tuch die Kleidung, die Häuser und Bürgerhäuser verlangen.",
+            hp: 400.0, armor: 2.0, armor_type: Fortified, cost: (gold: 60.0, wood: 60.0), build_time: 20.0, sight: 5.0,
+            category: Craft, workers: 2,
+            recipes: [(id: "sew", name: "Kleidung nähen", inputs: [("cloth", 1.0)], outputs: [("clothing", 2.0)], cycle: 50.0)],
+        ),
+
+        // ------------------------------------------------------------------ Stadt
+        (
+            id: "storehouse", name: "Lagerhaus", faction: EmberCrown, size: (3, 2),
+            description: "Lagert 400 je Ware und nimmt Ressourcen an. Produktionsgebäude müssen ein Lager in 14 Kacheln Reichweite haben.",
+            hp: 700.0, armor: 3.0, armor_type: Fortified, cost: (gold: 40.0, wood: 100.0), build_time: 24.0, sight: 5.0,
+            dropoff: true, storage: 400.0, category: Civic,
+        ),
+        (
+            id: "market", name: "Markt", faction: EmberCrown, size: (3, 3),
+            description: "Händler kaufen und verkaufen Waren gegen Gold. Jeder Handel verschiebt den Preis; er erholt sich langsam.",
+            hp: 600.0, armor: 2.0, armor_type: Fortified, cost: (gold: 100.0, wood: 120.0, stone: 40.0), build_time: 28.0, sight: 6.0,
+            market: true, category: Civic,
+        ),
+        (
+            id: "temple", name: "Tempel", faction: EmberCrown, size: (3, 2),
+            description: "Ein Priester verbrennt Räucherkräuter. Häuser im Umkreis von 12 Kacheln erfüllen ihr Bedürfnis nach Glauben.",
+            hp: 900.0, armor: 4.0, armor_type: Fortified, cost: (gold: 120.0, wood: 60.0, stone: 120.0), build_time: 34.0, sight: 6.0,
+            category: Civic, workers: 1, service: Some((kind: Faith, radius: 12.0)),
+            recipes: [(id: "incense", name: "Weihrauch entzünden", inputs: [("herbs", 1.0)], cycle: 45.0)],
+        ),
+
+        // ------------------------------------------------------------------ Befestigungen
+        (
+            id: "wall", name: "Mauer", faction: EmberCrown, size: (1, 1),
+            description: "Steinmauer. Im Baumodus als Linie ziehen. Blockiert Feinde; wird bei Angriffen zuerst eingerissen.",
+            hp: 700.0, armor: 6.0, armor_type: Fortified, cost: (stone: 8.0), build_time: 6.0, sight: 3.0,
+            category: Wall, fort: Some(Wall), hotkey: Some('W'),
+        ),
+        (
+            id: "gate", name: "Tor", faction: EmberCrown, size: (1, 1),
+            description: "Eichentor in der Mauer. Eigene Einheiten passieren, solange es offen ist; Feinde müssen es einreißen. Geschlossen sperrt es alle.",
+            hp: 600.0, armor: 6.0, armor_type: Fortified, cost: (wood: 30.0, stone: 10.0), build_time: 12.0, sight: 4.0,
+            category: Wall, fort: Some(Gate), hotkey: Some('G'),
+        ),
+        (
+            id: "wall_tower", name: "Mauerturm", faction: EmberCrown, size: (2, 2),
+            description: "Wehrturm für die Mauer. Beschießt Feinde und beruhigt die Bürger. Benötigt die Burg.",
+            hp: 900.0, armor: 7.0, armor_type: Fortified, cost: (gold: 80.0, wood: 40.0, stone: 100.0), build_time: 30.0, sight: 10.0,
+            era: 1, category: Wall, fort: Some(Tower),
+            attack: Some((damage: 20.0, damage_type: Pierce, range: 8.0, cooldown: 1.5, projectile: Arrow)),
+            service: Some((kind: Safety, radius: 9.0)),
+        ),
+
+        // ------------------------------------------------------------------ Die Hohlen
         (
             id: "hollow_shrine", name: "Hohlschrein", faction: Hollowed, size: (3, 3),
             description: "Ein Riss im Schleier, gefasst in die Steine einer Aureth-Kapelle. Quelle der Hohlen.",

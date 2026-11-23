@@ -10,7 +10,7 @@ use ashen_engine::render::{Camera2D, ViewParams};
 use ashen_engine::time::FixedStep;
 use ashen_engine::Engine;
 use ashen_sim::command::{Command, PlayerCommand};
-use ashen_sim::data::{BuildingTypeId, GameData, UnitClass};
+use ashen_sim::data::{BuildCategory, BuildingTypeId, Fort, GameData, Item, UnitClass};
 use ashen_sim::entity::{BuildingId, EntityRef, NodeId, UnitId, ENEMY, PLAYER};
 use ashen_sim::map::TileMap;
 use ashen_sim::mission::{MatchSettings, MissionDef};
@@ -78,6 +78,13 @@ pub struct MissionScene {
     pub action: SceneAction,
     pub fog_enabled: bool,
     pub time_alive: f32,
+    /// Lagerfenster (Waren) und Stadtübersicht (Steuern, Bürger, Ausbau) sind aufgeklappt.
+    pub show_storage: bool,
+    pub show_city: bool,
+    /// Gewählte Rubrik im Baumenü.
+    pub build_cat: BuildCategory,
+    /// Startkachel einer Mauerlinie beim Ziehen im Baumodus.
+    pub line_start: Option<IVec2>,
     last_view: Option<ViewParams>,
     last_select_voice: f32,
     hero_greeted: bool,
@@ -122,6 +129,10 @@ impl MissionScene {
             action: SceneAction::None,
             fog_enabled: fog,
             time_alive: 0.0,
+            show_storage: false,
+            show_city: false,
+            build_cat: BuildCategory::Housing,
+            line_start: None,
             last_view: None,
             last_select_voice: -10.0,
             hero_greeted: false,
@@ -219,6 +230,52 @@ impl MissionScene {
         self.selected_building = None;
     }
 
+    pub fn set_tax(&mut self, level: u8) {
+        self.cmd(Command::SetTax { level });
+    }
+
+    pub fn set_workers(&mut self, building: BuildingId, limit: Option<u32>) {
+        self.cmd(Command::SetWorkers { building, limit });
+    }
+
+    pub fn set_recipe(&mut self, building: BuildingId, recipe: u8) {
+        self.cmd(Command::SetRecipe { building, recipe });
+    }
+
+    pub fn set_gate(&mut self, building: BuildingId, open: bool) {
+        self.cmd(Command::SetGate { building, open });
+    }
+
+    pub fn trade(&mut self, item: Item, amount: i32) {
+        self.cmd(Command::Trade { item, amount });
+    }
+
+    pub fn advance_era(&mut self) {
+        self.cmd(Command::AdvanceEra);
+    }
+
+    /// Bauteile einer Mauerlinie von `a` nach `b` (Bresenham, diagonale Schritte sind erlaubt).
+    pub fn wall_line(a: IVec2, b: IVec2) -> Vec<IVec2> {
+        let (mut x, mut y) = (a.x, a.y);
+        let (dx, dy) = ((b.x - a.x).abs(), -(b.y - a.y).abs());
+        let (sx, sy) = (if a.x < b.x { 1 } else { -1 }, if a.y < b.y { 1 } else { -1 });
+        let mut err = dx + dy;
+        let mut out = vec![IVec2::new(x, y)];
+        while (x, y) != (b.x, b.y) && out.len() < 80 {
+            let e2 = 2 * err;
+            if e2 >= dy {
+                err += dy;
+                x += sx;
+            }
+            if e2 <= dx {
+                err += dx;
+                y += sy;
+            }
+            out.push(IVec2::new(x, y));
+        }
+        out
+    }
+
     pub fn center_on(&mut self, tile: Vec2) {
         self.camera.center = tile_to_world(tile);
     }
@@ -298,6 +355,15 @@ impl MissionScene {
             SimEvent::HeroRespawned { .. } => self.toast = Some(("Isolde Raventhorn ist zurückgekehrt.".into(), 3.0)),
             SimEvent::LevelUp { level, .. } => self.toast = Some((format!("Isolde erreicht Stufe {level}!"), 3.0)),
             SimEvent::BuildingCompleted { kind, owner: PLAYER, .. } => self.status = Some(format!("{} fertiggestellt", data.building(*kind).name)),
+            SimEvent::Unrest { .. } => self.toast = Some(("Unruhe in Brennhollow! Senkt die Steuern oder stillt die Bedürfnisse.".into(), 5.0)),
+            SimEvent::EraAdvanced { era, .. } => {
+                let name = data.rules.eras.get(*era as usize - 1).map(|e| e.name.as_str()).unwrap_or("?");
+                self.toast = Some((format!("Brennhollow ist nun eine {name}!"), 5.0));
+            }
+            SimEvent::HouseChanged { kind, up, .. } => {
+                let n = &data.building(*kind).name;
+                self.status = Some(if *up { format!("Ein Haus wurde zum {n} ausgebaut") } else { format!("Ein Haus verfiel zum {n}") });
+            }
             _ => {}
         }
     }
@@ -393,6 +459,12 @@ impl MissionScene {
         }
         if input.key_pressed(KeyCode::F10) {
             self.menu_open = true;
+        }
+        if input.key_pressed(KeyCode::KeyL) && !cmd_mod {
+            self.show_storage = !self.show_storage;
+        }
+        if input.key_pressed(KeyCode::KeyC) && !cmd_mod {
+            self.show_city = !self.show_city;
         }
         if input.key_pressed(KeyCode::Pause) || input.key_pressed(KeyCode::Backquote) {
             self.speed = if self.speed > 0.0 { 0.0 } else { 1.0 };
@@ -497,16 +569,32 @@ impl MissionScene {
         if input.ui_wants_pointer {
             if input.mouse_released(MouseButton::Left) {
                 self.drag_start = None;
+                self.line_start = None;
             }
             return;
         }
 
         // Platzierungsmodus.
         if let CommandMode::Place(bt) = self.mode {
-            if input.mouse_pressed(MouseButton::Left) {
-                let def = data.building(bt);
-                let tile = place_tile(mouse_tile, def.size);
-                let builders: Vec<UnitId> = self.own_selection().into_iter().filter(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).build_speed > 0.0)).collect();
+            let def = data.building(bt);
+            let tile = place_tile(mouse_tile, def.size);
+            let builders: Vec<UnitId> = self.own_selection().into_iter().filter(|id| self.world.units.get(*id).is_some_and(|u| data.unit(u.kind).build_speed > 0.0)).collect();
+            if def.fort == Some(Fort::Wall) {
+                // Mauern werden als Linie gezogen: Maustaste halten, Ziel wählen, loslassen.
+                if input.mouse_pressed(MouseButton::Left) {
+                    self.line_start = Some(tile);
+                }
+                if input.mouse_released(MouseButton::Left)
+                    && let Some(start) = self.line_start.take()
+                {
+                    let tiles = Self::wall_line(start, tile);
+                    self.cmd(Command::BuildLine { units: builders, kind: bt, tiles });
+                    engine.audio.play("voice.worker.work");
+                    if !shift {
+                        self.mode = CommandMode::Normal;
+                    }
+                }
+            } else if input.mouse_pressed(MouseButton::Left) {
                 self.cmd(Command::Build { units: builders, kind: bt, tile });
                 engine.audio.play("voice.worker.work");
                 if !shift {
@@ -514,10 +602,12 @@ impl MissionScene {
                 }
             }
             if input.mouse_pressed(MouseButton::Right) {
+                self.line_start = None;
                 self.mode = CommandMode::Normal;
             }
             return;
         }
+        self.line_start = None;
 
         // Linksklick: Auswahl bzw. Zielbefehle.
         if input.mouse_pressed(MouseButton::Left) {
@@ -674,13 +764,32 @@ impl MissionScene {
     pub fn render(&mut self, engine: &mut Engine, data: &GameData, art: &ArtLibrary) {
         engine.frame.camera = self.camera;
         let view = self.camera.view(engine.size, engine.renderer.settings.min_lines);
-        let mut overlay = Overlay { selected_units: self.selection.iter().copied().collect(), selected_building: self.selected_building, hovered: self.hovered, ghost: None, show_all_bars: engine.input.alt };
+        let mut overlay = Overlay { selected_units: self.selection.iter().copied().collect(), selected_building: self.selected_building, hovered: self.hovered, ghost: None, ghost_line: Vec::new(), show_all_bars: engine.input.alt };
         if let CommandMode::Place(bt) = self.mode {
             let def = data.building(bt);
             let mouse_tile = world_to_tile(view.screen_to_world(engine.input.mouse));
             let tile = place_tile(mouse_tile, def.size);
-            let ok = self.world.can_place(data, bt, tile, PLAYER).is_ok() && self.world.players[0].resources.covers(&def.cost);
-            overlay.ghost = Some((def.id.clone(), tile, def.size, ok));
+            let afford = self.world.afford(PLAYER, &def.cost, &def.goods_cost_r).is_ok();
+            match self.line_start {
+                Some(start) if def.fort == Some(Fort::Wall) => {
+                    // Vorschau der Linie; so viele Teile sind „gültig“, wie bezahlbar sind.
+                    let mut left = self.world.players[0].resources;
+                    overlay.ghost_line = Self::wall_line(start, tile)
+                        .into_iter()
+                        .map(|t| {
+                            let ok = self.world.can_place(data, bt, t, PLAYER).is_ok() && left.covers(&def.cost);
+                            if ok {
+                                left.sub(&def.cost);
+                            }
+                            (t, ok)
+                        })
+                        .collect();
+                }
+                _ => {
+                    let ok = self.world.can_place(data, bt, tile, PLAYER).is_ok() && afford;
+                    overlay.ghost = Some((def.id.clone(), tile, def.size, ok));
+                }
+            }
         }
         let alpha = self.step.alpha();
         self.view.render(&self.world, data, art, &mut engine.frame, &view, alpha, &overlay, self.fog_enabled);
@@ -728,4 +837,20 @@ pub fn letter_key(c: char) -> Option<KeyCode> {
         'Z' => KeyCode::KeyZ,
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn wall_line_is_contiguous_and_includes_ends() {
+        for (a, b) in [(IVec2::new(3, 3), IVec2::new(9, 3)), (IVec2::new(3, 3), IVec2::new(8, 8)), (IVec2::new(10, 4), IVec2::new(4, 9)), (IVec2::new(5, 5), IVec2::new(5, 5))] {
+            let line = MissionScene::wall_line(a, b);
+            assert_eq!(line.first(), Some(&a));
+            assert_eq!(line.last(), Some(&b));
+            assert!(line.windows(2).all(|w| (w[0] - w[1]).abs().max_element() == 1), "lückenlos: {line:?}");
+        }
+        assert_eq!(MissionScene::wall_line(IVec2::new(0, 0), IVec2::new(4, 4)).len(), 5, "Diagonale braucht nur eine Kachel je Schritt");
+    }
 }

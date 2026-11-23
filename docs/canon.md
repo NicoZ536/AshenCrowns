@@ -93,8 +93,24 @@ Hohle: `hollow_thrall` (Hohlknecht), `hollow_archer` (Knochenschütze), `grave_b
 `keep` (Bergfried – Hauptgebäude), `farmstead` (Gehöft), `barracks` (Kaserne), `watchtower` (Wachturm),
 Gegner: `hollow_shrine` (Hohlschrein), `bone_spire` (Knochenturm).
 
+Echtzeit-Wirtschaft (Phase 6/7, Details in `docs/design/rts_economy.md`): Wohnen `hut` (Hütte), `house` (Haus),
+`townhouse` (Bürgerhaus); Rohstoffe `woodcutter` (Holzfällerlager), `clay_pit` (Lehmgrube), `charcoal_burner` (Köhlerei),
+`iron_mine` (Eisenmine), `herb_garden` (Kräutergarten); Nahrung `farm` (Bauernhof), `windmill` (Mühle), `bakery`
+(Bäckerei), `brewery` (Brauerei), `sheep_farm` (Schäferei); Handwerk `sawmill` (Sägewerk), `brickworks` (Ziegelei),
+`smelter` (Schmelzhütte), `smithy` (Schmiede), `armory` (Rüstkammer), `weaver` (Weberei), `tailor` (Schneiderei);
+Stadt `storehouse` (Lagerhaus), `market` (Markt), `temple` (Tempel); Befestigungen `wall` (Mauer), `gate` (Tor),
+`wall_tower` (Mauerturm).
+
 ## Ressourcen der Vertical Slice
 `gold`, `wood`, `stone`, `food`, Bevölkerung (`population` / `population_cap`).
+
+## Waren der Echtzeit-Wirtschaft (IDs, `assets/data/goods.ron`)
+`clay` (Lehm), `iron_ore` (Eisenerz), `coal` (Kohle), `grain` (Getreide), `wool` (Wolle), `herbs` (Kräuter), `planks`
+(Bretter), `bricks` (Ziegel), `iron` (Eisenbarren), `flour` (Mehl), `cloth` (Tuch), `bread` (Brot), `beer` (Bier),
+`clothing` (Kleidung), `tools` (Werkzeug), `weapons` (Waffen), `armor` (Rüstung).
+
+## Ausbaustufen der Siedlung
+Stufe 0 *Siedlung* (Bergfried), Stufe 1 *Burg* (`castle`, `rules.ron` → `eras`).
 
 ## Kampagnenzeitalter
 I *The Last Settlement* · II *The Rising Crown* · III *The Broken Borders* · IV *The Age of Conquest* ·

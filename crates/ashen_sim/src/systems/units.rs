@@ -49,7 +49,7 @@ pub fn acquire(world: &mut SimWorld, data: &GameData, id: UnitId, radius: f32, i
     if include_buildings {
         let mut bb: Option<(f32, BuildingId)> = None;
         for (bid, b) in world.buildings.iter() {
-            if !SimWorld::hostile(owner, b.owner) || b.hp <= 0.0 || b.invulnerable {
+            if !SimWorld::hostile(owner, b.owner) || b.hp <= 0.0 || b.invulnerable || data.building(b.kind).is_fort() {
                 continue;
             }
             let d = b.distance_to(pos);
@@ -185,7 +185,10 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
                 if attack_move && can_fight {
                     let current = cur_target.filter(|t| world.entity_alive(*t));
                     let sight = def.sight;
-                    if let Some(t) = current.or_else(|| acquire(world, data, id, sight, true)) {
+                    // Eine Belagerungsmauer als Ziel weicht Feinden in Sichtweite.
+                    let siege = matches!(current, Some(EntityRef::Building(b)) if world.buildings.get(b).is_some_and(|x| data.building(x.kind).is_fort()));
+                    let chosen = if siege { acquire(world, data, id, sight, false).or(current) } else { current.or_else(|| acquire(world, data, id, sight, true)) };
+                    if let Some(t) = chosen {
                         if engage(world, data, id, t, true) != Engage::Lost {
                             continue;
                         }
@@ -426,9 +429,12 @@ fn return_cargo(world: &mut SimWorld, data: &GameData, id: UnitId, node: Option<
     }
     u.clear_path();
     u.carry = None;
-    let p = &mut world.players[owner as usize];
-    *p.resources.get_mut(kind) += amount as f32;
-    *p.stats.gathered.get_mut(kind) += amount as f32;
+    let accepted = world.credit(owner, crate::data::Item::Res(kind), amount as f32);
+    *world.players[owner as usize].stats.gathered.get_mut(kind) += accepted;
+    if accepted < amount as f32 && owner == PLAYER && world.players[owner as usize].full_cooldown <= 0.0 {
+        world.players[owner as usize].full_cooldown = 10.0;
+        world.error(owner, format!("Lager voll ({}) – baut ein Lagerhaus.", kind.label()));
+    }
     world.events.push(SimEvent::ResourceDelivered { owner, kind, amount, pos: center });
     let next = node.filter(|n| world.nodes.contains(*n)).or_else(|| find_node_near(world, pos, Some(kind), 14.0));
     let u = world.units.get_mut(id).expect("exists");
@@ -480,6 +486,7 @@ fn build(world: &mut SimWorld, data: &GameData, id: UnitId, building: BuildingId
             b.progress = 1.0;
             b.complete = true;
             world.players[owner as usize].stats.buildings_built += 1;
+            world.finish_building(data, building);
             world.events.push(SimEvent::BuildingCompleted { id: building, kind, owner, pos: center });
             let name = def.name.clone();
             if owner == PLAYER {

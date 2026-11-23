@@ -23,8 +23,10 @@ pub fn recompute_population(world: &mut SimWorld, data: &GameData) {
         }
     }
     let cap = data.rules.max_population;
+    let era = world.players[PLAYER as usize].era as usize;
+    let bonus: u32 = data.rules.eras.iter().take(era).map(|e| e.pop_bonus).sum();
     let p = &mut world.players[PLAYER as usize];
-    p.pop_cap = p.pop_cap.min(cap);
+    p.pop_cap = (p.pop_cap + bonus).min(cap);
 }
 
 /// Austrittspunkt eines Gebäudes (vordere, dem Betrachter zugewandte Ecke).
@@ -45,20 +47,24 @@ pub fn exit_point(world: &SimWorld, b: &Building, toward: Option<Vec2>) -> Vec2 
 }
 
 pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
-    // Passives Einkommen.
-    for (_, b) in world.buildings.iter_mut() {
+    // Passives Einkommen (Nahrung unterliegt der Lagerkapazität).
+    let mut food_income = [0.0f32; 3];
+    for (_, b) in world.buildings.iter() {
         if !b.complete {
             continue;
         }
         let def = data.building(b.kind);
-        let p = &mut world.players[b.owner as usize];
-        if def.food_per_sec > 0.0 {
-            p.resources.food += def.food_per_sec * dt;
-            p.stats.gathered.food += def.food_per_sec * dt;
-        }
+        food_income[b.owner as usize] += def.food_per_sec * dt;
         if def.gold_per_sec > 0.0 {
+            let p = &mut world.players[b.owner as usize];
             p.resources.gold += def.gold_per_sec * dt;
             p.stats.gathered.gold += def.gold_per_sec * dt;
+        }
+    }
+    for (owner, f) in food_income.iter().enumerate() {
+        if *f > 0.0 {
+            let got = world.credit(owner as PlayerId, crate::data::Item::Res(ResourceKind::Food), *f);
+            world.players[owner].stats.gathered.food += got;
         }
     }
 

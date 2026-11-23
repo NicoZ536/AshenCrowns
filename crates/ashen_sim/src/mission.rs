@@ -131,6 +131,12 @@ pub enum Condition {
     TagDiscovered(String),
     HeroLevel(u32),
     WavesSurvived(u32),
+    /// Ausbaustufe der Siedlung erreicht.
+    EraReached(u8),
+    /// Mindestzahl an Bewohnern.
+    Residents(u32),
+    /// Mindestvorrat einer Ware oder Ressource (Item-ID).
+    Stock { item: String, amount: f32 },
     All(Vec<Condition>),
     Any(Vec<Condition>),
 }
@@ -167,6 +173,9 @@ pub struct MissionDef {
     pub description: String,
     pub map_seed: u64,
     pub start_resources: Cost,
+    /// Startvorrat an Waren (Item-ID, Menge).
+    #[serde(default)]
+    pub start_goods: Vec<(String, f32)>,
     pub waves: WaveRules,
     pub placements: Vec<Placement>,
     pub objectives: Vec<ObjectiveDef>,

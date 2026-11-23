@@ -1,6 +1,6 @@
 //! Ereignisse, die die Simulation pro Tick ausgibt (für Audio, Partikel, UI, Chronik).
 
-use crate::data::{BuildingTypeId, DamageType, ProjectileKind, ResourceKind, UnitTypeId};
+use crate::data::{BuildingTypeId, DamageType, Item, ProjectileKind, ResourceKind, UnitTypeId};
 use crate::entity::{BuildingId, EntityRef, PlayerId, UnitId};
 use crate::env::Weather;
 use glam::Vec2;
@@ -35,6 +35,16 @@ pub enum SimEvent {
     ObjectiveAdded { id: String },
     ObjectiveCompleted { id: String },
     Starvation { owner: PlayerId, active: bool },
+    /// Ein Produktionszyklus wurde abgeschlossen (Ton/Effekt am Gebäude).
+    ProductionCycle { building: BuildingId, kind: BuildingTypeId, owner: PlayerId, pos: Vec2 },
+    /// Handel am Markt: `amount > 0` = gekauft, `< 0` = verkauft; `gold` = gezahlter bzw. erhaltener Betrag.
+    Traded { owner: PlayerId, item: Item, amount: i32, gold: f32, pos: Vec2 },
+    GateToggled { id: BuildingId, pos: Vec2, open: bool },
+    /// Wohnhaus ist auf- (`up`) oder abgestiegen.
+    HouseChanged { id: BuildingId, kind: BuildingTypeId, owner: PlayerId, pos: Vec2, up: bool },
+    EraAdvanced { owner: PlayerId, era: u8 },
+    /// Unruhe in der Bevölkerung (zu hohe Steuern oder Mangel).
+    Unrest { owner: PlayerId },
     Error { owner: PlayerId, text: String },
     Victory,
     Defeat,

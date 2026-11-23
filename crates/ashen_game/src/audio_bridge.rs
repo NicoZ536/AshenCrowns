@@ -54,8 +54,9 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
             if *blocked {
                 at(audio, "sfx.shield_block", *pos);
             }
-            if let EntityRef::Building(_) = target {
-                at(audio, "sfx.building_hit", *pos);
+            if let EntityRef::Building(b) = target {
+                let fort = world.buildings.get(*b).is_some_and(|x| data.building(x.kind).is_fort());
+                at(audio, if fort { "sfx.wall_hit" } else { "sfx.building_hit" }, *pos);
             } else if let EntityRef::Unit(u) = target
                 && let Some(unit) = world.units.get(*u)
                 && data.unit(unit.kind).class == ashen_sim::data::UnitClass::Hero
@@ -87,7 +88,29 @@ pub fn on_event(audio: &mut AudioSystem, e: &SimEvent, world: &SimWorld, data: &
             at(audio, "sfx.build_complete", *pos);
             audio.play("voice.worker.build_done");
         }
-        SimEvent::BuildingDestroyed { pos, .. } => at(audio, "sfx.building_destroyed", *pos),
+        SimEvent::BuildingDestroyed { pos, kind, .. } => at(audio, if data.building(*kind).is_fort() { "sfx.wall_collapse" } else { "sfx.building_destroyed" }, *pos),
+        SimEvent::ProductionCycle { kind, pos, .. } => {
+            let sfx = match data.building(*kind).id.as_str() {
+                "smithy" | "armory" | "smelter" => Some("sfx.smithy_hammer"),
+                "sawmill" | "woodcutter" => Some("sfx.sawmill_saw"),
+                "windmill" | "bakery" | "brewery" => Some("sfx.mill_grind"),
+                _ => None,
+            };
+            if let Some(id) = sfx {
+                at(audio, id, *pos);
+            }
+        }
+        SimEvent::Traded { owner: PLAYER, .. } => {
+            audio.play("sfx.market_trade");
+        }
+        SimEvent::GateToggled { pos, open, .. } => at(audio, if *open { "sfx.gate_open" } else { "sfx.gate_close" }, *pos),
+        SimEvent::HouseChanged { pos, up: true, owner: PLAYER, .. } => at(audio, "sfx.upgrade_complete", *pos),
+        SimEvent::EraAdvanced { owner: PLAYER, .. } => {
+            audio.play("sfx.upgrade_complete");
+        }
+        SimEvent::Unrest { owner: PLAYER } => {
+            audio.play("sfx.chapel_bell");
+        }
         SimEvent::TrainCompleted { kind, owner: PLAYER, .. } => {
             audio.play("sfx.train_complete");
             audio.play(&format!("voice.{}.select", data.unit(*kind).id));

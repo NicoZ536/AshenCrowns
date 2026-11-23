@@ -11,7 +11,7 @@ use ashen_core::iso::{tile_to_world, world_to_tile};
 use ashen_engine::render::SpriteRect;
 use ashen_engine::ui::theme;
 use ashen_engine::Engine;
-use ashen_sim::data::{BuildingTypeId, Cost, GameData, ResourceKind, UnitClass, UnitTypeId};
+use ashen_sim::data::{Cost, GameData, ResourceKind, UnitClass, UnitTypeId};
 use ashen_sim::entity::{BuildingId, NodeKind, PLAYER};
 use ashen_sim::fog::{EXPLORED, UNEXPLORED};
 use ashen_sim::map::Terrain;
@@ -37,8 +37,8 @@ pub struct HudCtx<'a> {
 }
 
 /// Höhe der oberen Leiste und der unteren Konsole (Punkte).
-const TOP_H: f32 = 50.0;
-const CONSOLE_H: f32 = 196.0;
+pub(crate) const TOP_H: f32 = 50.0;
+pub(crate) const CONSOLE_H: f32 = 196.0;
 const MINIMAP_W: f32 = 326.0;
 const SLOT: f32 = 48.0;
 const SLOT_GAP: f32 = 6.0;
@@ -47,6 +47,7 @@ const CARD_W: f32 = SLOT * 4.0 + SLOT_GAP * 3.0 + 40.0;
 pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &mut HudCtx) {
     top_bar(scene, ui, engine, cx);
     console(scene, ui, engine, cx);
+    crate::hud_city::draw(scene, ui, engine, cx);
     objectives(scene, ui, engine, cx);
     messages(scene, ui, cx);
     if let Some(start) = scene.drag_start {
@@ -72,6 +73,17 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
     }
 }
 
+/// Nahrungsverbrauch der Bewohner pro Sekunde.
+fn resident_food(world: &ashen_sim::SimWorld, data: &GameData) -> f32 {
+    world
+        .buildings
+        .iter()
+        .filter(|(_, b)| b.owner == PLAYER && b.complete)
+        .filter_map(|(_, b)| data.building(b.kind).housing.as_ref().map(|h| (b.residents, h)))
+        .map(|(r, h)| h.needs.iter().filter(|n| n.item_r == Some(ashen_sim::data::Item::Res(ResourceKind::Food))).map(|n| r * n.rate / 60.0).sum::<f32>())
+        .sum()
+}
+
 fn res_icon(k: ResourceKind) -> &'static str {
     match k {
         ResourceKind::Gold => "icon_gold",
@@ -81,12 +93,12 @@ fn res_icon(k: ResourceKind) -> &'static str {
     }
 }
 
-fn sprite(cx: &HudCtx, name: &str) -> SpriteRect {
+pub(crate) fn sprite(cx: &HudCtx, name: &str) -> SpriteRect {
     cx.art.atlas.try_get(name).unwrap_or_else(|| cx.art.get("icon_cancel"))
 }
 
 /// Text mit dunklem Schlagschatten (Lesbarkeit auf Texturen).
-fn shadow_text(p: &egui::Painter, pos: Pos2, anchor: Align2, text: &str, font: egui::FontId, col: Color32) -> Rect {
+pub(crate) fn shadow_text(p: &egui::Painter, pos: Pos2, anchor: Align2, text: &str, font: egui::FontId, col: Color32) -> Rect {
     p.text(pos + Vec2::new(1.0, 1.5), anchor, text, font.clone(), Color32::from_black_alpha(220));
     p.text(pos, anchor, text, font, col)
 }
@@ -102,7 +114,8 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
     let (pop, cap) = (p.pop, p.pop_cap);
     let starving = p.starving;
     let food_rate: f32 = scene.world.buildings.iter().filter(|(_, b)| b.owner == PLAYER && b.complete).map(|(_, b)| cx.data.building(b.kind).food_per_sec).sum::<f32>()
-        - scene.world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| cx.data.unit(u.kind).upkeep).sum::<f32>();
+        - scene.world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| cx.data.unit(u.kind).upkeep).sum::<f32>()
+        - resident_food(&scene.world, cx.data);
     egui::Panel::top("topbar").exact_size(TOP_H).frame(Frame::NONE).show(ui, |ui| {
         let rect = ui.max_rect();
         let painter = ui.painter().clone();
@@ -123,7 +136,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
                 format!("Gehöfte erzeugen sie, jede Einheit verbraucht sie.\nBilanz: {food_rate:+.1} pro Sekunde{}", if starving { "\nHungersnot! Einheiten verlieren Kraft." } else { "" }),
                 starving || food_rate < 0.0 && res.food < 60.0,
             ),
-            ("icon_pop", format!("{pop}/{cap}"), "Bevölkerung".into(), "Bevölkerung / Wohnraum. Gehöfte erhöhen den Wohnraum.".into(), pop >= cap),
+            ("icon_pop", format!("{pop}/{cap}"), "Bevölkerung".into(), "Einheiten / Versorgung. Gehöfte und der Bergfried erhöhen die Versorgung; Bürger wohnen in Hütten und Häusern.".into(), pop >= cap),
         ];
         let cell_w = [96.0, 96.0, 96.0, 136.0, 104.0];
         let plaque = Rect::from_min_size(rect.min + Vec2::new(8.0, 4.0), Vec2::new(cell_w.iter().sum::<f32>() + 28.0, TOP_H - 4.0));
@@ -396,7 +409,7 @@ fn selection_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Eng
     {
         let def = data.building(b.kind);
         ui.horizontal(|ui| {
-            portrait(ui, cx, sprite(cx, &format!("bld_{}", def.id)), b.owner != PLAYER, false);
+            portrait(ui, cx, sprite(cx, &crate::hud_city::building_icon(def)), b.owner != PLAYER, false);
             ui.add_space(14.0);
             ui.vertical(|ui| {
                 ui.add_space(4.0);
@@ -406,7 +419,11 @@ fn selection_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Eng
                 if !b.complete {
                     bar(ui, art, b.progress, w, Color32::from_rgb(200, 150, 50), &format!("Bau {:.0} %", b.progress * 100.0));
                 }
-                ui.label(RichText::new(&def.description).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
+                if b.owner == PLAYER && b.complete && (def.employs() || def.housing.is_some() || def.fort == Some(ashen_sim::data::Fort::Gate) || def.storage > 0.0 || def.market) {
+                    crate::hud_city::building_info(scene, ui, engine, cx, bid, &b);
+                } else {
+                    ui.label(RichText::new(&def.description).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
+                }
                 if b.owner == PLAYER && !b.queue.is_empty() {
                     ui.horizontal(|ui| {
                         ui.label(RichText::new("Ausbildung").font(theme::caps_font(11.5)).color(theme::GOLD_DIM));
@@ -598,7 +615,6 @@ enum CmdAction {
     Train(BuildingId, UnitTypeId),
     Rally,
     Demolish(BuildingId),
-    Place(BuildingTypeId),
     BackToNormal,
     Move,
     AttackMove,
@@ -607,6 +623,7 @@ enum CmdAction {
     Patrol,
     BuildMenu,
     Ability(u8),
+    AdvanceEra,
 }
 
 struct Cmd {
@@ -616,6 +633,7 @@ struct Cmd {
     title: String,
     body: String,
     cost: Option<Cost>,
+    goods: ashen_sim::data::ItemAmounts,
     extra: String,
     cooldown: Option<(f32, f32)>,
     action: CmdAction,
@@ -623,13 +641,12 @@ struct Cmd {
 
 impl Cmd {
     fn new(icon: impl Into<String>, hotkey: impl Into<String>, title: impl Into<String>, body: impl Into<String>, action: CmdAction) -> Cmd {
-        Cmd { icon: icon.into(), hotkey: hotkey.into(), enabled: true, title: title.into(), body: body.into(), cost: None, extra: String::new(), cooldown: None, action }
+        Cmd { icon: icon.into(), hotkey: hotkey.into(), enabled: true, title: title.into(), body: body.into(), cost: None, goods: Vec::new(), extra: String::new(), cooldown: None, action }
     }
 }
 
 fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
     let data = cx.data;
-    let res = scene.world.players[0].resources;
     let mut v = Vec::new();
     if let Some(bid) = scene.selected_building
         && let Some(b) = scene.world.buildings.get(bid)
@@ -645,13 +662,24 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
                 let hk = u.hotkey.map(|c| c.to_string()).unwrap_or_default();
                 let portrait = format!("{}_portrait", if cx.art.atlas.try_get(&format!("{}_portrait", u.id)).is_some() { u.id.as_str() } else { "swordsman" });
                 let mut c = Cmd::new(portrait, hk, format!("{} ausbilden", u.name), u.description.clone(), CmdAction::Train(bid, ut));
-                c.enabled = res.covers(&u.cost);
+                c.enabled = scene.world.afford(PLAYER, &u.cost, &u.goods_cost_r).is_ok();
                 c.cost = Some(u.cost);
+                c.goods = u.goods_cost_r.clone();
                 c.extra = format!("Ausbildung {:.0} s · Bevölkerung {}", u.train_time, u.pop);
                 v.push(c);
             }
             if !def.trains.is_empty() {
                 v.push(Cmd::new("icon_rally", "R", "Sammelpunkt", "Neue Einheiten sammeln sich hier (R, oder Rechtsklick).", CmdAction::Rally));
+            }
+            if b.tag.as_deref() == Some(scene.world.mission_def.defeat_tag.as_str())
+                && let Some(next) = data.rules.eras.get(scene.world.players[0].era as usize)
+            {
+                let mut c = Cmd::new("icon_castle", "", format!("Zur {} ausbauen", next.name), next.description.clone(), CmdAction::AdvanceEra);
+                c.cost = Some(next.cost);
+                c.goods = next.goods_r.clone();
+                c.enabled = scene.world.players[0].era_progress.is_none();
+                c.extra = next.requires.iter().map(|(b, n)| format!("{n}× {}", data.building_id(b).map(|id| data.building(id).name.as_str()).unwrap_or(b))).collect::<Vec<_>>().join(", ");
+                v.push(c);
             }
         }
         if b.tag.as_deref() != Some(scene.world.mission_def.defeat_tag.as_str()) {
@@ -663,16 +691,6 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
         return v;
     }
     if scene.mode == CommandMode::BuildMenu {
-        for bt in crate::mission::player_buildables(data) {
-            let d = data.building(bt);
-            let hk = d.hotkey.map(|c| c.to_string()).unwrap_or_default();
-            let req_ok = d.requires.iter().all(|r| data.building_id(r).is_some_and(|rb| scene.world.buildings.iter().any(|(_, x)| x.owner == PLAYER && x.kind == rb && x.complete)));
-            let mut c = Cmd::new(format!("bld_{}", d.id), hk, format!("{} bauen", d.name), d.description.clone(), CmdAction::Place(bt));
-            c.enabled = res.covers(&d.cost) && req_ok;
-            c.cost = Some(d.cost);
-            c.extra = format!("Bauzeit {:.0} s{}", d.build_time, if req_ok { String::new() } else { format!(" · Benötigt: {}", d.requires.join(", ")) });
-            v.push(c);
-        }
         v.push(Cmd::new("icon_cancel", "Esc", "Zurück", "Baumenü schließen.", CmdAction::BackToNormal));
         return v;
     }
@@ -682,7 +700,7 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
     v.push(Cmd::new("icon_hold", "H", "Position halten", "Stellung halten, nicht verfolgen (H).", CmdAction::Hold));
     v.push(Cmd::new("icon_patrol", "P", "Patrouille", "P, dann Linksklick auf das Patrouillenziel.", CmdAction::Patrol));
     if scene.has_workers(cx.data) {
-        v.push(Cmd::new("icon_build", "B", "Bauen", "Gehöft F, Kaserne B, Wachturm T.", CmdAction::BuildMenu));
+        v.push(Cmd::new("icon_build", "B", "Bauen", "Öffnet das Baumenü mit Rubriken: Wohnen, Rohstoffe, Handwerk, Nahrung, Stadt, Militär, Mauern.", CmdAction::BuildMenu));
     }
     if let Some(h) = scene.selected_hero(data)
         && let Some(hero) = scene.world.units.get(h)
@@ -711,25 +729,8 @@ fn commands(scene: &MissionScene, cx: &HudCtx) -> Vec<Cmd> {
     v
 }
 
-fn cost_row(ui: &mut Ui, cx: &HudCtx, cost: &Cost, have: &Cost) {
-    ui.horizontal(|ui| {
-        for k in ResourceKind::ALL {
-            let v = cost.get(k);
-            if v <= 0.0 {
-                continue;
-            }
-            let (r, _) = ui.allocate_exact_size(Vec2::splat(20.0), Sense::hover());
-            ui_common::paint_sprite(ui.painter(), cx.tex, sprite(cx, res_icon(k)), r, Color32::WHITE);
-            let ok = have.get(k) >= v;
-            ui.label(RichText::new(format!("{v:.0}")).font(theme::body_bold_font(15.0)).color(if ok { theme::PARCHMENT } else { Color32::from_rgb(236, 90, 70) }));
-            ui.add_space(6.0);
-        }
-    });
-}
-
 fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &HudCtx, card: Rect) {
     let art = cx.ui;
-    let have = scene.world.players[0].resources;
     let cmds = commands(scene, cx);
     let mut clicked = None;
     for i in 0..12 {
@@ -777,7 +778,7 @@ fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine
                 ui.label(RichText::new(&c.body).size(14.5).color(theme::PARCHMENT));
             }
             if let Some(cost) = &c.cost {
-                cost_row(ui, cx, cost, &have);
+                crate::hud_city::cost_row_full(ui, cx, &scene.world, cost, &c.goods);
             }
             if !c.extra.is_empty() {
                 ui.label(RichText::new(&c.extra).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
@@ -792,7 +793,6 @@ fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine
         CmdAction::Train(b, u) => scene.train(*b, *u),
         CmdAction::Rally => scene.mode = CommandMode::Rally,
         CmdAction::Demolish(b) => scene.demolish(*b),
-        CmdAction::Place(bt) => scene.mode = CommandMode::Place(*bt),
         CmdAction::BackToNormal => scene.mode = CommandMode::Normal,
         CmdAction::Move => scene.status = Some("Rechtsklick auf das Ziel".into()),
         CmdAction::AttackMove => scene.mode = CommandMode::AttackMove,
@@ -801,6 +801,7 @@ fn command_card(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine
         CmdAction::Patrol => scene.mode = CommandMode::Patrol,
         CmdAction::BuildMenu => scene.mode = CommandMode::BuildMenu,
         CmdAction::Ability(a) => scene.use_ability(cx.data, *a),
+        CmdAction::AdvanceEra => scene.advance_era(),
     }
 }
 
@@ -907,11 +908,12 @@ fn messages(scene: &mut MissionScene, ui: &mut egui::Ui, cx: &HudCtx) {
 fn mode_hint(scene: &MissionScene, ui: &mut egui::Ui, cx: &HudCtx) {
     let text = match scene.mode {
         CommandMode::Normal => return,
+        CommandMode::Place(bt) if cx.data.building(bt).fort == Some(ashen_sim::data::Fort::Wall) => "Mauer ziehen: Maustaste gedrückt halten, Ziel wählen, loslassen · Shift: weiter bauen · Rechtsklick/Esc: abbrechen",
         CommandMode::Place(_) => "Bauplatz wählen: Linksklick platzieren · Shift: mehrere · Rechtsklick/Esc: abbrechen",
         CommandMode::AttackMove => "Angriffsziel: Linksklick auf Gegner oder Boden",
         CommandMode::Patrol => "Patrouillenziel: Linksklick",
         CommandMode::Rally => "Sammelpunkt: Linksklick",
-        CommandMode::BuildMenu => "Bauen: F Gehöft · B Kaserne · T Wachturm · Esc zurück",
+        CommandMode::BuildMenu => "Bauen: Rubrik und Gebäude im Baumenü wählen · Esc zurück",
     };
     egui::Area::new(Id::unique("modehint")).anchor(Align2::CENTER_BOTTOM, Vec2::new(0.0, -(CONSOLE_H + 16.0))).interactable(false).show(ui.ctx(), |ui| {
         cx.ui.panel(ui, PanelKind::Thin, egui::Margin::symmetric(22, 14), |ui| {

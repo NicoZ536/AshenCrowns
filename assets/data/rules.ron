@@ -13,4 +13,47 @@
     fog_sight_mult: 0.75,
     rain_ranged_mult: 0.9,
     demolish_refund: 0.5,
+
+    // Stadtsimulation: Lager, Arbeitskräfte, Bevölkerung, Steuern, Markt.
+    city: (
+        logistics_radius: 14.0,   // Produktion braucht ein Lager (Bergfried/Lagerhaus) in dieser Reichweite
+        workforce_ratio: 0.8,     // Anteil der Bewohner, der arbeiten kann
+        happiness_rate: 3.0,      // Punkte pro Sekunde in Richtung Zielwert
+        growth_min_happiness: 35.0,
+        growth_rate: 0.08,        // Zuzug je Haus und Sekunde
+        emigration_rate: 0.12,    // Abwanderung je Haus und Sekunde bei Unruhe
+        unrest_below: 20.0,
+        upgrade_above: 70.0,
+        upgrade_time: 25.0,
+        downgrade_time: 40.0,
+        default_tax: 2,
+        tax_levels: [
+            (name: "Keine", income: 0.0, happiness: 15.0),
+            (name: "Niedrig", income: 0.5, happiness: 6.0),
+            (name: "Normal", income: 1.0, happiness: 0.0),
+            (name: "Hoch", income: 1.6, happiness: -14.0),
+            (name: "Drückend", income: 2.4, happiness: -32.0),
+        ],
+        price_wood: 2.0,
+        price_stone: 3.0,
+        price_food: 1.5,
+        market_fee: 0.12,
+        market_impact: 0.02,
+        market_recovery: 0.012,
+        market_min: 0.4,
+        market_max: 2.6,
+    ),
+
+    // Ausbaustufen der Siedlung. Stufe 0 (Siedlung) ist der Anfangszustand; jeder Eintrag
+    // beschreibt den Ausbau *zur* nächsten Stufe. Gebäude nennen ihre Mindeststufe in `era`.
+    eras: [
+        (
+            id: "castle", name: "Burg",
+            description: "Der Bergfried wird zur Burg ausgebaut: Eisenverarbeitung, Mauertürme und Bürgerhäuser werden möglich, die Lager wachsen.",
+            cost: (gold: 450.0, wood: 200.0, stone: 300.0),
+            goods: [("planks", 40.0), ("bricks", 40.0)],
+            requires: [("house", 2), ("storehouse", 1)],
+            build_time: 60.0, storage_bonus: 200.0, pop_bonus: 10,
+        ),
+    ],
 )

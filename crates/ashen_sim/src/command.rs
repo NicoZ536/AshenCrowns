@@ -1,7 +1,7 @@
 //! Spielerbefehle. Befehle sind reine Daten, damit sie gespeichert, über das Netzwerk
 //! gesendet (Lockstep) oder für Wiederholungen aufgezeichnet werden können.
 
-use crate::data::{BuildingTypeId, UnitTypeId};
+use crate::data::{BuildingTypeId, Item, UnitTypeId};
 use crate::entity::{BuildingId, EntityRef, NodeId, PlayerId, UnitId};
 use glam::{IVec2, Vec2};
 use serde::{Deserialize, Serialize};
@@ -21,6 +21,20 @@ pub enum Command {
     SetRally { building: BuildingId, point: Vec2 },
     UseAbility { unit: UnitId, ability: u8, point: Vec2 },
     Demolish { building: BuildingId },
+    /// Mehrere Bauteile (Mauerlinie) auf einmal platzieren; Arbeiter verteilen sich darauf.
+    BuildLine { units: Vec<UnitId>, kind: BuildingTypeId, tiles: Vec<IVec2> },
+    /// Arbeiterlimit eines Produktionsgebäudes (`None` = voll besetzen, `Some(0)` = stilllegen).
+    SetWorkers { building: BuildingId, limit: Option<u32> },
+    /// Rezept eines Gebäudes mit mehreren Rezepten wählen.
+    SetRecipe { building: BuildingId, recipe: u8 },
+    /// Tor für eigene Einheiten öffnen oder verschließen.
+    SetGate { building: BuildingId, open: bool },
+    /// Steuersatz (Index in den Steuerstufen).
+    SetTax { level: u8 },
+    /// Handel am Markt: positiv = kaufen, negativ = verkaufen.
+    Trade { item: Item, amount: i32 },
+    /// Siedlung zur nächsten Ausbaustufe ausbauen.
+    AdvanceEra,
 }
 
 /// Ein Befehl mit Absender.

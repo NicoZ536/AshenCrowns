@@ -7,6 +7,8 @@
     description: "Brennhollow, Aschmark, Jahr 897 n.F. Die Grenzsiedlung ist auf sich allein gestellt. Sichert Nahrung und Holz, bildet Soldaten aus, übersteht die Nächte – und findet die Quelle der Hohlen, bevor sie Brennhollow verschlingt.",
     map_seed: 897,
     start_resources: (gold: 300.0, wood: 200.0, stone: 100.0, food: 150.0),
+    // Vorräte der Siedlung: Ausrüstung für die ersten Soldaten, etwas Baumaterial und Kleidung.
+    start_goods: [("weapons", 10.0), ("armor", 4.0), ("tools", 4.0), ("planks", 20.0), ("clothing", 8.0), ("herbs", 6.0)],
     waves: (
         enabled: true,
         first_wave: 230.0,
@@ -22,6 +24,9 @@
         // Brennhollow
         (id: "keep", owner: 0, x: 12.0, y: 53.0, tag: Some("player_keep")),
         (id: "farmstead", owner: 0, x: 16.0, y: 57.0),
+        (id: "hut", owner: 0, x: 9.0, y: 50.0),
+        (id: "hut", owner: 0, x: 9.0, y: 58.0),
+        (id: "woodcutter", owner: 0, x: 6.0, y: 55.0),
         (id: "worker", owner: 0, x: 16.5, y: 52.5, count: 5),
         (id: "swordsman", owner: 0, x: 18.5, y: 55.0, count: 3),
         (id: "hero_isolde", owner: 0, x: 17.5, y: 53.5, tag: Some("hero")),
@@ -45,6 +50,9 @@
         (id: "obj_army", text: "Bildet eine Streitmacht von mindestens 8 Soldaten aus."),
         (id: "obj_survive", text: "Übersteht die erste Nacht."),
         (id: "obj_tower", text: "Errichtet einen Wachturm zum Schutz der Siedlung.", optional: true),
+        (id: "obj_town", text: "Siedelt mehr Bürger an: Baut eine dritte Hütte. Bürger sind die Arbeitskräfte der Betriebe.", optional: true),
+        (id: "obj_sawmill", text: "Errichtet ein Sägewerk, um aus Holz Bretter zu machen.", optional: true),
+        (id: "obj_wall", text: "Zieht eine Mauer mit Tor, um die Siedlung zu schützen.", optional: true),
         (id: "obj_find_shrine", text: "Findet die Quelle der Hohlen jenseits des Flusses im Nordosten."),
         (id: "obj_reeve", text: "Vernichtet den Fahlen Vogt.", optional: true),
         (id: "obj_destroy_shrine", text: "Zerstört den Hohlschrein von Vael Dorn."),
@@ -67,6 +75,22 @@
             Message(speaker: "Bruder Hal Venn", text: "Die Felder werden uns ernähren. Doch Brot allein hält die Toten nicht auf. Errichtet eine Kaserne.", voice: Some("char_hal_venn.m01_first_farm")),
             AddObjective("obj_barracks"),
             AddObjective("obj_tower"),
+        ]),
+        (id: "town_hint", modes: [Campaign], condition: AtTime(40.0), actions: [
+            Message(speaker: "Bruder Hal Venn", text: "Die Hütten füllen sich mit Bürgern, Wächterin. Sie schlagen Holz und arbeiten in den Betrieben – wenn Ihr sie ernährt und mäßig besteuert. Öffnet das Lager mit L und die Stadtübersicht mit C.", voice: None),
+            AddObjective("obj_town"),
+        ]),
+        (id: "town_done", modes: [Campaign], condition: BuildingCount(building: "hut", count: 3), actions: [
+            CompleteObjective("obj_town"),
+            AddObjective("obj_sawmill"),
+        ]),
+        (id: "sawmill_done", modes: [Campaign], condition: BuildingCompleted("sawmill"), actions: [
+            CompleteObjective("obj_sawmill"),
+            Message(speaker: "Bruder Hal Venn", text: "Bretter! Mit ihnen bauen wir besser – und die Schmiede werden Eisen verlangen, sobald Brennhollow zur Burg gewachsen ist.", voice: None),
+            AddObjective("obj_wall"),
+        ]),
+        (id: "wall_done", modes: [Campaign], condition: BuildingCompleted("gate"), actions: [
+            CompleteObjective("obj_wall"),
         ]),
         (id: "barracks_hint", modes: [Campaign], condition: All([AtTime(150.0), Any([NightStarted(1), AtTime(170.0)])]), actions: [
             AddObjective("obj_barracks"),

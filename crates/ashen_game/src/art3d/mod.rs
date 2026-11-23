@@ -1,6 +1,7 @@
 //! 3D→Pixel-Bake der Spielobjekte: Modelle werden beim Start mit der GPU in Sprites gerastert
 //! (5 Blickrichtungen, die übrigen 3 durch Spiegelung), nachbearbeitet und in den Atlas gelegt.
 
+pub mod city;
 pub mod rig;
 pub mod structures;
 pub mod units3d;

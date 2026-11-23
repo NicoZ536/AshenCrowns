@@ -38,6 +38,9 @@ fn check(world: &SimWorld, data: &GameData, c: &Condition) -> bool {
         Condition::TagDiscovered(t) => world.mission.discovered_tags.iter().any(|d| d == t),
         Condition::HeroLevel(l) => world.hero_of(data, PLAYER).and_then(|h| world.units.get(h)).is_some_and(|h| h.level >= *l),
         Condition::WavesSurvived(n) => world.mission.waves_survived >= *n,
+        Condition::EraReached(e) => world.players[PLAYER as usize].era >= *e,
+        Condition::Residents(n) => world.players[PLAYER as usize].residents >= *n as f32,
+        Condition::Stock { item, amount } => data.item(item).is_some_and(|it| world.players[PLAYER as usize].stock(it) >= *amount),
         Condition::All(v) => v.iter().all(|c| check(world, data, c)),
         Condition::Any(v) => v.iter().any(|c| check(world, data, c)),
     }

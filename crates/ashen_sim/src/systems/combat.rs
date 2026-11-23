@@ -191,6 +191,7 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
     for id in dead_b {
         let Some(b) = world.buildings.remove(id) else { continue };
         world.map.occupy(b.tile, b.size, false);
+        world.map.clear_gate(b.tile);
         let def = data.building(b.kind);
         world.events.push(SimEvent::BuildingDestroyed { id, kind: b.kind, owner: b.owner, pos: b.center() });
         if let Some(tag) = &b.tag {
@@ -199,6 +200,7 @@ pub fn cleanup_dead(world: &mut SimWorld, data: &GameData) {
         let text = if b.owner == PLAYER { format!("{} wurde zerstört.", def.name) } else { format!("{} der Hohlen fiel.", def.name) };
         world.record(ChronicleKind::Battle, text);
         crate::systems::economy::recompute_population(world, data);
+        crate::systems::city::recompute_capacity(world, data);
     }
 }
 

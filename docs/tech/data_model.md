@@ -21,7 +21,7 @@ Konventionen:
 ## 1. Spieldefinitionen (`GameData`)
 
 `GameData` (`data.rs`) hält alle Inhalte in Vektoren plus Index-Tabellen (ID-String → Index). Typisierte Indizes
-`UnitTypeId(u16)`, `BuildingTypeId(u16)`, `AbilityId(u16)` sind Positionen in diesen Vektoren und damit von der
+`UnitTypeId(u16)`, `BuildingTypeId(u16)`, `AbilityId(u16)`, `GoodId(u16)` sind Positionen in diesen Vektoren und damit von der
 Ladereihenfolge abhängig (relevant für Spielstände, siehe Typtabelle in Abschnitt 8).
 
 | Feld | Typ | Quelle |
@@ -29,15 +29,19 @@ Ladereihenfolge abhängig (relevant für Spielstände, siehe Typtabelle in Absch
 | `units` | `Vec<UnitDef>` | `assets/data/units.ron` (Hülle `(units: [...])`) |
 | `buildings` | `Vec<BuildingDef>` | `assets/data/buildings.ron` (Hülle `(buildings: [...])`) |
 | `abilities` | `Vec<AbilityDef>` | `assets/data/abilities.ron` (Hülle `(abilities: [...])`) |
+| `goods` | `Vec<GoodDef>` | `assets/data/goods.ron` (Hülle `(goods: [...])`) |
 | `rules` | `Rules` | `assets/data/rules.ron` |
 
-Funktionen: `GameData::load_dir(dir)` (lädt alle vier Dateien, `reindex`, `validate`),
+Funktionen: `GameData::load_dir(dir)` (lädt alle fünf Dateien, `reindex`, `validate`),
 `apply_overlay(dir)` (Mods; gibt Liste wie `unit:spearman` zurück), `validate()`, `unit_id`/`building_id`/`ability_id`,
-`unit`/`building`/`ability`, `type_table()`.
+`unit`/`building`/`ability`, `good_id`/`good`, `item(id)` (Grundressource oder Ware), `item_name`, `base_price`,
+`type_table()`.
 
 `validate()` prüft: Einheiten (`hp > 0`, `speed >= 0`, `damage_max >= damage_min`, Fähigkeiten existieren),
-Gebäude (`trains` verweist auf Einheiten, `requires` auf Gebäude, Größe > 0), Fähigkeiten (`Summon` verweist auf
-existierende Einheit).
+Gebäude (`trains` verweist auf Einheiten, `requires` auf Gebäude, Größe > 0, Wohnstufen `upgrade_to`/`downgrade_to`
+existieren, Rezepte haben `cycle > 0`, `era` ≤ Anzahl der Ausbaustufen), alle Mengenlisten (`goods_cost`, Rezepte,
+Bedürfnisse, Ausbaustufen) verweisen auf bekannte Items, Steuerstufen vorhanden, Ausbaustufen verlangen bekannte
+Gebäude, Fähigkeiten (`Summon` verweist auf existierende Einheit).
 
 ### 1.1 Aufzählungen
 
@@ -49,6 +53,11 @@ existierende Einheit).
 | `DamageType` | `Normal`, `Pierce`, `Siege`, `Magic`, `Hero` |
 | `ResourceKind` | `Gold`, `Wood`, `Stone`, `Food` |
 | `ProjectileKind` | `Arrow`, `BoneBolt`, `SoulBolt` |
+| `Item` | `Res(ResourceKind)` oder `Good(GoodId)`; einheitlicher Index (`Item::index`): Gold 0, Holz 1, Stein 2, Nahrung 3, danach Waren |
+| `BuildCategory` | `Housing`, `Raw`, `Craft`, `Food`, `Civic`, `Military`, `Wall` (Rubrik im Baumenü) |
+| `Fort` | `Wall`, `Gate`, `Tower` |
+| `NeedKind` | `Item(String)`, `Faith`, `Safety` |
+| `ServiceKind` | `Faith`, `Safety` |
 | `AbilityTargeting` | `SelfCentered`, `Point` (Hinweis: Alle Fähigkeiten der Vertical Slice sind `SelfCentered`; `Point` ist im Datenmodell vorhanden, wird von keiner Fähigkeit genutzt) |
 
 ### 1.2 `Cost`
@@ -56,6 +65,17 @@ existierende Einheit).
 `Cost { gold, wood, stone, food }`, alle `f32`, `#[serde(default)]` (nicht genannte Felder = 0).
 Hilfsfunktionen: `get`, `scaled`, `covers`, `add`, `sub`, `first_missing`. Wird sowohl für Kosten als auch für
 Ressourcenmengen (Spielerbestand, Belohnungen) verwendet.
+
+### 1.2a `GoodDef` (`goods.ron`, `#[serde(default)]`)
+
+`GoodDef { id, name, description, price: f32 = 5.0, tier: u8 = 1 }` – Waren der Echtzeit-Wirtschaft. `price` ist der
+Grundpreis am Markt, `tier` die Güterstufe (1 Rohstoff, 2 Zwischengut, 3 Fertiggut; Gruppierung im Lagerfenster).
+Ein Icon `icon_<id>` im Atlas ist Pflicht für die Darstellung (siehe `art/goods_icons.rs`). Mods ergänzen oder
+ersetzen Waren über `data/goods.ron`. Mengenlisten (`ItemList = Vec<(String, f32)>`) nennen Items per ID und werden
+beim Laden zu `ItemAmounts = Vec<(Item, f32)>` aufgelöst (Felder `*_r`, nicht serialisiert).
+
+Die 17 Waren: `clay`, `iron_ore`, `coal`, `grain`, `wool`, `herbs` (Stufe 1); `planks`, `bricks`, `iron`, `flour`, `cloth`
+(Stufe 2); `bread`, `beer`, `clothing`, `tools`, `weapons`, `armor` (Stufe 3). Details: `docs/design/rts_economy.md`.
 
 ### 1.3 `UnitDef` (`#[serde(default)]`)
 
@@ -127,17 +147,43 @@ Einheiten der Vertical Slice (`assets/data/units.ron`):
 | `food_per_sec`, `gold_per_sec` | `f32` | 0 | Passives Einkommen |
 | `attack` | `Option<TowerAttack>` | `None` | Turmangriff |
 | `requires` | `Vec<String>` | leer | Voraussetzung: fertige eigene Gebäude dieser IDs |
-| `buildable` | `bool` | `true` | `false` = nicht vom Spieler baubar (Bergfried, Gegnergebäude) |
+| `goods_cost` | `ItemList` | leer | Zusätzliche Baukosten in Waren |
+| `era` | `u8` | 0 | Mindest-Ausbaustufe der Siedlung (Index in `Rules::eras`; 1 = Burg) |
+| `category` | `BuildCategory` | `Civic` | Rubrik im Baumenü |
+| `workers` | `u32` | 0 | Arbeitsplätze (Bewohner) |
+| `recipes` | `Vec<Recipe>` | leer | Produktionsrezepte (siehe unten) |
+| `site` | `Option<Site>` | `None` | Standortbedingung |
+| `housing` | `Option<Housing>` | `None` | Wohnhaus-Stufe |
+| `storage` | `f32` | 0 | Lagerkapazität je Ware (> 0 = Lager: Lieferziel der Produktion) |
+| `market` | `bool` | `false` | Marktgebäude |
+| `fort` | `Option<Fort>` | `None` | Mauer, Tor oder Mauerturm |
+| `service` | `Option<Service>` | `None` | Wirkbereich `Faith`/`Safety` (`Service { kind, radius }`) |
+| `buildable` | `bool` | `true` | `false` = nicht vom Spieler baubar (Bergfried, Gegnergebäude, Haus/Bürgerhaus: nur durch Ausbau) |
 | `hotkey` | `Option<char>` | `None` | Bautaste |
+
+Unterstrukturen (alle `#[serde(default)]`):
+
+* `Recipe { id, name, inputs: ItemList, outputs: ItemList, cycle: f32 }` – Zyklusdauer bei voller Besetzung; ohne
+  `outputs` ist es ein Dienst (Tempel verbrennt Kräuter).
+* `Site { node: Option<NodeKind>, node_radius, node_min, consume_node, terrain: Vec<Terrain>, terrain_radius,
+  terrain_min, hint }` – Quellen/Gelände in der Nähe; `consume_node` fällt/verbraucht Vorrat der nächsten Quelle je Zyklus.
+* `Housing { tier, capacity, needs: Vec<Need>, tax, upgrade_to, upgrade_era, downgrade_to }`;
+  `Need { kind: NeedKind, rate (je Bewohner und Minute), weight }`.
 
 `TowerAttack { damage, damage_type, range, cooldown, projectile }` – alle Felder erforderlich.
 
 | ID | Name | Größe | LP | Kosten | Bauzeit | Besonderheit |
 |---|---|---|---|---|---|---|
-| `keep` | Bergfried | 3×3 | 2 200 | – (nicht baubar) | 120 s | `pop_provided` 10, trainiert `worker`, `dropoff`, `gold_per_sec` 0,6 |
+| `keep` | Bergfried | 3×3 | 2 200 | – (nicht baubar) | 120 s | `pop_provided` 10, trainiert `worker`, `dropoff`, `gold_per_sec` 0,6, `storage` 500, Schutz-Dienst Radius 12 |
 | `farmstead` | Gehöft | 2×2 | 700 | 60 Gold, 80 Holz | 30 s | `pop_provided` 8, `food_per_sec` 0,45 |
 | `barracks` | Kaserne | 3×2 | 1 300 | 160 Gold, 120 Holz, 40 Stein | 45 s | trainiert `swordsman`, `spearman`, `archer`, `knight` |
 | `watchtower` | Wachturm | 1×1 | 600 | 70 Gold, 60 Holz, 60 Stein | 30 s | Angriff 18 Pierce, Reichweite 7,5, Intervall 1,6 s, `Arrow` |
+| `hut` / `house` / `townhouse` | Hütte / Haus / Bürgerhaus | 2×2 | 350 / 600 / 900 | 40 Holz / (Ausbau) / (Ausbau) | 14 / 22 / 30 s | Wohnstufen 0–2, Kapazität 5 / 8 / 12 |
+| `woodcutter`, `clay_pit`, `charcoal_burner`, `iron_mine`, `herb_garden` | Rohstoffbetriebe | 2×2 | 300–600 | siehe `rts_economy.md` | 14–30 s | Gewinnung |
+| `farm`, `windmill`, `bakery`, `brewery`, `sheep_farm` | Nahrung/Wolle | 2×2–3×3 | 400–600 | siehe `rts_economy.md` | 20–26 s | Getreide → Mehl → Brot; Bier; Wolle |
+| `sawmill`, `brickworks`, `smelter`, `smithy`, `armory`, `weaver`, `tailor` | Handwerk | 2×2–3×2 | 400–750 | siehe `rts_economy.md` | 20–32 s | Bretter, Ziegel, Eisen, Waffen/Werkzeug, Rüstung, Tuch, Kleidung |
+| `storehouse`, `market`, `temple` | Stadt | 3×2 / 3×3 / 3×2 | 700 / 600 / 900 | siehe `rts_economy.md` | 24–34 s | Lager 400 je Ware; Handel; Glaube (Radius 12) |
+| `wall`, `gate`, `wall_tower` | Befestigungen | 1×1 / 1×1 / 2×2 | 700 / 600 / 900 | 8 Stein / 30 Holz + 10 Stein / siehe Doku | 6 / 12 / 30 s | blockiert / Tor / Turm (Burg) |
 | `hollow_shrine` | Hohlschrein | 3×3 | 3 500 | – | – | Gegnerbasis, nicht baubar |
 | `bone_spire` | Knochenturm | 1×1 | 900 | – | – | Angriff 16 Magic, Reichweite 7,0, Intervall 1,8 s, `SoulBolt` |
 
@@ -191,7 +237,11 @@ Wirkung skaliert mit der Stufe des Wirkers um 8 % je Stufe über Stufe 1 (`level
 | `night_sight_mult` | 0,7 | Sichtweitenfaktor nachts (nur Spieler) |
 | `fog_sight_mult` | 0,75 | Sichtweitenfaktor bei Nebelwetter (nur Spieler) |
 | `rain_ranged_mult` | 0,9 | Fernkampf-Faktor bei Regen |
-| `demolish_refund` | 0,5 | Rückerstattung beim Abriss |
+| `demolish_refund` | 0,5 | Rückerstattung beim Abriss (Grundkosten und Waren) |
+| `city` | `CityRules` | Regeln der Stadtsimulation: `logistics_radius` 14, `workforce_ratio` 0,8, `happiness_rate` 3, `growth_min_happiness` 35, `growth_rate` 0,08, `emigration_rate` 0,12, `unrest_below` 20, `upgrade_above` 70, `upgrade_time` 25, `downgrade_time` 40, `default_tax` 2, `tax_levels`, `price_wood/stone/food`, `market_fee` 0,12, `market_impact` 0,02, `market_recovery` 0,012, `market_min` 0,4, `market_max` 2,6 |
+| `eras` | `Vec<EraDef>` | Ausbaustufen (Ausbau *zu* Stufe i+1): `EraDef { id, name, description, cost, goods, requires: [(Gebäude-ID, Anzahl)], build_time, storage_bonus, pop_bonus }`; Mission 1 kennt `castle` (Burg) |
+
+`TaxLevel { name, income, happiness }` – fünf Steuersätze (Keine, Niedrig, Normal, Hoch, Drückend).
 
 ### 1.7 Schadens- und Rüstungsmodell
 
@@ -293,6 +343,12 @@ Entitäten liegen in `Arena<T>` (generationelle IDs: `Id<T> { index, generation 
 | `tag` | `Option<String>` | Missions-Markierung (z. B. `player_keep`, `enemy_shrine`) |
 | `invulnerable` | `bool` | Unverwundbar (Überleben-Modus, Gegnerbasis) |
 | `last_hit_time` | `f32` | Zeitpunkt des letzten Treffers (Trefferblitz) |
+| `workers`, `worker_limit` | `u32`, `Option<u32>` | Zugewiesene Arbeiter; Spielerlimit (`None` = voll, `Some(0)` = stillgelegt) |
+| `recipe`, `cycle_active`, `cycle` | `u8`, `bool`, `f32` | Gewähltes Rezept, Zyklus läuft (Eingaben verbraucht), Zyklusfortschritt (s) |
+| `status`, `stall_item` | `ProdStatus`, `Option<Item>` | Betriebszustand (`None`, `Running`, `MissingInput`, `NoWorkers`, `StorageFull`, `NoDepot`, `NoSite`, `Disabled`) und die fehlende/volle Ware |
+| `residents`, `happiness` | `f32` | Bewohner und Zufriedenheit (0–100) eines Wohnhauses |
+| `up_timer`, `down_timer`, `unmet` | `f32`, `f32`, `u32` | Zeitzähler für Aufstieg/Abstieg; Bitmaske unerfüllter Bedürfnisse (Index in `Housing::needs`) |
+| `gate_open` | `bool` | Tor offen für eigene Einheiten |
 
 ### 2.5 `ResourceNode`, `NodeKind`
 
@@ -346,7 +402,12 @@ Steinbrüche: Goldminen bei (7, 47), (50, 45), (63, 30); Steinbrüche bei (22, 4
 
 Zugehörige Typen:
 
-* `PlayerState { name, resources: Cost, pop, pop_cap, starving, stats: PlayerStats }`;
+* `PlayerState { name, resources: Cost, pop, pop_cap, starving, stats: PlayerStats, goods: Vec<f32>, tax_level: u8,
+  era: u8, era_progress: Option<f32>, capacity: f32, extra_capacity: f32, market: Vec<f32>, residents, workforce,
+  workers_used, avg_happiness, unrest, tax_rate, … }` – `goods` ist je Ware indiziert (`GoodId`), `market` je Item
+  (`Item::index`) mit dem Handelsdruck; `stock(item)`/`stock_mut(item)` greifen einheitlich auf Grundressourcen und
+  Waren zu. Lagerfunktionen auf `SimWorld`: `credit` (mit Kapazitätsgrenze), `take`, `afford`/`pay`/`refund`,
+  `market_price`, `market_of`.
   `PlayerStats { units_trained, units_lost, kills, buildings_built, gathered: Cost }`.
 * `Director { enabled, next_wave_in, wave, warned, boss_summons_done }`.
 * `MatchSettings { mode: GameMode, difficulty: Difficulty, seed: u64, hero_permadeath: bool }`, Standard:
@@ -357,7 +418,8 @@ Zugehörige Typen:
   weather_timer, weather_intensity, lightning_timer, forced_weather, was_night }`.
   `DayPhase`: `Dawn` (0,21–0,30), `Day` (0,30–0,72), `Dusk` (0,72–0,80), sonst `Night`. Startzeit 0,30.
   `Weather`: `Clear`, `Overcast`, `Fog`, `Rain`, `Storm`, `Ashfall`.
-* `TileMap { width, height, terrain, static_block, occupied, decor, revision }`; die Karte der Vertical Slice ist
+* `TileMap { width, height, terrain, static_block, occupied, decor, gate_pass, revision }` (`gate_pass`: Bitmaske der Spieler, die ein
+  offenes Tor auf der Kachel passieren dürfen; `walkable_for(tile, owner)`); die Karte der Vertical Slice ist
   72×72. `Terrain`: `Grass`, `DarkGrass`, `Dirt`, `Road`, `Stone`, `Sand`, `Ash`, `Ford`, `Water`, `DeepWater`
   (begehbar: alle außer den beiden Wasserarten; Bewegungskosten: Straße 0,8, Furt 1,6, Sand 1,15, sonst 1,0).
 * `Chronicle { entries: Vec<ChronicleEntry> }`, `ChronicleEntry { year, day, phase, kind, text }`,
@@ -381,6 +443,7 @@ Alle Felder sind erforderlich (kein `#[serde(default)]` auf Strukturebene; `Wave
 | `name`, `description` | `String` | Anzeige im Menü |
 | `map_seed` | `u64` | Seed der Kartenvariation |
 | `start_resources` | `Cost` | Startressourcen des Spielers |
+| `start_goods` | `Vec<(String, f32)>` | Startvorrat an Waren (Standard leer) |
 | `waves` | `WaveRules` | Regeln der Angriffswellen |
 | `placements` | `Vec<Placement>` | Startaufstellung |
 | `objectives` | `Vec<ObjectiveDef>` | Ziele |
@@ -418,6 +481,9 @@ Modi aktiv. Jeder Auslöser feuert **höchstens einmal** (`MissionState::fired`)
 | `TagDiscovered(String)` | Ein Objekt mit diesem Tag (nicht des Spielers) war sichtbar |
 | `HeroLevel(u32)` | Held des Spielers hat Stufe ≥ n |
 | `WavesSurvived(u32)` | Mindestens n Wellen vollständig besiegt |
+| `EraReached(u8)` | Ausbaustufe der Siedlung ≥ n |
+| `Residents(u32)` | Mindestens n Bewohner |
+| `Stock { item, amount }` | Vorrat einer Ware/Ressource ≥ amount |
 | `All(Vec<Condition>)` / `Any(Vec<Condition>)` | Alle / mindestens eine |
 
 | `Action` | Wirkung |
@@ -482,6 +548,12 @@ Ereignisse sind nicht Teil des Spielstands.
 | `Message` | `speaker`, `text`, `voice: Option<String>` |
 | `ObjectiveAdded` / `ObjectiveCompleted` | `id` |
 | `Starvation` | `owner`, `active` |
+| `ProductionCycle` | `building`, `kind`, `owner`, `pos` (Ton/Effekt am Gebäude) |
+| `Traded` | `owner`, `item`, `amount` (+ gekauft, − verkauft), `gold`, `pos` |
+| `GateToggled` | `id`, `pos`, `open` |
+| `HouseChanged` | `id`, `kind`, `owner`, `pos`, `up` (Wohnstufe gestiegen/gefallen) |
+| `EraAdvanced` | `owner`, `era` |
+| `Unrest` | `owner` |
 | `Error` | `owner`, `text` |
 | `Victory` / `Defeat` | – |
 
@@ -507,7 +579,17 @@ erzeugen ein `SimEvent::Error`. Einheitenlisten werden auf Besitz gefiltert.
 | `CancelTrain` | `building`, `index` | Eintrag abbrechen |
 | `SetRally` | `building`, `point` | Sammelpunkt setzen |
 | `UseAbility` | `unit`, `ability: u8`, `point` | Fähigkeit des Helden (Index in `UnitDef::abilities`) |
-| `Demolish` | `building` | Abreißen (Rückerstattung `demolish_refund` = 50 % bei fertigen Gebäuden, 75 % bei Baustellen) |
+| `Demolish` | `building` | Abreißen (Rückerstattung `demolish_refund` = 50 % bei fertigen Gebäuden, 75 % bei Baustellen; Waren eingeschlossen) |
+| `BuildLine` | `units`, `kind`, `tiles: Vec<IVec2>` | Mauerlinie: höchstens 80 Teile, je Teil Platz-/Kostenprüfung, Bauarbeiter reihum verteilt |
+| `SetWorkers` | `building`, `limit: Option<u32>` | Arbeiterlimit (`Some(0)` legt still, `None` = automatisch) |
+| `SetRecipe` | `building`, `recipe: u8` | Rezept wählen; ein laufender Zyklus wird abgebrochen, die Eingaben erstattet |
+| `SetGate` | `building`, `open: bool` | Tor öffnen/verschließen |
+| `SetTax` | `level: u8` | Steuersatz (Index in `city.tax_levels`) |
+| `Trade` | `item: Item`, `amount: i32` | Markt: positiv kaufen, negativ verkaufen |
+| `AdvanceEra` | – | Ausbau zur nächsten Siedlungsstufe (Voraussetzungen und Kosten aus `rules.eras`) |
+
+`Build`, `BuildLine` und `Train` prüfen und buchen Grundkosten **und** Waren (`goods_cost`); `can_place` zusätzlich Ausbaustufe
+(`era`) und Standort (`site`).
 
 ---
 
@@ -518,7 +600,7 @@ Datei: `<slot>.acsave` in `<Nutzerverzeichnis>/saves/`. Endung `acsave` (`save::
 ```text
 Offset  Größe     Inhalt
 0       4         Magic "ASHC"
-4       4         u32 Formatversion (little endian), derzeit FORMAT_VERSION = 1
+4       4         u32 Formatversion (little endian), derzeit FORMAT_VERSION = 3
 8       4         u32 Header-Länge in Bytes (little endian, höchstens 1 MiB)
 12      n         Header: JSON (SaveHeader)
 12+n    4         u32 CRC32 des Payloads (crc32fast)
@@ -544,7 +626,7 @@ Der JSON-Header kann ohne Dekodieren des Payloads gelesen werden (`read_header`,
 
 `SavePayload { world: SimWorld, type_table: Vec<String>, client_state: String }`:
 
-* `type_table` = `GameData::type_table()`: Liste `u:<unit-id>`, `b:<building-id>`, `a:<ability-id>` in Ladereihenfolge.
+* `type_table` = `GameData::type_table()`: Liste `u:<unit-id>`, `b:<building-id>`, `a:<ability-id>`, `g:<good-id>` in Ladereihenfolge.
   Da Typ-IDs Vektorpositionen sind, wird sie beim Laden mit den aktuell geladenen Daten **verglichen**; weicht sie
   ab (z. B. anderer Mod-Satz), meldet `decode` `SaveError::Incompatible` und das Spiel lädt nicht.
 * `client_state` = Text (RON) des Spiels: Kamera, Zoom, Geschwindigkeit (`ClientState { camera, lines, speed }`).

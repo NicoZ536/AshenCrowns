@@ -14,7 +14,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 pub const MAGIC: &[u8; 4] = b"ASHC";
-pub const FORMAT_VERSION: u32 = 2;
+pub const FORMAT_VERSION: u32 = 3;
 pub const EXTENSION: &str = "acsave";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -113,6 +113,8 @@ pub struct TileMap {
     /// Dynamische Belegung (Gebäude, Bäume, Minen). Zähler für überlappungsfreie Verwaltung.
     pub occupied: Vec<u8>,
     pub decor: Vec<Decor>,
+    /// Torkacheln: Bitmaske der Spieler, deren Einheiten das (offene) Tor passieren dürfen.
+    pub gate_pass: Vec<u8>,
     /// Version der Belegung; ändert sich bei jedem Blockadewechsel (für Pfad-Caches).
     pub revision: u32,
 }
@@ -127,6 +129,7 @@ impl TileMap {
             static_block: vec![false; n],
             occupied: vec![0; n],
             decor: Vec::new(),
+            gate_pass: vec![0; n],
             revision: 0,
         }
     }
@@ -159,6 +162,42 @@ impl TileMap {
         }
         let i = self.idx(t);
         self.terrain[i].walkable() && !self.static_block[i] && self.occupied[i] == 0
+    }
+
+    /// Begehbar für Einheiten des Spielers `owner`: wie [`walkable`](Self::walkable), zusätzlich
+    /// offene eigene Tore (nur von einem einzigen Gebäude belegte Kachel).
+    #[inline]
+    pub fn walkable_for(&self, t: IVec2, owner: u8) -> bool {
+        if !self.in_bounds(t) {
+            return false;
+        }
+        let i = self.idx(t);
+        if !self.terrain[i].walkable() || self.static_block[i] {
+            return false;
+        }
+        self.occupied[i] == 0 || (self.occupied[i] == 1 && self.gate_pass[i] & (1u8 << owner.min(7)) != 0)
+    }
+
+    /// Öffnet (`pass = true`) oder sperrt ein Tor für die Einheiten von `owner`.
+    pub fn set_gate(&mut self, t: IVec2, owner: u8, pass: bool) {
+        if self.in_bounds(t) {
+            let i = self.idx(t);
+            let bit = 1u8 << owner.min(7);
+            if pass {
+                self.gate_pass[i] |= bit;
+            } else {
+                self.gate_pass[i] &= !bit;
+            }
+            self.revision = self.revision.wrapping_add(1);
+        }
+    }
+
+    /// Entfernt alle Torrechte einer Kachel (Tor zerstört oder abgerissen).
+    pub fn clear_gate(&mut self, t: IVec2) {
+        if self.in_bounds(t) {
+            let i = self.idx(t);
+            self.gate_pass[i] = 0;
+        }
     }
 
     /// Bebaubar: begehbar, bebaubares Terrain, nicht belegt.
@@ -221,10 +260,17 @@ impl TileMap {
 
     /// Sichtlinie für Pfadglättung: alle überstrichenen Kacheln begehbar (Supercover).
     pub fn line_walkable(&self, a: Vec2, b: Vec2) -> bool {
+        self.line_walkable_for(a, b, 255)
+    }
+
+    /// Wie [`line_walkable`](Self::line_walkable) aus Sicht eines Spielers (offene eigene Tore zählen).
+    /// `owner >= 8` ignoriert Tore.
+    pub fn line_walkable_for(&self, a: Vec2, b: Vec2, owner: u8) -> bool {
+        let ok = |t: IVec2| if owner >= 8 { self.walkable(t) } else { self.walkable_for(t, owner) };
         let d = b - a;
         let len = d.length();
         if len < 1e-4 {
-            return self.walkable(Self::tile_of(a));
+            return ok(Self::tile_of(a));
         }
         let steps = (len * 3.0).ceil() as i32;
         // Seitlicher Versatz, damit Einheiten mit Radius nicht an Ecken hängen.
@@ -232,7 +278,7 @@ impl TileMap {
         for i in 0..=steps {
             let p = a + d * (i as f32 / steps as f32);
             for off in [Vec2::ZERO, n, -n] {
-                if !self.walkable(Self::tile_of(p + off)) {
+                if !ok(Self::tile_of(p + off)) {
                     return false;
                 }
             }

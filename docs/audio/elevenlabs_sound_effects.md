@@ -211,6 +211,22 @@ Grundlage: `assets/audio/manifest.ron` (Events `sfx.*`), Regeln in `docs/audio/e
 
 **Nachbearbeitung:** Hochpass 60 Hz; deutlich, aber kurz.
 
+### Echtzeit-Wirtschaft und Befestigungen (im Manifest seit Phase 6/7)
+Dateien noch nicht produziert; Events sind im Manifest eingetragen und werden vom Spiel ausgelöst (`audio_bridge.rs`).
+Auslöser und Manifestwerte; Prompts siehe Katalog 6.1/6.5 (gleiche Dateinamen) bzw. unten.
+
+| Event | Ziel-Datei(en) | Auslöser | Manifest | EN-Prompt (Vorschlag) | Dauer |
+|---|---|---|---|---|---|
+| `sfx.smithy_hammer` | `sfx/buildings/smithy_hammer_01…03.ogg` | Produktionszyklus Schmiede, Rüstkammer, Schmelzhütte | −4 dB, 3 Inst., 250 ms | blacksmith hammering on anvil, two ringing strikes, hiss of quenching, close, dry | 1,5 s |
+| `sfx.sawmill_saw` | `sfx/buildings/sawmill_saw_01…03.ogg` | Zyklus Sägewerk, Holzfällerlager | −6 dB, 3 Inst., 300 ms | hand saw cutting through a log, rhythmic rasp, wood chips falling, close, dry | 2,0 s |
+| `sfx.mill_grind` | `sfx/buildings/mill_grind_01…03.ogg` | Zyklus Mühle, Bäckerei, Brauerei | −8 dB, 2 Inst., 400 ms | millstone grinding grain, wooden creak, soft rumble, close, dry | 2,5 s |
+| `sfx.market_trade` | `sfx/buildings/market_trade_01…03.ogg` | Handel am Markt | −3 dB, 2 Inst., 120 ms | coins counted into a leather purse, soft metallic jingle, wooden counter, close, dry | 1,0 s |
+| `sfx.gate_open` / `sfx.gate_close` | `sfx/buildings/gate_open_01…03.ogg`, `gate_close_01…03.ogg` | Tor umgeschaltet | −2 dB, 2 Inst., 200 ms | siehe Katalog 6.5 | 3,5 s / 2,5 s |
+| `sfx.upgrade_complete` | `sfx/buildings/upgrade_complete_01…03.ogg` | Haus aufgestiegen, Burg-Ausbau fertig | −2 dB, 2 Inst. | siehe Katalog 6.5 | 2,0 s |
+| `sfx.chapel_bell` | `sfx/buildings/chapel_bell_01…03.ogg` | Unruhe in der Bevölkerung | −3 dB, 1 Inst., 3000 ms | siehe Katalog 6.5 | 5,0 s |
+| `sfx.wall_hit` | `sfx/combat/wall_hit_01…03.ogg` | Treffer auf Mauer, Tor oder Mauerturm | −2 dB, 4 Inst., 100 ms | weapon striking a thick stone wall, dull heavy thud with grit, close, dry | 0,8 s |
+| `sfx.wall_collapse` | `sfx/combat/wall_collapse_01…03.ogg` | Mauer, Tor oder Mauerturm zerstört | 0 dB, 2 Inst., 300 ms | siehe Katalog 6.1 | 5,0 s |
+
 ---
 
 ## 4. Benutzeroberfläche – `sfx/ui/`

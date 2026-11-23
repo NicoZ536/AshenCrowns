@@ -5,8 +5,8 @@ use ashen_core::iso::{depth_of, tile_to_world, world_to_tile, TILE_H};
 use ashen_core::noise::{fbm2, rand2};
 use ashen_engine::render::particles::{Particle, ParticleSystem};
 use ashen_engine::render::{Atmosphere, FrameData, Light, Material, SpriteInstance, SpriteRect, ViewParams};
-use ashen_sim::data::{GameData, ProjectileKind, ResourceKind, UnitClass};
-use ashen_sim::entity::{Activity, BuildingId, NodeKind, UnitId, ENEMY, PLAYER};
+use ashen_sim::data::{Fort, GameData, ProjectileKind, ResourceKind, UnitClass};
+use ashen_sim::entity::{Activity, Building, BuildingId, NodeKind, ProdStatus, UnitId, ENEMY, PLAYER};
 use ashen_sim::env::{DayPhase, Weather};
 use ashen_sim::map::{DecorKind, Terrain, TileMap};
 use ashen_sim::mapgen::ENEMY_BASE;
@@ -43,7 +43,54 @@ pub struct Overlay {
     pub hovered: Option<UnitId>,
     /// Platzierungsvorschau: Gebäude-ID, Kachel, gültig.
     pub ghost: Option<(String, IVec2, (u8, u8), bool)>,
+    /// Vorschau einer Mauerlinie: Kachel und Gültigkeit je Bauteil.
+    pub ghost_line: Vec<(IVec2, bool)>,
     pub show_all_bars: bool,
+}
+
+/// Kacheln fertiger Befestigungen (Mauern, Tore, Türme) für Anschlüsse und Torachsen.
+fn fort_tiles(world: &SimWorld, data: &GameData) -> HashSet<IVec2> {
+    let mut set = HashSet::new();
+    for (_, b) in world.buildings.iter() {
+        if b.complete && data.building(b.kind).is_fort() {
+            for y in 0..b.size.y {
+                for x in 0..b.size.x {
+                    set.insert(b.tile + IVec2::new(x, y));
+                }
+            }
+        }
+    }
+    set
+}
+
+/// Anschlussmaske einer Mauerkachel: Bit 0 = +x, 1 = −x, 2 = +z (Kachel-y), 3 = −z.
+fn wall_mask(forts: &HashSet<IVec2>, t: IVec2) -> u32 {
+    let mut m = 0;
+    for (i, d) in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)].into_iter().enumerate() {
+        if forts.contains(&(t + d)) {
+            m |= 1 << i;
+        }
+    }
+    m
+}
+
+/// Torachse: `true`, wenn die Mauer in x-Richtung verläuft.
+fn gate_along_x(forts: &HashSet<IVec2>, t: IVec2) -> bool {
+    let x = forts.contains(&(t + IVec2::new(1, 0))) || forts.contains(&(t + IVec2::new(-1, 0)));
+    let z = forts.contains(&(t + IVec2::new(0, 1))) || forts.contains(&(t + IVec2::new(0, -1)));
+    x || !z
+}
+
+/// Spritename (ohne `bld_`-Präfix) eines Gebäudes: Mauern und Tore hängen von der Nachbarschaft ab,
+/// der Bergfried von der Ausbaustufe.
+fn sprite_id(world: &SimWorld, data: &GameData, b: &Building, forts: &HashSet<IVec2>) -> String {
+    let def = data.building(b.kind);
+    match def.fort {
+        Some(Fort::Wall) => format!("wall_m{}", wall_mask(forts, b.tile)),
+        Some(Fort::Gate) => format!("gate_{}_{}", if gate_along_x(forts, b.tile) { "x" } else { "z" }, if b.gate_open { "open" } else { "closed" }),
+        _ if def.id == "keep" && world.players[b.owner as usize].era >= 1 => "keep_castle".into(),
+        _ => def.id.clone(),
+    }
 }
 
 pub struct WorldView {
@@ -223,6 +270,33 @@ impl WorldView {
                 if let Some(u) = world.units.get(*unit) {
                     self.burst(art, u.pos, 26, "fx_glow", Vec4::new(1.0, 0.9, 0.5, 1.0), 30.0, 20.0, 1.0, seed);
                     self.flash(u.pos, Vec3::new(1.0, 0.85, 0.5), 80.0, 1.0);
+                }
+            }
+            SimEvent::ProductionCycle { kind, pos, .. } => {
+                let id = data.building(*kind).id.as_str();
+                match id {
+                    "smithy" | "smelter" | "armory" | "brickworks" => {
+                        self.burst(art, *pos + Vec2::new(0.4, 0.2), 6, "fx_dot", Vec4::new(1.0, 0.7, 0.25, 1.0), 30.0, 10.0, 1.0, seed);
+                        self.flash(*pos, Vec3::new(1.0, 0.55, 0.2), 60.0, 0.35);
+                    }
+                    "sawmill" | "woodcutter" | "windmill" | "bakery" => self.burst(art, *pos, 5, "fx_dust", Vec4::new(0.7, 0.58, 0.4, 0.7), 14.0, 4.0, 0.0, seed),
+                    _ => self.burst(art, *pos, 3, "fx_dust", Vec4::new(0.5, 0.45, 0.38, 0.6), 10.0, 3.0, 0.0, seed),
+                }
+            }
+            SimEvent::GateToggled { pos, .. } => self.burst(art, *pos, 6, "fx_dust", Vec4::new(0.5, 0.45, 0.38, 0.7), 12.0, 3.0, 0.0, seed),
+            SimEvent::HouseChanged { pos, up, .. } => {
+                if *up {
+                    self.burst(art, *pos, 14, "fx_glow", Vec4::new(1.0, 0.85, 0.4, 1.0), 26.0, 14.0, 1.0, seed);
+                    self.flash(*pos, Vec3::new(1.0, 0.8, 0.4), 70.0, 0.7);
+                } else {
+                    self.burst(art, *pos, 8, "fx_smoke", Vec4::new(0.35, 0.32, 0.3, 0.7), 12.0, 6.0, 0.0, seed);
+                }
+            }
+            SimEvent::EraAdvanced { .. } => {
+                if let Some(k) = world.building_with_tag(&world.mission_def.defeat_tag).and_then(|b| world.buildings.get(b)) {
+                    let p = k.center();
+                    self.burst(art, p, 40, "fx_glow", Vec4::new(1.0, 0.8, 0.35, 1.0), 40.0, 20.0, 1.0, seed);
+                    self.flash(p, Vec3::new(1.0, 0.75, 0.35), 160.0, 1.4);
                 }
             }
             SimEvent::Lightning => self.lightning = 1.0,
@@ -494,6 +568,7 @@ impl WorldView {
         }
 
         // --- Gebäude
+        let forts = fort_tiles(world, data);
         let mut emit_smoke = Vec::new();
         let mut emit_embers = Vec::new();
         let mut emit_green = Vec::new();
@@ -504,9 +579,18 @@ impl WorldView {
             }
             let def = data.building(b.kind);
             let wp = tile_to_world(b.tile.as_vec2());
-            let rect = art.get(&format!("bld_{}", def.id));
+            let sid = sprite_id(world, data, b, &forts);
+            let rect = art.get(&format!("bld_{sid}"));
             let depth = depth_of(c);
-            let meta = art.buildings.get(&def.id).cloned().unwrap_or_default();
+            let meta = art.buildings.get(&sid).or_else(|| art.buildings.get(&def.id)).cloned().unwrap_or_default();
+            // Betriebe leuchten und rauchen nur bei der Arbeit, Wohnhäuser nur mit Bewohnern.
+            let active = if !def.recipes.is_empty() {
+                b.status == ProdStatus::Running
+            } else if def.housing.is_some() {
+                b.residents >= 0.5
+            } else {
+                true
+            };
             if b.complete {
                 let mut inst = SpriteInstance::new(&rect, wp);
                 if b.last_hit_time > world.time - 0.12 {
@@ -514,17 +598,52 @@ impl WorldView {
                 }
                 frame.world.push((depth, inst));
                 frame.shadows.push(SpriteInstance::new(&rect, wp).material(Material::Shadow).shear(shear).squash(squash));
-                for (off, col, r) in &meta.lights {
-                    frame.lights.push(Light::new(wp + *off, *r, *col, 0.8 + night * 0.9).flicker(0.2, off.x).height(20.0));
-                }
-                for s in &meta.smoke {
-                    emit_smoke.push((wp + *s, false));
-                }
-                for f in &meta.fires {
-                    emit_embers.push(wp + *f);
+                if active {
+                    for (off, col, r) in &meta.lights {
+                        frame.lights.push(Light::new(wp + *off, *r, *col, 0.8 + night * 0.9).flicker(0.2, off.x).height(20.0));
+                    }
+                    for s in &meta.smoke {
+                        emit_smoke.push((wp + *s, false));
+                    }
+                    for f in &meta.fires {
+                        emit_embers.push(wp + *f);
+                    }
                 }
                 for g in &meta.glow_green {
                     emit_green.push(wp + *g);
+                }
+                // Diagonale Mauerverbindungen zwischen eckig benachbarten Mauerkacheln.
+                if def.fort == Some(Fort::Wall) {
+                    for (d, name, oy) in [(IVec2::new(1, 1), "wall_d0", 0), (IVec2::new(1, -1), "wall_d1", -1)] {
+                        let t = b.tile;
+                        if forts.contains(&(t + d)) && !forts.contains(&(t + IVec2::new(d.x, 0))) && !forts.contains(&(t + IVec2::new(0, d.y))) {
+                            let origin = t + IVec2::new(0, oy);
+                            let r = art.get(&format!("bld_{name}"));
+                            let wpos = tile_to_world(origin.as_vec2());
+                            frame.world.push((depth_of(origin.as_vec2() + Vec2::new(1.0, 1.0)), SpriteInstance::new(&r, wpos)));
+                            frame.shadows.push(SpriteInstance::new(&r, wpos).material(Material::Shadow).shear(shear).squash(squash));
+                        }
+                    }
+                }
+                // Statussymbol über stillstehenden Betrieben und unruhigen Häusern.
+                if b.owner == PLAYER && (def.employs() || def.housing.is_some()) {
+                    let icon = match b.status {
+                        ProdStatus::MissingInput => Some("icon_status_input"),
+                        ProdStatus::NoWorkers => Some("icon_status_workers"),
+                        ProdStatus::StorageFull => Some("icon_status_full"),
+                        ProdStatus::NoDepot => Some("icon_status_depot"),
+                        ProdStatus::NoSite => Some("icon_status_site"),
+                        ProdStatus::Disabled => Some("icon_status_off"),
+                        _ if def.housing.is_some() && b.residents >= 1.0 && b.happiness < 20.0 => Some("icon_sad"),
+                        _ => None,
+                    };
+                    if let Some(name) = icon
+                        && let Some(r) = art.atlas.try_get(name)
+                    {
+                        let bob = (self.time * 3.0 + bid.index as f32).sin() * 1.5;
+                        let top = tile_to_world(c) - Vec2::new(r.size.x * 0.5, meta.height.max(30.0) * 0.8 + 18.0 + bob);
+                        frame.overlay.push(SpriteInstance::new(&r, top).material(Material::Unlit));
+                    }
                 }
                 if b.owner == ENEMY && !meta.glow_green.is_empty() {
                     let pulse = 0.8 + (self.time * 2.0).sin() * 0.2;
@@ -740,8 +859,26 @@ impl WorldView {
             if let Some(fr) = art.atlas.try_get(&format!("foundation_{}x{}", size.0, size.1)) {
                 frame.overlay.push(SpriteInstance::new(&fr, wp).material(Material::Unlit).tint(col));
             }
-            let rect = art.get(&format!("bld_{id}"));
+            let name = match id.as_str() {
+                "wall" => format!("wall_m{}", wall_mask(&forts, *tile)),
+                "gate" => format!("gate_{}_open", if gate_along_x(&forts, *tile) { "x" } else { "z" }),
+                other => other.to_string(),
+            };
+            let rect = art.get(&format!("bld_{name}"));
             frame.overlay.push(SpriteInstance::new(&rect, wp).material(Material::Unlit).tint(col * Vec4::new(1.0, 1.0, 1.0, 0.75)));
+        }
+        if !overlay.ghost_line.is_empty() {
+            let mut set = forts.clone();
+            set.extend(overlay.ghost_line.iter().map(|(t, _)| *t));
+            for (tile, ok) in &overlay.ghost_line {
+                let wp = tile_to_world(tile.as_vec2());
+                let col = if *ok { Vec4::new(0.6, 1.0, 0.6, 0.7) } else { Vec4::new(1.0, 0.4, 0.35, 0.7) };
+                if let Some(fr) = art.atlas.try_get("foundation_1x1") {
+                    frame.overlay.push(SpriteInstance::new(&fr, wp).material(Material::Unlit).tint(col));
+                }
+                let rect = art.get(&format!("bld_wall_m{}", wall_mask(&set, *tile)));
+                frame.overlay.push(SpriteInstance::new(&rect, wp).material(Material::Unlit).tint(col * Vec4::new(1.0, 1.0, 1.0, 0.75)));
+            }
         }
 
         // --- Lichtblitze von Effekten

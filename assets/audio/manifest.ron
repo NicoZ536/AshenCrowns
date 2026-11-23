@@ -119,6 +119,17 @@ AudioManifest(
         SoundEvent(id: "sfx.harvest_grain", category: Sfx, files: ["sfx/world/harvest_grain_*"], volume_db: -8.0, cooldown_ms: 250, max_instances: 2),
         SoundEvent(id: "sfx.horn_alarm", category: Sfx, files: ["sfx/world/horn_alarm_*"], volume_db: 0.0, cooldown_ms: 3000, max_instances: 1),
         SoundEvent(id: "sfx.thunder", category: Sfx, files: ["sfx/world/thunder_*"], volume_db: -2.0, cooldown_ms: 2000, max_instances: 1),
+        // Echtzeit-Wirtschaft und Befestigungen
+        SoundEvent(id: "sfx.smithy_hammer", category: Sfx, files: ["sfx/buildings/smithy_hammer_*"], volume_db: -4.0, cooldown_ms: 250, max_instances: 3),
+        SoundEvent(id: "sfx.sawmill_saw", category: Sfx, files: ["sfx/buildings/sawmill_saw_*"], volume_db: -6.0, cooldown_ms: 300, max_instances: 3),
+        SoundEvent(id: "sfx.mill_grind", category: Sfx, files: ["sfx/buildings/mill_grind_*"], volume_db: -8.0, cooldown_ms: 400, max_instances: 2),
+        SoundEvent(id: "sfx.market_trade", category: Sfx, files: ["sfx/buildings/market_trade_*"], volume_db: -3.0, cooldown_ms: 120, max_instances: 2),
+        SoundEvent(id: "sfx.gate_open", category: Sfx, files: ["sfx/buildings/gate_open_*"], volume_db: -2.0, cooldown_ms: 200, max_instances: 2),
+        SoundEvent(id: "sfx.gate_close", category: Sfx, files: ["sfx/buildings/gate_close_*"], volume_db: -2.0, cooldown_ms: 200, max_instances: 2),
+        SoundEvent(id: "sfx.upgrade_complete", category: Sfx, files: ["sfx/buildings/upgrade_complete_*"], volume_db: -2.0, cooldown_ms: 0, max_instances: 2),
+        SoundEvent(id: "sfx.chapel_bell", category: Sfx, files: ["sfx/buildings/chapel_bell_*"], volume_db: -3.0, cooldown_ms: 3000, max_instances: 1),
+        SoundEvent(id: "sfx.wall_hit", category: Sfx, files: ["sfx/combat/wall_hit_*"], volume_db: -2.0, cooldown_ms: 100, max_instances: 4),
+        SoundEvent(id: "sfx.wall_collapse", category: Sfx, files: ["sfx/combat/wall_collapse_*"], volume_db: 0.0, cooldown_ms: 300, max_instances: 2),
         SoundEvent(id: "sfx.fire_crackle", category: Sfx, files: ["sfx/world/fire_crackle_*"], volume_db: -8.0, cooldown_ms: 0, max_instances: 3),
     ],
     ambience: [

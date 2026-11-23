@@ -1,7 +1,7 @@
 //! Entitätstypen der Simulation: Einheiten, Gebäude, Ressourcenquellen, Projektile.
 
 use crate::arena::Id;
-use crate::data::{BuildingTypeId, DamageType, ProjectileKind, ResourceKind, UnitTypeId};
+use crate::data::{BuildingTypeId, DamageType, Item, ProjectileKind, ResourceKind, UnitTypeId};
 use glam::{IVec2, Vec2};
 use serde::{Deserialize, Serialize};
 
@@ -203,6 +203,26 @@ pub struct TrainItem {
     pub progress: f32,
 }
 
+/// Betriebszustand eines Produktions- oder Dienstgebäudes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum ProdStatus {
+    /// Keine Produktion (Wohnhaus, Wehranlage, Lager …).
+    #[default]
+    None,
+    Running,
+    /// Es fehlen Eingaben (siehe `Building::stall_item`).
+    MissingInput,
+    NoWorkers,
+    /// Ausgabe-Lager voll.
+    StorageFull,
+    /// Kein Lager in Reichweite.
+    NoDepot,
+    /// Standortbedingung (Bäume, Erzader, Gelände) nicht erfüllt.
+    NoSite,
+    /// Vom Spieler stillgelegt (Arbeiterlimit 0).
+    Disabled,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Building {
     pub kind: BuildingTypeId,
@@ -222,6 +242,28 @@ pub struct Building {
     pub tag: Option<String>,
     pub invulnerable: bool,
     pub last_hit_time: f32,
+    /// Zugewiesene Arbeiter (Bewohner).
+    pub workers: u32,
+    /// Vom Spieler gesetztes Arbeiterlimit; `None` = automatisch voll besetzen.
+    pub worker_limit: Option<u32>,
+    /// Gewähltes Rezept (Index in `BuildingDef::recipes`).
+    pub recipe: u8,
+    /// Läuft gerade ein Produktionszyklus (Eingaben sind verbraucht)?
+    pub cycle_active: bool,
+    /// Fortschritt des laufenden Zyklus in Sekunden.
+    pub cycle: f32,
+    pub status: ProdStatus,
+    /// Fehlende Eingabe bzw. volles Lager (für Anzeige).
+    pub stall_item: Option<Item>,
+    /// Bewohner (Wohnhäuser).
+    pub residents: f32,
+    pub happiness: f32,
+    pub up_timer: f32,
+    pub down_timer: f32,
+    /// Bitmaske unerfüllter Bedürfnisse (Index in `Housing::needs`).
+    pub unmet: u32,
+    /// Tor: offen für eigene Einheiten (Feinde werden nie durchgelassen).
+    pub gate_open: bool,
 }
 
 impl Building {

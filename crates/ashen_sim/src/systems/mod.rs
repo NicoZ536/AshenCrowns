@@ -2,6 +2,7 @@
 
 pub mod abilities;
 pub mod ai;
+pub mod city;
 pub mod combat;
 pub mod commands;
 pub mod economy;

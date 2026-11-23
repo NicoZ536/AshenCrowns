@@ -39,6 +39,8 @@ pub struct Pathfinder {
     heap: BinaryHeap<Node>,
     /// Anzahl expandierter Knoten der letzten Suche (für Budgetierung/Profiling).
     pub last_expanded: usize,
+    /// `true`, wenn die letzte Suche das Ziel tatsächlich erreicht hat (sonst Teilpfad).
+    pub last_found: bool,
 }
 
 const DIRS: [(i32, i32, f32); 8] = [
@@ -76,23 +78,69 @@ impl Pathfinder {
         self.heap.clear();
     }
 
-    /// Sucht einen Pfad von `from` nach `to` (Weltkoordinaten in Kacheln).
+    /// Sucht einen Pfad von `from` nach `to` (Weltkoordinaten in Kacheln), ohne Torrechte.
     ///
     /// Ist das Ziel blockiert, wird die nächstgelegene begehbare Kachel angesteuert.
     /// Gibt geglättete Wegpunkte zurück (ohne Startpunkt). `None`, wenn unerreichbar
     /// oder das Knotenbudget erschöpft ist – dann wird der Knoten mit der geringsten
     /// Heuristik als Teilziel verwendet.
     pub fn find(&mut self, map: &TileMap, from: Vec2, to: Vec2, max_nodes: usize) -> Option<Vec<Vec2>> {
+        self.find_for(map, from, to, max_nodes, 255)
+    }
+
+    /// Wie [`find`](Self::find) aus Sicht von Spieler `owner`: dessen offene Tore sind passierbar.
+    /// Nach dem Aufruf sagt [`last_found`](Self::last_found), ob das Ziel wirklich erreicht wird
+    /// (`false` = nur Teilpfad bis zum nächstgelegenen Punkt).
+    pub fn find_for(&mut self, map: &TileMap, from: Vec2, to: Vec2, max_nodes: usize, owner: u8) -> Option<Vec<Vec2>> {
+        let ok = |t: IVec2| if owner >= 8 { map.walkable(t) } else { map.walkable_for(t, owner) };
         let start = map.nearest_walkable(TileMap::tile_of(from), 3)?;
         let goal_tile = TileMap::tile_of(to);
-        let goal_exact_ok = map.walkable(goal_tile);
+        let goal_exact_ok = ok(goal_tile);
         let goal = if goal_exact_ok { goal_tile } else { map.nearest_walkable(goal_tile, 6)? };
+        self.last_found = true;
 
         if start == goal {
             let end = if goal_exact_ok { to } else { TileMap::center_of(goal) };
             return Some(vec![end]);
         }
+        let (found, end_idx, si) = self.search(map, start, goal, max_nodes, ok, |_| 0.0);
+        self.last_found = found;
+        if end_idx == si {
+            return None;
+        }
+        let w = map.width;
+        let tiles = self.trace(end_idx, si, w);
+        let mut pts: Vec<Vec2> = tiles.into_iter().map(TileMap::center_of).collect();
+        if found && goal_exact_ok
+            && let Some(last) = pts.last_mut()
+        {
+            *last = to;
+        }
+        Some(smooth_for(map, from, pts, owner))
+    }
 
+    /// Sucht den Weg zu `to`, wobei feindliche Befestigungen (`breakable[idx]`) mit Zusatzkosten
+    /// passierbar sind, und liefert die erste Befestigungskachel auf diesem Weg: das Ziel einer
+    /// Belagerung, wenn der normale Weg versperrt ist.
+    pub fn find_breach(&mut self, map: &TileMap, from: Vec2, to: Vec2, max_nodes: usize, owner: u8, breakable: &[bool]) -> Option<IVec2> {
+        let ok = |t: IVec2| map.walkable_for(t, owner) || (map.in_bounds(t) && breakable[map.idx(t)]);
+        let start = map.nearest_walkable(TileMap::tile_of(from), 3)?;
+        let goal_tile = TileMap::tile_of(to);
+        let goal = if ok(goal_tile) { goal_tile } else { map.nearest_walkable(goal_tile, 6)? };
+        if start == goal {
+            return None;
+        }
+        let extra = |t: IVec2| if breakable[map.idx(t)] { 14.0 } else { 0.0 };
+        let (found, end_idx, si) = self.search(map, start, goal, max_nodes, ok, extra);
+        if !found || end_idx == si {
+            return None;
+        }
+        let tiles = self.trace(end_idx, si, map.width);
+        tiles.into_iter().find(|t| breakable[map.idx(*t)])
+    }
+
+    /// A*-Kern. Liefert (Ziel erreicht, Endknoten, Startknoten).
+    fn search<W: Fn(IVec2) -> bool, C: Fn(IVec2) -> f32>(&mut self, map: &TileMap, start: IVec2, goal: IVec2, max_nodes: usize, ok: W, extra: C) -> (bool, usize, usize) {
         let n = (map.width * map.height) as usize;
         self.prepare(n);
         let w = map.width;
@@ -127,18 +175,18 @@ impl Pathfinder {
             }
             for &(dx, dy, cost) in &DIRS {
                 let q = IVec2::new(p.x + dx, p.y + dy);
-                if !map.walkable(q) {
+                if !ok(q) {
                     continue;
                 }
                 // Keine Diagonale an blockierten Ecken vorbei.
-                if dx != 0 && dy != 0 && (!map.walkable(IVec2::new(p.x + dx, p.y)) || !map.walkable(IVec2::new(p.x, p.y + dy))) {
+                if dx != 0 && dy != 0 && (!ok(IVec2::new(p.x + dx, p.y)) || !ok(IVec2::new(p.x, p.y + dy))) {
                     continue;
                 }
                 let qi = map.idx(q);
                 if self.closed[qi] == self.current {
                     continue;
                 }
-                let ng = self.g[i] + cost * map.terrain[qi].move_cost();
+                let ng = self.g[i] + cost * map.terrain[qi].move_cost() + extra(q);
                 if self.stamp[qi] != self.current || ng < self.g[qi] {
                     self.stamp[qi] = self.current;
                     self.g[qi] = ng;
@@ -148,11 +196,11 @@ impl Pathfinder {
             }
         }
         self.last_expanded = expanded;
+        (found, if found { gi } else { best.1 }, si)
+    }
 
-        let end_idx = if found { gi } else { best.1 };
-        if end_idx == si {
-            return None;
-        }
+    /// Kachelfolge vom Start (ausgeschlossen) bis `end_idx`.
+    fn trace(&self, end_idx: usize, si: usize, w: i32) -> Vec<IVec2> {
         let mut tiles = Vec::new();
         let mut c = end_idx;
         while c != u32::MAX as usize {
@@ -163,17 +211,17 @@ impl Pathfinder {
             }
         }
         tiles.reverse();
-        let mut pts: Vec<Vec2> = tiles.into_iter().map(TileMap::center_of).collect();
-        if found && goal_exact_ok
-            && let Some(last) = pts.last_mut() {
-                *last = to;
-            }
-        Some(smooth(map, from, pts))
+        tiles
     }
 }
 
 /// Entfernt überflüssige Wegpunkte, solange die direkte Linie begehbar ist.
 pub fn smooth(map: &TileMap, from: Vec2, pts: Vec<Vec2>) -> Vec<Vec2> {
+    smooth_for(map, from, pts, 255)
+}
+
+/// Wie [`smooth`], aber mit Torrechten des Spielers `owner` (`>= 8` = keine).
+pub fn smooth_for(map: &TileMap, from: Vec2, pts: Vec<Vec2>, owner: u8) -> Vec<Vec2> {
     if pts.len() <= 1 {
         return pts;
     }
@@ -182,7 +230,7 @@ pub fn smooth(map: &TileMap, from: Vec2, pts: Vec<Vec2>) -> Vec<Vec2> {
     let mut i = 0;
     while i < pts.len() {
         let mut j = pts.len() - 1;
-        while j > i && !map.line_walkable(anchor, pts[j]) {
+        while j > i && !map.line_walkable_for(anchor, pts[j], owner) {
             j -= 1;
         }
         out.push(pts[j]);

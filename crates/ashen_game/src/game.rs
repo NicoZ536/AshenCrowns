@@ -29,6 +29,9 @@ pub struct AutoRun {
     pub camera_tile: Option<(f32, f32)>,
     pub zoom_lines: Option<f32>,
     pub hide_ui: bool,
+    pub demo_city: bool,
+    /// Fenster für Screenshots öffnen (`storage`, `city`, `build[:Rubrik]`, `select:<id>`).
+    pub ui_open: Vec<String>,
 }
 
 pub struct AshenGame {
@@ -84,6 +87,9 @@ impl AshenGame {
             m.world.env.forced_weather = Some(w);
             m.world.env.weather_intensity = 1.0;
         }
+        if self.auto.demo_city {
+            crate::showcase::city(&mut m.world, data);
+        }
         let steps = (self.auto.sim_seconds * data.rules.tick_rate as f32) as u32;
         if self.auto.battle {
             // Eine Welle direkt vor die Basis setzen, damit Kampfgeschehen sichtbar ist.
@@ -118,6 +124,23 @@ impl AshenGame {
         }
         if let Some(l) = self.auto.zoom_lines {
             m.camera.target_lines = l;
+        }
+        for what in &self.auto.ui_open {
+            let (key, arg) = what.split_once(':').unwrap_or((what.as_str(), ""));
+            match key {
+                "storage" => m.show_storage = true,
+                "city" => m.show_city = true,
+                "build" => {
+                    m.mode = crate::mission::CommandMode::BuildMenu;
+                    if let Some(c) = ashen_sim::data::BuildCategory::ALL.iter().find(|c| format!("{c:?}").eq_ignore_ascii_case(arg)) {
+                        m.build_cat = *c;
+                    }
+                }
+                "select" => {
+                    m.selected_building = m.world.buildings.iter().find(|(_, b)| b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg).map(|(id, _)| id);
+                }
+                _ => {}
+            }
         }
         if self.auto.select_army {
             m.selection = m.world.units.iter().filter(|(_, u)| u.owner == ashen_sim::entity::PLAYER && data.unit(u.kind).class != ashen_sim::data::UnitClass::Worker).map(|(id, _)| id).collect();

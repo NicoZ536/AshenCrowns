@@ -21,6 +21,7 @@ mods/
         ├── units.ron          optional: Einheiten (Hülle  (units: [ ... ]) )
         ├── buildings.ron      optional: Gebäude (Hülle  (buildings: [ ... ]) )
         ├── abilities.ron      optional: Fähigkeiten (Hülle  (abilities: [ ... ]) )
+        ├── goods.ron          optional: Waren (Hülle  (goods: [ ... ]) ), siehe docs/design/rts_economy.md
         └── missions/
             └── *.ron          optional: zusätzliche Missionen (je eine MissionDef)
 ```
@@ -73,7 +74,7 @@ beginnt immer wieder bei den Basisdaten). Aktive Mods erscheinen mit „aktiv“
 
 Für jeden aktiven Mod (in der Reihenfolge `load_order`, dann `id`) wird `apply_overlay(<mod>/data)` aufgerufen:
 
-1. Die Dateien `units.ron`, `buildings.ron`, `abilities.ron` werden – **falls vorhanden** – gelesen. Fehlende Dateien
+1. Die Dateien `units.ron`, `buildings.ron`, `abilities.ron`, `goods.ron` werden – **falls vorhanden** – gelesen. Fehlende Dateien
    werden ohne Meldung ignoriert.
 2. Für jeden Eintrag gilt: Gibt es bereits einen Eintrag mit **gleicher `id`**, wird er **vollständig ersetzt**;
    andernfalls wird der Eintrag **am Ende angehängt**.

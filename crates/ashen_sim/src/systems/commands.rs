@@ -5,7 +5,7 @@ use crate::data::{AbilityTargeting, GameData, UnitClass};
 use crate::entity::*;
 use crate::events::SimEvent;
 use crate::map::TileMap;
-use crate::systems::abilities;
+use crate::systems::{abilities, city};
 use crate::world::SimWorld;
 use glam::Vec2;
 
@@ -154,12 +154,11 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
                 world.error(player, e);
                 return;
             }
-            let res = world.players[player as usize].resources;
-            if let Some(missing) = res.first_missing(&def.cost) {
-                world.error(player, format!("Nicht genug {}.", missing.label()));
+            if let Err(it) = world.afford(player, &def.cost, &def.goods_cost_r) {
+                world.error(player, city::missing_text(data, it));
                 return;
             }
-            world.players[player as usize].resources.sub(&def.cost);
+            world.pay(player, &def.cost, &def.goods_cost_r);
             let bid = world.place_building(data, kind, player, tile, false);
             for id in builders {
                 if let Some(u) = world.units.get_mut(id) {
@@ -200,11 +199,11 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
                 world.error(player, "Nicht genug Wohnraum – baut weitere Gehöfte.");
                 return;
             }
-            if let Some(missing) = ps.resources.first_missing(&udef.cost) {
-                world.error(player, format!("Nicht genug {}.", missing.label()));
+            if let Err(it) = world.afford(player, &udef.cost, &udef.goods_cost_r) {
+                world.error(player, city::missing_text(data, it));
                 return;
             }
-            world.players[player as usize].resources.sub(&udef.cost);
+            world.pay(player, &udef.cost, &udef.goods_cost_r);
             if let Some(b) = world.buildings.get_mut(building) {
                 b.queue.push(TrainItem { unit, progress: 0.0 });
             }
@@ -215,8 +214,8 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
                 return;
             }
             let item = b.queue.remove(index);
-            let cost = data.unit(item.unit).cost;
-            world.players[player as usize].resources.add(&cost);
+            let u = data.unit(item.unit);
+            world.refund(player, &u.cost, &u.goods_cost_r, 1.0);
         }
         Command::SetRally { building, point } => {
             if let Some(b) = world.buildings.get_mut(building)
@@ -256,6 +255,43 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
                 }
             }
         }
+        Command::BuildLine { units, kind, tiles } => build_line(world, data, player, &units, kind, &tiles),
+        Command::SetWorkers { building, limit } => {
+            if let Some(b) = world.buildings.get_mut(building)
+                && b.owner == player
+            {
+                b.worker_limit = limit;
+            }
+        }
+        Command::SetRecipe { building, recipe } => {
+            if let Some(b) = world.buildings.get_mut(building)
+                && b.owner == player
+                && (recipe as usize) < data.building(b.kind).recipes.len()
+                && b.recipe != recipe
+            {
+                // Ein laufender Zyklus ist verloren; die Eingaben werden zurückerstattet.
+                let old = &data.building(b.kind).recipes[b.recipe as usize];
+                let refund = if b.cycle_active { old.inputs_r.clone() } else { Vec::new() };
+                b.recipe = recipe;
+                b.cycle_active = false;
+                b.cycle = 0.0;
+                for (it, n) in refund {
+                    *world.players[player as usize].stock_mut(it) += n;
+                }
+            }
+        }
+        Command::SetGate { building, open } => {
+            if world.buildings.get(building).is_some_and(|b| b.owner == player) {
+                city::set_gate(world, data, building, open);
+            }
+        }
+        Command::SetTax { level } => {
+            if (level as usize) < data.rules.city.tax_levels.len() {
+                world.players[player as usize].tax_level = level;
+            }
+        }
+        Command::Trade { item, amount } => city::trade(world, data, player, item, amount),
+        Command::AdvanceEra => city::advance_era(world, data, player),
         Command::Demolish { building } => {
             let Some(b) = world.buildings.get_mut(building) else { return };
             if b.owner != player || b.tag.as_deref() == Some(world.mission_def.defeat_tag.as_str()) {
@@ -263,14 +299,52 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
             }
             let def = data.building(b.kind);
             let refund = if b.complete { data.rules.demolish_refund } else { 0.75 };
-            let cost = def.cost.scaled(refund);
-            for item in std::mem::take(&mut b.queue) {
-                world.players[player as usize].resources.add(&data.unit(item.unit).cost);
-            }
+            let queue = std::mem::take(&mut b.queue);
             b.hp = 0.0;
             b.invulnerable = false;
-            world.players[player as usize].resources.add(&cost);
+            for item in queue {
+                let u = data.unit(item.unit);
+                world.refund(player, &u.cost, &u.goods_cost_r, 1.0);
+            }
+            world.refund(player, &def.cost, &def.goods_cost_r, refund);
             world.events.push(SimEvent::Message { speaker: String::new(), text: format!("{} abgerissen.", def.name), voice: None });
         }
+    }
+}
+
+/// Platziert mehrere Bauteile (Mauerlinie) und verteilt die Bauarbeiter reihum darauf.
+fn build_line(world: &mut SimWorld, data: &GameData, player: PlayerId, units: &[UnitId], kind: crate::data::BuildingTypeId, tiles: &[glam::IVec2]) {
+    let builders: Vec<UnitId> = owned(world, player, units).into_iter().filter(|&id| world.units.get(id).is_some_and(|u| data.unit(u.kind).build_speed > 0.0)).collect();
+    if builders.is_empty() {
+        return;
+    }
+    let def = data.building(kind);
+    if !def.buildable {
+        return;
+    }
+    let mut placed = 0usize;
+    let mut first_error: Option<String> = None;
+    for &tile in tiles.iter().take(80) {
+        if let Err(e) = world.can_place(data, kind, tile, player) {
+            first_error.get_or_insert(e);
+            continue;
+        }
+        if let Err(it) = world.afford(player, &def.cost, &def.goods_cost_r) {
+            first_error.get_or_insert(city::missing_text(data, it));
+            break;
+        }
+        world.pay(player, &def.cost, &def.goods_cost_r);
+        let bid = world.place_building(data, kind, player, tile, false);
+        let uid = builders[placed % builders.len()];
+        if let Some(u) = world.units.get_mut(uid) {
+            // Der erste Auftrag ersetzt den bisherigen, weitere reihen sich in die Warteschlange.
+            set_order(u, Order::Build { building: bid }, placed >= builders.len());
+        }
+        placed += 1;
+    }
+    if placed == 0
+        && let Some(e) = first_error
+    {
+        world.error(player, e);
     }
 }

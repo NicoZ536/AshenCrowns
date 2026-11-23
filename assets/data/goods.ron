@@ -1,0 +1,27 @@
+// ASHEN CROWNS – Waren der Echtzeit-Wirtschaft (Güterstufen 1–3 aus dem GDD, Kapitel 8.2).
+// Grundressourcen (gold, wood, stone, food) sind fest eingebaut; hier stehen die übrigen Güter.
+// price = Grundpreis in Gold am Markt. Mods können Einträge mit gleicher id ersetzen oder ergänzen.
+(
+    goods: [
+        // Stufe 1: Rohstoffe
+        (id: "clay", name: "Lehm", description: "Feuchter Ton aus der Lehmgrube. Wird in der Ziegelei gebrannt.", price: 3.0, tier: 1),
+        (id: "iron_ore", name: "Eisenerz", description: "Erz aus den Adern der Aschberge. Muss geschmolzen werden.", price: 5.0, tier: 1),
+        (id: "coal", name: "Kohle", description: "Holzkohle aus der Köhlerei. Treibstoff für Schmelze und Schmiede.", price: 4.0, tier: 1),
+        (id: "grain", name: "Getreide", description: "Ernte der Bauernhöfe. Wird gemahlen oder zu Bier gebraut.", price: 3.0, tier: 1),
+        (id: "wool", name: "Wolle", description: "Geschoren von den Schafen der Schäferei.", price: 4.0, tier: 1),
+        (id: "herbs", name: "Kräuter", description: "Heil- und Räucherkräuter aus dem Kräutergarten. Die Tempel verbrennen sie.", price: 5.0, tier: 1),
+        // Stufe 2: Zwischengüter
+        (id: "planks", name: "Bretter", description: "Gesägtes Holz für bessere Bauten und Werkstätten.", price: 5.0, tier: 2),
+        (id: "bricks", name: "Ziegel", description: "Gebrannter Lehm für feste Häuser und Mauern.", price: 6.0, tier: 2),
+        (id: "iron", name: "Eisenbarren", description: "Geschmolzenes Eisen, Grundstoff aller Schmiede.", price: 12.0, tier: 2),
+        (id: "flour", name: "Mehl", description: "In der Mühle gemahlenes Korn.", price: 5.0, tier: 2),
+        (id: "cloth", name: "Tuch", description: "Gewebter Stoff aus Wolle.", price: 9.0, tier: 2),
+        // Stufe 3: Fertiggüter
+        (id: "bread", name: "Brot", description: "Gebacken in der Bäckerei. Ein Grundbedürfnis der Bürgerhäuser.", price: 7.0, tier: 3),
+        (id: "beer", name: "Bier", description: "Aus Getreide gebraut. Hebt die Laune der Bürger.", price: 8.0, tier: 3),
+        (id: "clothing", name: "Kleidung", description: "Genäht in der Schneiderei. Bürger wollen sich kleiden.", price: 14.0, tier: 3),
+        (id: "tools", name: "Werkzeug", description: "Hämmer, Sägen und Spaten für Bauten und Betriebe.", price: 14.0, tier: 3),
+        (id: "weapons", name: "Waffen", description: "Schwerter, Speere und Bögen für die Ausbildung von Soldaten.", price: 22.0, tier: 3),
+        (id: "armor", name: "Rüstung", description: "Kettenhemden und Brustpanzer für schwere Einheiten.", price: 30.0, tier: 3),
+    ],
+)

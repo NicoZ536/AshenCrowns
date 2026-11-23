@@ -1,17 +1,17 @@
 //! Budgetierte Wegsuche, Pfadverfolgung, Separation und Kollision.
 
 use crate::data::GameData;
-use crate::entity::{Order, UnitId};
+use crate::entity::{EntityRef, Order, UnitId};
 use crate::map::TileMap;
 use crate::world::SimWorld;
-use glam::Vec2;
+use glam::{IVec2, Vec2};
 
 /// Maximale Wegsuchen pro Tick (verteilt Lastspitzen bei großen Gruppenbefehlen).
 const MAX_REQUESTS_PER_TICK: usize = 48;
 /// Gesamtbudget expandierter A*-Knoten pro Tick.
 const NODE_BUDGET_PER_TICK: usize = 24_000;
 
-pub fn process_paths(world: &mut SimWorld, _data: &GameData) {
+pub fn process_paths(world: &mut SimWorld, data: &GameData) {
     let mut done = 0;
     let mut budget = NODE_BUDGET_PER_TICK;
     let ids = world.units.ids();
@@ -29,10 +29,16 @@ pub fn process_paths(world: &mut SimWorld, _data: &GameData) {
             }
             continue;
         };
-        let from = u.pos;
-        let result = world.pathfinder.find(&world.map, from, goal, 6000.min(budget));
+        let (from, owner, order) = (u.pos, u.owner, u.order);
+        let result = world.pathfinder.find_for(&world.map, from, goal, 6000.min(budget), owner);
+        let found = world.pathfinder.last_found;
         budget = budget.saturating_sub(world.pathfinder.last_expanded.max(1));
         done += 1;
+        // Kein Weg (Mauern/Tore versperren ihn): die Befestigung angreifen, statt festzustecken.
+        if !found && matches!(order, Order::Move { attack_move: true, .. }) {
+            let spent = plan_breach(world, data, id, goal);
+            budget = budget.saturating_sub(spent);
+        }
         let u = world.units.get_mut(id).expect("exists");
         u.path_pending = false;
         match result {
@@ -48,6 +54,50 @@ pub fn process_paths(world: &mut SimWorld, _data: &GameData) {
     }
 }
 
+/// Sucht für eine Einheit ohne freien Weg die erste feindliche Befestigung auf dem kürzesten Weg
+/// (Befestigungen sind mit Zusatzkosten passierbar) und macht sie zum Angriffsziel.
+/// Gibt die verbrauchten A*-Knoten zurück.
+fn plan_breach(world: &mut SimWorld, data: &GameData, id: UnitId, goal: Vec2) -> usize {
+    let Some(u) = world.units.get(id) else { return 0 };
+    if data.unit(u.kind).damage_max <= 0.0 {
+        return 0;
+    }
+    // Hat die Einheit schon eine lebende Befestigung als Ziel, bleibt sie dabei.
+    if let Some(EntityRef::Building(b)) = u.target
+        && world.buildings.get(b).is_some_and(|x| x.hp > 0.0 && data.building(x.kind).is_fort())
+    {
+        return 0;
+    }
+    let (from, owner) = (u.pos, u.owner);
+    let mut breakable = vec![false; (world.map.width * world.map.height) as usize];
+    let mut any = false;
+    for (_, b) in world.buildings.iter() {
+        if b.hp > 0.0 && !b.invulnerable && SimWorld::hostile(owner, b.owner) && data.building(b.kind).is_fort() {
+            any = true;
+            for y in b.tile.y..b.tile.y + b.size.y {
+                for x in b.tile.x..b.tile.x + b.size.x {
+                    let t = IVec2::new(x, y);
+                    if world.map.in_bounds(t) {
+                        breakable[world.map.idx(t)] = true;
+                    }
+                }
+            }
+        }
+    }
+    if !any {
+        return 0;
+    }
+    let tile = world.pathfinder.find_breach(&world.map, from, goal, 6000, owner, &breakable);
+    let spent = world.pathfinder.last_expanded.max(1);
+    if let Some(t) = tile
+        && let Some(bid) = world.building_at(t)
+        && let Some(u) = world.units.get_mut(id)
+    {
+        u.target = Some(EntityRef::Building(bid));
+    }
+    spent
+}
+
 pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
     let ids = world.units.ids();
     let mut neighbours: Vec<UnitId> = Vec::new();
@@ -55,6 +105,7 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
         let Some(u) = world.units.get(id) else { continue };
         let def = data.unit(u.kind);
         let pos = u.pos;
+        let owner = u.owner;
         let radius = def.radius;
         let mut speed = def.speed * if u.routing > 0.0 { 1.15 } else { 1.0 };
         speed /= world.map.terrain_at(TileMap::tile_of(pos)).move_cost();
@@ -109,14 +160,17 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
         let step = desired * dt + push * 0.45;
         let mut new_pos = pos + step;
         let map = &world.map;
-        if !map.walkable(TileMap::tile_of(new_pos)) {
+        let (ot, nt) = (TileMap::tile_of(pos), TileMap::tile_of(new_pos));
+        // Diagonale Schritte über die Ecke zweier Mauerkacheln sind verboten.
+        let corner_cut = nt.x != ot.x && nt.y != ot.y && (!map.walkable_for(IVec2::new(nt.x, ot.y), owner) || !map.walkable_for(IVec2::new(ot.x, nt.y), owner));
+        if corner_cut || !map.walkable_for(nt, owner) {
             let tx = Vec2::new(new_pos.x, pos.y);
             let ty = Vec2::new(pos.x, new_pos.y);
-            if map.walkable(TileMap::tile_of(tx)) {
+            if map.walkable_for(TileMap::tile_of(tx), owner) {
                 new_pos = tx;
-            } else if map.walkable(TileMap::tile_of(ty)) {
+            } else if map.walkable_for(TileMap::tile_of(ty), owner) {
                 new_pos = ty;
-            } else if !map.walkable(TileMap::tile_of(pos)) {
+            } else if !map.walkable_for(ot, owner) {
                 // In einer Blockade gefangen (z. B. neues Gebäude): herausschieben.
                 if let Some(t) = map.nearest_walkable(TileMap::tile_of(pos), 5) {
                     new_pos = TileMap::center_of(t);
