@@ -1,7 +1,7 @@
 //! Rahmen der Weltkarten-Oberfläche: Oberleiste, Bedienleiste, Benachrichtigungen, Ereignis-, Friedens- und
 //! Schlacht-Dialoge, Pausenmenü und Tooltips.
 
-use super::mapview::{DrawCtx, MapMode, MapView, Marker, realm_color};
+use super::mapview::{DrawCtx, MapMode, province_markers, realm_color};
 use super::store;
 use super::widgets::*;
 use super::windows;
@@ -88,7 +88,7 @@ pub(super) fn draw(
             cmds.push(StrategyCommand::MoveArmy { army: a, to: p });
         }
     }
-    MapView::draw_legend(&ui.painter_at(rect), rect, s.mode, art);
+    s.view.draw_legend(ui, rect, s.mode, &s.world, art);
     if !blocked {
         map_tooltip(s, &ctx, art, &input);
     }
@@ -716,6 +716,12 @@ fn map_tooltip(
             ));
         }
         v
+    } else if let Some(p) = input.hover_marker.map(|p| &w.provinces[p as usize]) {
+        let mut v = vec![(format!("Ereignisse in {}", p.name), theme::GOLD)];
+        for m in province_markers(w, p) {
+            v.push((m.name().into(), m.tint()));
+        }
+        v
     } else if let Some(p) = input.hover.map(|p| &w.provinces[p as usize]) {
         let mut v = vec![
             (p.name.clone(), theme::GOLD),
@@ -745,8 +751,8 @@ fn map_tooltip(
                 Color32::from_rgb(110, 230, 150),
             ));
         }
-        if p.plague.is_some() {
-            v.push((Marker::Drop.name().into(), Color32::from_rgb(160, 220, 90)));
+        for m in province_markers(w, p) {
+            v.push((m.name().into(), m.tint()));
         }
         if s.selected_army.is_some() && p.owner.is_some() {
             v.push((

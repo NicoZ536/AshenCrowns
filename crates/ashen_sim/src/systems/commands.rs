@@ -236,7 +236,7 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
             }
             let ps = &world.players[player as usize];
             let queued: u32 = world.buildings.iter().filter(|(_, x)| x.owner == player).flat_map(|(_, x)| x.queue.iter()).map(|q| data.unit(q.unit).pop).sum();
-            if ps.pop + queued + udef.pop > ps.pop_cap.min(data.rules.max_population) {
+            if !world.mission_def.free_economy && ps.pop + queued + udef.pop > ps.pop_cap.min(data.rules.max_population) {
                 world.error(player, "Nicht genug Wohnraum – baut weitere Gehöfte.");
                 return;
             }

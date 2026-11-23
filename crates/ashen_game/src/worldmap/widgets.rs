@@ -132,16 +132,16 @@ impl WinKind {
     }
     fn default_pos(self) -> Pos2 {
         match self {
-            WinKind::Province => Pos2::new(14.0, 120.0),
+            WinKind::Province => Pos2::new(14.0, 66.0),
             WinKind::Realm
             | WinKind::Economy
             | WinKind::Religion
             | WinKind::Magic
-            | WinKind::Victory => Pos2::new(300.0, 120.0),
+            | WinKind::Victory => Pos2::new(300.0, 66.0),
             WinKind::Family | WinKind::Diplomacy | WinKind::Court | WinKind::Chronicle => {
-                Pos2::new(240.0, 120.0)
+                Pos2::new(240.0, 66.0)
             }
-            WinKind::Military => Pos2::new(14.0, 120.0),
+            WinKind::Military => Pos2::new(14.0, 66.0),
         }
     }
 }
@@ -227,7 +227,9 @@ pub struct Cx<'a> {
 
 impl Cx<'_> {
     pub fn button(&mut self, ui: &mut Ui, text: &str, w: f32, enabled: bool) -> bool {
-        let r = ui_art::button(ui, self.art, text, Vec2::new(w, 28.0), enabled);
+        // Breite passt sich dem Text an (nie Abschneiden der Beschriftung).
+        let tw = ui.painter().layout_no_wrap(text.to_string(), theme::caps_font(12.0), Color32::WHITE).size().x + 32.0;
+        let r = ui_art::button(ui, self.art, text, Vec2::new(w.max(tw), 28.0), enabled);
         if enabled {
             ui_common::sfx(self.engine, ui, &r);
         }
@@ -321,7 +323,8 @@ pub fn kv_col(ui: &mut Ui, k: &str, v: impl Into<String>, col: Color32) {
 /// Metallbalken mit Beschriftung in der Zeile.
 pub fn bar_row(ui: &mut Ui, art: &UiArt, label: &str, frac: f32, color: Color32, value: &str) {
     ui.horizontal(|ui| {
-        let (lr, _) = ui.allocate_exact_size(Vec2::new(128.0, 20.0), Sense::hover());
+        let lw = ui.painter().layout_no_wrap(label.to_string(), theme::body_font(14.0), Color32::WHITE).size().x + 10.0;
+        let (lr, _) = ui.allocate_exact_size(Vec2::new(lw.max(128.0), 20.0), Sense::hover());
         ui.painter().text(
             Pos2::new(lr.min.x, lr.center().y),
             Align2::LEFT_CENTER,
@@ -361,7 +364,8 @@ pub fn window(
 ) -> bool {
     let mut close = false;
     let art = cx.art;
-    let max_h = (ctx.content_rect().height() - 150.0).max(300.0);
+    // Unterhalb der Oberleiste und oberhalb der Fensterleiste bleiben (Titel, Rand und Abstand eingerechnet).
+    let max_h = (ctx.content_rect().height() - 238.0).max(260.0);
     egui::Area::new(Id::unique(("wm_win", kind.id())))
         .order(Order::Middle)
         .movable(true)

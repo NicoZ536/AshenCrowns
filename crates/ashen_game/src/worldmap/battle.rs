@@ -907,6 +907,8 @@ pub fn plan_battle(
         enemy_base_tag: "enemy_keep".into(),
         map: Some(battle_map(req, seed)),
         start_time: Some((req.hour / 24.0).clamp(0.2, 0.9)),
+        // Keine Wirtschaftsstrafen in Weltkarten-Schlachten (kein Nahrungsunterhalt, kein Bevölkerungslimit).
+        free_economy: true,
         ..Default::default()
     };
     // Sandbox-Modus: keine Standard-Niederlage (kein Bergfried nötig) und keine Wellen; Sieg/Niederlage entscheidet `battle_outcome`.

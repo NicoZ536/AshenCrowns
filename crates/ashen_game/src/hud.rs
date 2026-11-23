@@ -48,7 +48,9 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
     top_bar(scene, ui, engine, cx);
     console(scene, ui, engine, cx);
     crate::hud_hero::draw(scene, ui, engine, cx);
-    crate::hud_city::draw(scene, ui, engine, cx);
+    if !scene.world.mission_def.free_economy {
+        crate::hud_city::draw(scene, ui, engine, cx);
+    }
     objectives(scene, ui, engine, cx);
     messages(scene, ui, cx);
     if let Some(start) = scene.drag_start {
@@ -72,6 +74,44 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
     if let Some(o) = scene.world.mission.outcome {
         outcome(scene, ui, engine, cx, o);
     }
+}
+
+/// Tagesabschnitt für die Anzeige (Morgen, Mittag, Nachmittag, Abend, Nacht).
+fn day_part(env: &ashen_sim::env::Environment) -> &'static str {
+    use ashen_sim::env::DayPhase;
+    let t = env.time_of_day;
+    match env.phase() {
+        DayPhase::Dawn => "Morgen",
+        DayPhase::Day if t < 0.40 => "Morgen",
+        DayPhase::Day if t < 0.62 => "Mittag",
+        DayPhase::Day => "Nachmittag",
+        DayPhase::Dusk => "Abend",
+        DayPhase::Night => "Nacht",
+    }
+}
+
+/// Schlachtleiste statt Ressourcenplakette (Weltkarten-Schlachten ohne Wirtschaft): Stärke und Moral beider Seiten.
+fn battle_cells(world: &ashen_sim::SimWorld, data: &GameData) -> Vec<(&'static str, String, String, String, bool)> {
+    use ashen_sim::entity::ENEMY;
+    let side = |owner| {
+        let (mut n, mut morale) = (0u32, 0.0f32);
+        for (_, u) in world.units.iter().filter(|(_, u)| u.owner == owner) {
+            let def = data.unit(u.kind);
+            if def.class == UnitClass::Worker {
+                continue;
+            }
+            n += 1;
+            morale += (u.morale / def.morale.max(1.0)).clamp(0.0, 1.0);
+        }
+        (n, if n > 0 { morale / n as f32 * 100.0 } else { 0.0 })
+    };
+    let ((mine, mm), (foe, fm)) = (side(PLAYER), side(ENEMY));
+    vec![
+        ("icon_pop", format!("{mine}"), "Eure Streitmacht".into(), "Einsatzbereite Einheiten Eurer Heere auf dem Schlachtfeld.".into(), mine * 2 < foe),
+        ("icon_attack", format!("{foe}"), "Gegner".into(), "Einheiten des Feindes auf dem Schlachtfeld.".into(), false),
+        ("icon_happy", format!("{mm:.0}%"), "Eure Moral".into(), "Durchschnittliche Moral Eurer Einheiten. Bricht sie, fliehen die Truppen.".into(), mm < 40.0),
+        ("icon_sad", format!("{fm:.0}%"), "Moral des Gegners".into(), "Durchschnittliche Moral der feindlichen Einheiten.".into(), false),
+    ]
 }
 
 /// Nahrungsverbrauch der Bewohner pro Sekunde.
@@ -114,6 +154,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
     let res = p.resources;
     let (pop, cap) = (p.pop, p.pop_cap);
     let starving = p.starving;
+    let battle = scene.world.mission_def.free_economy;
     let food_rate: f32 = scene.world.buildings.iter().filter(|(_, b)| b.owner == PLAYER && b.complete).map(|(_, b)| cx.data.building(b.kind).food_per_sec).sum::<f32>()
         - scene.world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| cx.data.unit(u.kind).upkeep).sum::<f32>()
         - resident_food(&scene.world, cx.data);
@@ -126,7 +167,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
         art.band(&fg, rect.min.x, rect.max.x, rect.max.y - 4.0, true);
 
         // Ressourcenplakette.
-        let cells: [(&str, String, String, String, bool); 5] = [
+        let cells: Vec<(&str, String, String, String, bool)> = if battle { battle_cells(&scene.world, cx.data) } else { vec![
             ("icon_gold", format!("{}", res.gold.floor()), "Gold".into(), "Aus der Mine, Abgaben des Bergfrieds.".into(), false),
             ("icon_wood", format!("{}", res.wood.floor()), "Holz".into(), "Von Holzfällern geschlagen.".into(), false),
             ("icon_stone", format!("{}", res.stone.floor()), "Stein".into(), "Aus dem Steinbruch.".into(), false),
@@ -138,8 +179,8 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
                 starving || food_rate < 0.0 && res.food < 60.0,
             ),
             ("icon_pop", format!("{pop}/{cap}"), "Bevölkerung".into(), "Einheiten / Versorgung. Gehöfte und der Bergfried erhöhen die Versorgung; Bürger wohnen in Hütten und Häusern.".into(), pop >= cap),
-        ];
-        let cell_w = [96.0, 96.0, 96.0, 136.0, 104.0];
+        ] };
+        let cell_w: Vec<f32> = if battle { vec![104.0; 4] } else { vec![96.0, 96.0, 96.0, 136.0, 104.0] };
         let plaque = Rect::from_min_size(rect.min + Vec2::new(8.0, 4.0), Vec2::new(cell_w.iter().sum::<f32>() + 28.0, TOP_H - 4.0));
         for s in art.panel_shapes(PanelKind::Plaque, plaque, false) {
             painter.add(s);
@@ -157,7 +198,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
                 art.glow(&painter, Rect::from_center_size(Pos2::new(cell.min.x + 60.0, cell.center().y), Vec2::new(90.0, 36.0)), Color32::from_rgb((90.0 * a) as u8, (24.0 * a) as u8, 0));
             }
             shadow_text(&painter, Pos2::new(cell.min.x + 37.0, cell.center().y + 1.0), Align2::LEFT_CENTER, value, theme::heading_font(17.0), col);
-            if i == 3 {
+            if i == 3 && !battle {
                 let rate_col = if food_rate < 0.0 { Color32::from_rgb(226, 110, 80) } else { Color32::from_rgb(150, 200, 120) };
                 let vw = painter.layout_no_wrap(value.clone(), theme::heading_font(17.0), col).size().x;
                 shadow_text(&painter, Pos2::new(cell.min.x + 41.0 + vw, cell.center().y + 2.0), Align2::LEFT_CENTER, &format!("{food_rate:+.1}/s"), theme::body_bold_font(13.0), rate_col);
@@ -165,7 +206,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
             let resp = ui.interact(cell, Id::unique("res").with(i), Sense::hover());
             ui_art::tip(resp, art, title, body);
             x += cell_w[i];
-            if i < 4 {
+            if i + 1 < cells.len() {
                 let d = Pos2::new(x - 4.0, cell.center().y);
                 painter.add(Shape::convex_polygon(vec![d + Vec2::new(0.0, -4.0), d + Vec2::new(3.0, 0.0), d + Vec2::new(0.0, 4.0), d + Vec2::new(-3.0, 0.0)], theme::GOLD_DIM, Stroke::new(1.0, Color32::from_rgb(20, 12, 6))));
             }
@@ -175,7 +216,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
         let env = &scene.world.env;
         let mins = (scene.world.time / 60.0) as u32;
         let center = Pos2::new(rect.center().x.max(plaque.max.x + 150.0), rect.center().y);
-        let line1 = format!("Tag {} · {}", env.day, env.phase().label());
+        let line1 = format!("Tag {} · {}", env.day, day_part(env));
         let line2 = format!("{} · {:02}:{:02}", env.weather.label(), mins / 60, mins % 60);
         let w1 = painter.layout_no_wrap(line1.clone(), theme::heading_font(16.0), theme::GOLD).size().x;
         let w2 = painter.layout_no_wrap(line2.clone(), theme::italic_font(14.5), theme::GOLD).size().x;
@@ -193,7 +234,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
         shadow_text(&painter, Pos2::new(x0, center.y + 1.0), Align2::LEFT_CENTER, &line1, theme::heading_font(16.0), theme::GOLD);
         shadow_text(&painter, Pos2::new(x0 + w1 + 14.0, center.y + 2.0), Align2::LEFT_CENTER, &line2, theme::italic_font(14.5), theme::PARCHMENT_DIM);
         let resp = ui.interact(dp, Id::unique("date"), Sense::hover());
-        ui_art::tip(resp, art, &format!("Jahr 897 n. F. · Tag {}", env.day), &format!("{} · Wetter: {} · Spielzeit {:02}:{:02}", env.phase().label(), env.weather.label(), mins / 60, mins % 60));
+        ui_art::tip(resp, art, &format!("Jahr 897 n. F. · Tag {}", env.day), &format!("{} · Wetter: {} · Spielzeit {:02}:{:02}", day_part(env), env.weather.label(), mins / 60, mins % 60));
 
         // Rechts: Welle, Tempo, Menü.
         let right = UiBuilder::new().max_rect(Rect::from_min_max(Pos2::new(center.x + 140.0, rect.min.y), Pos2::new(rect.max.x - 10.0, rect.max.y))).layout(egui::Layout::right_to_left(egui::Align::Center));
@@ -960,7 +1001,7 @@ fn messages(scene: &mut MissionScene, ui: &mut egui::Ui, cx: &HudCtx) {
     let art = cx.ui;
     if let Some((t, left)) = &scene.toast {
         let a = (left / 0.4).clamp(0.0, 1.0);
-        egui::Area::new(Id::unique("toast")).anchor(Align2::CENTER_TOP, Vec2::new(0.0, TOP_H + 34.0)).interactable(false).show(ui.ctx(), |ui| {
+        egui::Area::new(Id::unique("toast")).anchor(Align2::CENTER_TOP, Vec2::new(0.0, TOP_H + 34.0 + if scene.world.mission_def.free_economy { 62.0 } else { 0.0 })).interactable(false).show(ui.ctx(), |ui| {
             ui.multiply_opacity(a);
             let (rect, _) = {
                 let g = ui.painter().layout_no_wrap(t.clone(), theme::heading_font(18.0), theme::GOLD);

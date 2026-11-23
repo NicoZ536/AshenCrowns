@@ -236,6 +236,10 @@ pub struct MissionDef {
     /// Tageszeit (0..1) bei Spielbeginn; ohne Angabe der Standard der Umgebung.
     #[serde(default)]
     pub start_time: Option<f32>,
+    /// Keine Wirtschaftsstrafen: kein Nahrungsunterhalt (keine Hungersnot) und kein Bevölkerungslimit.
+    /// Gedacht für Schlachten aus der Großen Kampagne, die ohne Stadt und Nachschub beginnen.
+    #[serde(default)]
+    pub free_economy: bool,
 }
 
 impl MissionDef {

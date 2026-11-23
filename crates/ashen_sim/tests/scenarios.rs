@@ -288,6 +288,44 @@ fn modifier_unit_cap_blocks_training() {
 }
 
 #[test]
+fn free_economy_disables_upkeep_and_population_cap() {
+    let d = data();
+    let base = MissionDef::load(&assets().join("missions/m01_last_settlement.ron")).unwrap();
+    let barracks = d.building_id("barracks").unwrap();
+    let sword = d.unit_id("swordsman").unwrap();
+    for free in [false, true] {
+        let mut def = base.clone();
+        def.free_economy = free;
+        let mut w = world(&def);
+        w.players[0].resources.food = 0.0;
+        w.players[0].resources.gold = 5000.0;
+        w.players[0].resources.wood = 5000.0;
+        w.players[0].resources.stone = 5000.0;
+        for g in w.players[0].goods.iter_mut() {
+            *g = 100.0;
+        }
+        let b = w.place_building(&d, barracks, PLAYER, glam::IVec2::new(20, 58), true);
+        // Bevölkerung am Limit: Ausbildung scheitert nur mit Bevölkerungslimit.
+        w.players[0].pop = w.players[0].pop_cap;
+        w.push_command(PlayerCommand { player: PLAYER, command: Command::Train { building: b, unit: sword } });
+        for _ in 0..40 {
+            w.step(&d);
+        }
+        w.players[0].pop = w.players[0].pop_cap;
+        let queued = w.buildings.get(b).map(|b| b.queue.len()).unwrap_or(0);
+        let upkeep: f32 = w.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| d.unit(u.kind).upkeep).sum();
+        assert!(upkeep > 0.0, "Testwelt braucht Einheiten mit Unterhalt");
+        if free {
+            assert!(!w.players[0].starving, "keine Hungersnot bei free_economy");
+            assert!(queued > 0 || w.players[0].stats.units_trained > 0, "Ausbildung trotz Bevölkerungslimit");
+        } else {
+            assert!(w.players[0].starving, "ohne free_economy Hungersnot bei 0 Nahrung");
+            assert_eq!(queued, 0, "Bevölkerungslimit blockiert die Ausbildung");
+        }
+    }
+}
+
+#[test]
 fn modifiers_scale_waves_resources_and_remove_hero() {
     let d = data();
     let base = MissionDef::load(&assets().join("missions/m01_last_settlement.ron")).unwrap();

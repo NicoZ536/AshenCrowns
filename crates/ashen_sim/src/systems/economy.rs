@@ -69,11 +69,17 @@ pub fn tick(world: &mut SimWorld, data: &GameData, dt: f32) {
         }
     }
 
-    // Unterhalt: Nahrung.
-    let upkeep: f32 = world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| data.unit(u.kind).upkeep).sum();
+    // Unterhalt: Nahrung (entfällt in Missionen mit `free_economy`).
+    let upkeep: f32 = if world.mission_def.free_economy { 0.0 } else { world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| data.unit(u.kind).upkeep).sum() };
+    let free = world.mission_def.free_economy;
     let p = &mut world.players[PLAYER as usize];
     p.resources.food -= upkeep * dt;
-    if p.resources.food <= 0.0 {
+    if free {
+        if p.starving {
+            p.starving = false;
+            world.events.push(SimEvent::Starvation { owner: PLAYER, active: false });
+        }
+    } else if p.resources.food <= 0.0 {
         p.resources.food = 0.0;
         if !p.starving {
             p.starving = true;

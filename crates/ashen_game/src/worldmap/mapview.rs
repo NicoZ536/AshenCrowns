@@ -200,46 +200,76 @@ pub fn prosperity(world: &StrategyWorld, p: ProvId) -> f32 {
         + pr.buildings.iter().map(|(_, n)| *n as f32).sum::<f32>() * 0.6
 }
 
-/// Legende eines Kartenmodus.
-pub fn legend(mode: MapMode) -> Vec<(Color32, &'static str)> {
+/// Legende eines Kartenmodus (Farbfeld, Beschriftung).
+pub fn legend(mode: MapMode, world: &StrategyWorld) -> Vec<(Color32, String)> {
+    let v = |c: Color32, s: &str| (c, s.to_string());
     match mode {
-        MapMode::Realms => vec![
-            (rgb([196, 56, 40]), "Reichsfarbe = Besitzer"),
-            (rgb([140, 140, 130]), "Herrenlos"),
-        ],
+        MapMode::Realms => {
+            let mut held: Vec<(RealmId, usize)> = world
+                .realms
+                .iter()
+                .filter(|r| r.alive)
+                .map(|r| {
+                    (
+                        r.id,
+                        world.provinces.iter().filter(|p| p.holder() == Some(r.id)).count(),
+                    )
+                })
+                .filter(|(_, n)| *n > 0)
+                .collect();
+            held.sort_by_key(|(id, n)| (Some(*id) != world.player, std::cmp::Reverse(*n)));
+            let mut out: Vec<(Color32, String)> = held
+                .iter()
+                .map(|(id, _)| (realm_color(&world.realms[*id as usize]), world.rname(*id)))
+                .collect();
+            out.push(v(rgb([140, 140, 130]), "Herrenlos"));
+            out
+        }
         MapMode::Terrain => vec![
-            (to_color(biome_rgb(Biome::Plains)), "Ebene"),
-            (to_color(biome_rgb(Biome::Forest)), "Wald"),
-            (to_color(biome_rgb(Biome::Mountain)), "Gebirge"),
-            (to_color(biome_rgb(Biome::Desert)), "Wüste"),
-            (to_color(biome_rgb(Biome::Swamp)), "Sumpf"),
+            v(to_color(biome_rgb(Biome::Plains)), "Ebene"),
+            v(to_color(biome_rgb(Biome::Forest)), "Wald"),
+            v(to_color(biome_rgb(Biome::Hills)), "Hügelland"),
+            v(to_color(biome_rgb(Biome::Mountain)), "Gebirge"),
+            v(to_color(biome_rgb(Biome::Desert)), "Wüste"),
+            v(to_color(biome_rgb(Biome::Swamp)), "Sumpf"),
+            v(to_color(biome_rgb(Biome::Tundra)), "Tundra"),
+            v(to_color(biome_rgb(Biome::Coast)), "Küste"),
+            v(to_color(biome_rgb(Biome::Island)), "Insel"),
+            v(to_color(biome_rgb(Biome::Volcanic)), "Vulkan"),
+            v(to_color(biome_rgb(Biome::Ruins)), "Ruinen"),
+            v(to_color(biome_rgb(Biome::Hollowland)), "Hohlland"),
         ],
         MapMode::Religion => RELIGIONS
             .iter()
-            .map(|r| (to_color(religion_rgb(*r)), r.name()))
+            .map(|r| (to_color(religion_rgb(*r)), r.name().to_string()))
+            .chain(std::iter::once(v(rgb([140, 140, 130]), "Sättigung = Anteil des Glaubens")))
             .collect(),
         MapMode::Hollowing => vec![
-            (rgb([90, 110, 90]), "rein"),
-            (rgb([90, 230, 140]), "stark gehohlt"),
-            (rgb([176, 96, 230]), "Schleier ≥ 4"),
+            v(rgb([90, 110, 90]), "rein (0)"),
+            v(rgb([90, 170, 115]), "gehohlt (50)"),
+            v(rgb([90, 230, 140]), "stark gehohlt (100)"),
+            v(rgb([176, 96, 230]), "Schleier ≥ 4"),
         ],
         MapMode::Economy => vec![
-            (rgb([70, 52, 40]), "arm"),
-            (rgb([196, 150, 60]), "wohlhabend"),
-            (rgb([250, 228, 130]), "reich"),
+            v(rgb([70, 52, 40]), "arm"),
+            v(rgb([196, 150, 60]), "wohlhabend"),
+            v(rgb([250, 228, 130]), "reich"),
+            v(rgb([140, 140, 130]), "Zahl = Steuerkraft"),
         ],
         MapMode::Unrest => vec![
-            (rgb([70, 140, 80]), "ruhig"),
-            (rgb([220, 190, 60]), "gespannt"),
-            (rgb([210, 50, 40]), "Aufstand"),
+            v(rgb([70, 140, 80]), "ruhig"),
+            v(rgb([220, 190, 60]), "gespannt"),
+            v(rgb([210, 50, 40]), "Aufstand"),
+            v(rgb([140, 140, 130]), "Zahl = Unruhe 0–100"),
         ],
         MapMode::Diplomacy => vec![
-            (rgb([240, 200, 70]), "eigenes Reich/Vasallen"),
-            (rgb([80, 130, 230]), "Verbündete"),
-            (rgb([210, 50, 40]), "Krieg"),
-            (rgb([90, 190, 100]), "freundlich"),
-            (rgb([150, 150, 150]), "neutral"),
-            (rgb([190, 110, 60]), "feindlich"),
+            v(rgb([240, 200, 70]), "eigenes Reich / Vasallen"),
+            v(rgb([80, 130, 230]), "Verbündete"),
+            v(rgb([210, 50, 40]), "Krieg"),
+            v(rgb([90, 190, 100]), "freundlich"),
+            v(rgb([150, 150, 150]), "neutral"),
+            v(rgb([190, 110, 60]), "feindlich"),
+            v(rgb([70, 70, 70]), "herrenlos"),
         ],
     }
 }
@@ -468,6 +498,8 @@ pub struct MapInput {
     pub right_clicked: Option<ProvId>,
     pub hover: Option<ProvId>,
     pub hover_army: Option<ArmyId>,
+    /// Zeiger über dem gebündelten Ereignismarker einer Provinz.
+    pub hover_marker: Option<ProvId>,
 }
 
 pub struct MapView {
@@ -477,6 +509,8 @@ pub struct MapView {
     tex: Option<TextureHandle>,
     tex_key: Option<(MapMode, u64)>,
     army_hits: Vec<(Rect, ArmyId)>,
+    marker_hits: Vec<(Rect, ProvId)>,
+    legend_signs: bool,
     drag_moved: f32,
     seed: u32,
 }
@@ -490,6 +524,8 @@ impl MapView {
             tex: None,
             tex_key: None,
             army_hits: Vec::new(),
+            marker_hits: Vec::new(),
+            legend_signs: false,
             drag_moved: 0.0,
             seed: (seed as u32) ^ 0x5EED,
         }
@@ -583,10 +619,16 @@ impl MapView {
                         c = mix(c, [150.0, 196.0, 210.0], 0.45);
                     }
                     c = mix(c, [255.0, 255.0, 255.0], (speck - 0.5) * 0.05);
+                    // Schaumsaum: hell an der Küste, nach außen ausgefranst.
+                    let frill = 0.5 + 0.5 * (x as f32 * 0.9 + y as f32 * 0.6 + shade * 14.0).sin();
                     if d <= 1.0 {
-                        c = mix(c, [210.0, 226.0, 220.0], 0.55);
+                        c = mix(c, [244.0, 250.0, 244.0], 0.82);
                     } else if d <= 2.0 {
-                        c = mix(c, [170.0, 206.0, 214.0], 0.25);
+                        c = mix(c, [226.0, 240.0, 238.0], 0.6);
+                    } else if d <= 3.0 {
+                        c = mix(c, [196.0, 226.0, 232.0], 0.3 + 0.25 * frill);
+                    } else if d <= 4.0 && frill > 0.62 {
+                        c = mix(c, [170.0, 210.0, 222.0], 0.25);
                     }
                     img.pixels[i] = to_color(c);
                     continue;
@@ -631,6 +673,21 @@ impl MapView {
                     let tl = 0.74 + 0.5 * shade + (speck - 0.5) * 0.10;
                     c = mix(c, [tc[0] * tl, tc[1] * tl, tc[2] * tl], k);
                 }
+                // Reichsgrenze: Abstand (1–2 Texel) zu einem Texel mit anderem Halter.
+                let mut realm_border = 0u8;
+                'rb: for dist in 1..=2i32 {
+                    for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
+                        let (nx, ny) = (x as i32 + dx * dist, y as i32 + dy * dist);
+                        if nx < 0 || ny < 0 || nx >= RW as i32 || ny >= RH as i32 {
+                            continue;
+                        }
+                        let nid = geo.ids[ny as usize * RW + nx as usize];
+                        if nid != NONE && nid != id && holders[nid as usize] != holders[id as usize] {
+                            realm_border = dist as u8;
+                            break 'rb;
+                        }
+                    }
+                }
                 // Grenzen: Nachbartexel mit anderer Provinz.
                 let mut border_other: Option<u16> = None;
                 for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
@@ -651,11 +708,14 @@ impl MapView {
                     if other == NONE {
                         c = mix(c, [18.0, 14.0, 12.0], 0.62);
                     } else if holders[id as usize] != holders[other as usize] {
-                        let rc = holder_rgb[id as usize].unwrap_or([120.0, 120.0, 112.0]);
-                        c = mix(mix(c, [14.0, 10.0, 8.0], 0.45), rc, 0.75);
+                        let rc = holder_rgb[id as usize].unwrap_or([150.0, 150.0, 140.0]);
+                        c = mix(mix(rc, [255.0, 236.0, 190.0], 0.38), [14.0, 10.0, 8.0], 0.12);
                     } else {
-                        c = mix(c, [20.0, 14.0, 10.0], 0.30);
+                        c = mix(c, [20.0, 14.0, 10.0], 0.22);
                     }
+                } else if realm_border == 2 {
+                    let rc = holder_rgb[id as usize].unwrap_or([150.0, 150.0, 140.0]);
+                    c = mix(c, mix(rc, [255.0, 236.0, 190.0], 0.2), 0.45);
                 }
                 img.pixels[i] = to_color(c);
             }
@@ -791,28 +851,9 @@ impl MapView {
         }
         self.draw_sea_shimmer(&painter, rect, cx);
         self.draw_overlays(&painter, rect, mode, cx);
-        // Randverdunkelung
-        for (c, s) in [
-            (
-                rect.left_center(),
-                EVec2::new(rect.width() * 0.35, rect.height() * 1.5),
-            ),
-            (
-                rect.right_center(),
-                EVec2::new(rect.width() * 0.35, rect.height() * 1.5),
-            ),
-            (
-                rect.center_top(),
-                EVec2::new(rect.width() * 1.5, rect.height() * 0.3),
-            ),
-            (
-                rect.center_bottom(),
-                EVec2::new(rect.width() * 1.5, rect.height() * 0.3),
-            ),
-        ] {
-            cx.ui_art
-                .soft_shadow(&painter, Rect::from_center_size(c, s), 0.45);
-        }
+        Self::draw_vignette(&painter, rect);
+        Self::draw_frame(&painter, rect);
+        Self::draw_compass(&painter, rect);
 
         // ---- Zeigerinteraktion
         if let Some(p) = ctx
@@ -825,6 +866,11 @@ impl MapView {
                 .rev()
                 .find(|(r, _)| r.contains(p))
                 .map(|(_, a)| *a);
+            out.hover_marker = self
+                .marker_hits
+                .iter()
+                .find(|(r, _)| r.contains(p))
+                .map(|(_, id)| *id);
             let m = self.to_map(rect, p);
             out.hover = self.province_at(world, m);
         }
@@ -839,6 +885,115 @@ impl MapView {
             self.drag_moved = 0.0;
         }
         out
+    }
+
+    /// Leichte Vignette: Ränder und Ecken dunkeln sanft ab.
+    fn draw_vignette(painter: &Painter, rect: Rect) {
+        let depth = (rect.height() * 0.16).clamp(50.0, 120.0);
+        let a_out = 120u8;
+        let edge = |p: &Painter, r: Rect, outer: [bool; 4]| {
+            // Ecken: links-oben, rechts-oben, rechts-unten, links-unten; true = außen (dunkel).
+            let col = |o: bool| {
+                if o {
+                    Color32::from_black_alpha(a_out)
+                } else {
+                    Color32::TRANSPARENT
+                }
+            };
+            let mut m = egui::Mesh::default();
+            m.colored_vertex(r.left_top(), col(outer[0]));
+            m.colored_vertex(r.right_top(), col(outer[1]));
+            m.colored_vertex(r.right_bottom(), col(outer[2]));
+            m.colored_vertex(r.left_bottom(), col(outer[3]));
+            m.add_triangle(0, 1, 2);
+            m.add_triangle(0, 2, 3);
+            p.add(Shape::mesh(m));
+        };
+        let (w, h) = (depth * 1.4, depth);
+        edge(painter, Rect::from_min_size(rect.min, EVec2::new(w, rect.height())), [true, false, false, true]);
+        edge(
+            painter,
+            Rect::from_min_size(Pos2::new(rect.max.x - w, rect.min.y), EVec2::new(w, rect.height())),
+            [false, true, true, false],
+        );
+        edge(painter, Rect::from_min_size(rect.min, EVec2::new(rect.width(), h)), [true, true, false, false]);
+        edge(
+            painter,
+            Rect::from_min_size(Pos2::new(rect.min.x, rect.max.y - h), EVec2::new(rect.width(), h)),
+            [false, false, true, true],
+        );
+    }
+
+    /// Kartenrahmen: Pergamentrand mit dunklen Fassungslinien und Eckzier.
+    fn draw_frame(painter: &Painter, rect: Rect) {
+        let band = 9.0;
+        let parch = Color32::from_rgb(176, 148, 98);
+        let parch_hi = Color32::from_rgb(214, 188, 132);
+        let dark = Color32::from_rgb(26, 18, 12);
+        for r in [
+            Rect::from_min_size(rect.min, EVec2::new(rect.width(), band)),
+            Rect::from_min_size(Pos2::new(rect.min.x, rect.max.y - band), EVec2::new(rect.width(), band)),
+            Rect::from_min_size(rect.min, EVec2::new(band, rect.height())),
+            Rect::from_min_size(Pos2::new(rect.max.x - band, rect.min.y), EVec2::new(band, rect.height())),
+        ] {
+            painter.rect_filled(r, 0.0, parch);
+        }
+        painter.rect_stroke(rect.shrink(1.0), 0.0, Stroke::new(2.0, dark), egui::StrokeKind::Inside);
+        painter.rect_stroke(rect.shrink(3.5), 0.0, Stroke::new(1.0, parch_hi), egui::StrokeKind::Inside);
+        painter.rect_stroke(rect.shrink(band), 0.0, Stroke::new(2.0, dark), egui::StrokeKind::Outside);
+        for c in [rect.left_top(), rect.right_top(), rect.right_bottom(), rect.left_bottom()] {
+            let d = EVec2::new(
+                if c.x <= rect.center().x { 1.0 } else { -1.0 },
+                if c.y <= rect.center().y { 1.0 } else { -1.0 },
+            );
+            let at = c + d * 14.0;
+            painter.add(Shape::convex_polygon(
+                vec![
+                    at + EVec2::new(0.0, -7.0),
+                    at + EVec2::new(7.0, 0.0),
+                    at + EVec2::new(0.0, 7.0),
+                    at + EVec2::new(-7.0, 0.0),
+                ],
+                Color32::from_rgb(214, 170, 82),
+                Stroke::new(1.5, dark),
+            ));
+        }
+    }
+
+    /// Dezente Kompassrose unten rechts.
+    fn draw_compass(painter: &Painter, rect: Rect) {
+        let c = Pos2::new(rect.max.x - 70.0, rect.max.y - 78.0);
+        let r = 34.0;
+        let a = 0.55;
+        let ink = Color32::from_rgba_unmultiplied(236, 220, 176, (200.0 * a) as u8);
+        let shade = Color32::from_rgba_unmultiplied(20, 14, 10, (170.0 * a) as u8);
+        painter.circle_filled(c, r + 4.0, Color32::from_rgba_unmultiplied(14, 20, 30, (110.0 * a) as u8));
+        painter.circle_stroke(c, r, Stroke::new(1.5, ink));
+        painter.circle_stroke(c, r * 0.62, Stroke::new(1.0, ink.gamma_multiply(0.6)));
+        for k in 0..4 {
+            let ang = k as f32 * std::f32::consts::FRAC_PI_2;
+            let (dx, dy) = (ang.sin(), -ang.cos());
+            let d = EVec2::new(dx, dy);
+            let n = EVec2::new(-dy, dx);
+            let len = if k == 0 { r + 8.0 } else { r };
+            painter.add(Shape::convex_polygon(
+                vec![c + d * len, c + n * 6.0, c - n * 6.0],
+                if k == 0 { Color32::from_rgba_unmultiplied(214, 96, 70, (230.0 * a) as u8) } else { ink },
+                Stroke::new(1.0, shade),
+            ));
+            painter.add(Shape::convex_polygon(
+                vec![c - d * (r * 0.55), c + n * 4.0, c - n * 4.0],
+                ink.gamma_multiply(0.7),
+                Stroke::new(1.0, shade),
+            ));
+        }
+        painter.text(
+            c + EVec2::new(0.0, -r - 18.0),
+            egui::Align2::CENTER_CENTER,
+            "N",
+            ashen_engine::ui::theme::caps_font(13.0),
+            ink,
+        );
     }
 
     fn draw_sea_shimmer(&self, painter: &Painter, rect: Rect, cx: &DrawCtx) {
@@ -985,15 +1140,49 @@ impl MapView {
                 false,
             );
         }
-        // Siedlungen, Namen, Marker.
+        // Siedlungen und Marker an festen Ankern; die belegten Flächen sperren Beschriftungen.
+        let mut occ: Vec<Rect> = Vec::new();
+        self.marker_hits.clear();
+        let mut sites: Vec<(ProvId, Pos2, f32)> = Vec::new();
         for p in &world.provinces {
             let c = self.to_screen(rect, p.centroid);
             if !rect.expand(60.0).contains(c) {
                 continue;
             }
-            self.draw_settlement(painter, c, p, world, cx, mode);
+            let size = Self::site_size(p, z);
+            self.draw_settlement(painter, c, size, p, world, cx);
+            occ.push(Rect::from_center_size(
+                c + EVec2::new(0.0, -size * 0.05),
+                EVec2::new(size * 1.4, size * 1.0),
+            ));
+            let marks = province_markers(world, p);
+            if !marks.is_empty() {
+                let br = Self::badge_rect(c, size, z);
+                Self::draw_marker_badge(painter, br, &marks, t, z, p.id);
+                self.marker_hits.push((br.expand(3.0), p.id));
+                occ.push(br.expand(3.0));
+            }
+            if matches!(mode, MapMode::Economy | MapMode::Unrest | MapMode::Hollowing) {
+                let v = match mode {
+                    MapMode::Economy => format!("{:.0}", prosperity(world, p.id)),
+                    MapMode::Unrest => format!("{:.0}", p.unrest),
+                    _ => format!("{:.0}", p.hollowing),
+                };
+                let pr = Self::plaque(
+                    painter,
+                    c + EVec2::new(size * 0.62, -size * 0.5),
+                    &v,
+                    11.0 * z.clamp(0.9, 1.3),
+                    Color32::from_rgb(200, 170, 90),
+                    Color32::from_rgb(255, 244, 210),
+                );
+                occ.push(pr.expand(2.0));
+            }
+            sites.push((p.id, c, size));
         }
-        // Heere.
+        // Regionsnamen (nur bei weitem Zoom, transparent) über den Siedlungen, unter Heeren und Namen.
+        self.draw_region_names(painter, rect, world);
+        // Heere: fester Standplatz neben dem Siedlungssymbol, marschierende an ihrer Position.
         let mut at: std::collections::BTreeMap<ProvId, Vec<&ashen_strategy::Army>> =
             std::collections::BTreeMap::new();
         for a in &world.armies {
@@ -1001,13 +1190,13 @@ impl MapView {
                 at.entry(a.location).or_default().push(a);
             }
         }
+        let mut army_draws: Vec<(Pos2, &ashen_strategy::Army)> = Vec::new();
         for (loc, list) in &at {
-            let base = self.to_screen(rect, Self::centroid(world, *loc))
-                + EVec2::new(0.0, 22.0 * z.clamp(0.8, 2.0));
-            let n = list.len() as f32;
+            let lp = &world.provinces[*loc as usize];
+            let c = self.to_screen(rect, lp.centroid);
+            let size = Self::site_size(lp, z);
             for (i, a) in list.iter().enumerate() {
-                let off = EVec2::new((i as f32 - (n - 1.0) / 2.0) * 26.0 * z.clamp(0.8, 1.6), 0.0);
-                self.draw_army(painter, base + off, a, world, cx, rect);
+                army_draws.push((Self::army_stand(c, size, z, i), a));
             }
         }
         for a in world
@@ -1015,7 +1204,13 @@ impl MapView {
             .iter()
             .filter(|a| !a.path.is_empty() && a.progress > 0.0)
         {
-            let pos = self.to_screen(rect, self.army_pos(world, a));
+            army_draws.push((self.to_screen(rect, self.army_pos(world, a)), a));
+        }
+        for (pos, _) in &army_draws {
+            occ.push(Self::army_rect(*pos, z).expand(2.0));
+        }
+        self.draw_labels(painter, rect, cx, &sites, &mut occ);
+        for (pos, a) in army_draws {
             self.draw_army(painter, pos, a, world, cx, rect);
         }
     }
@@ -1067,17 +1262,226 @@ impl MapView {
         }
     }
 
+    /// Bildschirmgröße des Siedlungssymbols (ohne Zoom-Begrenzung in Karteneinheiten).
+    fn site_size(p: &ashen_strategy::Province, z: f32) -> f32 {
+        (26.0 + 8.0 * p.settlement.rank() as f32) * z.clamp(0.7, 1.7)
+    }
+
+    /// Rechteck des gebündelten Ereignismarkers über der Siedlung.
+    fn badge_rect(c: Pos2, size: f32, z: f32) -> Rect {
+        let side = if z >= 2.4 { 26.0 } else { 20.0 };
+        Rect::from_center_size(c + EVec2::new(0.0, -size * 0.62 - side * 0.55), EVec2::splat(side))
+    }
+
+    /// Belegtes Rechteck eines Heeres (Figur, Banner und Stärkeplakette).
+    fn army_rect(pos: Pos2, z: f32) -> Rect {
+        let size = 34.0 * z.clamp(0.8, 1.7);
+        Rect::from_min_max(
+            Pos2::new(pos.x - size * 0.55, pos.y - size * 0.95),
+            Pos2::new(pos.x + size * 0.6, pos.y + size * 0.22 + 17.0),
+        )
+    }
+
+    /// Fester Standplatz der Heere einer Provinz: rechts neben dem Siedlungssymbol, nie auf dem Namen.
+    fn army_stand(c: Pos2, size: f32, z: f32, idx: usize) -> Pos2 {
+        let az = z.clamp(0.8, 1.7);
+        c + EVec2::new(size * 0.5 + 20.0 * az + idx as f32 * 34.0 * az, size * 0.42)
+    }
+
+    /// Reihenfolge der Beschriftungen: Auswahl > Spielerreich/Hauptstädte > Siedlungsgröße > Provinzfläche.
+    fn label_priority(world: &StrategyWorld, id: ProvId, selected: Option<ProvId>) -> f32 {
+        let p = &world.provinces[id as usize];
+        let mut s = p.settlement.rank() as f32 * 30.0;
+        let poly = &p.polygon;
+        let mut area = 0.0;
+        for i in 0..poly.len() {
+            let (a, b) = (poly[i], poly[(i + 1) % poly.len()]);
+            area += a.x * b.y - b.x * a.y;
+        }
+        s += (area.abs() * 0.5 / 1500.0).min(40.0);
+        if world.realms.iter().any(|r| r.alive && r.capital == id) {
+            s += 500.0;
+        }
+        if world.player.is_some() && p.holder() == world.player {
+            s += 300.0;
+        }
+        if selected == Some(id) {
+            s += 1000.0;
+        }
+        s
+    }
+
+    /// Regionsnamen: groß, gesperrt und transparent bei weitem Zoom.
+    fn draw_region_names(&self, painter: &Painter, rect: Rect, world: &StrategyWorld) {
+        let z = self.zoom;
+        let a = ((1.2 - z) / 0.3).clamp(0.0, 1.0);
+        if a <= 0.02 {
+            return;
+        }
+        let font = ashen_engine::ui::theme::title_font((24.0 * z).clamp(16.0, 30.0));
+        for reg in &world.regions {
+            if reg.provinces.is_empty() {
+                continue;
+            }
+            let mut m = Vec2::ZERO;
+            for p in &reg.provinces {
+                m += world.provinces[*p as usize].centroid;
+            }
+            m /= reg.provinces.len() as f32;
+            let c = self.to_screen(rect, m);
+            if !rect.expand(200.0).contains(c) {
+                continue;
+            }
+            let name = reg.name.to_uppercase();
+            let galleys: Vec<_> = name
+                .chars()
+                .map(|ch| painter.layout_no_wrap(ch.to_string(), font.clone(), Color32::WHITE))
+                .collect();
+            let gap = font.size * 0.16;
+            let total: f32 = galleys.iter().map(|g| g.size().x + gap).sum::<f32>() - gap;
+            let h = galleys.first().map(|g| g.size().y).unwrap_or(0.0);
+            let mut x = c.x - total / 2.0;
+            for (ch, g) in name.chars().zip(galleys) {
+                let w = g.size().x;
+                let pos = Pos2::new(x, c.y - h / 2.0);
+                let txt = ch.to_string();
+                painter.text(
+                    pos + EVec2::new(1.5, 1.5),
+                    egui::Align2::LEFT_TOP,
+                    &txt,
+                    font.clone(),
+                    Color32::from_black_alpha((120.0 * a) as u8),
+                );
+                painter.text(
+                    pos,
+                    egui::Align2::LEFT_TOP,
+                    &txt,
+                    font.clone(),
+                    Color32::from_rgba_unmultiplied(240, 226, 186, (150.0 * a) as u8),
+                );
+                x += w + gap;
+            }
+        }
+    }
+
+    /// Provinznamen mit Kollisionsvermeidung: wichtige zuerst, Ausweichplätze, kleinere Schrift, sonst ausgeblendet.
+    fn draw_labels(
+        &self,
+        painter: &Painter,
+        rect: Rect,
+        cx: &DrawCtx,
+        sites: &[(ProvId, Pos2, f32)],
+        occ: &mut Vec<Rect>,
+    ) {
+        let z = self.zoom;
+        let world = cx.world;
+        if z < 1.0 {
+            return;
+        }
+        let mut order: Vec<(f32, usize)> = sites
+            .iter()
+            .enumerate()
+            .map(|(i, (id, _, _))| (Self::label_priority(world, *id, cx.selected), i))
+            .collect();
+        order.sort_by(|a, b| b.0.total_cmp(&a.0));
+        let base = 11.5 * z.clamp(0.95, 1.5);
+        for (prio, i) in order {
+            if z < 1.3 && prio < 300.0 {
+                continue;
+            }
+            let (id, c, size) = sites[i];
+            let p = &world.provinces[id as usize];
+            let col = if prio >= 500.0 {
+                Color32::from_rgb(255, 240, 200)
+            } else {
+                Color32::from_rgb(240, 228, 196)
+            };
+            let forced = prio >= 500.0;
+            let mut chosen: Option<(Rect, std::sync::Arc<egui::Galley>, f32)> = None;
+            'search: for scale in [1.0_f32, 0.84] {
+                let fsize = (base * scale).round().max(8.0);
+                let g = painter.layout_no_wrap(
+                    p.name.clone(),
+                    ashen_engine::ui::theme::caps_font(fsize),
+                    col,
+                );
+                let sz = g.size();
+                let cands = [
+                    Rect::from_min_size(Pos2::new(c.x - sz.x / 2.0, c.y + size * 0.5), sz),
+                    Rect::from_min_size(
+                        Pos2::new(c.x - sz.x / 2.0, c.y - size * 0.62 - 26.0 - sz.y),
+                        sz,
+                    ),
+                    Rect::from_min_size(Pos2::new(c.x - size * 0.78 - sz.x, c.y - sz.y / 2.0), sz),
+                    Rect::from_min_size(Pos2::new(c.x + size * 0.78, c.y - sz.y / 2.0), sz),
+                ];
+                for r in cands.iter() {
+                    let probe = r.expand2(EVec2::new(3.0, 0.0));
+                    if !rect.intersects(*r) {
+                        continue;
+                    }
+                    if !occ.iter().any(|o| o.intersects(probe)) {
+                        chosen = Some((*r, g.clone(), fsize));
+                        break 'search;
+                    }
+                }
+            }
+            if chosen.is_none() && forced {
+                // Wichtige Namen werden trotzdem gesetzt: Platz mit der kleinsten Überdeckung.
+                let fsize = (base * 0.84).round().max(8.0);
+                let g = painter.layout_no_wrap(
+                    p.name.clone(),
+                    ashen_engine::ui::theme::caps_font(fsize),
+                    col,
+                );
+                let sz = g.size();
+                let cands = [
+                    Rect::from_min_size(Pos2::new(c.x - sz.x / 2.0, c.y + size * 0.5), sz),
+                    Rect::from_min_size(
+                        Pos2::new(c.x - sz.x / 2.0, c.y - size * 0.62 - 26.0 - sz.y),
+                        sz,
+                    ),
+                    Rect::from_min_size(Pos2::new(c.x - size * 0.78 - sz.x, c.y - sz.y / 2.0), sz),
+                    Rect::from_min_size(Pos2::new(c.x + size * 0.78, c.y - sz.y / 2.0), sz),
+                    Rect::from_min_size(Pos2::new(c.x - sz.x / 2.0, c.y + size * 0.5 + sz.y), sz),
+                ];
+                let cost = |r: &Rect| -> f32 {
+                    occ.iter()
+                        .map(|o| {
+                            let i = o.intersect(*r);
+                            i.width().max(0.0) * i.height().max(0.0)
+                        })
+                        .sum()
+                };
+                if let Some(best) = cands.iter().min_by(|a, b| cost(a).total_cmp(&cost(b))) {
+                    chosen = Some((*best, g, fsize));
+                }
+            }
+            let Some((r, g, fsize)) = chosen else {
+                continue;
+            };
+            occ.push(r.expand2(EVec2::new(3.0, 0.0)));
+            let shadow = painter.layout_no_wrap(
+                p.name.clone(),
+                ashen_engine::ui::theme::caps_font(fsize),
+                Color32::from_black_alpha(230),
+            );
+            for (dx, dy) in [(1.0, 1.0), (-1.0, 1.0)] {
+                painter.galley(r.min + EVec2::new(dx, dy), shadow.clone(), Color32::BLACK);
+            }
+            painter.galley(r.min, g, col);
+        }
+    }
+
     fn draw_settlement(
         &self,
         painter: &Painter,
         c: Pos2,
+        size: f32,
         p: &ashen_strategy::Province,
         world: &StrategyWorld,
         cx: &DrawCtx,
-        mode: MapMode,
     ) {
-        let z = self.zoom;
-        let size = (26.0 + 8.0 * p.settlement.rank() as f32) * z.clamp(0.7, 1.7);
         let name = match p.settlement {
             SettlementLevel::Village => "bld_hut",
             SettlementLevel::Town => "bld_house",
@@ -1129,94 +1533,16 @@ impl MapView {
                 Stroke::new(1.0, Color32::BLACK),
             ));
         }
-        // Name (ab mittlerer Zoomstufe).
-        if z >= 0.85 {
-            let f = ashen_engine::ui::theme::caps_font((11.0 * z.clamp(0.9, 1.5)).round());
-            let pos = c + EVec2::new(0.0, size * 0.52);
-            painter.text(
-                pos + EVec2::new(1.0, 1.0),
-                egui::Align2::CENTER_TOP,
-                &p.name,
-                f.clone(),
-                Color32::from_black_alpha(230),
-            );
-            painter.text(
-                pos,
-                egui::Align2::CENTER_TOP,
-                &p.name,
-                f,
-                Color32::from_rgb(240, 228, 196),
-            );
-        }
-        // Marker über der Siedlung.
-        let mut marks: Vec<(Marker, Color32)> = Vec::new();
-        if world.battles.iter().any(|b| b.province == p.id) {
-            marks.push((Marker::Swords, Color32::from_rgb(255, 120, 70)));
-        }
-        if p.siege.is_some() {
-            marks.push((Marker::Flame, Color32::from_rgb(255, 160, 60)));
-        }
-        if p.plague.is_some() {
-            marks.push((Marker::Drop, Color32::from_rgb(150, 220, 90)));
-        }
-        if p.shrine > 0 || p.god_shrine.is_some() && p.veil >= 3.0 {
-            marks.push((Marker::Ring, Color32::from_rgb(140, 250, 170)));
-        }
-        if world
-            .neutrals
-            .iter()
-            .any(|n| n.active && n.province == p.id)
-        {
-            marks.push((Marker::Paw, Color32::from_rgb(230, 90, 70)));
-        }
-        if world
-            .bosses
-            .iter()
-            .any(|b| b.province == p.id && b.state == ashen_strategy::BossState::Active)
-        {
-            marks.push((Marker::Skull, Color32::from_rgb(250, 240, 220)));
-        }
-        if p.unrest >= 60.0 || p.rebel_held {
-            marks.push((Marker::Fist, Color32::from_rgb(235, 80, 60)));
-        }
-        if p.food_ratio < 0.7 && p.population() > 50.0 {
-            marks.push((Marker::Bowl, Color32::from_rgb(220, 180, 90)));
-        }
-        let ms = (3.0 * z.clamp(0.9, 1.6)).max(2.0);
-        let total = marks.len() as f32 * (8.0 * ms + 3.0);
-        for (i, (m, col)) in marks.iter().enumerate() {
-            let x = c.x - total / 2.0 + i as f32 * (8.0 * ms + 3.0);
-            let y = c.y - size * 0.62 - 8.0 * ms;
-            let pulse = if matches!(m, Marker::Swords | Marker::Flame) {
-                0.75 + 0.25 * (cx.t * 6.0).sin()
-            } else {
-                1.0
-            };
-            m.draw(painter, Pos2::new(x, y), ms, col.gamma_multiply(pulse));
-        }
-        if mode == MapMode::Economy || mode == MapMode::Unrest || mode == MapMode::Hollowing {
-            let v = match mode {
-                MapMode::Economy => format!("{:.0}", prosperity(world, p.id)),
-                MapMode::Unrest => format!("{:.0}", p.unrest),
-                _ => format!("{:.0}", p.hollowing),
-            };
-            let f = ashen_engine::ui::theme::body_bold_font(12.0 * z.clamp(0.9, 1.4));
-            let pos = c + EVec2::new(0.0, size * 0.52 + 14.0 * z.clamp(0.9, 1.4));
-            painter.text(
-                pos + EVec2::new(1.0, 1.0),
-                egui::Align2::CENTER_TOP,
-                &v,
-                f.clone(),
-                Color32::BLACK,
-            );
-            painter.text(
-                pos,
-                egui::Align2::CENTER_TOP,
-                &v,
-                f,
-                Color32::from_rgb(255, 244, 210),
-            );
-        }
+    }
+
+    /// Kleines Plakettchen mit Zahl (Heeresstärke, Kartenwerte).
+    fn plaque(painter: &Painter, center: Pos2, text: &str, size: f32, border: Color32, fg: Color32) -> Rect {
+        let g = painter.layout_no_wrap(text.to_string(), ashen_engine::ui::theme::body_bold_font(size), fg);
+        let r = Rect::from_center_size(center, g.size() + EVec2::new(8.0, 2.0));
+        painter.rect_filled(r, 3.0, Color32::from_rgba_unmultiplied(20, 14, 10, 225));
+        painter.rect_stroke(r, 3.0, Stroke::new(1.0, border), egui::StrokeKind::Inside);
+        painter.galley(r.center() - g.size() / 2.0, g, fg);
+        r
     }
 
     fn draw_army(
@@ -1296,22 +1622,13 @@ impl MapView {
                 painter.circle_filled(figure.center(), size * 0.25, col);
             }
         }
-        // Stärke
-        let txt = format!("{}", a.size());
-        let f = ashen_engine::ui::theme::body_bold_font(11.5 * z);
-        let tp = pos + EVec2::new(0.0, size * 0.22);
-        painter.text(
-            tp + EVec2::new(1.0, 1.0),
-            egui::Align2::CENTER_TOP,
-            &txt,
-            f.clone(),
-            Color32::BLACK,
-        );
-        painter.text(
-            tp,
-            egui::Align2::CENTER_TOP,
-            &txt,
-            f,
+        // Stärke als kleines Plakettchen unter der Figur.
+        Self::plaque(
+            painter,
+            pos + EVec2::new(size * 0.05, size * 0.22 + 8.0),
+            &format!("{}", a.size()),
+            10.5 * z,
+            col.gamma_multiply(0.9),
             if mine {
                 Color32::from_rgb(255, 232, 160)
             } else {
@@ -1319,19 +1636,9 @@ impl MapView {
             },
         );
         if a.in_battle.is_some() {
-            Marker::Swords.draw(
-                painter,
-                r.center_top() + EVec2::new(-12.0, -22.0),
-                3.0,
-                Color32::from_rgb(255, 130, 80),
-            );
+            Marker::Swords.draw(painter, r.center_top() + EVec2::new(-10.0, -12.0), 2.0, 1.0);
         } else if a.order == ArmyOrder::Siege {
-            Marker::Flame.draw(
-                painter,
-                r.center_top() + EVec2::new(-12.0, -22.0),
-                3.0,
-                Color32::from_rgb(255, 170, 70),
-            );
+            Marker::Flame.draw(painter, r.center_top() + EVec2::new(-10.0, -12.0), 2.0, 1.0);
         }
         if selected {
             painter.rect_stroke(
@@ -1351,50 +1658,144 @@ impl MapView {
         self.army_hits.push((r.expand(4.0), a.id));
     }
 
-    /// Legende des aktuellen Modus unten links.
-    pub fn draw_legend(painter: &Painter, rect: Rect, mode: MapMode, art: &UiArt) {
-        let items = legend(mode);
-        let h = 22.0 + items.len() as f32 * 18.0;
-        let r = Rect::from_min_size(
-            Pos2::new(rect.min.x + 14.0, rect.max.y - h - 14.0),
-            EVec2::new(210.0, h),
+    /// Gebündelter Ereignismarker: kleine Plakette mit dem wichtigsten Symbol, bei mehreren ein „+n“; dezentes Pulsieren.
+    fn draw_marker_badge(painter: &Painter, r: Rect, marks: &[Marker], t: f32, z: f32, id: ProvId) {
+        let m = marks[0];
+        let ph = (t * 2.2 + id as f32 * 0.9).sin() * 0.5 + 0.5;
+        let tint = m.tint();
+        let glow = r.expand(2.0 + ph * 2.5);
+        painter.rect_filled(glow, 5.0, tint.gamma_multiply(0.10 + 0.14 * ph));
+        painter.rect_filled(r, 4.0, Color32::from_rgba_unmultiplied(20, 14, 12, 225));
+        painter.rect_stroke(
+            r,
+            4.0,
+            Stroke::new(1.0, tint.gamma_multiply(0.65 + 0.35 * ph)),
+            egui::StrokeKind::Inside,
         );
+        let px = if z >= 2.4 { 3.0 } else { 2.0 };
+        m.draw(painter, r.center() - EVec2::splat(4.0 * px), px, 0.82 + 0.18 * ph);
+        if marks.len() > 1 {
+            Self::plaque(
+                painter,
+                r.right_bottom() + EVec2::new(-1.0, 1.0),
+                &format!("+{}", marks.len() - 1),
+                9.0,
+                tint.gamma_multiply(0.8),
+                Color32::from_rgb(240, 228, 196),
+            );
+        }
+    }
+
+    /// Legende des aktuellen Modus unten links: Farbtabelle, optional Zeichen (Grenzen, Ereignissymbole).
+    pub fn draw_legend(&mut self, ui: &mut egui::Ui, rect: Rect, mode: MapMode, world: &StrategyWorld, art: &UiArt) {
+        use ashen_engine::ui::theme;
+        let painter = ui.painter_at(rect);
+        let items = legend(mode, world);
+        let cols = if items.len() > 7 { 2 } else { 1 };
+        let rows = items.len().div_ceil(cols);
+        let col_w = if cols == 2 { 210.0 } else { 190.0 };
+        let marker_rows = Marker::ALL.len().div_ceil(2);
+        let signs_h = if self.legend_signs { 26.0 + 18.0 + marker_rows as f32 * 19.0 } else { 0.0 };
+        let w = (cols as f32 * col_w + 20.0).max(if self.legend_signs { 310.0 } else { 0.0 });
+        let h = 42.0 + rows as f32 * 18.0 + signs_h;
+        let r = Rect::from_min_size(Pos2::new(rect.min.x + 20.0, rect.max.y - h - 20.0), EVec2::new(w, h));
         for s in art.panel_shapes(ui_art::PanelKind::Thin, r, false) {
             painter.add(s);
         }
-        painter.text(
-            r.min + EVec2::new(16.0, 10.0),
-            egui::Align2::LEFT_TOP,
-            mode.label(),
-            ashen_engine::ui::theme::caps_font(12.5),
-            ashen_engine::ui::theme::GOLD,
-        );
+        painter.text(r.min + EVec2::new(16.0, 10.0), egui::Align2::LEFT_TOP, mode.label(), theme::caps_font(12.5), theme::GOLD);
         for (i, (c, name)) in items.iter().enumerate() {
-            let y = r.min.y + 30.0 + i as f32 * 18.0;
-            painter.rect_filled(
-                Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)),
-                0.0,
-                *c,
+            let (col, row) = (i / rows, i % rows);
+            let x = r.min.x + 16.0 + col as f32 * col_w;
+            let y = r.min.y + 32.0 + row as f32 * 18.0;
+            let sw = Rect::from_min_size(Pos2::new(x, y), EVec2::new(14.0, 12.0));
+            painter.rect_filled(sw, 0.0, *c);
+            painter.rect_stroke(sw, 0.0, Stroke::new(1.0, Color32::BLACK), egui::StrokeKind::Outside);
+            painter.text(Pos2::new(x + 22.0, y - 1.0), egui::Align2::LEFT_TOP, name, theme::body_font(12.5), theme::PARCHMENT);
+        }
+        // Umschalter für den Zeichenblock.
+        let toggle = Rect::from_min_size(Pos2::new(r.max.x - 140.0, r.min.y + 6.0), EVec2::new(126.0, 20.0));
+        let resp = ui.interact(toggle, egui::Id::unique("wm_legend_signs"), egui::Sense::click());
+        if resp.clicked() {
+            self.legend_signs = !self.legend_signs;
+        }
+        painter.text(
+            toggle.right_center(),
+            egui::Align2::RIGHT_CENTER,
+            if self.legend_signs { "Zeichen ausblenden" } else { "Zeichen anzeigen" },
+            theme::body_font(12.0),
+            if resp.hovered() { theme::GOLD_BRIGHT } else { theme::GOLD_DIM },
+        );
+        if self.legend_signs {
+            let y0 = r.min.y + 32.0 + rows as f32 * 18.0 + 6.0;
+            painter.line_segment(
+                [Pos2::new(r.min.x + 14.0, y0 - 3.0), Pos2::new(r.max.x - 14.0, y0 - 3.0)],
+                Stroke::new(1.0, theme::GOLD_DIM.gamma_multiply(0.6)),
             );
-            painter.rect_stroke(
-                Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)),
-                0.0,
-                Stroke::new(1.0, Color32::BLACK),
-                egui::StrokeKind::Outside,
-            );
-            painter.text(
-                Pos2::new(r.min.x + 38.0, y - 1.0),
-                egui::Align2::LEFT_TOP,
-                *name,
-                ashen_engine::ui::theme::body_font(13.0),
-                ashen_engine::ui::theme::PARCHMENT,
-            );
+            let half = (w - 20.0) / 2.0;
+            for (i, (label, wd, col)) in [
+                ("Reichsgrenze", 3.5, Color32::from_rgb(240, 200, 120)),
+                ("Provinzgrenze", 1.0, Color32::from_rgb(160, 134, 100)),
+            ]
+            .iter()
+            .enumerate()
+            {
+                let x = r.min.x + 16.0 + i as f32 * half;
+                painter.line_segment(
+                    [Pos2::new(x, y0 + 8.0), Pos2::new(x + 22.0, y0 + 8.0)],
+                    Stroke::new(*wd, *col),
+                );
+                painter.text(Pos2::new(x + 30.0, y0), egui::Align2::LEFT_TOP, label, theme::body_font(12.5), theme::PARCHMENT);
+            }
+            for (i, m) in Marker::ALL.iter().enumerate() {
+                let (col, row) = (i % 2, i / 2);
+                let x = r.min.x + 16.0 + col as f32 * half;
+                let y = y0 + 22.0 + row as f32 * 19.0;
+                let chip = Rect::from_min_size(Pos2::new(x, y), EVec2::splat(17.0));
+                painter.rect_filled(chip, 3.0, Color32::from_rgba_unmultiplied(20, 14, 12, 225));
+                painter.rect_stroke(chip, 3.0, Stroke::new(1.0, m.tint().gamma_multiply(0.7)), egui::StrokeKind::Inside);
+                m.draw(&painter, chip.center() - EVec2::splat(6.0), 1.5, 1.0);
+                painter.text(Pos2::new(x + 24.0, y + 1.0), egui::Align2::LEFT_TOP, m.name(), theme::body_font(12.0), theme::PARCHMENT);
+            }
         }
     }
 }
 
-/// 8×8-Pixelsymbole für Ereignismarker.
-#[derive(Clone, Copy)]
+/// Aktive Ereignisse einer Provinz in Anzeigepriorität (das erste wird als Marker gezeigt).
+pub fn province_markers(world: &StrategyWorld, p: &ashen_strategy::Province) -> Vec<Marker> {
+    let mut marks = Vec::new();
+    if world.battles.iter().any(|b| b.province == p.id) {
+        marks.push(Marker::Swords);
+    }
+    if p.siege.is_some() {
+        marks.push(Marker::Flame);
+    }
+    if world
+        .bosses
+        .iter()
+        .any(|b| b.province == p.id && b.state == ashen_strategy::BossState::Active)
+    {
+        marks.push(Marker::Skull);
+    }
+    if p.unrest >= 60.0 || p.rebel_held {
+        marks.push(Marker::Fist);
+    }
+    if world.neutrals.iter().any(|n| n.active && n.province == p.id) {
+        marks.push(Marker::Paw);
+    }
+    if p.shrine > 0 || p.god_shrine.is_some() && p.veil >= 3.0 {
+        marks.push(Marker::Ring);
+    }
+    if p.plague.is_some() {
+        marks.push(Marker::Drop);
+    }
+    if p.food_ratio < 0.7 && p.population() > 50.0 {
+        marks.push(Marker::Bowl);
+    }
+    marks
+}
+
+/// 8×8-Pixelsymbole für Ereignismarker (0 = Loch, 1 = Schatten, 2 = Grundton, 3 = Licht).
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Marker {
     Swords,
     Skull,
@@ -1407,88 +1808,40 @@ pub enum Marker {
 }
 
 impl Marker {
-    fn bits(self) -> [u8; 8] {
+    pub const ALL: [Marker; 8] = [
+        Marker::Swords,
+        Marker::Flame,
+        Marker::Skull,
+        Marker::Fist,
+        Marker::Paw,
+        Marker::Ring,
+        Marker::Drop,
+        Marker::Bowl,
+    ];
+
+    fn rows(self) -> [&'static str; 8] {
         match self {
-            Marker::Swords => [
-                0b1000_0001,
-                0b1100_0011,
-                0b0110_0110,
-                0b0011_1100,
-                0b0011_1100,
-                0b0110_0110,
-                0b1100_0011,
-                0b1000_0001,
-            ],
-            Marker::Skull => [
-                0b0011_1100,
-                0b0111_1110,
-                0b1101_1011,
-                0b1101_1011,
-                0b1111_1111,
-                0b0011_1100,
-                0b0010_0100,
-                0b0010_0100,
-            ],
-            Marker::Flame => [
-                0b0001_0000,
-                0b0001_1000,
-                0b0011_1000,
-                0b0111_1100,
-                0b0111_1110,
-                0b1111_1110,
-                0b0111_1100,
-                0b0011_1000,
-            ],
-            Marker::Drop => [
-                0b0001_1000,
-                0b0001_1000,
-                0b0011_1100,
-                0b0111_1110,
-                0b1111_1111,
-                0b1111_1111,
-                0b0111_1110,
-                0b0011_1100,
-            ],
-            Marker::Ring => [
-                0b0011_1100,
-                0b0100_0010,
-                0b1001_1001,
-                0b1010_0101,
-                0b1010_0101,
-                0b1001_1001,
-                0b0100_0010,
-                0b0011_1100,
-            ],
-            Marker::Paw => [
-                0b0100_0010,
-                0b1110_0111,
-                0b0100_0010,
-                0b0001_1000,
-                0b0011_1100,
-                0b0111_1110,
-                0b0111_1110,
-                0b0011_1100,
-            ],
-            Marker::Fist => [
-                0b0110_1100,
-                0b1111_1110,
-                0b1111_1111,
-                0b1111_1111,
-                0b1111_1111,
-                0b0111_1110,
-                0b0011_1100,
-                0b0001_1000,
-            ],
-            Marker::Bowl => [
-                0,
-                0,
-                0,
-                0b1111_1111,
-                0b1111_1111,
-                0b0111_1110,
-                0b0011_1100,
-                0,
-            ],
+            Marker::Swords => ["3......3", ".32..23.", "..3223..", "...33...", "..2112..", ".21..12.", "11....11", "........"],
+            Marker::Skull => ["..2222..", ".233222.", ".200200.", ".222222.", "..2222..", "..2222..", "..2121..", "........"],
+            Marker::Flame => ["...2....", "..22....", "..232.2.", ".23322..", ".233322.", ".233332.", "..2332..", "...22..."],
+            Marker::Drop => ["...22...", "...22...", "..2332..", ".233322.", ".233222.", ".222212.", "..2112..", "...11..."],
+            Marker::Ring => ["..2222..", ".23..32.", "23....12", "2..22..2", "2..22..2", "21....12", ".21..12.", "..1111.."],
+            Marker::Paw => [".2....2.", "222..222", ".2.22.2.", "..2332..", ".233332.", ".233332.", ".22..22.", "........"],
+            Marker::Fist => ["...33...", "..2332..", "..2222..", "..2222..", "...22...", "........", "...22...", "..2222.."],
+            Marker::Bowl => ["........", "........", "3......3", "23....32", "22222222", ".223322.", "..2222..", "...11..."],
+        }
+    }
+
+    pub fn tint(self) -> Color32 {
+        match self {
+            Marker::Swords => Color32::from_rgb(255, 128, 76),
+            Marker::Skull => Color32::from_rgb(236, 228, 208),
+            Marker::Flame => Color32::from_rgb(255, 164, 64),
+            Marker::Drop => Color32::from_rgb(150, 220, 90),
+            Marker::Ring => Color32::from_rgb(120, 236, 170),
+            Marker::Paw => Color32::from_rgb(226, 96, 76),
+            Marker::Fist => Color32::from_rgb(232, 86, 66),
+            Marker::Bowl => Color32::from_rgb(222, 184, 100),
         }
     }
 
@@ -1505,29 +1858,32 @@ impl Marker {
         }
     }
 
-    /// Zeichnet das Symbol pixelgenau (jedes Pixel ein Quadrat der Kantenlänge `px`), mit dunklem Schlagschatten.
-    pub fn draw(self, painter: &Painter, min: Pos2, px: f32, col: Color32) {
-        let bits = self.bits();
-        let px = px.round().max(2.0);
-        for pass in 0..2 {
-            let (off, c) = if pass == 0 {
-                (px * 0.6, Color32::from_black_alpha(210))
-            } else {
-                (0.0, col)
-            };
-            for (y, row) in bits.iter().enumerate() {
-                for x in 0..8 {
-                    if row & (0x80 >> x) != 0 {
-                        painter.rect_filled(
-                            Rect::from_min_size(
-                                Pos2::new(min.x + x as f32 * px + off, min.y + y as f32 * px + off),
-                                EVec2::splat(px),
-                            ),
-                            0.0,
-                            c,
-                        );
-                    }
-                }
+    /// Zeichnet das Symbol pixelgenau (jedes Pixel ein Quadrat der Kantenlänge `px`) ab `min`; `k` dimmt (0–1).
+    pub fn draw(self, painter: &Painter, min: Pos2, px: f32, k: f32) {
+        let tint = self.tint();
+        let t = |m: f32| {
+            let c = |v: u8| (v as f32 * m).min(255.0) as u8;
+            Color32::from_rgb(c(tint.r()), c(tint.g()), c(tint.b())).gamma_multiply(k)
+        };
+        let light = Color32::from_rgb(
+            ((tint.r() as u16 + 255) / 2) as u8,
+            ((tint.g() as u16 + 255) / 2) as u8,
+            ((tint.b() as u16 + 255) / 2) as u8,
+        )
+        .gamma_multiply(k);
+        for (y, row) in self.rows().iter().enumerate() {
+            for (x, ch) in row.bytes().enumerate() {
+                let c = match ch {
+                    b'1' => t(0.55),
+                    b'2' => t(1.0),
+                    b'3' => light,
+                    _ => continue,
+                };
+                painter.rect_filled(
+                    Rect::from_min_size(Pos2::new(min.x + x as f32 * px, min.y + y as f32 * px), EVec2::splat(px)),
+                    0.0,
+                    c,
+                );
             }
         }
     }
