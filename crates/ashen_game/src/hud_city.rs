@@ -1,16 +1,18 @@
 //! Oberfläche der Echtzeit-Wirtschaft: Lagerfenster, Stadtübersicht (Steuern, Bürger, Ausbau),
 //! Baumenü mit Rubriken, Marktfenster und die Betriebsansicht eines gewählten Gebäudes.
 
-use crate::hud::{shadow_text, sprite, HudCtx, CONSOLE_H, TOP_H};
+use crate::hud::{CONSOLE_H, HudCtx, TOP_H, shadow_text, sprite};
 use crate::mission::{CommandMode, MissionScene};
 use crate::ui_art::{self, BtnState, PanelKind};
 use crate::ui_common;
-use ashen_engine::ui::theme;
 use ashen_engine::Engine;
-use ashen_sim::data::{BuildCategory, BuildingDef, BuildingTypeId, Cost, Item, ItemAmounts, Recipe, ResourceKind};
-use ashen_sim::entity::{Building, BuildingId, ProdStatus, PLAYER};
-use ashen_sim::world::SimWorld;
+use ashen_engine::ui::theme;
 use ashen_sim::GameData;
+use ashen_sim::data::{
+    BuildCategory, BuildingDef, BuildingTypeId, Cost, Item, ItemAmounts, Recipe, ResourceKind,
+};
+use ashen_sim::entity::{Building, BuildingId, PLAYER, ProdStatus};
+use ashen_sim::world::SimWorld;
 use egui::{Align2, Color32, Id, Pos2, Rect, RichText, Sense, Ui, Vec2};
 
 const RED: Color32 = Color32::from_rgb(236, 90, 70);
@@ -40,13 +42,27 @@ pub fn cost_row_full(ui: &mut Ui, cx: &HudCtx, world: &SimWorld, cost: &Cost, go
     let have = &world.players[PLAYER as usize];
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 3.0;
-        let mut entries: Vec<(Item, f32)> = ResourceKind::ALL.iter().filter(|k| cost.get(**k) > 0.0).map(|k| (Item::Res(*k), cost.get(*k))).collect();
+        let mut entries: Vec<(Item, f32)> = ResourceKind::ALL
+            .iter()
+            .filter(|k| cost.get(**k) > 0.0)
+            .map(|k| (Item::Res(*k), cost.get(*k)))
+            .collect();
         entries.extend(goods.iter().copied());
         for (it, v) in entries {
             let (r, _) = ui.allocate_exact_size(Vec2::splat(20.0), Sense::hover());
-            ui_common::paint_sprite(ui.painter(), cx.tex, sprite(cx, &item_icon(cx.data, it)), r, Color32::WHITE);
+            ui_common::paint_sprite(
+                ui.painter(),
+                cx.tex,
+                sprite(cx, &item_icon(cx.data, it)),
+                r,
+                Color32::WHITE,
+            );
             let ok = have.stock(it) + 1e-3 >= v;
-            ui.label(RichText::new(format!("{v:.0}")).font(theme::body_bold_font(15.0)).color(if ok { theme::PARCHMENT } else { RED }));
+            ui.label(
+                RichText::new(format!("{v:.0}"))
+                    .font(theme::body_bold_font(15.0))
+                    .color(if ok { theme::PARCHMENT } else { RED }),
+            );
             ui.add_space(5.0);
         }
     });
@@ -54,26 +70,48 @@ pub fn cost_row_full(ui: &mut Ui, cx: &HudCtx, world: &SimWorld, cost: &Cost, go
 
 /// Rezept als lesbarer Text: „2× Holz → 3× Bretter · 30 s“.
 pub fn recipe_text(data: &GameData, r: &Recipe) -> String {
-    let list = |l: &ItemAmounts| l.iter().map(|(it, n)| format!("{n:.0}× {}", data.item_name(*it))).collect::<Vec<_>>().join(" + ");
+    let list = |l: &ItemAmounts| {
+        l.iter()
+            .map(|(it, n)| format!("{n:.0}× {}", data.item_name(*it)))
+            .collect::<Vec<_>>()
+            .join(" + ")
+    };
     match (r.inputs_r.is_empty(), r.outputs_r.is_empty()) {
         (true, false) => format!("{} · {:.0} s", list(&r.outputs_r), r.cycle),
         (false, true) => format!("verbraucht {} · alle {:.0} s", list(&r.inputs_r), r.cycle),
-        (false, false) => format!("{} → {} · {:.0} s", list(&r.inputs_r), list(&r.outputs_r), r.cycle),
+        (false, false) => format!(
+            "{} → {} · {:.0} s",
+            list(&r.inputs_r),
+            list(&r.outputs_r),
+            r.cycle
+        ),
         (true, true) => String::new(),
     }
 }
 
 fn status_text(data: &GameData, b: &Building) -> (String, Color32) {
     let radius = data.rules.city.logistics_radius;
-    let item = b.stall_item.map(|it| data.item_name(it).to_string()).unwrap_or_default();
+    let item = b
+        .stall_item
+        .map(|it| data.item_name(it).to_string())
+        .unwrap_or_default();
     match b.status {
         ProdStatus::None => (String::new(), theme::PARCHMENT),
         ProdStatus::Running => ("Arbeitet".into(), Color32::from_rgb(150, 210, 120)),
         ProdStatus::MissingInput => (format!("Stillstand: es fehlt {item}"), RED),
-        ProdStatus::NoWorkers => ("Stillstand: keine Arbeiter frei – baut Wohnhäuser".into(), RED),
+        ProdStatus::NoWorkers => (
+            "Stillstand: keine Arbeiter frei – baut Wohnhäuser".into(),
+            RED,
+        ),
         ProdStatus::StorageFull => (format!("Stillstand: Lager für {item} ist voll"), RED),
-        ProdStatus::NoDepot => (format!("Stillstand: kein Lager in {radius:.0} Kacheln Reichweite"), RED),
-        ProdStatus::NoSite => ("Stillstand: Vorkommen erschöpft oder nicht in Reichweite".into(), RED),
+        ProdStatus::NoDepot => (
+            format!("Stillstand: kein Lager in {radius:.0} Kacheln Reichweite"),
+            RED,
+        ),
+        ProdStatus::NoSite => (
+            "Stillstand: Vorkommen erschöpft oder nicht in Reichweite".into(),
+            RED,
+        ),
         ProdStatus::Disabled => ("Stillgelegt".into(), theme::PARCHMENT_DIM),
     }
 }
@@ -84,14 +122,22 @@ fn building_summary(data: &GameData, d: &BuildingDef) -> Vec<String> {
     for r in &d.recipes {
         let t = recipe_text(data, r);
         if !t.is_empty() {
-            v.push(if d.recipes.len() > 1 { format!("{}: {t}", r.name) } else { t });
+            v.push(if d.recipes.len() > 1 {
+                format!("{}: {t}", r.name)
+            } else {
+                t
+            });
         }
     }
     if d.workers > 0 {
         v.push(format!("Arbeiter: {}", d.workers));
     }
     if let Some(h) = &d.housing {
-        v.push(format!("Wohnraum: {} Bewohner · Steuer {:.1} Gold/min je Bewohner", h.capacity, h.tax * 60.0));
+        v.push(format!(
+            "Wohnraum: {} Bewohner · Steuer {:.1} Gold/min je Bewohner",
+            h.capacity,
+            h.tax * 60.0
+        ));
     }
     if d.storage > 0.0 {
         v.push(format!("Lager: {:.0} je Ware", d.storage));
@@ -117,7 +163,13 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
     if scene.mode == CommandMode::BuildMenu {
         build_panel(scene, ui, engine, cx);
     }
-    if scene.selected_building.is_some_and(|b| scene.world.buildings.get(b).is_some_and(|x| x.owner == PLAYER && x.complete && cx.data.building(x.kind).market)) {
+    if scene.selected_building.is_some_and(|b| {
+        scene
+            .world
+            .buildings
+            .get(b)
+            .is_some_and(|x| x.owner == PLAYER && x.complete && cx.data.building(x.kind).market)
+    }) {
         market_window(scene, ui, engine, cx);
     }
 }
@@ -126,7 +178,13 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
 fn shortcut_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &HudCtx) {
     let art = cx.ui;
     let p = &scene.world.players[PLAYER as usize];
-    let (res, work, used, hap, unrest) = (p.residents, p.workforce, p.workers_used, p.avg_happiness, p.unrest);
+    let (res, work, used, hap, unrest) = (
+        p.residents,
+        p.workforce,
+        p.workers_used,
+        p.avg_happiness,
+        p.unrest,
+    );
     egui::Area::new(Id::unique("city_shortcuts")).anchor(Align2::LEFT_TOP, Vec2::new(12.0, TOP_H + 14.0)).show(ui.ctx(), |ui| {
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 6.0;
@@ -162,7 +220,15 @@ fn producers_text(data: &GameData, it: Item) -> (String, String) {
         let mut v: Vec<&str> = data
             .buildings
             .iter()
-            .filter(|b| b.recipes.iter().any(|r| if outputs { r.outputs_r.iter().any(|(i, _)| *i == it) } else { r.inputs_r.iter().any(|(i, _)| *i == it) }))
+            .filter(|b| {
+                b.recipes.iter().any(|r| {
+                    if outputs {
+                        r.outputs_r.iter().any(|(i, _)| *i == it)
+                    } else {
+                        r.inputs_r.iter().any(|(i, _)| *i == it)
+                    }
+                })
+            })
             .map(|b| b.name.as_str())
             .collect();
         v.dedup();
@@ -171,7 +237,12 @@ fn producers_text(data: &GameData, it: Item) -> (String, String) {
     (names(true), names(false))
 }
 
-fn storage_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &mut HudCtx) {
+fn storage_window(
+    scene: &mut MissionScene,
+    ui: &mut egui::Ui,
+    engine: &mut Engine,
+    cx: &mut HudCtx,
+) {
     let art = cx.ui;
     let data = cx.data;
     let p = &scene.world.players[PLAYER as usize];
@@ -254,7 +325,12 @@ fn city_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine,
     // Bewohner je Stufe und häufigste unerfüllte Bedürfnisse.
     let mut tiers: Vec<(String, u32, f32)> = Vec::new();
     let mut unmet: Vec<(String, u32)> = Vec::new();
-    for (_, b) in scene.world.buildings.iter().filter(|(_, b)| b.owner == PLAYER && b.complete) {
+    for (_, b) in scene
+        .world
+        .buildings
+        .iter()
+        .filter(|(_, b)| b.owner == PLAYER && b.complete)
+    {
         let d = data.building(b.kind);
         let Some(h) = &d.housing else { continue };
         match tiers.iter_mut().find(|t| t.0 == d.name) {
@@ -267,7 +343,10 @@ fn city_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine,
         for (i, n) in h.needs.iter().enumerate() {
             if b.unmet & (1 << i) != 0 {
                 let name = match &n.kind {
-                    ashen_sim::data::NeedKind::Item(_) => n.item_r.map(|it| data.item_name(it).to_string()).unwrap_or_default(),
+                    ashen_sim::data::NeedKind::Item(_) => n
+                        .item_r
+                        .map(|it| data.item_name(it).to_string())
+                        .unwrap_or_default(),
                     ashen_sim::data::NeedKind::Faith => "Tempel in der Nähe".into(),
                     ashen_sim::data::NeedKind::Safety => "Schutz (Turm/Kaserne)".into(),
                 };
@@ -392,94 +471,226 @@ fn build_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine,
     let mut pick: Option<BuildingTypeId> = None;
     let mut cat = scene.build_cat;
     let mut back = false;
-    egui::Area::new(Id::unique("build_panel")).anchor(Align2::RIGHT_BOTTOM, Vec2::new(-12.0, -(CONSOLE_H + 10.0))).show(ui.ctx(), |ui| {
-        art.panel(ui, PanelKind::Thin, egui::Margin { left: 20, right: 20, top: 16, bottom: 16 }, |ui| {
-            ui.set_width(540.0);
-            ui.horizontal(|ui| {
-                ui.label(RichText::new("Bauen").font(theme::title_bold_font(19.0)).color(theme::GOLD));
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let r = ui_art::button(ui, art, "Zurück", Vec2::new(80.0, 28.0), true);
-                    ui_common::sfx(engine, ui, &r);
-                    if r.clicked() {
-                        back = true;
-                    }
-                });
-            });
-            ui.horizontal_wrapped(|ui| {
-                ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
-                for c in BuildCategory::ALL {
-                    let r = ui_art::choice(ui, art, c.label(), cat == c);
-                    ui_common::sfx(engine, ui, &r);
-                    if r.clicked() {
-                        cat = c;
-                    }
-                }
-            });
-            ui.add_space(6.0);
-            ui.horizontal_wrapped(|ui| {
-                ui.spacing_mut().item_spacing = Vec2::new(6.0, 6.0);
-                for bt in crate::mission::player_buildables(data) {
-                    let d = data.building(bt);
-                    if d.category != cat {
-                        continue;
-                    }
-                    let req_ok = d.requires.iter().all(|r| data.building_id(r).is_some_and(|rb| scene.world.buildings.iter().any(|(_, x)| x.owner == PLAYER && x.kind == rb && x.complete)));
-                    let era_ok = d.era <= era;
-                    let afford = scene.world.afford(PLAYER, &d.cost, &d.goods_cost_r).is_ok();
-                    let enabled = era_ok && req_ok;
-                    let (rect, resp) = ui.allocate_exact_size(Vec2::new(122.0, 104.0), if enabled { Sense::click() } else { Sense::hover() });
-                    let st = BtnState::of(&resp, enabled);
-                    let p = ui.painter();
-                    art.image(p, art.slot_tex(match st { BtnState::Normal => 0, BtnState::Hover => 1, BtnState::Pressed => 2, BtnState::Disabled => 3 }, false), rect, Color32::WHITE);
-                    let tint = if enabled { Color32::WHITE } else { Color32::from_gray(90) };
-                    let spr = sprite(cx, &building_icon(d));
-                    let scale = (60.0 / spr.size.x.max(spr.size.y)).min(1.0);
-                    ui_common::paint_sprite(p, cx.tex, spr, Rect::from_center_size(rect.center() + Vec2::new(0.0, -14.0), Vec2::new(spr.size.x * scale, spr.size.y * scale)), tint);
-                    shadow_text(p, Pos2::new(rect.center().x, rect.max.y - 24.0), Align2::CENTER_CENTER, &d.name, theme::body_bold_font(13.5), if enabled { theme::PARCHMENT } else { theme::ASH });
-                    // Kosten als kleine Icon-Reihe am unteren Rand.
-                    let mut entries: Vec<(Item, f32)> = ResourceKind::ALL.iter().filter(|k| d.cost.get(**k) > 0.0).map(|k| (Item::Res(*k), d.cost.get(*k))).collect();
-                    entries.extend(d.goods_cost_r.iter().copied());
-                    let w = entries.len() as f32 * 34.0;
-                    let mut x = rect.center().x - w / 2.0;
-                    for (it, n) in &entries {
-                        ui_common::paint_sprite(p, cx.tex, sprite(cx, &item_icon(data, *it)), Rect::from_min_size(Pos2::new(x, rect.max.y - 14.0), Vec2::splat(11.0)), Color32::WHITE);
-                        let have = scene.world.players[PLAYER as usize].stock(*it) >= *n;
-                        p.text(Pos2::new(x + 12.0, rect.max.y - 8.5), Align2::LEFT_CENTER, format!("{n:.0}"), theme::body_font(11.5), if have { theme::PARCHMENT_DIM } else { RED });
-                        x += 34.0;
-                    }
-                    if !era_ok {
-                        shadow_text(p, rect.center() + Vec2::new(0.0, 6.0), Align2::CENTER_CENTER, "gesperrt", theme::caps_font(12.0), RED);
-                    } else if !afford {
-                        p.rect_stroke(rect.shrink(3.0), 0.0, egui::Stroke::new(1.0, RED.gamma_multiply(0.6)), egui::StrokeKind::Inside);
-                    }
-                    ui_common::sfx(engine, ui, &resp);
-                    let resp = ui_art::tooltip(resp, art, |ui| {
-                        ui.label(RichText::new(&d.name).font(theme::heading_font(16.0)).color(theme::GOLD));
-                        ui.set_max_width(320.0);
-                        ui.label(RichText::new(&d.description).size(14.0).color(theme::PARCHMENT));
-                        for line in building_summary(data, d) {
-                            ui.label(RichText::new(line).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
-                        }
-                        cost_row_full(ui, cx, &scene.world, &d.cost, &d.goods_cost_r);
-                        ui.label(RichText::new(format!("Bauzeit {:.0} s", d.build_time)).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
-                        if !era_ok {
-                            let name = data.rules.eras.get(d.era as usize - 1).map(|e| e.name.as_str()).unwrap_or("?");
-                            ui.label(RichText::new(format!("Benötigt die Ausbaustufe {name}")).color(RED));
-                        }
-                        if !req_ok {
-                            ui.label(RichText::new(format!("Benötigt: {}", d.requires.join(", "))).color(RED));
-                        }
-                        if let Some(s) = &d.site {
-                            ui.label(RichText::new(&s.hint).font(theme::italic_font(13.5)).color(theme::EMBER));
+    egui::Area::new(Id::unique("build_panel"))
+        .anchor(Align2::RIGHT_BOTTOM, Vec2::new(-12.0, -(CONSOLE_H + 10.0)))
+        .show(ui.ctx(), |ui| {
+            art.panel(
+                ui,
+                PanelKind::Thin,
+                egui::Margin {
+                    left: 20,
+                    right: 20,
+                    top: 16,
+                    bottom: 16,
+                },
+                |ui| {
+                    ui.set_width(540.0);
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("Bauen")
+                                .font(theme::title_bold_font(19.0))
+                                .color(theme::GOLD),
+                        );
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            let r = ui_art::button(ui, art, "Zurück", Vec2::new(80.0, 28.0), true);
+                            ui_common::sfx(engine, ui, &r);
+                            if r.clicked() {
+                                back = true;
+                            }
+                        });
+                    });
+                    ui.horizontal_wrapped(|ui| {
+                        ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
+                        for c in BuildCategory::ALL {
+                            let r = ui_art::choice(ui, art, c.label(), cat == c);
+                            ui_common::sfx(engine, ui, &r);
+                            if r.clicked() {
+                                cat = c;
+                            }
                         }
                     });
-                    if resp.clicked() && enabled {
-                        pick = Some(bt);
-                    }
-                }
-            });
+                    ui.add_space(6.0);
+                    ui.horizontal_wrapped(|ui| {
+                        ui.spacing_mut().item_spacing = Vec2::new(6.0, 6.0);
+                        for bt in crate::mission::player_buildables(data) {
+                            let d = data.building(bt);
+                            if d.category != cat {
+                                continue;
+                            }
+                            let req_ok = d.requires.iter().all(|r| {
+                                data.building_id(r).is_some_and(|rb| {
+                                    scene.world.buildings.iter().any(|(_, x)| {
+                                        x.owner == PLAYER && x.kind == rb && x.complete
+                                    })
+                                })
+                            });
+                            let era_ok = d.era <= era;
+                            let afford =
+                                scene.world.afford(PLAYER, &d.cost, &d.goods_cost_r).is_ok();
+                            let enabled = era_ok && req_ok;
+                            let (rect, resp) = ui.allocate_exact_size(
+                                Vec2::new(122.0, 104.0),
+                                if enabled {
+                                    Sense::click()
+                                } else {
+                                    Sense::hover()
+                                },
+                            );
+                            let st = BtnState::of(&resp, enabled);
+                            let p = ui.painter();
+                            art.image(
+                                p,
+                                art.slot_tex(
+                                    match st {
+                                        BtnState::Normal => 0,
+                                        BtnState::Hover => 1,
+                                        BtnState::Pressed => 2,
+                                        BtnState::Disabled => 3,
+                                    },
+                                    false,
+                                ),
+                                rect,
+                                Color32::WHITE,
+                            );
+                            let tint = if enabled {
+                                Color32::WHITE
+                            } else {
+                                Color32::from_gray(90)
+                            };
+                            let spr = sprite(cx, &building_icon(d));
+                            let scale = (60.0 / spr.size.x.max(spr.size.y)).min(1.0);
+                            ui_common::paint_sprite(
+                                p,
+                                cx.tex,
+                                spr,
+                                Rect::from_center_size(
+                                    rect.center() + Vec2::new(0.0, -14.0),
+                                    Vec2::new(spr.size.x * scale, spr.size.y * scale),
+                                ),
+                                tint,
+                            );
+                            shadow_text(
+                                p,
+                                Pos2::new(rect.center().x, rect.max.y - 24.0),
+                                Align2::CENTER_CENTER,
+                                &d.name,
+                                theme::body_bold_font(13.5),
+                                if enabled {
+                                    theme::PARCHMENT
+                                } else {
+                                    theme::ASH
+                                },
+                            );
+                            // Kosten als kleine Icon-Reihe am unteren Rand.
+                            let mut entries: Vec<(Item, f32)> = ResourceKind::ALL
+                                .iter()
+                                .filter(|k| d.cost.get(**k) > 0.0)
+                                .map(|k| (Item::Res(*k), d.cost.get(*k)))
+                                .collect();
+                            entries.extend(d.goods_cost_r.iter().copied());
+                            let w = entries.len() as f32 * 34.0;
+                            let mut x = rect.center().x - w / 2.0;
+                            for (it, n) in &entries {
+                                ui_common::paint_sprite(
+                                    p,
+                                    cx.tex,
+                                    sprite(cx, &item_icon(data, *it)),
+                                    Rect::from_min_size(
+                                        Pos2::new(x, rect.max.y - 14.0),
+                                        Vec2::splat(11.0),
+                                    ),
+                                    Color32::WHITE,
+                                );
+                                let have = scene.world.players[PLAYER as usize].stock(*it) >= *n;
+                                p.text(
+                                    Pos2::new(x + 12.0, rect.max.y - 8.5),
+                                    Align2::LEFT_CENTER,
+                                    format!("{n:.0}"),
+                                    theme::body_font(11.5),
+                                    if have { theme::PARCHMENT_DIM } else { RED },
+                                );
+                                x += 34.0;
+                            }
+                            if !era_ok {
+                                shadow_text(
+                                    p,
+                                    rect.center() + Vec2::new(0.0, 6.0),
+                                    Align2::CENTER_CENTER,
+                                    "gesperrt",
+                                    theme::caps_font(12.0),
+                                    RED,
+                                );
+                            } else if !afford {
+                                p.rect_stroke(
+                                    rect.shrink(3.0),
+                                    0.0,
+                                    egui::Stroke::new(1.0, RED.gamma_multiply(0.6)),
+                                    egui::StrokeKind::Inside,
+                                );
+                            }
+                            ui_common::sfx(engine, ui, &resp);
+                            let resp = ui_art::tooltip(resp, art, |ui| {
+                                ui.label(
+                                    RichText::new(&d.name)
+                                        .font(theme::heading_font(16.0))
+                                        .color(theme::GOLD),
+                                );
+                                ui.set_max_width(320.0);
+                                ui.label(
+                                    RichText::new(&d.description)
+                                        .size(14.0)
+                                        .color(theme::PARCHMENT),
+                                );
+                                for line in building_summary(data, d) {
+                                    ui.label(
+                                        RichText::new(line)
+                                            .font(theme::italic_font(13.5))
+                                            .color(theme::PARCHMENT_DIM),
+                                    );
+                                }
+                                cost_row_full(ui, cx, &scene.world, &d.cost, &d.goods_cost_r);
+                                ui.label(
+                                    RichText::new(format!("Bauzeit {:.0} s", d.build_time))
+                                        .font(theme::italic_font(13.5))
+                                        .color(theme::PARCHMENT_DIM),
+                                );
+                                if !era_ok {
+                                    let name = data
+                                        .rules
+                                        .eras
+                                        .get(d.era as usize - 1)
+                                        .map(|e| e.name.as_str())
+                                        .unwrap_or("?");
+                                    ui.label(
+                                        RichText::new(format!("Benötigt die Ausbaustufe {name}"))
+                                            .color(RED),
+                                    );
+                                }
+                                if !req_ok {
+                                    ui.label(
+                                        RichText::new(format!(
+                                            "Benötigt: {}",
+                                            d.requires.join(", ")
+                                        ))
+                                        .color(RED),
+                                    );
+                                }
+                                if let Some(s) = &d.site {
+                                    ui.label(
+                                        RichText::new(&s.hint)
+                                            .font(theme::italic_font(13.5))
+                                            .color(theme::EMBER),
+                                    );
+                                }
+                            });
+                            if resp.clicked() && enabled {
+                                pick = Some(bt);
+                            }
+                        }
+                    });
+                },
+            );
         });
-    });
     scene.build_cat = cat;
     if let Some(bt) = pick {
         scene.mode = CommandMode::Place(bt);
@@ -493,7 +704,12 @@ fn build_panel(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine,
 // Markt
 // ---------------------------------------------------------------------------------------------
 
-fn market_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &mut HudCtx) {
+fn market_window(
+    scene: &mut MissionScene,
+    ui: &mut egui::Ui,
+    engine: &mut Engine,
+    cx: &mut HudCtx,
+) {
     let art = cx.ui;
     let data = cx.data;
     let fee = data.rules.city.market_fee;
@@ -546,7 +762,14 @@ fn market_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engin
 // ---------------------------------------------------------------------------------------------
 
 /// Zeilen zu Produktion, Arbeitern, Bewohnern und Tor eines gewählten eigenen Gebäudes.
-pub fn building_info(scene: &mut MissionScene, ui: &mut Ui, engine: &mut Engine, cx: &HudCtx, bid: BuildingId, b: &Building) {
+pub fn building_info(
+    scene: &mut MissionScene,
+    ui: &mut Ui,
+    engine: &mut Engine,
+    cx: &HudCtx,
+    bid: BuildingId,
+    b: &Building,
+) {
     let art = cx.ui;
     let data = cx.data;
     let def = data.building(b.kind);
@@ -554,44 +777,96 @@ pub fn building_info(scene: &mut MissionScene, ui: &mut Ui, engine: &mut Engine,
         return;
     }
     if let Some(h) = &def.housing {
-        let tier = ["Hütte", "Haus", "Bürgerhaus"].get(h.tier as usize).copied().unwrap_or("Haus");
-        let col = if b.happiness < 20.0 { RED } else if b.happiness >= 70.0 { Color32::from_rgb(150, 210, 120) } else { theme::PARCHMENT };
-        ui.label(RichText::new(format!("{tier} · Bewohner {:.1}/{} · Zufriedenheit {:.0} %", b.residents, h.capacity, b.happiness)).size(14.5).color(col));
+        let tier = ["Hütte", "Haus", "Bürgerhaus"]
+            .get(h.tier as usize)
+            .copied()
+            .unwrap_or("Haus");
+        let col = if b.happiness < 20.0 {
+            RED
+        } else if b.happiness >= 70.0 {
+            Color32::from_rgb(150, 210, 120)
+        } else {
+            theme::PARCHMENT
+        };
+        ui.label(
+            RichText::new(format!(
+                "{tier} · Bewohner {:.1}/{} · Zufriedenheit {:.0} %",
+                b.residents, h.capacity, b.happiness
+            ))
+            .size(14.5)
+            .color(col),
+        );
         let mut missing = Vec::new();
         for (i, n) in h.needs.iter().enumerate() {
             if b.unmet & (1 << i) != 0 {
                 missing.push(match &n.kind {
-                    ashen_sim::data::NeedKind::Item(_) => n.item_r.map(|it| data.item_name(it).to_string()).unwrap_or_default(),
+                    ashen_sim::data::NeedKind::Item(_) => n
+                        .item_r
+                        .map(|it| data.item_name(it).to_string())
+                        .unwrap_or_default(),
                     ashen_sim::data::NeedKind::Faith => "Tempel".into(),
                     ashen_sim::data::NeedKind::Safety => "Schutz".into(),
                 });
             }
         }
         if !missing.is_empty() {
-            ui.label(RichText::new(format!("Es mangelt an: {}", missing.join(", "))).size(14.0).color(RED));
+            ui.label(
+                RichText::new(format!("Es mangelt an: {}", missing.join(", ")))
+                    .size(14.0)
+                    .color(RED),
+            );
         } else if h.upgrade_to.is_some() {
-            ui.label(RichText::new("Alle Bedürfnisse erfüllt – das Haus baut sich bei Zufriedenheit aus.").font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
+            ui.label(
+                RichText::new(
+                    "Alle Bedürfnisse erfüllt – das Haus baut sich bei Zufriedenheit aus.",
+                )
+                .font(theme::italic_font(13.5))
+                .color(theme::PARCHMENT_DIM),
+            );
         }
         return;
     }
     if def.employs() {
         let recipe = &def.recipes[(b.recipe as usize).min(def.recipes.len() - 1)];
-        ui.label(RichText::new(recipe_text(data, recipe)).size(14.0).color(theme::PARCHMENT));
+        ui.label(
+            RichText::new(recipe_text(data, recipe))
+                .size(14.0)
+                .color(theme::PARCHMENT),
+        );
         let (text, col) = status_text(data, b);
         ui.label(RichText::new(text).size(14.5).color(col));
         ui.horizontal(|ui| {
-            ui.label(RichText::new("Arbeiter").font(theme::caps_font(11.5)).color(theme::GOLD_DIM));
+            ui.label(
+                RichText::new("Arbeiter")
+                    .font(theme::caps_font(11.5))
+                    .color(theme::GOLD_DIM),
+            );
             let limit = b.worker_limit.unwrap_or(def.workers).min(def.workers);
             let minus = ui_art::button(ui, art, "-", Vec2::new(28.0, 24.0), limit > 0);
             ui_common::sfx(engine, ui, &minus);
             if minus.clicked() {
                 scene.set_workers(bid, Some(limit - 1));
             }
-            ui.label(RichText::new(format!("{} / {}", b.workers, def.workers)).font(theme::body_bold_font(15.0)).color(if b.workers < limit { RED } else { theme::PARCHMENT }));
+            ui.label(
+                RichText::new(format!("{} / {}", b.workers, def.workers))
+                    .font(theme::body_bold_font(15.0))
+                    .color(if b.workers < limit {
+                        RED
+                    } else {
+                        theme::PARCHMENT
+                    }),
+            );
             let plus = ui_art::button(ui, art, "+", Vec2::new(28.0, 24.0), limit < def.workers);
             ui_common::sfx(engine, ui, &plus);
             if plus.clicked() {
-                scene.set_workers(bid, if limit + 1 >= def.workers { None } else { Some(limit + 1) });
+                scene.set_workers(
+                    bid,
+                    if limit + 1 >= def.workers {
+                        None
+                    } else {
+                        Some(limit + 1)
+                    },
+                );
             }
             if def.recipes.len() > 1 {
                 ui.add_space(10.0);
@@ -608,20 +883,50 @@ pub fn building_info(scene: &mut MissionScene, ui: &mut Ui, engine: &mut Engine,
     }
     if def.fort == Some(ashen_sim::data::Fort::Gate) {
         ui.horizontal(|ui| {
-            let label = if b.gate_open { "Tor verschließen" } else { "Tor öffnen" };
+            let label = if b.gate_open {
+                "Tor verschließen"
+            } else {
+                "Tor öffnen"
+            };
             let r = ui_art::button(ui, art, label, Vec2::new(160.0, 28.0), true);
             ui_common::sfx(engine, ui, &r);
-            if ui_art::tip(r, art, label, "Offen: eigene Einheiten passieren, Feinde nie. Verschlossen: niemand kommt durch.").clicked() {
+            if ui_art::tip(
+                r,
+                art,
+                label,
+                "Offen: eigene Einheiten passieren, Feinde nie. Verschlossen: niemand kommt durch.",
+            )
+            .clicked()
+            {
                 scene.set_gate(bid, !b.gate_open);
             }
-            ui.label(RichText::new(if b.gate_open { "Offen für eigene Einheiten" } else { "Verschlossen" }).size(14.0).color(theme::PARCHMENT));
+            ui.label(
+                RichText::new(if b.gate_open {
+                    "Offen für eigene Einheiten"
+                } else {
+                    "Verschlossen"
+                })
+                .size(14.0)
+                .color(theme::PARCHMENT),
+            );
         });
         return;
     }
     if def.storage > 0.0 {
-        ui.label(RichText::new(format!("Lagert {:.0} je Ware. Betriebe im Umkreis von {:.0} Kacheln liefern hierher.", def.storage, data.rules.city.logistics_radius)).size(14.0).color(theme::PARCHMENT));
+        ui.label(
+            RichText::new(format!(
+                "Lagert {:.0} je Ware. Betriebe im Umkreis von {:.0} Kacheln liefern hierher.",
+                def.storage, data.rules.city.logistics_radius
+            ))
+            .size(14.0)
+            .color(theme::PARCHMENT),
+        );
     }
     if def.market {
-        ui.label(RichText::new("Handel im Marktfenster rechts: Waren kaufen und verkaufen.").size(14.0).color(theme::PARCHMENT));
+        ui.label(
+            RichText::new("Handel im Marktfenster rechts: Waren kaufen und verkaufen.")
+                .size(14.0)
+                .color(theme::PARCHMENT),
+        );
     }
 }

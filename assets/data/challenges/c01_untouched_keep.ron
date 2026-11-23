@@ -1,0 +1,12 @@
+// Herausforderung: Der Bergfried darf keinen einzigen Schaden nehmen, und die Streitmacht ist klein.
+(
+    id: "ch_untouched_keep",
+    name: "Unversehrter Bergfried",
+    description: "Kein Kratzer am Bergfried – und nur zehn Soldaten im Feld. Wer die Wellen vor den Mauern aufhält und den Hohlschrein trotzdem bricht, verdient den Namen Wächterin.",
+    base: "m01_last_settlement",
+    mode: Campaign,
+    difficulty: Normal,
+    modifiers: [KeepIntact, UnitCap(10)],
+    goal_text: "Zerstört den Hohlschrein, ohne dass der Bergfried beschädigt wird. Höchstens zehn Soldaten.",
+    scoring: (victory_bonus: 2000.0, per_kill: 6.0, per_unit_lost: -15.0, per_building: 4.0, par_time: 1800.0, time_bonus_per_sec: 0.5, rank_by: Score),
+)

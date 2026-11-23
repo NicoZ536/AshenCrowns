@@ -62,6 +62,8 @@ pub struct PlayerState {
     pub full_cooldown: f32,
     /// Steuereinnahmen pro Sekunde (letzte Sekunde, für die Anzeige).
     pub tax_rate: f32,
+    /// Erreichte Stufe je Schmiede-Upgrade (Index = `GameData::upgrades`).
+    pub upgrades: Vec<u8>,
 }
 
 impl PlayerState {
@@ -88,6 +90,7 @@ impl PlayerState {
             unrest_cooldown: 0.0,
             full_cooldown: 0.0,
             tax_rate: 0.0,
+            upgrades: vec![0; data.upgrades.len()],
         }
     }
 
@@ -135,7 +138,12 @@ pub struct SimWorld {
     pub director: Director,
     pub chronicle: Chronicle,
     pub rng: ChaCha8Rng,
-    pub hero_respawn: Option<(UnitTypeId, f32)>,
+    /// Gefallene Helden des Spielers (Zustand bleibt für die Wiederbelebung erhalten).
+    pub fallen: Vec<FallenHero>,
+    /// Beute am Boden.
+    pub drops: Vec<GroundItem>,
+    /// Zustand der Gegner-KI (Gefecht).
+    pub ai: systems::ai_player::AiState,
     #[serde(skip)]
     pub events: Vec<SimEvent>,
     #[serde(skip)]
@@ -151,17 +159,10 @@ pub struct SimWorld {
 impl SimWorld {
     /// Erzeugt eine neue Partie aus Missionsdefinition und Startoptionen.
     pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings) -> Result<SimWorld, String> {
-        let map = crate::mapgen::generate(mission.map_seed, settings.seed);
-        Self::build(data, mission, settings, map, true)
-    }
-
-    /// Erzeugt eine Partie auf einer vorgegebenen Karte (z. B. generierte Weltkarten-Schlacht):
-    /// keine Standard-Rohstoffquellen, alles Weitere stammt aus den Platzierungen der Mission.
-    pub fn new_with_map(data: &GameData, mission: MissionDef, settings: MatchSettings, map: crate::map::TileMap) -> Result<SimWorld, String> {
-        Self::build(data, mission, settings, map, false)
-    }
-
-    fn build(data: &GameData, mission: MissionDef, settings: MatchSettings, map: crate::map::TileMap, default_resources: bool) -> Result<SimWorld, String> {
+        let map = match &mission.map {
+            Some(md) => md.to_tilemap()?,
+            None => crate::mapgen::generate(mission.map_seed, settings.seed),
+        };
         let (w, h) = (map.width, map.height);
         let mut world = SimWorld {
             tick: 0,
@@ -183,7 +184,9 @@ impl SimWorld {
             fog: FogOfWar::new(w, h),
             director: Director::default(),
             chronicle: Chronicle::default(),
-            hero_respawn: None,
+            fallen: Vec::new(),
+            drops: Vec::new(),
+            ai: systems::ai_player::AiState::default(),
             events: Vec::new(),
             pending: Vec::new(),
             pathfinder: Pathfinder::default(),
@@ -192,7 +195,9 @@ impl SimWorld {
             mission_def: mission,
         };
         world.apply_mode_rules(data);
-        if default_resources {
+        if world.mission_def.map.is_some() {
+            crate::genmap::populate_from_data(&mut world, data);
+        } else {
             crate::mapgen::populate_resources(&mut world, data);
         }
         world.apply_placements(data)?;
@@ -200,7 +205,12 @@ impl SimWorld {
         systems::city::recompute_capacity(&mut world, data);
         systems::fog::update(&mut world, data);
         let name = world.mission_def.name.clone();
-        world.record(ChronicleKind::Founding, format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})"));
+        let founding = if world.mission_def.map.is_some() {
+            format!("Die Wächterin der Aschmark übernimmt den Befehl. ({name})")
+        } else {
+            format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})")
+        };
+        world.record(ChronicleKind::Founding, founding);
         Ok(world)
     }
 
@@ -210,13 +220,19 @@ impl SimWorld {
                 *self.players[PLAYER as usize].stock_mut(it) += n;
             }
         }
+        if let Some(t) = self.mission_def.start_time {
+            self.env.time_of_day = t.rem_euclid(1.0);
+            self.env.was_night = self.env.is_night();
+        }
         let waves = self.mission_def.waves.clone();
         self.director.enabled = waves.enabled;
         self.director.next_wave_in = waves.first_wave;
         match self.settings.mode {
             GameMode::Campaign => {}
             GameMode::Skirmish => {
-                self.director.next_wave_in = waves.first_wave * 0.8;
+                // Im Gefecht baut und befehligt die KI die Hohlen; der Wellen-Direktor ruht.
+                self.director.enabled = false;
+                self.ai.enable(data, self.settings.difficulty);
             }
             GameMode::Survival => {
                 self.director.next_wave_in = 90.0;
@@ -257,6 +273,7 @@ impl SimWorld {
                     let id = self.spawn_unit(data, ut, p.owner, pos);
                     if let Some(u) = self.units.get_mut(id) {
                         u.tag = p.tag.clone();
+                        u.camp = p.camp.clone();
                         if p.guard {
                             u.order = Order::Guard { post: pos, radius: 6.5 };
                         }
@@ -279,8 +296,11 @@ impl SimWorld {
         } else {
             self.map.nearest_walkable(tile, 8).map(TileMap::center_of).unwrap_or(pos)
         };
-        let unit = Unit::new(kind, owner, pos, def.hp, def.mana, def.morale, def.abilities.len());
+        let (_, _, hp_pct) = self.upgrade_bonus_full(data, owner, def.class);
+        let hp = def.hp * (1.0 + hp_pct);
+        let unit = Unit::new(kind, owner, pos, hp, def.mana, def.morale, def.abilities.len());
         let id = self.units.insert(unit);
+        systems::heroes::init_hero(self, data, id);
         self.events.push(SimEvent::UnitSpawned { id, kind, owner, pos });
         id
     }
@@ -319,6 +339,7 @@ impl SimWorld {
             down_timer: 0.0,
             unmet: 0,
             gate_open: true,
+            research: None,
         };
         let center = b.center();
         let id = self.buildings.insert(b);
@@ -417,6 +438,48 @@ impl SimWorld {
         a != b && a != NEUTRAL && b != NEUTRAL
     }
 
+    /// Summe der Upgrade-Boni für eine Einheitenklasse: (Schadensanteil, Rüstung).
+    pub fn upgrade_bonus(&self, data: &GameData, owner: PlayerId, class: UnitClass) -> (f32, f32) {
+        let (d, a, _) = self.upgrade_bonus_full(data, owner, class);
+        (d, a)
+    }
+
+    /// Wie [`upgrade_bonus`](Self::upgrade_bonus), zusätzlich mit dem Lebensanteil.
+    pub fn upgrade_bonus_full(&self, data: &GameData, owner: PlayerId, class: UnitClass) -> (f32, f32, f32) {
+        let ps = &self.players[owner as usize];
+        let (mut d, mut a, mut h) = (0.0, 0.0, 0.0);
+        for (i, up) in data.upgrades.iter().enumerate() {
+            let lvl = ps.upgrades.get(i).copied().unwrap_or(0) as f32;
+            if lvl > 0.0 && up.applies_to.contains(&class) {
+                d += up.per_level.damage_pct * lvl;
+                a += up.per_level.armor * lvl;
+                h += up.per_level.hp_pct * lvl;
+            }
+        }
+        (d, a, h)
+    }
+
+    /// Gesamter Schadensfaktor einer Einheit (Buffs, Ausrüstung, Talente, Upgrades, Formation).
+    pub fn damage_factor(&self, data: &GameData, u: &Unit) -> f32 {
+        let def = data.unit(u.kind);
+        let (ud, _) = self.upgrade_bonus(data, u.owner, def.class);
+        let f = u.formation.mods();
+        let fm = if def.is_ranged() { f.ranged_damage_mult } else { f.damage_mult };
+        u.damage_mult() * (1.0 + u.mods.damage_pct + ud).max(0.1) * fm
+    }
+
+    /// Gesamte Rüstung einer Einheit.
+    pub fn armor_of(&self, data: &GameData, u: &Unit) -> f32 {
+        let def = data.unit(u.kind);
+        let (_, ua) = self.upgrade_bonus(data, u.owner, def.class);
+        def.armor + u.armor_bonus() + u.level.saturating_sub(1) as f32 * 0.5 + u.mods.armor + ua + u.formation.mods().armor
+    }
+
+    /// Geschwindigkeitsfaktor (Ausrüstung, Talente, Formation).
+    pub fn speed_factor(&self, u: &Unit) -> f32 {
+        (1.0 + u.mods.speed_pct).max(0.2) * u.formation.mods().speed_mult
+    }
+
     /// Effektive Sichtweite einer Einheit unter Berücksichtigung von Nacht und Nebel.
     pub fn sight_of(&self, data: &GameData, u: &Unit) -> f32 {
         let def = data.unit(u.kind);
@@ -507,9 +570,14 @@ impl SimWorld {
                 let Some(u) = self.units.get(id) else { return };
                 let def = data.unit(u.kind);
                 let class_mult = bonus.iter().find(|(c, _)| *c == def.class).map(|(_, m)| *m).unwrap_or(1.0);
-                let armor = def.armor + u.armor_bonus() + (u.level.saturating_sub(1)) as f32 * 0.5;
+                let armor = self.armor_of(data, u);
                 let reduction = if armor >= 0.0 { armor * 0.06 / (1.0 + 0.06 * armor) } else { -(1.0 - 0.94f32.powf(-armor)) };
+                let fm = u.formation.mods();
                 let mut amount = raw * dtype.multiplier(def.armor_type) * class_mult * (1.0 - reduction);
+                if dtype == DamageType::Pierce {
+                    amount *= (1.0 - def.ranged_resist).max(0.0) * fm.pierce_taken;
+                }
+                let morale_loss = fm.morale_loss;
                 let pos = u.pos;
                 let fearless = def.fearless;
                 let max_hp = u.max_hp;
@@ -525,7 +593,7 @@ impl SimWorld {
                 u.combat_timer = 4.0;
                 u.last_attacker = source;
                 if !fearless {
-                    u.morale -= amount / max_hp * 38.0;
+                    u.morale -= amount / max_hp * 38.0 * morale_loss;
                 }
                 self.events.push(SimEvent::Hit { target, pos, amount, damage_type: dtype, blocked });
             }
@@ -577,8 +645,10 @@ impl SimWorld {
         }
         systems::environment::tick(self, data, dt);
         systems::economy::tick(self, data, dt);
+        systems::heroes::tick(self, data, dt);
         systems::city::tick(self, data, dt);
         systems::ai::tick(self, data, dt);
+        systems::ai_player::tick(self, data, dt);
         let ids: Vec<(UnitId, Vec2)> = self.units.iter().map(|(id, u)| (id, u.pos)).collect();
         self.spatial.rebuild(self.map.width, self.map.height, ids.into_iter());
         systems::units::tick(self, data, dt);
@@ -586,12 +656,12 @@ impl SimWorld {
         systems::movement::integrate(self, data, dt);
         systems::combat::tick(self, data, dt);
         systems::units::status_tick(self, data, dt);
+        systems::casters::tick(self, data);
         systems::combat::cleanup_dead(self, data);
         if self.tick.is_multiple_of(4) {
             systems::fog::update(self, data);
         }
         systems::script::tick(self, data);
-        systems::economy::hero_respawn(self, data, dt);
     }
 
     /// Stabiler Hash des Zustands (für Determinismus-Tests und Desync-Erkennung).

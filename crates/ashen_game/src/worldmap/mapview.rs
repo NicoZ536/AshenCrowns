@@ -5,8 +5,14 @@ use crate::art::ArtLibrary;
 use crate::ui_art::{self, UiArt};
 use crate::ui_common;
 use ashen_core::noise::{fbm2, rand2};
-use ashen_strategy::{ArmyId, ArmyKind, ArmyOrder, Biome, LinkKind, ProvId, Realm, RealmId, Religion, SettlementLevel, StrategyWorld, TreatyKind, RELIGIONS, STRATA};
-use egui::{Color32, ColorImage, Painter, Pos2, Rect, Shape, Stroke, TextureHandle, TextureId, TextureOptions, Vec2 as EVec2};
+use ashen_strategy::{
+    ArmyId, ArmyKind, ArmyOrder, Biome, LinkKind, ProvId, RELIGIONS, Realm, RealmId, Religion,
+    STRATA, SettlementLevel, StrategyWorld, TreatyKind,
+};
+use egui::{
+    Color32, ColorImage, Painter, Pos2, Rect, Shape, Stroke, TextureHandle, TextureId,
+    TextureOptions, Vec2 as EVec2,
+};
 use glam::Vec2;
 
 /// Kartenkoordinaten der Simulation: 1000 × 700. Ein Texel der Rasterkarte deckt `UNIT` Kartenpunkte ab.
@@ -29,7 +35,15 @@ pub enum MapMode {
 }
 
 impl MapMode {
-    pub const ALL: [MapMode; 7] = [MapMode::Realms, MapMode::Terrain, MapMode::Religion, MapMode::Hollowing, MapMode::Economy, MapMode::Unrest, MapMode::Diplomacy];
+    pub const ALL: [MapMode; 7] = [
+        MapMode::Realms,
+        MapMode::Terrain,
+        MapMode::Religion,
+        MapMode::Hollowing,
+        MapMode::Economy,
+        MapMode::Unrest,
+        MapMode::Diplomacy,
+    ];
     pub fn label(self) -> &'static str {
         match self {
             MapMode::Realms => "Reiche",
@@ -53,7 +67,10 @@ impl MapMode {
         }
     }
     pub fn from_id(s: &str) -> Option<MapMode> {
-        MapMode::ALL.iter().copied().find(|m| m.id() == s || m.label().eq_ignore_ascii_case(s))
+        MapMode::ALL
+            .iter()
+            .copied()
+            .find(|m| m.id() == s || m.label().eq_ignore_ascii_case(s))
     }
     pub fn next(self) -> MapMode {
         let i = MapMode::ALL.iter().position(|m| *m == self).unwrap_or(0);
@@ -78,11 +95,19 @@ fn rgb(c: [u8; 3]) -> Color32 {
 
 fn mix(a: [f32; 3], b: [f32; 3], t: f32) -> [f32; 3] {
     let t = t.clamp(0.0, 1.0);
-    [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
+    [
+        a[0] + (b[0] - a[0]) * t,
+        a[1] + (b[1] - a[1]) * t,
+        a[2] + (b[2] - a[2]) * t,
+    ]
 }
 
 fn to_color(c: [f32; 3]) -> Color32 {
-    Color32::from_rgb(c[0].clamp(0.0, 255.0) as u8, c[1].clamp(0.0, 255.0) as u8, c[2].clamp(0.0, 255.0) as u8)
+    Color32::from_rgb(
+        c[0].clamp(0.0, 255.0) as u8,
+        c[1].clamp(0.0, 255.0) as u8,
+        c[2].clamp(0.0, 255.0) as u8,
+    )
 }
 
 fn hsv(h: f32, s: f32, v: f32) -> [f32; 3] {
@@ -167,29 +192,71 @@ fn ramp(stops: &[(f32, [f32; 3])], v: f32) -> [f32; 3] {
 /// Steuerkraft einer Provinz (Kopfsteuer × Zufriedenheit + Gebäude) – Grundlage des Wohlstandsmodus.
 pub fn prosperity(world: &StrategyWorld, p: ProvId) -> f32 {
     let pr = &world.provinces[p as usize];
-    let head: f32 = STRATA.iter().map(|s| pr.pop[s.idx()].total() * s.head_tax()).sum();
-    head * (0.5 + pr.avg_satisfaction() / 100.0) / 100.0 + pr.buildings.iter().map(|(_, n)| *n as f32).sum::<f32>() * 0.6
+    let head: f32 = STRATA
+        .iter()
+        .map(|s| pr.pop[s.idx()].total() * s.head_tax())
+        .sum();
+    head * (0.5 + pr.avg_satisfaction() / 100.0) / 100.0
+        + pr.buildings.iter().map(|(_, n)| *n as f32).sum::<f32>() * 0.6
 }
 
 /// Legende eines Kartenmodus.
 pub fn legend(mode: MapMode) -> Vec<(Color32, &'static str)> {
     match mode {
-        MapMode::Realms => vec![(rgb([196, 56, 40]), "Reichsfarbe = Besitzer"), (rgb([140, 140, 130]), "Herrenlos")],
-        MapMode::Terrain => vec![(to_color(biome_rgb(Biome::Plains)), "Ebene"), (to_color(biome_rgb(Biome::Forest)), "Wald"), (to_color(biome_rgb(Biome::Mountain)), "Gebirge"), (to_color(biome_rgb(Biome::Desert)), "Wüste"), (to_color(biome_rgb(Biome::Swamp)), "Sumpf")],
-        MapMode::Religion => RELIGIONS.iter().map(|r| (to_color(religion_rgb(*r)), r.name())).collect(),
-        MapMode::Hollowing => vec![(rgb([90, 110, 90]), "rein"), (rgb([90, 230, 140]), "stark gehohlt"), (rgb([176, 96, 230]), "Schleier ≥ 4")],
-        MapMode::Economy => vec![(rgb([70, 52, 40]), "arm"), (rgb([196, 150, 60]), "wohlhabend"), (rgb([250, 228, 130]), "reich")],
-        MapMode::Unrest => vec![(rgb([70, 140, 80]), "ruhig"), (rgb([220, 190, 60]), "gespannt"), (rgb([210, 50, 40]), "Aufstand")],
-        MapMode::Diplomacy => vec![(rgb([240, 200, 70]), "eigenes Reich/Vasallen"), (rgb([80, 130, 230]), "Verbündete"), (rgb([210, 50, 40]), "Krieg"), (rgb([90, 190, 100]), "freundlich"), (rgb([150, 150, 150]), "neutral"), (rgb([190, 110, 60]), "feindlich")],
+        MapMode::Realms => vec![
+            (rgb([196, 56, 40]), "Reichsfarbe = Besitzer"),
+            (rgb([140, 140, 130]), "Herrenlos"),
+        ],
+        MapMode::Terrain => vec![
+            (to_color(biome_rgb(Biome::Plains)), "Ebene"),
+            (to_color(biome_rgb(Biome::Forest)), "Wald"),
+            (to_color(biome_rgb(Biome::Mountain)), "Gebirge"),
+            (to_color(biome_rgb(Biome::Desert)), "Wüste"),
+            (to_color(biome_rgb(Biome::Swamp)), "Sumpf"),
+        ],
+        MapMode::Religion => RELIGIONS
+            .iter()
+            .map(|r| (to_color(religion_rgb(*r)), r.name()))
+            .collect(),
+        MapMode::Hollowing => vec![
+            (rgb([90, 110, 90]), "rein"),
+            (rgb([90, 230, 140]), "stark gehohlt"),
+            (rgb([176, 96, 230]), "Schleier ≥ 4"),
+        ],
+        MapMode::Economy => vec![
+            (rgb([70, 52, 40]), "arm"),
+            (rgb([196, 150, 60]), "wohlhabend"),
+            (rgb([250, 228, 130]), "reich"),
+        ],
+        MapMode::Unrest => vec![
+            (rgb([70, 140, 80]), "ruhig"),
+            (rgb([220, 190, 60]), "gespannt"),
+            (rgb([210, 50, 40]), "Aufstand"),
+        ],
+        MapMode::Diplomacy => vec![
+            (rgb([240, 200, 70]), "eigenes Reich/Vasallen"),
+            (rgb([80, 130, 230]), "Verbündete"),
+            (rgb([210, 50, 40]), "Krieg"),
+            (rgb([90, 190, 100]), "freundlich"),
+            (rgb([150, 150, 150]), "neutral"),
+            (rgb([190, 110, 60]), "feindlich"),
+        ],
     }
 }
 
 /// Färbung einer Provinz im Kartenmodus: (Farbe, Mischanteil mit dem Geländeton).
-fn mode_tint(mode: MapMode, world: &StrategyWorld, p: ProvId, max_prosperity: f32) -> Option<([f32; 3], f32)> {
+fn mode_tint(
+    mode: MapMode,
+    world: &StrategyWorld,
+    p: ProvId,
+    max_prosperity: f32,
+) -> Option<([f32; 3], f32)> {
     let pr = &world.provinces[p as usize];
     match mode {
         MapMode::Terrain => None,
-        MapMode::Realms => pr.holder().map(|h| (realm_rgb(&world.realms[h as usize]), 0.58)),
+        MapMode::Realms => pr
+            .holder()
+            .map(|h| (realm_rgb(&world.realms[h as usize]), 0.58)),
         MapMode::Religion => {
             let r = pr.faith_majority();
             let share = pr.faith[r.idx()];
@@ -197,7 +264,14 @@ fn mode_tint(mode: MapMode, world: &StrategyWorld, p: ProvId, max_prosperity: f3
         }
         MapMode::Hollowing => {
             let h = (pr.hollowing / 100.0).clamp(0.0, 1.0);
-            let base = ramp(&[(0.0, [96.0, 112.0, 96.0]), (0.5, [80.0, 190.0, 120.0]), (1.0, [60.0, 250.0, 150.0])], h);
+            let base = ramp(
+                &[
+                    (0.0, [96.0, 112.0, 96.0]),
+                    (0.5, [80.0, 190.0, 120.0]),
+                    (1.0, [60.0, 250.0, 150.0]),
+                ],
+                h,
+            );
             if pr.veil >= 4.0 {
                 Some((mix(base, [176.0, 96.0, 230.0], 0.55), 0.85))
             } else {
@@ -206,28 +280,65 @@ fn mode_tint(mode: MapMode, world: &StrategyWorld, p: ProvId, max_prosperity: f3
         }
         MapMode::Economy => {
             let v = (prosperity(world, p) / max_prosperity.max(1.0)).clamp(0.0, 1.0);
-            Some((ramp(&[(0.0, [70.0, 52.0, 40.0]), (0.5, [196.0, 150.0, 60.0]), (1.0, [252.0, 232.0, 130.0])], v), 0.8))
+            Some((
+                ramp(
+                    &[
+                        (0.0, [70.0, 52.0, 40.0]),
+                        (0.5, [196.0, 150.0, 60.0]),
+                        (1.0, [252.0, 232.0, 130.0]),
+                    ],
+                    v,
+                ),
+                0.8,
+            ))
         }
         MapMode::Unrest => {
-            let v = (pr.unrest / 100.0).clamp(0.0, 1.0).max(pr.tension.iter().cloned().fold(0.0, f32::max) / 120.0);
-            Some((ramp(&[(0.0, [70.0, 140.0, 80.0]), (0.45, [220.0, 190.0, 60.0]), (1.0, [210.0, 50.0, 40.0])], v), 0.8))
+            let v = (pr.unrest / 100.0)
+                .clamp(0.0, 1.0)
+                .max(pr.tension.iter().cloned().fold(0.0, f32::max) / 120.0);
+            Some((
+                ramp(
+                    &[
+                        (0.0, [70.0, 140.0, 80.0]),
+                        (0.45, [220.0, 190.0, 60.0]),
+                        (1.0, [210.0, 50.0, 40.0]),
+                    ],
+                    v,
+                ),
+                0.8,
+            ))
         }
         MapMode::Diplomacy => {
             let me = world.player?;
-            let Some(h) = pr.holder() else { return Some(([70.0, 70.0, 70.0], 0.5)) };
-            if h == me || world.realms[h as usize].vassal_of == Some(me) || world.realms[me as usize].vassal_of == Some(h) {
+            let Some(h) = pr.holder() else {
+                return Some(([70.0, 70.0, 70.0], 0.5));
+            };
+            if h == me
+                || world.realms[h as usize].vassal_of == Some(me)
+                || world.realms[me as usize].vassal_of == Some(h)
+            {
                 return Some(([240.0, 200.0, 70.0], 0.75));
             }
             let c = if world.at_war(me, h) {
                 [210.0, 50.0, 40.0]
-            } else if world.has_treaty(TreatyKind::Alliance, me, h) || world.has_treaty(TreatyKind::DefensivePact, me, h) {
+            } else if world.has_treaty(TreatyKind::Alliance, me, h)
+                || world.has_treaty(TreatyKind::DefensivePact, me, h)
+            {
                 [80.0, 130.0, 230.0]
             } else {
                 let o = world.opinion(me, h);
                 if o > 15.0 {
-                    mix([150.0, 150.0, 150.0], [90.0, 190.0, 100.0], (o / 60.0).min(1.0))
+                    mix(
+                        [150.0, 150.0, 150.0],
+                        [90.0, 190.0, 100.0],
+                        (o / 60.0).min(1.0),
+                    )
                 } else if o < -15.0 {
-                    mix([150.0, 150.0, 150.0], [190.0, 110.0, 60.0], (-o / 60.0).min(1.0))
+                    mix(
+                        [150.0, 150.0, 150.0],
+                        [190.0, 110.0, 60.0],
+                        (-o / 60.0).min(1.0),
+                    )
                 } else {
                     [150.0, 150.0, 150.0]
                 }
@@ -327,7 +438,13 @@ impl Geometry {
                 }
             }
         }
-        Geometry { ids, sea, shade, speck, sea_points }
+        Geometry {
+            ids,
+            sea,
+            shade,
+            speck,
+            sea_points,
+        }
     }
 }
 
@@ -366,7 +483,16 @@ pub struct MapView {
 
 impl MapView {
     pub fn new(seed: u64) -> MapView {
-        MapView { cam: Vec2::new(MAP_W * 0.5, MAP_H * 0.5), zoom: 1.0, geo: None, tex: None, tex_key: None, army_hits: Vec::new(), drag_moved: 0.0, seed: (seed as u32) ^ 0x5EED }
+        MapView {
+            cam: Vec2::new(MAP_W * 0.5, MAP_H * 0.5),
+            zoom: 1.0,
+            geo: None,
+            tex: None,
+            tex_key: None,
+            army_hits: Vec::new(),
+            drag_moved: 0.0,
+            seed: (seed as u32) ^ 0x5EED,
+        }
     }
 
     pub fn center_on(&mut self, p: Vec2) {
@@ -375,12 +501,18 @@ impl MapView {
 
     fn to_screen(&self, rect: Rect, p: Vec2) -> Pos2 {
         let c = rect.center();
-        Pos2::new(c.x + (p.x - self.cam.x) * self.zoom, c.y + (p.y - self.cam.y) * self.zoom)
+        Pos2::new(
+            c.x + (p.x - self.cam.x) * self.zoom,
+            c.y + (p.y - self.cam.y) * self.zoom,
+        )
     }
 
     fn to_map(&self, rect: Rect, s: Pos2) -> Vec2 {
         let c = rect.center();
-        Vec2::new(self.cam.x + (s.x - c.x) / self.zoom, self.cam.y + (s.y - c.y) / self.zoom)
+        Vec2::new(
+            self.cam.x + (s.x - c.x) / self.zoom,
+            self.cam.y + (s.y - c.y) / self.zoom,
+        )
     }
 
     pub fn province_at(&self, world: &StrategyWorld, m: Vec2) -> Option<ProvId> {
@@ -394,7 +526,16 @@ impl MapView {
             }
         }
         // Küstennähe großzügig: nächster Schwerpunkt innerhalb von 22 Kartenpunkten.
-        world.provinces.iter().filter(|p| (p.centroid - m).length() < 22.0).min_by(|a, b| (a.centroid - m).length().total_cmp(&(b.centroid - m).length())).map(|p| p.id)
+        world
+            .provinces
+            .iter()
+            .filter(|p| (p.centroid - m).length() < 22.0)
+            .min_by(|a, b| {
+                (a.centroid - m)
+                    .length()
+                    .total_cmp(&(b.centroid - m).length())
+            })
+            .map(|p| p.id)
     }
 
     /// Texturen bei Bedarf neu erzeugen (Kartenmodus, Besitzänderungen, Monatswechsel).
@@ -404,15 +545,25 @@ impl MapView {
         }
         let mut sig: u64 = (world.day / 30) as u64;
         for p in &world.provinces {
-            sig = sig.wrapping_mul(1_000_003).wrapping_add(p.holder().map(|h| h as u64 + 1).unwrap_or(0));
+            sig = sig
+                .wrapping_mul(1_000_003)
+                .wrapping_add(p.holder().map(|h| h as u64 + 1).unwrap_or(0));
         }
         if self.tex.is_some() && self.tex_key == Some((mode, sig)) {
             return;
         }
         let geo = self.geo.as_ref().expect("Geometrie");
-        let max_prosperity = (0..world.provinces.len()).map(|p| prosperity(world, p as ProvId)).fold(1.0, f32::max);
-        let tints: Vec<Option<([f32; 3], f32)>> = (0..world.provinces.len()).map(|p| mode_tint(mode, world, p as ProvId, max_prosperity)).collect();
-        let holder_rgb: Vec<Option<[f32; 3]>> = world.provinces.iter().map(|p| p.holder().map(|h| realm_rgb(&world.realms[h as usize]))).collect();
+        let max_prosperity = (0..world.provinces.len())
+            .map(|p| prosperity(world, p as ProvId))
+            .fold(1.0, f32::max);
+        let tints: Vec<Option<([f32; 3], f32)>> = (0..world.provinces.len())
+            .map(|p| mode_tint(mode, world, p as ProvId, max_prosperity))
+            .collect();
+        let holder_rgb: Vec<Option<[f32; 3]>> = world
+            .provinces
+            .iter()
+            .map(|p| p.holder().map(|h| realm_rgb(&world.realms[h as usize])))
+            .collect();
         let holders: Vec<Option<RealmId>> = world.provinces.iter().map(|p| p.holder()).collect();
         let mut img = ColorImage::filled([RW, RH], Color32::BLACK);
         for y in 0..RH {
@@ -426,7 +577,8 @@ impl MapView {
                     let d = geo.sea[i] as f32;
                     let depth = (d / 16.0).clamp(0.0, 1.0);
                     let mut c = mix([58.0, 104.0, 124.0], [22.0, 40.0, 64.0], depth);
-                    let wave = ((x as f32 * 0.55 + y as f32 * 0.9 + shade * 9.0).sin() * 0.5 + 0.5) * (1.0 - depth * 0.6);
+                    let wave = ((x as f32 * 0.55 + y as f32 * 0.9 + shade * 9.0).sin() * 0.5 + 0.5)
+                        * (1.0 - depth * 0.6);
                     if wave > 0.93 && speck > 0.4 {
                         c = mix(c, [150.0, 196.0, 210.0], 0.45);
                     }
@@ -445,16 +597,30 @@ impl MapView {
                 let lum = 0.80 + 0.40 * shade + (speck - 0.5) * 0.10;
                 c = [c[0] * lum, c[1] * lum, c[2] * lum];
                 match pr.biome {
-                    Biome::Forest | Biome::Swamp if speck > 0.78 => c = mix(c, [24.0, 48.0, 30.0], 0.55),
-                    Biome::Mountain if ((x as f32 * 0.5 - y as f32 * 0.8 + shade * 12.0).sin()) > 0.82 => c = mix(c, [60.0, 56.0, 56.0], 0.5),
+                    Biome::Forest | Biome::Swamp if speck > 0.78 => {
+                        c = mix(c, [24.0, 48.0, 30.0], 0.55)
+                    }
+                    Biome::Mountain
+                        if ((x as f32 * 0.5 - y as f32 * 0.8 + shade * 12.0).sin()) > 0.82 =>
+                    {
+                        c = mix(c, [60.0, 56.0, 56.0], 0.5)
+                    }
                     Biome::Mountain if speck > 0.9 => c = mix(c, [220.0, 216.0, 210.0], 0.5),
-                    Biome::Hills if ((y as f32 * 0.7 + shade * 10.0).sin()) > 0.8 => c = mix(c, [168.0, 156.0, 92.0], 0.35),
-                    Biome::Desert if ((x as f32 * 0.35 + y as f32 * 0.5 + shade * 8.0).sin()) > 0.85 => c = mix(c, [232.0, 206.0, 144.0], 0.4),
+                    Biome::Hills if ((y as f32 * 0.7 + shade * 10.0).sin()) > 0.8 => {
+                        c = mix(c, [168.0, 156.0, 92.0], 0.35)
+                    }
+                    Biome::Desert
+                        if ((x as f32 * 0.35 + y as f32 * 0.5 + shade * 8.0).sin()) > 0.85 =>
+                    {
+                        c = mix(c, [232.0, 206.0, 144.0], 0.4)
+                    }
                     Biome::Volcanic if speck > 0.93 => c = mix(c, [255.0, 120.0, 40.0], 0.7),
                     Biome::Tundra if speck > 0.85 => c = mix(c, [236.0, 240.0, 240.0], 0.5),
                     Biome::Ruins if speck > 0.9 => c = mix(c, [168.0, 160.0, 150.0], 0.5),
                     Biome::Hollowland if speck > 0.88 => c = mix(c, [110.0, 230.0, 150.0], 0.25),
-                    Biome::Plains | Biome::Coast | Biome::Island if speck > 0.9 => c = mix(c, [150.0, 170.0, 80.0], 0.4),
+                    Biome::Plains | Biome::Coast | Biome::Island if speck > 0.9 => {
+                        c = mix(c, [150.0, 170.0, 80.0], 0.4)
+                    }
                     _ => {}
                 }
                 // Hohlung färbt in allen Modi die Landschaft leicht grün, Verwüstung dunkelt ab.
@@ -469,7 +635,11 @@ impl MapView {
                 let mut border_other: Option<u16> = None;
                 for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
                     let (nx, ny) = (x as i32 + dx, y as i32 + dy);
-                    let nid = if nx < 0 || ny < 0 || nx >= RW as i32 || ny >= RH as i32 { NONE } else { geo.ids[ny as usize * RW + nx as usize] };
+                    let nid = if nx < 0 || ny < 0 || nx >= RW as i32 || ny >= RH as i32 {
+                        NONE
+                    } else {
+                        geo.ids[ny as usize * RW + nx as usize]
+                    };
                     if nid != id {
                         border_other = Some(nid);
                         if nid == NONE {
@@ -492,19 +662,32 @@ impl MapView {
         }
         match &mut self.tex {
             Some(t) => t.set(img, TextureOptions::NEAREST),
-            None => self.tex = Some(ctx.load_texture("worldmap_raster", img, TextureOptions::NEAREST)),
+            None => {
+                self.tex = Some(ctx.load_texture("worldmap_raster", img, TextureOptions::NEAREST))
+            }
         }
         self.tex_key = Some((mode, sig));
     }
 
     /// Zeichnet die Karte samt Overlays in `rect` und verarbeitet Kamera und Mauseingaben.
-    pub fn show(&mut self, ui: &mut egui::Ui, rect: Rect, mode: MapMode, cx: &DrawCtx, block_input: bool) -> MapInput {
+    pub fn show(
+        &mut self,
+        ui: &mut egui::Ui,
+        rect: Rect,
+        mode: MapMode,
+        cx: &DrawCtx,
+        block_input: bool,
+    ) -> MapInput {
         let ctx = ui.ctx().clone();
         let world = cx.world;
         self.ensure_raster(&ctx, world, mode);
         let mut out = MapInput::default();
         // ---- Kamera
-        let resp = ui.interact(rect, egui::Id::unique("worldmap_canvas"), egui::Sense::click_and_drag());
+        let resp = ui.interact(
+            rect,
+            egui::Id::unique("worldmap_canvas"),
+            egui::Sense::click_and_drag(),
+        );
         let dt = ctx.input(|i| i.stable_dt).min(0.1);
         if !block_input {
             let (scroll, keys_pan, zoom_keys) = ctx.input(|i| {
@@ -528,8 +711,12 @@ impl MapView {
                 self.cam += keys_pan * 420.0 * dt / self.zoom;
             }
             // Kantenbildlauf (nur wenn der Zeiger im Fenster ist und nichts anderes ihn beansprucht).
-            if let Some(p) = ctx.input(|i| i.pointer.hover_pos()) {
-                if rect.contains(p) && !ctx.egui_wants_pointer_input() && resp.hovered() {
+            if let Some(p) = ctx.input(|i| i.pointer.hover_pos())
+                && rect.contains(p)
+                && !ctx.egui_wants_pointer_input()
+                && resp.hovered()
+            {
+                {
                     let edge = 6.0;
                     let mut pan = Vec2::ZERO;
                     if p.x < rect.min.x + edge {
@@ -552,46 +739,92 @@ impl MapView {
                 dz += scroll * 0.0025;
             }
             if dz != 0.0 {
-                let before = ctx.input(|i| i.pointer.hover_pos()).filter(|p| rect.contains(*p)).map(|p| (p, self.to_map(rect, p)));
+                let before = ctx
+                    .input(|i| i.pointer.hover_pos())
+                    .filter(|p| rect.contains(*p))
+                    .map(|p| (p, self.to_map(rect, p)));
                 self.zoom = (self.zoom * (1.0 + dz)).clamp(0.55, 4.5);
                 if let Some((p, m)) = before {
                     // Zoom auf den Zeiger: Kartenpunkt unter dem Zeiger bleibt stehen.
                     let c = rect.center();
-                    self.cam = Vec2::new(m.x - (p.x - c.x) / self.zoom, m.y - (p.y - c.y) / self.zoom);
+                    self.cam =
+                        Vec2::new(m.x - (p.x - c.x) / self.zoom, m.y - (p.y - c.y) / self.zoom);
                 }
             }
         }
-        if resp.dragged_by(egui::PointerButton::Primary) || resp.dragged_by(egui::PointerButton::Middle) {
+        if resp.dragged_by(egui::PointerButton::Primary)
+            || resp.dragged_by(egui::PointerButton::Middle)
+        {
             let d = resp.drag_delta();
             self.cam -= Vec2::new(d.x, d.y) / self.zoom;
             self.drag_moved += d.length();
         }
-        if resp.drag_stopped() || (!resp.dragged() && resp.is_pointer_button_down_on() == false) {
-            // Klick nur, wenn kaum gezogen wurde (siehe unten)
-        }
         let half = Vec2::new(rect.width(), rect.height()) / (2.0 * self.zoom);
         let margin = 60.0;
-        let min = Vec2::new((half.x - margin).min(MAP_W * 0.5), (half.y - margin).min(MAP_H * 0.5));
-        self.cam.x = self.cam.x.clamp(min.x.min(MAP_W - min.x), (MAP_W - min.x).max(min.x));
-        self.cam.y = self.cam.y.clamp(min.y.min(MAP_H - min.y), (MAP_H - min.y).max(min.y));
+        let min = Vec2::new(
+            (half.x - margin).min(MAP_W * 0.5),
+            (half.y - margin).min(MAP_H * 0.5),
+        );
+        self.cam.x = self
+            .cam
+            .x
+            .clamp(min.x.min(MAP_W - min.x), (MAP_W - min.x).max(min.x));
+        self.cam.y = self
+            .cam
+            .y
+            .clamp(min.y.min(MAP_H - min.y), (MAP_H - min.y).max(min.y));
 
         // ---- Hintergrund und Karte
         let painter = ui.painter_at(rect);
         painter.rect_filled(rect, 0.0, Color32::from_rgb(12, 20, 32));
-        let map_rect = Rect::from_min_max(self.to_screen(rect, Vec2::ZERO), self.to_screen(rect, Vec2::new(MAP_W, MAP_H)));
+        let map_rect = Rect::from_min_max(
+            self.to_screen(rect, Vec2::ZERO),
+            self.to_screen(rect, Vec2::new(MAP_W, MAP_H)),
+        );
         if let Some(t) = &self.tex {
-            painter.image(t.id(), map_rect, Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)), Color32::WHITE);
+            painter.image(
+                t.id(),
+                map_rect,
+                Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                Color32::WHITE,
+            );
         }
         self.draw_sea_shimmer(&painter, rect, cx);
         self.draw_overlays(&painter, rect, mode, cx);
         // Randverdunkelung
-        for (c, s) in [(rect.left_center(), EVec2::new(rect.width() * 0.35, rect.height() * 1.5)), (rect.right_center(), EVec2::new(rect.width() * 0.35, rect.height() * 1.5)), (rect.center_top(), EVec2::new(rect.width() * 1.5, rect.height() * 0.3)), (rect.center_bottom(), EVec2::new(rect.width() * 1.5, rect.height() * 0.3))] {
-            cx.ui_art.soft_shadow(&painter, Rect::from_center_size(c, s), 0.45);
+        for (c, s) in [
+            (
+                rect.left_center(),
+                EVec2::new(rect.width() * 0.35, rect.height() * 1.5),
+            ),
+            (
+                rect.right_center(),
+                EVec2::new(rect.width() * 0.35, rect.height() * 1.5),
+            ),
+            (
+                rect.center_top(),
+                EVec2::new(rect.width() * 1.5, rect.height() * 0.3),
+            ),
+            (
+                rect.center_bottom(),
+                EVec2::new(rect.width() * 1.5, rect.height() * 0.3),
+            ),
+        ] {
+            cx.ui_art
+                .soft_shadow(&painter, Rect::from_center_size(c, s), 0.45);
         }
 
         // ---- Zeigerinteraktion
-        if let Some(p) = ctx.input(|i| i.pointer.hover_pos()).filter(|p| rect.contains(*p) && resp.hovered()) {
-            out.hover_army = self.army_hits.iter().rev().find(|(r, _)| r.contains(p)).map(|(_, a)| *a);
+        if let Some(p) = ctx
+            .input(|i| i.pointer.hover_pos())
+            .filter(|p| rect.contains(*p) && resp.hovered())
+        {
+            out.hover_army = self
+                .army_hits
+                .iter()
+                .rev()
+                .find(|(r, _)| r.contains(p))
+                .map(|(_, a)| *a);
             let m = self.to_map(rect, p);
             out.hover = self.province_at(world, m);
         }
@@ -619,7 +852,11 @@ impl MapView {
             let phase = (cx.t * 0.9 + i as f32 * 1.37).sin() * 0.5 + 0.5;
             if phase > 0.55 {
                 let a = ((phase - 0.55) / 0.45 * 90.0) as u8;
-                painter.rect_filled(Rect::from_min_size(s, EVec2::new(px * 2.0, px)), 0.0, Color32::from_rgba_unmultiplied(190, 226, 236, a));
+                painter.rect_filled(
+                    Rect::from_min_size(s, EVec2::new(px * 2.0, px)),
+                    0.0,
+                    Color32::from_rgba_unmultiplied(190, 226, 236, a),
+                );
             }
         }
     }
@@ -646,46 +883,107 @@ impl MapView {
                     let off = EVec2::new(ph.sin() * 36.0, (ph * 0.8).cos() * 22.0) * z;
                     let size = EVec2::new(150.0 + j as f32 * 26.0, 70.0 + j as f32 * 12.0) * z;
                     let a = k * (0.5 + 0.5 * (t * 0.3 + j as f32).sin());
-                    cx.ui_art.glow(painter, Rect::from_center_size(c + off, size), Color32::from_rgb((10.0 + 18.0 * a) as u8, (34.0 + 48.0 * a) as u8, (22.0 + 26.0 * a) as u8));
+                    cx.ui_art.glow(
+                        painter,
+                        Rect::from_center_size(c + off, size),
+                        Color32::from_rgb(
+                            (10.0 + 18.0 * a) as u8,
+                            (34.0 + 48.0 * a) as u8,
+                            (22.0 + 26.0 * a) as u8,
+                        ),
+                    );
                 }
             }
-            let war = p.siege.is_some() || world.battles.iter().any(|b| b.province == p.id) || p.rebel_held;
+            let war = p.siege.is_some()
+                || world.battles.iter().any(|b| b.province == p.id)
+                || p.rebel_held;
             if war {
                 let a = 0.6 + 0.4 * (t * 4.0 + p.id as f32).sin();
-                cx.ui_art.glow(painter, Rect::from_center_size(c, EVec2::new(150.0, 100.0) * z), Color32::from_rgb((120.0 * a) as u8, (44.0 * a) as u8, (8.0 * a) as u8));
+                cx.ui_art.glow(
+                    painter,
+                    Rect::from_center_size(c, EVec2::new(150.0, 100.0) * z),
+                    Color32::from_rgb((120.0 * a) as u8, (44.0 * a) as u8, (8.0 * a) as u8),
+                );
                 let area = Rect::from_center_size(c, EVec2::new(90.0, 80.0) * z);
-                ui_art::embers(cx.ui_art, &painter.with_clip_rect(rect.intersect(area)), area, t, 10, p.id as u32 + 3);
+                ui_art::embers(
+                    cx.ui_art,
+                    &painter.with_clip_rect(rect.intersect(area)),
+                    area,
+                    t,
+                    10,
+                    p.id as u32 + 3,
+                );
             }
         }
         // Auswahlumriss, Provinz-Umrisse bei Zeigerkontakt folgen im Anschluss an die Icons.
         if let Some(sel) = cx.selected {
-            let poly: Vec<Pos2> = world.provinces[sel as usize].polygon.iter().map(|v| self.to_screen(rect, *v)).collect();
-            painter.add(Shape::closed_line(poly.clone(), Stroke::new(3.0, Color32::from_rgb(20, 10, 4))));
+            let poly: Vec<Pos2> = world.provinces[sel as usize]
+                .polygon
+                .iter()
+                .map(|v| self.to_screen(rect, *v))
+                .collect();
+            painter.add(Shape::closed_line(
+                poly.clone(),
+                Stroke::new(3.0, Color32::from_rgb(20, 10, 4)),
+            ));
             let pulse = 0.75 + 0.25 * (t * 3.0).sin();
-            painter.add(Shape::closed_line(poly, Stroke::new(1.8, Color32::from_rgb((250.0 * pulse) as u8, (214.0 * pulse) as u8, (120.0 * pulse) as u8))));
+            painter.add(Shape::closed_line(
+                poly,
+                Stroke::new(
+                    1.8,
+                    Color32::from_rgb(
+                        (250.0 * pulse) as u8,
+                        (214.0 * pulse) as u8,
+                        (120.0 * pulse) as u8,
+                    ),
+                ),
+            ));
         }
         // Bewegungspfeile.
         let player = world.player;
         for a in &world.armies {
-            if a.path.is_empty() || !(Some(a.owner.unwrap_or(u16::MAX)) == player || cx.selected_army == Some(a.id)) {
+            if a.path.is_empty()
+                || !(Some(a.owner.unwrap_or(u16::MAX)) == player || cx.selected_army == Some(a.id))
+            {
                 continue;
             }
             let selected = cx.selected_army == Some(a.id);
-            let col = if selected { Color32::from_rgb(255, 224, 120) } else { Color32::from_rgb(220, 190, 110).gamma_multiply(0.75) };
+            let col = if selected {
+                Color32::from_rgb(255, 224, 120)
+            } else {
+                Color32::from_rgb(220, 190, 110).gamma_multiply(0.75)
+            };
             let mut pts = vec![self.army_pos(world, a)];
             for p in &a.path {
                 pts.push(Self::centroid(world, *p));
             }
-            self.draw_arrow(painter, rect, &pts, col, selected, a.path.iter().any(|p| {
-                world.provinces[a.location as usize].neighbors.iter().any(|l| l.to == *p && l.kind == LinkKind::Sea)
-            }));
+            self.draw_arrow(
+                painter,
+                rect,
+                &pts,
+                col,
+                selected,
+                a.path.iter().any(|p| {
+                    world.provinces[a.location as usize]
+                        .neighbors
+                        .iter()
+                        .any(|l| l.to == *p && l.kind == LinkKind::Sea)
+                }),
+            );
         }
         if let (Some(path), Some(aid)) = (&cx.preview, cx.selected_army)
             && let Some(a) = world.army(aid)
         {
             let mut pts = vec![self.army_pos(world, a)];
             pts.extend(path.iter().map(|p| Self::centroid(world, *p)));
-            self.draw_arrow(painter, rect, &pts, Color32::from_rgb(150, 230, 255), false, false);
+            self.draw_arrow(
+                painter,
+                rect,
+                &pts,
+                Color32::from_rgb(150, 230, 255),
+                false,
+                false,
+            );
         }
         // Siedlungen, Namen, Marker.
         for p in &world.provinces {
@@ -696,21 +994,27 @@ impl MapView {
             self.draw_settlement(painter, c, p, world, cx, mode);
         }
         // Heere.
-        let mut at: std::collections::BTreeMap<ProvId, Vec<&ashen_strategy::Army>> = std::collections::BTreeMap::new();
+        let mut at: std::collections::BTreeMap<ProvId, Vec<&ashen_strategy::Army>> =
+            std::collections::BTreeMap::new();
         for a in &world.armies {
             if a.path.is_empty() || a.progress <= 0.0 {
                 at.entry(a.location).or_default().push(a);
             }
         }
         for (loc, list) in &at {
-            let base = self.to_screen(rect, Self::centroid(world, *loc)) + EVec2::new(0.0, 22.0 * z.clamp(0.8, 2.0));
+            let base = self.to_screen(rect, Self::centroid(world, *loc))
+                + EVec2::new(0.0, 22.0 * z.clamp(0.8, 2.0));
             let n = list.len() as f32;
             for (i, a) in list.iter().enumerate() {
                 let off = EVec2::new((i as f32 - (n - 1.0) / 2.0) * 26.0 * z.clamp(0.8, 1.6), 0.0);
                 self.draw_army(painter, base + off, a, world, cx, rect);
             }
         }
-        for a in world.armies.iter().filter(|a| !a.path.is_empty() && a.progress > 0.0) {
+        for a in world
+            .armies
+            .iter()
+            .filter(|a| !a.path.is_empty() && a.progress > 0.0)
+        {
             let pos = self.to_screen(rect, self.army_pos(world, a));
             self.draw_army(painter, pos, a, world, cx, rect);
         }
@@ -719,18 +1023,31 @@ impl MapView {
     fn army_pos(&self, world: &StrategyWorld, a: &ashen_strategy::Army) -> Vec2 {
         let from = Self::centroid(world, a.location);
         match a.path.first() {
-            Some(n) if a.progress > 0.0 => from.lerp(Self::centroid(world, *n), a.progress.clamp(0.0, 1.0)),
+            Some(n) if a.progress > 0.0 => {
+                from.lerp(Self::centroid(world, *n), a.progress.clamp(0.0, 1.0))
+            }
             _ => from,
         }
     }
 
-    fn draw_arrow(&self, painter: &Painter, rect: Rect, pts: &[Vec2], col: Color32, bold: bool, dashed_sea: bool) {
+    fn draw_arrow(
+        &self,
+        painter: &Painter,
+        rect: Rect,
+        pts: &[Vec2],
+        col: Color32,
+        bold: bool,
+        dashed_sea: bool,
+    ) {
         if pts.len() < 2 {
             return;
         }
         let s: Vec<Pos2> = pts.iter().map(|p| self.to_screen(rect, *p)).collect();
         let w = if bold { 3.0 } else { 2.0 };
-        painter.add(Shape::line(s.clone(), Stroke::new(w + 2.0, Color32::from_black_alpha(170))));
+        painter.add(Shape::line(
+            s.clone(),
+            Stroke::new(w + 2.0, Color32::from_black_alpha(170)),
+        ));
         if dashed_sea {
             painter.extend(Shape::dashed_line(&s, Stroke::new(w, col), 7.0, 4.0));
         } else {
@@ -742,11 +1059,23 @@ impl MapView {
             let n = EVec2::new(-d.y, d.x);
             let tip = b;
             let base = b - d * 12.0;
-            painter.add(Shape::convex_polygon(vec![tip, base + n * 6.0, base - n * 6.0], col, Stroke::new(1.0, Color32::from_black_alpha(200))));
+            painter.add(Shape::convex_polygon(
+                vec![tip, base + n * 6.0, base - n * 6.0],
+                col,
+                Stroke::new(1.0, Color32::from_black_alpha(200)),
+            ));
         }
     }
 
-    fn draw_settlement(&self, painter: &Painter, c: Pos2, p: &ashen_strategy::Province, world: &StrategyWorld, cx: &DrawCtx, mode: MapMode) {
+    fn draw_settlement(
+        &self,
+        painter: &Painter,
+        c: Pos2,
+        p: &ashen_strategy::Province,
+        world: &StrategyWorld,
+        cx: &DrawCtx,
+        mode: MapMode,
+    ) {
         let z = self.zoom;
         let size = (26.0 + 8.0 * p.settlement.rank() as f32) * z.clamp(0.7, 1.7);
         let name = match p.settlement {
@@ -763,9 +1092,22 @@ impl MapView {
             painter.rect_filled(r.shrink(size * 0.2), 0.0, Color32::from_rgb(200, 170, 120));
         }
         if p.fortification >= 3
-            && let Some(s) = cx.art.atlas.try_get(if p.fortification >= 6 { "bld_wall_tower" } else { "bld_watchtower" })
+            && let Some(s) = cx.art.atlas.try_get(if p.fortification >= 6 {
+                "bld_wall_tower"
+            } else {
+                "bld_watchtower"
+            })
         {
-            ui_common::paint_sprite(painter, cx.atlas, s, Rect::from_center_size(c + EVec2::new(size * 0.55, size * 0.05), EVec2::splat(size * 0.62)), Color32::WHITE);
+            ui_common::paint_sprite(
+                painter,
+                cx.atlas,
+                s,
+                Rect::from_center_size(
+                    c + EVec2::new(size * 0.55, size * 0.05),
+                    EVec2::splat(size * 0.62),
+                ),
+                Color32::WHITE,
+            );
         }
         // Reichsfahne an Hauptstädten.
         if let Some(h) = p.owner
@@ -773,15 +1115,38 @@ impl MapView {
         {
             let col = realm_color(&world.realms[h as usize]);
             let top = c + EVec2::new(-size * 0.45, -size * 0.75);
-            painter.line_segment([top, top + EVec2::new(0.0, size * 0.55)], Stroke::new(2.0, Color32::from_rgb(40, 28, 20)));
-            painter.add(Shape::convex_polygon(vec![top, top + EVec2::new(size * 0.4, size * 0.12), top + EVec2::new(0.0, size * 0.26)], col, Stroke::new(1.0, Color32::BLACK)));
+            painter.line_segment(
+                [top, top + EVec2::new(0.0, size * 0.55)],
+                Stroke::new(2.0, Color32::from_rgb(40, 28, 20)),
+            );
+            painter.add(Shape::convex_polygon(
+                vec![
+                    top,
+                    top + EVec2::new(size * 0.4, size * 0.12),
+                    top + EVec2::new(0.0, size * 0.26),
+                ],
+                col,
+                Stroke::new(1.0, Color32::BLACK),
+            ));
         }
         // Name (ab mittlerer Zoomstufe).
         if z >= 0.85 {
             let f = ashen_engine::ui::theme::caps_font((11.0 * z.clamp(0.9, 1.5)).round());
             let pos = c + EVec2::new(0.0, size * 0.52);
-            painter.text(pos + EVec2::new(1.0, 1.0), egui::Align2::CENTER_TOP, &p.name, f.clone(), Color32::from_black_alpha(230));
-            painter.text(pos, egui::Align2::CENTER_TOP, &p.name, f, Color32::from_rgb(240, 228, 196));
+            painter.text(
+                pos + EVec2::new(1.0, 1.0),
+                egui::Align2::CENTER_TOP,
+                &p.name,
+                f.clone(),
+                Color32::from_black_alpha(230),
+            );
+            painter.text(
+                pos,
+                egui::Align2::CENTER_TOP,
+                &p.name,
+                f,
+                Color32::from_rgb(240, 228, 196),
+            );
         }
         // Marker über der Siedlung.
         let mut marks: Vec<(Marker, Color32)> = Vec::new();
@@ -797,10 +1162,18 @@ impl MapView {
         if p.shrine > 0 || p.god_shrine.is_some() && p.veil >= 3.0 {
             marks.push((Marker::Ring, Color32::from_rgb(140, 250, 170)));
         }
-        if world.neutrals.iter().any(|n| n.active && n.province == p.id) {
+        if world
+            .neutrals
+            .iter()
+            .any(|n| n.active && n.province == p.id)
+        {
             marks.push((Marker::Paw, Color32::from_rgb(230, 90, 70)));
         }
-        if world.bosses.iter().any(|b| b.province == p.id && b.state == ashen_strategy::BossState::Active) {
+        if world
+            .bosses
+            .iter()
+            .any(|b| b.province == p.id && b.state == ashen_strategy::BossState::Active)
+        {
             marks.push((Marker::Skull, Color32::from_rgb(250, 240, 220)));
         }
         if p.unrest >= 60.0 || p.rebel_held {
@@ -814,7 +1187,11 @@ impl MapView {
         for (i, (m, col)) in marks.iter().enumerate() {
             let x = c.x - total / 2.0 + i as f32 * (8.0 * ms + 3.0);
             let y = c.y - size * 0.62 - 8.0 * ms;
-            let pulse = if matches!(m, Marker::Swords | Marker::Flame) { 0.75 + 0.25 * (cx.t * 6.0).sin() } else { 1.0 };
+            let pulse = if matches!(m, Marker::Swords | Marker::Flame) {
+                0.75 + 0.25 * (cx.t * 6.0).sin()
+            } else {
+                1.0
+            };
             m.draw(painter, Pos2::new(x, y), ms, col.gamma_multiply(pulse));
         }
         if mode == MapMode::Economy || mode == MapMode::Unrest || mode == MapMode::Hollowing {
@@ -825,16 +1202,38 @@ impl MapView {
             };
             let f = ashen_engine::ui::theme::body_bold_font(12.0 * z.clamp(0.9, 1.4));
             let pos = c + EVec2::new(0.0, size * 0.52 + 14.0 * z.clamp(0.9, 1.4));
-            painter.text(pos + EVec2::new(1.0, 1.0), egui::Align2::CENTER_TOP, &v, f.clone(), Color32::BLACK);
-            painter.text(pos, egui::Align2::CENTER_TOP, &v, f, Color32::from_rgb(255, 244, 210));
+            painter.text(
+                pos + EVec2::new(1.0, 1.0),
+                egui::Align2::CENTER_TOP,
+                &v,
+                f.clone(),
+                Color32::BLACK,
+            );
+            painter.text(
+                pos,
+                egui::Align2::CENTER_TOP,
+                &v,
+                f,
+                Color32::from_rgb(255, 244, 210),
+            );
         }
     }
 
-    fn draw_army(&mut self, painter: &Painter, pos: Pos2, a: &ashen_strategy::Army, world: &StrategyWorld, cx: &DrawCtx, rect: Rect) {
+    fn draw_army(
+        &mut self,
+        painter: &Painter,
+        pos: Pos2,
+        a: &ashen_strategy::Army,
+        world: &StrategyWorld,
+        cx: &DrawCtx,
+        rect: Rect,
+    ) {
         let z = self.zoom.clamp(0.8, 1.7);
         let size = 34.0 * z;
         let col = match a.owner {
-            Some(o) if matches!(a.kind, ArmyKind::Realm | ArmyKind::Mercenary) => realm_color(&world.realms[o as usize]),
+            Some(o) if matches!(a.kind, ArmyKind::Realm | ArmyKind::Mercenary) => {
+                realm_color(&world.realms[o as usize])
+            }
             _ => match a.kind {
                 ArmyKind::Hollow | ArmyKind::Boss => Color32::from_rgb(90, 232, 136),
                 ArmyKind::Legion => Color32::from_rgb(190, 190, 206),
@@ -842,7 +1241,10 @@ impl MapView {
                 _ => Color32::from_rgb(200, 80, 70),
             },
         };
-        let r = Rect::from_center_size(pos + EVec2::new(0.0, -size * 0.3), EVec2::new(size * 0.95, size * 1.15));
+        let r = Rect::from_center_size(
+            pos + EVec2::new(0.0, -size * 0.3),
+            EVec2::new(size * 0.95, size * 1.15),
+        );
         if !rect.expand(40.0).intersects(r) {
             return;
         }
@@ -851,14 +1253,43 @@ impl MapView {
         cx.ui_art.soft_shadow(painter, r.expand(size * 0.2), 0.45);
         // Banner: Stange mit Fahne in Reichsfarbe.
         let pole_top = Pos2::new(r.left() + size * 0.1, r.top() - size * 0.05);
-        painter.line_segment([pole_top, pole_top + EVec2::new(0.0, size * 0.9)], Stroke::new(2.0, Color32::from_rgb(46, 30, 20)));
+        painter.line_segment(
+            [pole_top, pole_top + EVec2::new(0.0, size * 0.9)],
+            Stroke::new(2.0, Color32::from_rgb(46, 30, 20)),
+        );
         let wave = (cx.t * 3.0 + a.id as f32).sin() * size * 0.05;
-        painter.add(Shape::convex_polygon(vec![pole_top, pole_top + EVec2::new(size * 0.48, size * 0.08 + wave), pole_top + EVec2::new(size * 0.4, size * 0.2), pole_top + EVec2::new(size * 0.5, size * 0.32 - wave), pole_top + EVec2::new(0.0, size * 0.34)], col, Stroke::new(1.0, Color32::from_black_alpha(220))));
+        painter.add(Shape::convex_polygon(
+            vec![
+                pole_top,
+                pole_top + EVec2::new(size * 0.48, size * 0.08 + wave),
+                pole_top + EVec2::new(size * 0.4, size * 0.2),
+                pole_top + EVec2::new(size * 0.5, size * 0.32 - wave),
+                pole_top + EVec2::new(0.0, size * 0.34),
+            ],
+            col,
+            Stroke::new(1.0, Color32::from_black_alpha(220)),
+        ));
         // Figur: Sprite des stärksten Regiments.
-        let lead = a.regiments.iter().max_by_key(|r| r.count).map(|r| r.unit.as_str()).unwrap_or("swordsman");
-        let sprite_id = crate::worldmap::battle::UNIT_TABLE.iter().find(|(s, _, _)| *s == lead).map(|(_, r, _)| *r).unwrap_or("swordsman");
-        let frame = cx.art.atlas.try_get(&format!("{lead}_idle_0_0")).or_else(|| cx.art.atlas.try_get(&format!("{sprite_id}_idle_0_0")));
-        let figure = Rect::from_center_size(pos + EVec2::new(size * 0.12, -size * 0.12), EVec2::splat(size * 0.95));
+        let lead = a
+            .regiments
+            .iter()
+            .max_by_key(|r| r.count)
+            .map(|r| r.unit.as_str())
+            .unwrap_or("swordsman");
+        let sprite_id = crate::worldmap::battle::UNIT_TABLE
+            .iter()
+            .find(|(s, _, _)| *s == lead)
+            .map(|(_, r, _)| *r)
+            .unwrap_or("swordsman");
+        let frame = cx
+            .art
+            .atlas
+            .try_get(&format!("{lead}_idle_0_0"))
+            .or_else(|| cx.art.atlas.try_get(&format!("{sprite_id}_idle_0_0")));
+        let figure = Rect::from_center_size(
+            pos + EVec2::new(size * 0.12, -size * 0.12),
+            EVec2::splat(size * 0.95),
+        );
         match frame {
             Some(s) => ui_common::paint_sprite(painter, cx.atlas, s, figure, Color32::WHITE),
             None => {
@@ -869,17 +1300,53 @@ impl MapView {
         let txt = format!("{}", a.size());
         let f = ashen_engine::ui::theme::body_bold_font(11.5 * z);
         let tp = pos + EVec2::new(0.0, size * 0.22);
-        painter.text(tp + EVec2::new(1.0, 1.0), egui::Align2::CENTER_TOP, &txt, f.clone(), Color32::BLACK);
-        painter.text(tp, egui::Align2::CENTER_TOP, &txt, f, if mine { Color32::from_rgb(255, 232, 160) } else { Color32::from_rgb(240, 220, 210) });
+        painter.text(
+            tp + EVec2::new(1.0, 1.0),
+            egui::Align2::CENTER_TOP,
+            &txt,
+            f.clone(),
+            Color32::BLACK,
+        );
+        painter.text(
+            tp,
+            egui::Align2::CENTER_TOP,
+            &txt,
+            f,
+            if mine {
+                Color32::from_rgb(255, 232, 160)
+            } else {
+                Color32::from_rgb(240, 220, 210)
+            },
+        );
         if a.in_battle.is_some() {
-            Marker::Swords.draw(painter, r.center_top() + EVec2::new(-12.0, -22.0), 3.0, Color32::from_rgb(255, 130, 80));
+            Marker::Swords.draw(
+                painter,
+                r.center_top() + EVec2::new(-12.0, -22.0),
+                3.0,
+                Color32::from_rgb(255, 130, 80),
+            );
         } else if a.order == ArmyOrder::Siege {
-            Marker::Flame.draw(painter, r.center_top() + EVec2::new(-12.0, -22.0), 3.0, Color32::from_rgb(255, 170, 70));
+            Marker::Flame.draw(
+                painter,
+                r.center_top() + EVec2::new(-12.0, -22.0),
+                3.0,
+                Color32::from_rgb(255, 170, 70),
+            );
         }
         if selected {
-            painter.rect_stroke(r.expand(3.0), 0.0, Stroke::new(2.0, Color32::from_rgb(255, 224, 120)), egui::StrokeKind::Outside);
+            painter.rect_stroke(
+                r.expand(3.0),
+                0.0,
+                Stroke::new(2.0, Color32::from_rgb(255, 224, 120)),
+                egui::StrokeKind::Outside,
+            );
         } else if mine {
-            painter.rect_stroke(r.expand(1.0), 0.0, Stroke::new(1.0, Color32::from_rgb(200, 170, 90).gamma_multiply(0.7)), egui::StrokeKind::Outside);
+            painter.rect_stroke(
+                r.expand(1.0),
+                0.0,
+                Stroke::new(1.0, Color32::from_rgb(200, 170, 90).gamma_multiply(0.7)),
+                egui::StrokeKind::Outside,
+            );
         }
         self.army_hits.push((r.expand(4.0), a.id));
     }
@@ -888,16 +1355,40 @@ impl MapView {
     pub fn draw_legend(painter: &Painter, rect: Rect, mode: MapMode, art: &UiArt) {
         let items = legend(mode);
         let h = 22.0 + items.len() as f32 * 18.0;
-        let r = Rect::from_min_size(Pos2::new(rect.min.x + 14.0, rect.max.y - h - 14.0), EVec2::new(210.0, h));
+        let r = Rect::from_min_size(
+            Pos2::new(rect.min.x + 14.0, rect.max.y - h - 14.0),
+            EVec2::new(210.0, h),
+        );
         for s in art.panel_shapes(ui_art::PanelKind::Thin, r, false) {
             painter.add(s);
         }
-        painter.text(r.min + EVec2::new(16.0, 10.0), egui::Align2::LEFT_TOP, mode.label(), ashen_engine::ui::theme::caps_font(12.5), ashen_engine::ui::theme::GOLD);
+        painter.text(
+            r.min + EVec2::new(16.0, 10.0),
+            egui::Align2::LEFT_TOP,
+            mode.label(),
+            ashen_engine::ui::theme::caps_font(12.5),
+            ashen_engine::ui::theme::GOLD,
+        );
         for (i, (c, name)) in items.iter().enumerate() {
             let y = r.min.y + 30.0 + i as f32 * 18.0;
-            painter.rect_filled(Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)), 0.0, *c);
-            painter.rect_stroke(Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)), 0.0, Stroke::new(1.0, Color32::BLACK), egui::StrokeKind::Outside);
-            painter.text(Pos2::new(r.min.x + 38.0, y - 1.0), egui::Align2::LEFT_TOP, *name, ashen_engine::ui::theme::body_font(13.0), ashen_engine::ui::theme::PARCHMENT);
+            painter.rect_filled(
+                Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)),
+                0.0,
+                *c,
+            );
+            painter.rect_stroke(
+                Rect::from_min_size(Pos2::new(r.min.x + 16.0, y), EVec2::new(14.0, 12.0)),
+                0.0,
+                Stroke::new(1.0, Color32::BLACK),
+                egui::StrokeKind::Outside,
+            );
+            painter.text(
+                Pos2::new(r.min.x + 38.0, y - 1.0),
+                egui::Align2::LEFT_TOP,
+                *name,
+                ashen_engine::ui::theme::body_font(13.0),
+                ashen_engine::ui::theme::PARCHMENT,
+            );
         }
     }
 }
@@ -918,14 +1409,86 @@ pub enum Marker {
 impl Marker {
     fn bits(self) -> [u8; 8] {
         match self {
-            Marker::Swords => [0b1000_0001, 0b1100_0011, 0b0110_0110, 0b0011_1100, 0b0011_1100, 0b0110_0110, 0b1100_0011, 0b1000_0001],
-            Marker::Skull => [0b0011_1100, 0b0111_1110, 0b1101_1011, 0b1101_1011, 0b1111_1111, 0b0011_1100, 0b0010_0100, 0b0010_0100],
-            Marker::Flame => [0b0001_0000, 0b0001_1000, 0b0011_1000, 0b0111_1100, 0b0111_1110, 0b1111_1110, 0b0111_1100, 0b0011_1000],
-            Marker::Drop => [0b0001_1000, 0b0001_1000, 0b0011_1100, 0b0111_1110, 0b1111_1111, 0b1111_1111, 0b0111_1110, 0b0011_1100],
-            Marker::Ring => [0b0011_1100, 0b0100_0010, 0b1001_1001, 0b1010_0101, 0b1010_0101, 0b1001_1001, 0b0100_0010, 0b0011_1100],
-            Marker::Paw => [0b0100_0010, 0b1110_0111, 0b0100_0010, 0b0001_1000, 0b0011_1100, 0b0111_1110, 0b0111_1110, 0b0011_1100],
-            Marker::Fist => [0b0110_1100, 0b1111_1110, 0b1111_1111, 0b1111_1111, 0b1111_1111, 0b0111_1110, 0b0011_1100, 0b0001_1000],
-            Marker::Bowl => [0, 0, 0, 0b1111_1111, 0b1111_1111, 0b0111_1110, 0b0011_1100, 0],
+            Marker::Swords => [
+                0b1000_0001,
+                0b1100_0011,
+                0b0110_0110,
+                0b0011_1100,
+                0b0011_1100,
+                0b0110_0110,
+                0b1100_0011,
+                0b1000_0001,
+            ],
+            Marker::Skull => [
+                0b0011_1100,
+                0b0111_1110,
+                0b1101_1011,
+                0b1101_1011,
+                0b1111_1111,
+                0b0011_1100,
+                0b0010_0100,
+                0b0010_0100,
+            ],
+            Marker::Flame => [
+                0b0001_0000,
+                0b0001_1000,
+                0b0011_1000,
+                0b0111_1100,
+                0b0111_1110,
+                0b1111_1110,
+                0b0111_1100,
+                0b0011_1000,
+            ],
+            Marker::Drop => [
+                0b0001_1000,
+                0b0001_1000,
+                0b0011_1100,
+                0b0111_1110,
+                0b1111_1111,
+                0b1111_1111,
+                0b0111_1110,
+                0b0011_1100,
+            ],
+            Marker::Ring => [
+                0b0011_1100,
+                0b0100_0010,
+                0b1001_1001,
+                0b1010_0101,
+                0b1010_0101,
+                0b1001_1001,
+                0b0100_0010,
+                0b0011_1100,
+            ],
+            Marker::Paw => [
+                0b0100_0010,
+                0b1110_0111,
+                0b0100_0010,
+                0b0001_1000,
+                0b0011_1100,
+                0b0111_1110,
+                0b0111_1110,
+                0b0011_1100,
+            ],
+            Marker::Fist => [
+                0b0110_1100,
+                0b1111_1110,
+                0b1111_1111,
+                0b1111_1111,
+                0b1111_1111,
+                0b0111_1110,
+                0b0011_1100,
+                0b0001_1000,
+            ],
+            Marker::Bowl => [
+                0,
+                0,
+                0,
+                0b1111_1111,
+                0b1111_1111,
+                0b0111_1110,
+                0b0011_1100,
+                0,
+            ],
         }
     }
 
@@ -947,11 +1510,22 @@ impl Marker {
         let bits = self.bits();
         let px = px.round().max(2.0);
         for pass in 0..2 {
-            let (off, c) = if pass == 0 { (px * 0.6, Color32::from_black_alpha(210)) } else { (0.0, col) };
+            let (off, c) = if pass == 0 {
+                (px * 0.6, Color32::from_black_alpha(210))
+            } else {
+                (0.0, col)
+            };
             for (y, row) in bits.iter().enumerate() {
                 for x in 0..8 {
                     if row & (0x80 >> x) != 0 {
-                        painter.rect_filled(Rect::from_min_size(Pos2::new(min.x + x as f32 * px + off, min.y + y as f32 * px + off), EVec2::splat(px)), 0.0, c);
+                        painter.rect_filled(
+                            Rect::from_min_size(
+                                Pos2::new(min.x + x as f32 * px + off, min.y + y as f32 * px + off),
+                                EVec2::splat(px),
+                            ),
+                            0.0,
+                            c,
+                        );
                     }
                 }
             }

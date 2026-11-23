@@ -1,0 +1,13 @@
+// Herausforderung: karger Start, häufige Angriffe.
+(
+    id: "ch_hunger_winter",
+    name: "Hungerwinter",
+    description: "Die Speicher sind fast leer, die Hohlen kommen früher und öfter. Wer fünf Nächte übersteht oder den Schrein bricht, hat es überlebt.",
+    base: "m01_last_settlement",
+    mode: Campaign,
+    difficulty: Normal,
+    modifiers: [StartResources(0.4), WaveInterval(0.8)],
+    victory: Some(DayStarted(6)),
+    goal_text: "Übersteht fünf Nächte mit knappen Vorräten – oder zerstört den Hohlschrein.",
+    scoring: (victory_bonus: 2500.0, per_kill: 5.0, per_unit_lost: -10.0, per_building: 3.0, per_resident: 3.0, per_night: 100.0, rank_by: Score),
+)

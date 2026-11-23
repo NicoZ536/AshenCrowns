@@ -413,7 +413,7 @@ abgelegt werden. Zukünftige Track-IDs dürfen nicht auf `_intro` oder `_loop` e
 
 ### 3.1 Intensitätsstufen (Manifest-Feld `intensity`)
 
-Priorität (höher schlägt niedriger): **Sting > Boss > Battle > Combat > Tension > Calm > Menu**
+Priorität (höher schlägt niedriger): **Sting > Boss > Battle > Combat > Tension > Calm > WorldHollow > WorldWar > WorldPeace > Menu** (die drei Weltkarten-Stufen gelten nur in der Weltkarten-Szene)
 
 | Stufe | Bedeutung | Empfohlene Auslöser (Vorschlag für die Integration) | Manifest-Track (Vertical Slice) |
 |---|---|---|---|
@@ -1370,6 +1370,115 @@ Vae-loth dhum
 - *Spätphase:* Stem mit lauterer Hohl-Form, wenn die Hohlung mehr als die Hälfte der Karte erfasst hat.
 
 ---
+
+### 4.2b Weltkarte der Großen Kampagne (Frieden, Krieg, Hohlung)
+
+**Einsatzregel:** `worldmap` setzt je nach Lage eine der drei neuen Intensitäten (`WorldPeace` < `WorldWar` < `WorldHollow`): Steigerungen wirken sofort, Absenkungen nach 8 s. Gleiches Set B wie `worldmap_spring` (Crossfade R1). Die Jahreszeiten-Tracks aus 4.2 bleiben optionale Varianten.
+
+#### 4.2b `worldmap_peace` – „Eldraeth im Frieden“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `worldmap_peace` → `assets/audio/music/worldmap_peace_intro.ogg`, `assets/audio/music/worldmap_peace_loop.ogg` |
+| Manifest | intensity: WorldPeace · intro: Some · looped: true (eingetragen) |
+| Zweck / Spielsituation | Strategische Weltkarte ohne Krieg des Spielerreichs: Verwaltung, Handel, Dynastiepolitik. |
+| Instrumentierung | Streicher legato, Holzflöte, Harfe, Laute, ferne Hörner, Rahmentrommel |
+| Tempo / Takt | 78 BPM, 4/4 |
+| Tonart | G-dorisch |
+| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+
+**Suno-Style-Prompt**
+```text
+cinematic fantasy orchestral, G dorian, 78 bpm, calm kingdom at peace, legato strings, wooden flute, harp, lute, distant horns, soft frame drum, hopeful and wide, instrumental
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Instrumental]
+
+[Verse]
+[Instrumental: main theme]
+
+[Build]
+[Instrumental: rising intensity]
+
+[Verse]
+[Instrumental: theme returns]
+
+[Outro]
+[Instrumental: no ending]
+```
+
+#### 4.2b `worldmap_war` – „Heere auf der Karte“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `worldmap_war` → `assets/audio/music/worldmap_war_intro.ogg`, `assets/audio/music/worldmap_war_loop.ogg` |
+| Manifest | intensity: WorldWar · intro: Some · looped: true (eingetragen) |
+| Zweck / Spielsituation | Das Spielerreich ist im Krieg oder eine Schlacht steht an. |
+| Instrumentierung | tiefe Streicher Ostinato, Kriegstrommeln, Blechbläser, Chor ohne Text, Becken |
+| Tempo / Takt | 96 BPM, 4/4 |
+| Tonart | G-dorisch (Set B, Moll-Färbung) |
+| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+
+**Suno-Style-Prompt**
+```text
+dark cinematic orchestral war theme, G minor, 96 bpm, relentless low string ostinato, taiko and war drums, brass stabs, wordless male choir, tense and heroic, instrumental
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Instrumental]
+
+[Verse]
+[Instrumental: main theme]
+
+[Build]
+[Instrumental: rising intensity]
+
+[Verse]
+[Instrumental: theme returns]
+
+[Outro]
+[Instrumental: no ending]
+```
+
+#### 4.2b `worldmap_hollow` – „Der Schleier reißt“
+
+| Feld | Inhalt |
+|---|---|
+| ID / Ziel-Dateien | `worldmap_hollow` → `assets/audio/music/worldmap_hollow_intro.ogg`, `assets/audio/music/worldmap_hollow_loop.ogg` |
+| Manifest | intensity: WorldHollow · intro: Some · looped: true (eingetragen) |
+| Zweck / Spielsituation | Hohlung des Reiches ab Pfad 2, Hohlung der Provinzen ≥ 30 oder Schleierdruck ≥ 60. |
+| Instrumentierung | tiefe Drones, Glasharfe, gedämpfte Chöre, Aschglas-Perkussion, verstimmte Laute |
+| Tempo / Takt | 64 BPM, 4/4 |
+| Tonart | G-phrygisch |
+| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+
+**Suno-Style-Prompt**
+```text
+dark ambient orchestral, G phrygian, 64 bpm, slow breathing drones, glass harmonica, hushed wordless choir, detuned lute, sparse cracked percussion, eerie and mournful, instrumental
+```
+
+**Lyrics-/Struktur-Feld**
+```text
+[Intro]
+[Instrumental]
+
+[Verse]
+[Instrumental: main theme]
+
+[Build]
+[Instrumental: rising intensity]
+
+[Verse]
+[Instrumental: theme returns]
+
+[Outro]
+[Instrumental: no ending]
+```
 
 ### 4.3 Städtebau und wirtschaftliche Entwicklung
 

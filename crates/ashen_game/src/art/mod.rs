@@ -5,11 +5,12 @@ pub mod buildings;
 pub mod fx;
 pub mod goods_icons;
 pub mod icons;
+pub mod military_icons;
 pub mod palette;
 pub mod props;
 pub mod terrain;
 
-use crate::art3d::{self, rig::Anim, DIRS};
+use crate::art3d::{self, DIRS, rig::Anim};
 use ashen_engine::anim::{AnimationClip, AnimationSet};
 use ashen_engine::assets::{self, Atlas, AtlasBuilder};
 use ashen_engine::gpu::GpuContext;
@@ -36,6 +37,7 @@ impl ArtLibrary {
         fx::build(&mut b);
         icons::build(&mut b);
         goods_icons::build(&mut b);
+        military_icons::build(&mut b);
         let metas = art3d::bake_all(gpu, &mut b)?;
         let mut overrides = 0;
         if let Some(dir) = assets_dir {
@@ -43,7 +45,9 @@ impl ArtLibrary {
             if let Ok(rd) = std::fs::read_dir(&sprites) {
                 for e in rd.flatten() {
                     let p = e.path();
-                    let Some(stem) = p.file_stem().map(|s| s.to_string_lossy().to_string()) else { continue };
+                    let Some(stem) = p.file_stem().map(|s| s.to_string_lossy().to_string()) else {
+                        continue;
+                    };
                     if p.extension().is_none_or(|x| x != "png") || stem.ends_with("_n") {
                         continue;
                     }
@@ -57,19 +61,32 @@ impl ArtLibrary {
         }
         let count = b.len();
         let atlas = b.build();
-        let mut lib = ArtLibrary { atlas, buildings: metas, anims: HashMap::new() };
+        let mut lib = ArtLibrary {
+            atlas,
+            buildings: metas,
+            anims: HashMap::new(),
+        };
         for (id, anims) in art3d::unit_anim_specs() {
-            let sets = (0..DIRS).map(|d| lib.make_anim_set(id, &anims, d)).collect();
+            let sets = (0..DIRS)
+                .map(|d| lib.make_anim_set(id, &anims, d))
+                .collect();
             lib.anims.insert(id.to_string(), sets);
         }
-        log::info!("Atlas {}×{} mit {count} Sprites ({overrides} Overrides) in {:.0} ms erzeugt", lib.atlas.size.0, lib.atlas.size.1, start.elapsed().as_secs_f32() * 1000.0);
+        log::info!(
+            "Atlas {}×{} mit {count} Sprites ({overrides} Overrides) in {:.0} ms erzeugt",
+            lib.atlas.size.0,
+            lib.atlas.size.1,
+            start.elapsed().as_secs_f32() * 1000.0
+        );
         Ok(lib)
     }
 
     fn make_anim_set(&self, id: &str, anims: &[Anim], dir: usize) -> AnimationSet {
         let mut set = AnimationSet::default();
         for a in anims {
-            let frames: Vec<SpriteRect> = (0..a.frames()).filter_map(|i| self.atlas.try_get(&format!("{id}_{}_{dir}_{i}", a.name()))).collect();
+            let frames: Vec<SpriteRect> = (0..a.frames())
+                .filter_map(|i| self.atlas.try_get(&format!("{id}_{}_{dir}_{i}", a.name())))
+                .collect();
             if !frames.is_empty() {
                 set.insert(a.name(), AnimationClip::new(frames, a.fps(), a.looped()));
             }
@@ -80,18 +97,26 @@ impl ArtLibrary {
     /// Animationen einer Einheit in einer gebackenen Richtung; unbekannte (Mod-)Einheiten
     /// erhalten eine passende Basisfigur.
     pub fn unit_anims(&self, id: &str, hollow: bool, dir: usize) -> &AnimationSet {
-        let sets = self.anims.get(id).unwrap_or_else(|| &self.anims[if hollow { "hollow_thrall" } else { "swordsman" }]);
+        let sets = self
+            .anims
+            .get(id)
+            .unwrap_or_else(|| &self.anims[if hollow { "hollow_thrall" } else { "swordsman" }]);
         &sets[dir.min(DIRS - 1)]
     }
 
     pub fn portrait(&self, id: &str) -> SpriteRect {
-        self.atlas.try_get(&format!("{id}_portrait")).unwrap_or_else(|| self.atlas.get("swordsman_portrait"))
+        self.atlas
+            .try_get(&format!("{id}_portrait"))
+            .unwrap_or_else(|| self.atlas.get("swordsman_portrait"))
     }
 
     /// Kontaktbogen der Einheiten-Frames (Debug/Art-Review): je Einheit Zeilen mit allen Richtungen
     /// für Idle, Lauf, Angriff und Tod, vierfach vergrößert.
     pub fn contact_sheet(&self, path: &Path) -> Result<(), String> {
-        let ids: Vec<&'static str> = art3d::unit_anim_specs().into_iter().map(|(id, _)| id).collect();
+        let ids: Vec<&'static str> = art3d::unit_anim_specs()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let picks = [("idle", 0), ("walk", 2), ("attack", 2), ("death", 5)];
         let (cw, ch, z) = (100u32, 112u32, 3u32);
         let cols = (DIRS * picks.len()) as u32;
@@ -101,7 +126,10 @@ impl ArtLibrary {
         for (row, id) in ids.iter().enumerate() {
             for (pi, (anim, f)) in picks.iter().enumerate() {
                 for d in 0..DIRS {
-                    let Some((x, y, sw, sh)) = self.pixel_rect(&format!("{id}_{anim}_{d}_{f}")) else { continue };
+                    let Some((x, y, sw, sh)) = self.pixel_rect(&format!("{id}_{anim}_{d}_{f}"))
+                    else {
+                        continue;
+                    };
                     let ox = ((pi * DIRS + d) as u32) * cw + 2;
                     let oy = row as u32 * ch + 2;
                     for py in 0..sh.min((ch - 4) / z) {
@@ -113,7 +141,11 @@ impl ArtLibrary {
                             }
                             for dy in 0..z {
                                 for dx in 0..z {
-                                    img.put_pixel(ox + px * z + dx, oy + py * z + dy, image::Rgba([c[0], c[1], c[2], 255]));
+                                    img.put_pixel(
+                                        ox + px * z + dx,
+                                        oy + py * z + dy,
+                                        image::Rgba([c[0], c[1], c[2], 255]),
+                                    );
                                 }
                             }
                         }
@@ -128,7 +160,12 @@ impl ArtLibrary {
     pub fn pixel_rect(&self, name: &str) -> Option<(u32, u32, u32, u32)> {
         let r = self.atlas.try_get(name)?;
         let (w, h) = (self.atlas.size.0 as f32, self.atlas.size.1 as f32);
-        Some(((r.uv[0] * w) as u32, (r.uv[1] * h) as u32, r.size.x as u32, r.size.y as u32))
+        Some((
+            (r.uv[0] * w) as u32,
+            (r.uv[1] * h) as u32,
+            r.size.x as u32,
+            r.size.y as u32,
+        ))
     }
 
     pub fn get(&self, name: &str) -> SpriteRect {

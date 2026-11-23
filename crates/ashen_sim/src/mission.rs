@@ -4,6 +4,7 @@
 
 use crate::data::Cost;
 use crate::env::Weather;
+use crate::scenario::{AreaDef, MapData, StartPos};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -29,25 +30,41 @@ impl GameMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Difficulty {
-    Story,
+    #[serde(alias = "Story")]
+    Easy,
     Normal,
     Hard,
+    Nightmare,
 }
 
 impl Difficulty {
+    pub const ALL: [Difficulty; 4] = [Difficulty::Easy, Difficulty::Normal, Difficulty::Hard, Difficulty::Nightmare];
+
     pub fn wave_mult(self) -> f32 {
         match self {
-            Difficulty::Story => 0.65,
+            Difficulty::Easy => 0.65,
             Difficulty::Normal => 1.0,
             Difficulty::Hard => 1.4,
+            Difficulty::Nightmare => 1.8,
         }
     }
 
     pub fn label(self) -> &'static str {
         match self {
-            Difficulty::Story => "Erzählung",
+            Difficulty::Easy => "Leicht",
             Difficulty::Normal => "Normal",
             Difficulty::Hard => "Schwer",
+            Difficulty::Nightmare => "Albtraum",
+        }
+    }
+
+    /// Index in `Rules::ai_levels`.
+    pub fn index(self) -> usize {
+        match self {
+            Difficulty::Easy => 0,
+            Difficulty::Normal => 1,
+            Difficulty::Hard => 2,
+            Difficulty::Nightmare => 3,
         }
     }
 }
@@ -107,6 +124,9 @@ pub struct Placement {
     pub tag: Option<String>,
     #[serde(default)]
     pub guard: bool,
+    /// Lagerkennung: fällt die letzte Einheit des Lagers, lässt es Beute fallen.
+    #[serde(default)]
+    pub camp: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -137,6 +157,13 @@ pub enum Condition {
     Residents(u32),
     /// Mindestvorrat einer Ware oder Ressource (Item-ID).
     Stock { item: String, amount: f32 },
+    /// Mindestens `count` eigene Einheiten stehen im benannten Bereich.
+    UnitsInArea { area: String, count: u32 },
+    /// Höchstens so viele gegnerische Einheiten leben noch.
+    EnemyUnitsAtMost(u32),
+    /// Das Gebäude mit diesem Tag hat Schaden genommen.
+    TagDamaged(String),
+    Not(Box<Condition>),
     All(Vec<Condition>),
     Any(Vec<Condition>),
 }
@@ -153,6 +180,8 @@ pub enum Action {
     EnableWaves(bool),
     SetWeather(Weather),
     Chronicle(String),
+    /// Erzeugt Einheiten im benannten Bereich; `attack` schickt sie gegen die Spielersiedlung.
+    SpawnUnits { unit: String, owner: u8, area: String, count: u32, #[serde(default)] attack: bool },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -166,7 +195,7 @@ pub struct TriggerDef {
 }
 
 /// Definition einer Mission.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MissionDef {
     pub id: String,
     pub name: String,
@@ -184,12 +213,39 @@ pub struct MissionDef {
     pub defeat_tag: String,
     /// Tag des gegnerischen Hauptgebäudes (Ziel in Gefecht/Kampagne, Spawnpunkt der Wellen).
     pub enemy_base_tag: String,
+    /// Explizite Karte (Szenarien); ohne Angabe wird die Karte aus `map_seed` erzeugt.
+    #[serde(default)]
+    pub map: Option<MapData>,
+    /// Benannte Bereiche für Auslöser und Aktionen.
+    #[serde(default)]
+    pub areas: Vec<AreaDef>,
+    /// Startpositionen der Spieler (Editor, Gefechtseinrichtung, Validierung).
+    #[serde(default)]
+    pub starts: Vec<StartPos>,
+    /// Ausführliche Einsatzbesprechung (Szenarienliste).
+    #[serde(default)]
+    pub briefing: String,
+    #[serde(default)]
+    pub author: String,
+    /// Jahr n.F. des historischen Ereignisses (Anzeige).
+    #[serde(default)]
+    pub year: Option<u32>,
+    /// Obergrenze für Streitkräfte (alle Einheiten außer Arbeitern) des Spielers.
+    #[serde(default)]
+    pub unit_cap: Option<u32>,
+    /// Tageszeit (0..1) bei Spielbeginn; ohne Angabe der Standard der Umgebung.
+    #[serde(default)]
+    pub start_time: Option<f32>,
 }
 
 impl MissionDef {
     pub fn load(path: &Path) -> Result<MissionDef, String> {
         let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         ron::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))
+    }
+
+    pub fn area(&self, id: &str) -> Option<&AreaDef> {
+        self.areas.iter().find(|a| a.id == id)
     }
 
     pub fn objective(&self, id: &str) -> Option<&ObjectiveDef> {

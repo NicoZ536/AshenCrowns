@@ -30,6 +30,15 @@ pub fn process_paths(world: &mut SimWorld, data: &GameData) {
             continue;
         };
         let (from, owner, order) = (u.pos, u.owner, u.order);
+        // Flieger gehen geradeaus über alle Hindernisse.
+        if data.unit(u.kind).flying {
+            let max = Vec2::new(world.map.width as f32 - 0.5, world.map.height as f32 - 0.5);
+            if let Some(u) = world.units.get_mut(id) {
+                u.path = vec![goal.clamp(Vec2::splat(0.5), max)];
+                u.path_pending = false;
+            }
+            continue;
+        }
         let result = world.pathfinder.find_for(&world.map, from, goal, 6000.min(budget), owner);
         let found = world.pathfinder.last_found;
         budget = budget.saturating_sub(world.pathfinder.last_expanded.max(1));
@@ -107,8 +116,11 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
         let pos = u.pos;
         let owner = u.owner;
         let radius = def.radius;
-        let mut speed = def.speed * if u.routing > 0.0 { 1.15 } else { 1.0 };
-        speed /= world.map.terrain_at(TileMap::tile_of(pos)).move_cost();
+        let flying = def.flying;
+        let mut speed = def.speed * if u.routing > 0.0 { 1.15 } else { 1.0 } * world.speed_factor(u);
+        if !flying {
+            speed /= world.map.terrain_at(TileMap::tile_of(pos)).move_cost();
+        }
 
         // Gewünschte Geschwindigkeit entlang des Pfades.
         let mut desired = Vec2::ZERO;
@@ -136,6 +148,9 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
             }
             let Some(other) = world.units.get(o) else { continue };
             let odef = data.unit(other.kind);
+            if odef.flying != flying {
+                continue;
+            }
             let d = pos - other.pos;
             let len = d.length();
             let min = radius + odef.radius;
@@ -163,7 +178,7 @@ pub fn integrate(world: &mut SimWorld, data: &GameData, dt: f32) {
         let (ot, nt) = (TileMap::tile_of(pos), TileMap::tile_of(new_pos));
         // Diagonale Schritte über die Ecke zweier Mauerkacheln sind verboten.
         let corner_cut = nt.x != ot.x && nt.y != ot.y && (!map.walkable_for(IVec2::new(nt.x, ot.y), owner) || !map.walkable_for(IVec2::new(ot.x, nt.y), owner));
-        if corner_cut || !map.walkable_for(nt, owner) {
+        if !flying && (corner_cut || !map.walkable_for(nt, owner)) {
             let tx = Vec2::new(new_pos.x, pos.y);
             let ty = Vec2::new(pos.x, new_pos.y);
             if map.walkable_for(TileMap::tile_of(tx), owner) {

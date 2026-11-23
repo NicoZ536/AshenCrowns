@@ -1,0 +1,13 @@
+// Herausforderung: Überleben mit wenigen Klingen.
+(
+    id: "ch_few_blades",
+    name: "Wenige Klingen",
+    description: "Nur sechs Soldaten dürfen Brennhollow verteidigen. Mauern, Türme und kluge Bürger müssen den Rest leisten.",
+    base: "m01_last_settlement",
+    mode: Survival,
+    difficulty: Normal,
+    modifiers: [UnitCap(6)],
+    victory: Some(DayStarted(8)),
+    goal_text: "Überlebt sieben Nächte mit höchstens sechs Soldaten.",
+    scoring: (victory_bonus: 3000.0, per_kill: 6.0, per_unit_lost: -12.0, per_building: 4.0, per_resident: 2.0, per_wave: 20.0, per_night: 120.0, rank_by: Score, counts_when_defeated: true),
+)

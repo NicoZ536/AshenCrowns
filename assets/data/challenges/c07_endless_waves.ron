@@ -1,0 +1,12 @@
+// Herausforderung: Endlose Wellen – wie weit kommt Brennhollow?
+(
+    id: "ch_endless_waves",
+    name: "Endlose Wellen",
+    description: "Kein Sieg, nur ein Rekord. Die Wellen werden stärker und stärker; gezählt wird, wie viele Brennhollow aufhält.",
+    base: "m01_last_settlement",
+    mode: Survival,
+    difficulty: Hard,
+    modifiers: [WaveStrength(1.2)],
+    goal_text: "Haltet so viele Wellen auf wie möglich. Die Niederlage beendet den Lauf – und zählt.",
+    scoring: (victory_bonus: 0.0, per_kill: 4.0, per_unit_lost: -3.0, per_building: 1.0, per_resident: 1.0, per_wave: 120.0, per_night: 60.0, rank_by: Score, counts_when_defeated: true),
+)

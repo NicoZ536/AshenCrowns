@@ -1,7 +1,9 @@
 //! Laden der Spielinhalte inklusive Mods.
 
+use ashen_sim::challenge::ChallengeDef;
 use ashen_sim::data::GameData;
 use ashen_sim::mission::MissionDef;
+use ashen_sim::scenario::{ScenarioEntry, ScenarioSource};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -20,18 +22,29 @@ pub struct ModInfo {
 
 /// Findet Mods in `<assets>/../mods` und im Nutzerverzeichnis.
 pub fn discover_mods(assets: &Path) -> Vec<ModInfo> {
-    let mut dirs = vec![assets.parent().map(|p| p.join("mods")).unwrap_or_else(|| PathBuf::from("mods")), crate::settings::data_dir().join("mods")];
+    let mut dirs = vec![
+        assets
+            .parent()
+            .map(|p| p.join("mods"))
+            .unwrap_or_else(|| PathBuf::from("mods")),
+        crate::settings::data_dir().join("mods"),
+    ];
     dirs.dedup();
     let mut out = Vec::new();
     for d in dirs {
-        let Ok(rd) = std::fs::read_dir(&d) else { continue };
+        let Ok(rd) = std::fs::read_dir(&d) else {
+            continue;
+        };
         for e in rd.flatten() {
             let p = e.path();
             let info = p.join("mod.ron");
             if !info.exists() {
                 continue;
             }
-            match std::fs::read_to_string(&info).map_err(|e| e.to_string()).and_then(|t| ron::from_str::<ModInfo>(&t).map_err(|e| e.to_string())) {
+            match std::fs::read_to_string(&info)
+                .map_err(|e| e.to_string())
+                .and_then(|t| ron::from_str::<ModInfo>(&t).map_err(|e| e.to_string()))
+            {
                 Ok(mut m) => {
                     m.path = p;
                     if !out.iter().any(|x: &ModInfo| x.id == m.id) {
@@ -52,15 +65,48 @@ pub struct Content {
     pub mods: Vec<ModInfo>,
     pub active_mods: Vec<String>,
     pub errors: Vec<String>,
+    /// Mitgelieferte und Mod-Szenarien (eigene Szenarien liegen im Benutzerordner, siehe [`Content::user_scenarios`]).
+    pub scenarios: Vec<ScenarioEntry>,
+    pub challenges: Vec<ChallengeDef>,
+    scenario_dirs: Vec<(PathBuf, ScenarioSource)>,
 }
 
 impl Content {
+    /// Ordner mit mitgelieferten und Mod-Szenarien.
+    pub fn scenario_dirs(&self) -> Vec<(PathBuf, ScenarioSource)> {
+        self.scenario_dirs.clone()
+    }
+
+    /// Eigene Szenarien aus dem Benutzerordner (bei jedem Aufruf frisch gelesen).
+    pub fn user_scenarios(&self, errors: &mut Vec<String>) -> Vec<ScenarioEntry> {
+        ashen_sim::scenario::discover(
+            &[(crate::settings::scenarios_dir(), ScenarioSource::User)],
+            errors,
+        )
+    }
+
+    /// Mission oder Szenario nach ID (Basis von Herausforderungen).
+    pub fn find_base(&self, id: &str) -> Option<MissionDef> {
+        self.missions
+            .iter()
+            .find(|m| m.id == id)
+            .cloned()
+            .or_else(|| {
+                self.scenarios
+                    .iter()
+                    .find(|s| s.def.id == id)
+                    .map(|s| s.def.clone())
+            })
+    }
+
     pub fn load(assets: &Path, enabled: &[String]) -> Result<Content, String> {
         let mut data = GameData::load_dir(&assets.join("data")).map_err(|e| e.to_string())?;
         let mods = discover_mods(assets);
         let mut errors = Vec::new();
         let mut active = Vec::new();
         let mut mission_dirs = vec![assets.join("data/missions")];
+        let mut scenario_dirs = vec![(assets.join("data/scenarios"), ScenarioSource::Bundled)];
+        let mut challenge_dirs = vec![assets.join("data/challenges")];
         for m in &mods {
             if !enabled.contains(&m.id) {
                 continue;
@@ -70,14 +116,22 @@ impl Content {
                     log::info!("Mod {} aktiv ({} Änderungen)", m.id, changes.len());
                     active.push(m.id.clone());
                     mission_dirs.push(m.path.join("data/missions"));
+                    scenario_dirs.push((m.path.join("data/scenarios"), ScenarioSource::Mod));
+                    challenge_dirs.push(m.path.join("data/challenges"));
                 }
                 Err(e) => errors.push(format!("Mod {}: {e}", m.name)),
             }
         }
         let mut missions = Vec::new();
         for d in mission_dirs {
-            let Ok(rd) = std::fs::read_dir(&d) else { continue };
-            let mut files: Vec<PathBuf> = rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "ron")).collect();
+            let Ok(rd) = std::fs::read_dir(&d) else {
+                continue;
+            };
+            let mut files: Vec<PathBuf> = rd
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|e| e == "ron"))
+                .collect();
             files.sort();
             for f in files {
                 match MissionDef::load(&f) {
@@ -89,6 +143,24 @@ impl Content {
         if missions.is_empty() {
             return Err("Keine Missionen gefunden".into());
         }
-        Ok(Content { data, missions, mods, active_mods: active, errors })
+        let scenarios = ashen_sim::scenario::discover(&scenario_dirs, &mut errors);
+        let mut challenges: Vec<ChallengeDef> = Vec::new();
+        for d in challenge_dirs {
+            for c in ChallengeDef::load_dir(&d, &mut errors) {
+                // Mods können eine Herausforderung mit gleicher ID ersetzen.
+                challenges.retain(|x| x.id != c.id);
+                challenges.push(c);
+            }
+        }
+        Ok(Content {
+            data,
+            missions,
+            mods,
+            active_mods: active,
+            errors,
+            scenarios,
+            challenges,
+            scenario_dirs,
+        })
     }
 }

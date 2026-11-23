@@ -16,7 +16,11 @@ pub fn in_diamond(x: i32, y: i32) -> bool {
     if !(0..TH).contains(&y) {
         return false;
     }
-    let hw = if y < TH / 2 { (y + 1) * 2 } else { (TH - y) * 2 };
+    let hw = if y < TH / 2 {
+        (y + 1) * 2
+    } else {
+        (TH - y) * 2
+    };
     x >= TW / 2 - hw && x < TW / 2 + hw
 }
 
@@ -63,7 +67,9 @@ pub fn edge_name(t: Terrain, side: u8) -> String {
 fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
     let fx = x as f32;
     let fy = y as f32 * 2.0; // isometrische Stauchung ausgleichen
-    let n = 0.28 + fbm2(fx * 0.06, fy * 0.06, seed, 3) * 0.5 + (fbm2(fx * 0.3, fy * 0.3, seed ^ 0x55, 2) - 0.5) * 0.12;
+    let n = 0.28
+        + fbm2(fx * 0.06, fy * 0.06, seed, 3) * 0.5
+        + (fbm2(fx * 0.3, fy * 0.3, seed ^ 0x55, 2) - 0.5) * 0.12;
     let r = rand2(x, y, seed ^ 0xA1);
     let b = bayer(x, y);
     let mut normal = Vec3::new(0.0, -0.25, 1.0);
@@ -72,7 +78,11 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
     let mut tone = n;
     match t {
         Terrain::Grass | Terrain::DarkGrass => {
-            ramp = if t == Terrain::Grass { pal::grass() } else { pal::dark_grass() };
+            ramp = if t == Terrain::Grass {
+                pal::grass()
+            } else {
+                pal::dark_grass()
+            };
             // Halme: helle Pixel mit dunklem Fuß.
             let blade = rand2(x, y / 2, seed ^ 0x51) > 0.95;
             let under = rand2(x, (y + 1) / 2, seed ^ 0x51) > 0.95;
@@ -106,10 +116,18 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
             let mortar = lx < 1.0 || ly < 1.0;
             let stone_tone = rand2(col, row, seed ^ 0x77) * 0.35;
             if mortar {
-                return (pal::dirt().dither(0.25 + n * 0.2, x, y), Vec3::new(0.0, 0.0, 1.0), 0.0);
+                return (
+                    pal::dirt().dither(0.25 + n * 0.2, x, y),
+                    Vec3::new(0.0, 0.0, 1.0),
+                    0.0,
+                );
             }
             tone = 0.35 + stone_tone + (if ly < 2.0 { 0.18 } else { -0.05 }) - (lx / 6.0) * 0.12;
-            normal = if ly < 2.0 { Vec3::new(-0.2, -0.6, 0.77) } else { Vec3::new(0.15, 0.25, 0.95) };
+            normal = if ly < 2.0 {
+                Vec3::new(-0.2, -0.6, 0.77)
+            } else {
+                Vec3::new(0.15, 0.25, 0.95)
+            };
         }
         Terrain::Stone => {
             ramp = pal::rock();
@@ -177,7 +195,11 @@ fn paint_edge(t: Terrain, side: u8, seed: u32) -> Canvas {
             if d < jag {
                 let (col, n, g) = texel(t, x, y, seed);
                 // Dunkle Randlinie für Tiefe, wenn der Rand höher liegt (Gras über Erde).
-                let rim = d > jag - 1.0 && matches!(t, Terrain::Grass | Terrain::DarkGrass | Terrain::Road | Terrain::Stone);
+                let rim = d > jag - 1.0
+                    && matches!(
+                        t,
+                        Terrain::Grass | Terrain::DarkGrass | Terrain::Road | Terrain::Stone
+                    );
                 c.pxn(x, y, if rim { col.scale(0.72) } else { col }, n);
                 if g > 0.0 {
                     c.glow(x, y, g);
@@ -198,7 +220,13 @@ fn paint_bridge() -> Canvas {
                 // Planken quer zur Laufrichtung (entlang der Kachel-y-Achse).
                 let plank = ((x + y * 2) / 3) % 2 == 0;
                 let gap = (x + y * 2) % 3 == 0;
-                let t = if gap { 0.1 } else if plank { 0.6 } else { 0.45 } + rand2(x, y, 9) * 0.15;
+                let t = if gap {
+                    0.1
+                } else if plank {
+                    0.6
+                } else {
+                    0.45
+                } + rand2(x, y, 9) * 0.15;
                 c.pxn(x, y + 2, wood.dither(t, x, y), Vec3::new(0.0, -0.3, 1.0));
             }
         }
@@ -208,7 +236,12 @@ fn paint_bridge() -> Canvas {
         for dy in 0..3 {
             let y = if x < 16 { 8 + x / 2 } else { 8 + (31 - x) / 2 } + 2 + dy;
             if x % 7 != 3 || dy < 2 {
-                c.pxn(x, y.min(TH + 5), pal::dark_wood().at(0.3 + dy as f32 * 0.1), Vec3::new(0.0, 0.5, 0.8));
+                c.pxn(
+                    x,
+                    y.min(TH + 5),
+                    pal::dark_wood().at(0.3 + dy as f32 * 0.1),
+                    Vec3::new(0.0, 0.5, 0.8),
+                );
             }
         }
     }
@@ -234,9 +267,19 @@ pub fn paint_foundation(w: i32, h: i32) -> Canvas {
             }
             let border = tx < 0.18 || ty < 0.18 || tx > w as f32 - 0.18 || ty > h as f32 - 0.18;
             if border {
-                c.pxn(x, y, stone.dither(0.45 + rand2(x, y, 3) * 0.3, x, y), Vec3::new(0.0, -0.4, 0.9));
+                c.pxn(
+                    x,
+                    y,
+                    stone.dither(0.45 + rand2(x, y, 3) * 0.3, x, y),
+                    Vec3::new(0.0, -0.4, 0.9),
+                );
             } else {
-                c.pxn(x, y, dirt.dither(0.35 + rand2(x, y, 4) * 0.2, x, y), Vec3::Z);
+                c.pxn(
+                    x,
+                    y,
+                    dirt.dither(0.35 + rand2(x, y, 4) * 0.2, x, y),
+                    Vec3::Z,
+                );
             }
         }
     }
@@ -251,13 +294,21 @@ pub fn build(atlas: &mut AtlasBuilder) {
         }
         if t.priority() >= Terrain::Sand.priority() || *t == Terrain::Ford {
             for side in 0..4u8 {
-                atlas.add(edge_name(*t, side), paint_edge(*t, side, 5000 + ti as u32 * 31), Vec2::new(16.0, 8.0));
+                atlas.add(
+                    edge_name(*t, side),
+                    paint_edge(*t, side, 5000 + ti as u32 * 31),
+                    Vec2::new(16.0, 8.0),
+                );
             }
         }
     }
     atlas.add("bridge", paint_bridge(), Vec2::new(16.0, 10.0));
     for (w, h) in [(1, 1), (2, 2), (3, 2), (3, 3)] {
-        atlas.add(format!("foundation_{w}x{h}"), paint_foundation(w, h), Vec2::new(h as f32 * 16.0, 0.0));
+        atlas.add(
+            format!("foundation_{w}x{h}"),
+            paint_foundation(w, h),
+            Vec2::new(h as f32 * 16.0, 0.0),
+        );
     }
 }
 
@@ -283,7 +334,10 @@ mod tests {
         }
         for y in -8..24 {
             for x in -16..48 {
-                assert!(cov.get(&(x, y)).copied().unwrap_or(0) >= 1, "Lücke bei {x},{y}");
+                assert!(
+                    cov.get(&(x, y)).copied().unwrap_or(0) >= 1,
+                    "Lücke bei {x},{y}"
+                );
             }
         }
     }

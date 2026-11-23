@@ -12,8 +12,8 @@ mod windows;
 use crate::art::ArtLibrary;
 use crate::settings::UserSettings;
 use crate::ui_art::UiArt;
-use ashen_engine::audio::Intensity;
 use ashen_engine::Engine;
+use ashen_engine::audio::Intensity;
 use ashen_strategy::*;
 use egui::TextureId;
 use glam::Vec2;
@@ -106,7 +106,7 @@ impl WorldMapScene {
         let capital = me.map(|m| world.realms[m as usize].capital);
         if let Some(c) = capital {
             view.center_on(world.provinces[c as usize].centroid);
-            view.zoom = 1.25;
+            view.zoom = 1.5;
         }
         let year = world.year();
         WorldMapScene {
@@ -146,7 +146,11 @@ impl WorldMapScene {
 
     /// Wartet die Szene auf eine Entscheidung (Ereignis, Schlacht, Friedensangebot, Sieg)?
     pub fn modal_open(&self) -> bool {
-        self.pending_event().is_some() || self.pending_battle().is_some() || self.pending_peace().is_some() || self.menu_open || self.game_over()
+        self.pending_event().is_some()
+            || self.pending_battle().is_some()
+            || self.pending_peace().is_some()
+            || self.menu_open
+            || self.game_over()
     }
 
     pub fn pending_event(&self) -> Option<&PendingEvent> {
@@ -156,7 +160,12 @@ impl WorldMapScene {
 
     pub fn pending_battle(&self) -> Option<&BattleRequest> {
         let me = self.me();
-        self.world.pending_battles().iter().find(|b| b.attackers.iter().chain(b.defenders.iter()).any(|a| a.realm == Some(me) && a.army != u32::MAX))
+        self.world.pending_battles().iter().find(|b| {
+            b.attackers
+                .iter()
+                .chain(b.defenders.iter())
+                .any(|a| a.realm == Some(me) && a.army != u32::MAX)
+        })
     }
 
     pub fn pending_peace(&self) -> Option<&PeaceOffer> {
@@ -166,7 +175,8 @@ impl WorldMapScene {
 
     /// Sieg errungen oder Reich untergegangen und noch nicht bestätigt.
     pub fn game_over(&self) -> bool {
-        (self.world.victory.is_some() && !self.victory_ack) || (!self.world.realms[self.me() as usize].alive && !self.defeat_ack)
+        (self.world.victory.is_some() && !self.victory_ack)
+            || (!self.world.realms[self.me() as usize].alive && !self.defeat_ack)
     }
 
     pub fn toast(&mut self, s: impl Into<String>) {
@@ -176,7 +186,11 @@ impl WorldMapScene {
     pub fn open_window(&mut self, k: WinKind) {
         if !self.open.contains(&k) {
             self.open.push(k);
-            self.sounds.push(if k == WinKind::Chronicle { "sfx.ui_chronicle_page" } else { "sfx.ui_window_open" });
+            self.sounds.push(if k == WinKind::Chronicle {
+                "sfx.ui_chronicle_page"
+            } else {
+                "sfx.ui_window_open"
+            });
         } else {
             // nach vorn holen: ans Ende der Liste (wird zuletzt gezeichnet)
             self.open.retain(|x| *x != k);
@@ -201,8 +215,17 @@ impl WorldMapScene {
         let me = self.me();
         let realm = &self.world.realms[me as usize];
         let provs = self.world.provinces_of(me);
-        let avg_hollow = if provs.is_empty() { 0.0 } else { provs.iter().map(|p| self.world.provinces[*p as usize].hollowing).sum::<f32>() / provs.len() as f32 };
-        if realm.hollow_path >= 2 || avg_hollow >= 30.0 || self.world.endgame.veil_pressure >= 60.0 {
+        let avg_hollow = if provs.is_empty() {
+            0.0
+        } else {
+            provs
+                .iter()
+                .map(|p| self.world.provinces[*p as usize].hollowing)
+                .sum::<f32>()
+                / provs.len() as f32
+        };
+        if realm.hollow_path >= 2 || avg_hollow >= 30.0 || self.world.endgame.veil_pressure >= 60.0
+        {
             Intensity::WorldHollow
         } else if self.world.in_any_war(me) || self.pending_battle().is_some() {
             Intensity::WorldWar
@@ -258,7 +281,9 @@ impl WorldMapScene {
                     self.last_autosave_year = year;
                     if settings.autosave_minutes > 0.0 {
                         match store::autosave(&self.world) {
-                            Ok(_) => self.status = Some(format!("Automatisch gespeichert (Jahr {year})")),
+                            Ok(_) => {
+                                self.status = Some(format!("Automatisch gespeichert (Jahr {year})"))
+                            }
                             Err(e) => log::warn!("Autosave der Grand Campaign fehlgeschlagen: {e}"),
                         }
                     }
@@ -275,7 +300,12 @@ impl WorldMapScene {
     }
 
     fn push_notice(&mut self, text: String, kind: ChronicleKind, province: Option<ProvId>) {
-        self.notices.push_back(Notice { text, kind, province, age: 0.0 });
+        self.notices.push_back(Notice {
+            text,
+            kind,
+            province,
+            age: 0.0,
+        });
         while self.notices.len() > 6 {
             self.notices.pop_front();
         }
@@ -285,7 +315,12 @@ impl WorldMapScene {
         let me = self.me();
         for e in self.world.drain_events() {
             match e {
-                StrategyEvent::Notice { realm, kind, text, province } => {
+                StrategyEvent::Notice {
+                    realm,
+                    kind,
+                    text,
+                    province,
+                } => {
                     if realm.is_none_or(|r| r == me) {
                         self.push_notice(text, kind, province);
                     }
@@ -298,12 +333,29 @@ impl WorldMapScene {
                         self.push_notice(t, ChronicleKind::Battle, Some(p));
                     }
                 }
-                StrategyEvent::BattleResolved { province, winner_realm } => {
-                    if winner_realm == Some(me) || self.world.armies.iter().any(|a| a.owner == Some(me) && a.location == province) {
+                StrategyEvent::BattleResolved {
+                    province,
+                    winner_realm,
+                } => {
+                    if winner_realm == Some(me)
+                        || self
+                            .world
+                            .armies
+                            .iter()
+                            .any(|a| a.owner == Some(me) && a.location == province)
+                    {
                         let t = match winner_realm {
-                            Some(w) if w == me => format!("Sieg bei {}.", self.world.pname(province)),
-                            Some(w) => format!("{} siegt bei {}.", self.world.rname(w), self.world.pname(province)),
-                            None => format!("Schlacht bei {} ohne Sieger.", self.world.pname(province)),
+                            Some(w) if w == me => {
+                                format!("Sieg bei {}.", self.world.pname(province))
+                            }
+                            Some(w) => format!(
+                                "{} siegt bei {}.",
+                                self.world.rname(w),
+                                self.world.pname(province)
+                            ),
+                            None => {
+                                format!("Schlacht bei {} ohne Sieger.", self.world.pname(province))
+                            }
                         };
                         self.push_notice(t, ChronicleKind::Battle, Some(province));
                     }
@@ -319,7 +371,11 @@ impl WorldMapScene {
                     if let Some(w) = self.world.wars.iter().find(|w| w.id == war)
                         && (w.attackers.contains(&me) || w.defenders.contains(&me))
                     {
-                        let t = format!("Krieg: {} gegen {}!", self.world.rname(w.leader_a), self.world.rname(w.leader_d));
+                        let t = format!(
+                            "Krieg: {} gegen {}!",
+                            self.world.rname(w.leader_a),
+                            self.world.rname(w.leader_d)
+                        );
                         self.push_notice(t, ChronicleKind::War, None);
                         engine.audio.play("sfx.ui_war_declared");
                     }
@@ -328,7 +384,11 @@ impl WorldMapScene {
                     if let Some(w) = self.world.wars.iter().find(|w| w.id == war)
                         && (w.attackers.contains(&me) || w.defenders.contains(&me))
                     {
-                        self.push_notice("Der Krieg ist beendet – Friede.".into(), ChronicleKind::Peace, None);
+                        self.push_notice(
+                            "Der Krieg ist beendet – Friede.".into(),
+                            ChronicleKind::Peace,
+                            None,
+                        );
                         engine.audio.play("sfx.ui_peace_made");
                     }
                 }
@@ -343,7 +403,11 @@ impl WorldMapScene {
                 }
                 StrategyEvent::ProvinceChanged { province, old, new } => {
                     if old == Some(me) || new == Some(me) {
-                        let t = if new == Some(me) { format!("{} ist nun Euer.", self.world.pname(province)) } else { format!("{} ist verloren.", self.world.pname(province)) };
+                        let t = if new == Some(me) {
+                            format!("{} ist nun Euer.", self.world.pname(province))
+                        } else {
+                            format!("{} ist verloren.", self.world.pname(province))
+                        };
                         self.push_notice(t, ChronicleKind::War, Some(province));
                     }
                 }
@@ -363,7 +427,10 @@ impl WorldMapScene {
                 StrategyCommand::MoveArmy { .. } => "move",
                 StrategyCommand::Recruit { .. } | StrategyCommand::HireMercenaries(_) => "recruit",
                 StrategyCommand::Build { .. } | StrategyCommand::UpgradeFortification(_) => "build",
-                StrategyCommand::Diplomacy { action: DiplomaticAction::Propose(_) | DiplomaticAction::OfferVassalage, .. } => "treaty",
+                StrategyCommand::Diplomacy {
+                    action: DiplomaticAction::Propose(_) | DiplomaticAction::OfferVassalage,
+                    ..
+                } => "treaty",
                 StrategyCommand::ArrangeMarriage { .. } => "marriage",
                 _ => "",
             };
@@ -420,18 +487,35 @@ impl WorldMapScene {
             self.mode = m;
         }
         if let Some(sel) = &auto.select {
-            let found = self.world.prov_by_key(sel).or_else(|| self.world.provinces.iter().find(|p| p.name.eq_ignore_ascii_case(sel)).map(|p| p.id));
+            let found = self.world.prov_by_key(sel).or_else(|| {
+                self.world
+                    .provinces
+                    .iter()
+                    .find(|p| p.name.eq_ignore_ascii_case(sel))
+                    .map(|p| p.id)
+            });
             if let Some(p) = found {
                 self.selected = Some(p);
-                self.view.center_on(self.world.provinces[p as usize].centroid);
+                self.view
+                    .center_on(self.world.provinces[p as usize].centroid);
             }
         }
         if let Some(f) = &auto.focus {
-            let found = self.world.prov_by_key(f).or_else(|| self.world.provinces.iter().find(|p| p.name.eq_ignore_ascii_case(f)).map(|p| p.id));
+            let found = self.world.prov_by_key(f).or_else(|| {
+                self.world
+                    .provinces
+                    .iter()
+                    .find(|p| p.name.eq_ignore_ascii_case(f))
+                    .map(|p| p.id)
+            });
             if let Some(p) = found {
-                self.view.center_on(self.world.provinces[p as usize].centroid);
+                self.view
+                    .center_on(self.world.provinces[p as usize].centroid);
             } else if let Some((x, y)) = f.split_once(',') {
-                self.view.center_on(Vec2::new(x.parse().unwrap_or(500.0), y.parse().unwrap_or(350.0)));
+                self.view.center_on(Vec2::new(
+                    x.parse().unwrap_or(500.0),
+                    y.parse().unwrap_or(350.0),
+                ));
             }
         }
         if let Some(z) = auto.zoom {
@@ -451,8 +535,38 @@ impl WorldMapScene {
             // Krieg gegen die Aschenlegion/Hohlen ist immer möglich; für das Bild genügt ein Schlachtfeld in Grenznähe.
             if let Some(h) = self.world.realm_by_key("hollowed") {
                 let loc = self.world.realms[me as usize].capital;
-                let _ = self.world.new_army(ArmyKind::Realm, Some(h), loc, vec![Regiment { unit: "hollow_thrall".into(), count: 40, vet: 0, hp: 1.0 }], "Hohle Vorhut");
-                let _ = self.world.new_army(ArmyKind::Realm, Some(me), loc, vec![Regiment { unit: "swordsman".into(), count: 30, vet: 1, hp: 1.0 }, Regiment { unit: "archer".into(), count: 20, vet: 0, hp: 1.0 }], "Wächter der Aschmark");
+                let _ = self.world.new_army(
+                    ArmyKind::Realm,
+                    Some(h),
+                    loc,
+                    vec![Regiment {
+                        unit: "hollow_thrall".into(),
+                        count: 40,
+                        vet: 0,
+                        hp: 1.0,
+                    }],
+                    "Hohle Vorhut",
+                );
+                let _ = self.world.new_army(
+                    ArmyKind::Realm,
+                    Some(me),
+                    loc,
+                    vec![
+                        Regiment {
+                            unit: "swordsman".into(),
+                            count: 30,
+                            vet: 1,
+                            hp: 1.0,
+                        },
+                        Regiment {
+                            unit: "archer".into(),
+                            count: 20,
+                            vet: 0,
+                            hp: 1.0,
+                        },
+                    ],
+                    "Wächter der Aschmark",
+                );
             }
         }
         if auto.event_popup {
@@ -463,9 +577,55 @@ impl WorldMapScene {
         if auto.battle_dialog {
             let hollow = self.world.realm_by_key("hollowed");
             if let Some(h) = hollow {
-                let loc = self.selected.unwrap_or(self.world.realms[me as usize].capital);
-                let _ = self.world.new_army(ArmyKind::Realm, Some(h), loc, vec![Regiment { unit: "hollow_thrall".into(), count: 60, vet: 0, hp: 1.0 }, Regiment { unit: "grave_brute".into(), count: 4, vet: 0, hp: 1.0 }], "Hohlschar");
-                let _ = self.world.new_army(ArmyKind::Realm, Some(me), loc, vec![Regiment { unit: "swordsman".into(), count: 50, vet: 1, hp: 1.0 }, Regiment { unit: "archer".into(), count: 30, vet: 0, hp: 1.0 }, Regiment { unit: "knight".into(), count: 8, vet: 0, hp: 1.0 }], "Wächter der Aschmark");
+                let loc = self
+                    .selected
+                    .unwrap_or(self.world.realms[me as usize].capital);
+                let _ = self.world.new_army(
+                    ArmyKind::Realm,
+                    Some(h),
+                    loc,
+                    vec![
+                        Regiment {
+                            unit: "hollow_thrall".into(),
+                            count: 60,
+                            vet: 0,
+                            hp: 1.0,
+                        },
+                        Regiment {
+                            unit: "grave_brute".into(),
+                            count: 4,
+                            vet: 0,
+                            hp: 1.0,
+                        },
+                    ],
+                    "Hohlschar",
+                );
+                let _ = self.world.new_army(
+                    ArmyKind::Realm,
+                    Some(me),
+                    loc,
+                    vec![
+                        Regiment {
+                            unit: "swordsman".into(),
+                            count: 50,
+                            vet: 1,
+                            hp: 1.0,
+                        },
+                        Regiment {
+                            unit: "archer".into(),
+                            count: 30,
+                            vet: 0,
+                            hp: 1.0,
+                        },
+                        Regiment {
+                            unit: "knight".into(),
+                            count: 8,
+                            vet: 0,
+                            hp: 1.0,
+                        },
+                    ],
+                    "Wächter der Aschmark",
+                );
                 self.world.tick_day();
                 let _ = self.world.drain_events();
             }
@@ -473,7 +633,15 @@ impl WorldMapScene {
     }
 
     /// Zeichnet die gesamte Weltkarten-Oberfläche.
-    pub fn ui(&mut self, ui: &mut egui::Ui, engine: &mut Engine, lib: &ArtLibrary, tex: TextureId, art: &UiArt, settings: &mut UserSettings) {
+    pub fn ui(
+        &mut self,
+        ui: &mut egui::Ui,
+        engine: &mut Engine,
+        lib: &ArtLibrary,
+        tex: TextureId,
+        art: &UiArt,
+        settings: &mut UserSettings,
+    ) {
         panels::draw(self, ui, engine, lib, tex, art, settings);
     }
 }

@@ -2,6 +2,7 @@
 
 use crate::arena::Id;
 use crate::data::{BuildingTypeId, DamageType, Item, ProjectileKind, ResourceKind, UnitTypeId};
+use crate::rpg::{Formation, ItemId, StatMods, EQUIP_SLOTS};
 use glam::{IVec2, Vec2};
 use serde::{Deserialize, Serialize};
 
@@ -103,6 +104,23 @@ pub struct Unit {
     /// Gehört zu einer Angriffswelle (KI).
     pub wave: Option<u32>,
     pub alive_time: f32,
+    /// Aufstellung der Gruppe (Wirkung siehe [`Formation::mods`]).
+    pub formation: Formation,
+    /// Beschwörer, der diese Einheit gerufen hat; sie verschwindet mit ihm.
+    pub master: Option<UnitId>,
+    /// Lagerzugehörigkeit (Beute bei vollständiger Vernichtung).
+    pub camp: Option<String>,
+    /// Talentränge (Index = Talent im Talentbaum des Helden).
+    pub talents: Vec<u8>,
+    /// Ausrüstung: Waffe, Rüstung, Amulett, zwei Ringe.
+    pub equipment: [Option<ItemId>; EQUIP_SLOTS],
+    pub inventory: Vec<ItemId>,
+    /// Durch Talente freigeschaltete Fähigkeiten (hinter den Grundfähigkeiten).
+    pub extra_abilities: Vec<String>,
+    /// Aus Ausrüstung und Talenten berechnete Werte (Cache, siehe `systems::heroes`).
+    pub mods: StatMods,
+    /// Abklingzeit des Trankgebrauchs.
+    pub potion_cd: f32,
 }
 
 impl Unit {
@@ -146,6 +164,15 @@ impl Unit {
             tag: None,
             wave: None,
             alive_time: 0.0,
+            formation: Formation::Block,
+            master: None,
+            camp: None,
+            talents: Vec::new(),
+            equipment: [None; EQUIP_SLOTS],
+            inventory: Vec::new(),
+            extra_abilities: Vec::new(),
+            mods: StatMods::default(),
+            potion_cd: 0.0,
         }
     }
 
@@ -248,6 +275,8 @@ pub struct Building {
     pub worker_limit: Option<u32>,
     /// Gewähltes Rezept (Index in `BuildingDef::recipes`).
     pub recipe: u8,
+    /// Laufende Forschung: (Upgrade-Index, Fortschritt in Sekunden).
+    pub research: Option<(u8, f32)>,
     /// Läuft gerade ein Produktionszyklus (Eingaben sind verbraucht)?
     pub cycle_active: bool,
     /// Fortschritt des laufenden Zyklus in Sekunden.
@@ -349,4 +378,23 @@ pub struct Projectile {
     pub arc: f32,
     pub progress: f32,
     pub total: f32,
+    /// Flächenschaden-Radius am Einschlagpunkt (0 = Einzelziel).
+    pub splash: f32,
+    /// Schadensfaktor gegen Gebäude.
+    pub building_mult: f32,
+}
+
+/// Gegenstand am Boden (Beute), von Helden aufnehmbar.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GroundItem {
+    pub pos: Vec2,
+    pub item: ItemId,
+}
+
+/// Gefallener Held: der vollständige Zustand wartet auf die Wiederbelebung.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FallenHero {
+    pub unit: Unit,
+    /// Verbleibende Sekunden bis zur kostenlosen Rückkehr im Bergfried.
+    pub timer: f32,
 }

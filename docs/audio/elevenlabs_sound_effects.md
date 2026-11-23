@@ -290,6 +290,142 @@ Eleven Music als 2-s-Sting erzeugen.
 
 ---
 
+## 4b. Weltkarte der Großen Kampagne (im Manifest)
+
+Ereignisse der Weltkarten-Oberfläche (`worldmap`). Ein Ereignis `sfx.ui_event_popup` entspricht der Spielidee „ui.event_popup“ usw.; die Dateinamen folgen der Konvention aus `docs/canon.md` (Kategorie `ui` bzw. `world`).
+
+### ui_event_popup (Event `sfx.ui_event_popup`) · −3 dB, Cooldown 300 ms
+_Ereignisfenster (Pergament) öffnet sich._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_event_popup_01.ogg` | parchment scroll unrolling with a soft wax seal crack and a single low bell tone, medieval, no melody | 1,5 s | 0,6 | Pergament + Glocke |
+| `sfx/ui/ui_event_popup_02.ogg` | heavy parchment slap on a wooden table followed by a quiet quill scratch and a distant bell, short | 1,5 s | 0,6 | Tisch + Feder |
+| `sfx/ui/ui_event_popup_03.ogg` | old courier horn note far away then a rustle of paper, subtle, atmospheric | 1,5 s | 0,6 | Bote |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_war_declared (Event `sfx.ui_war_declared`) · 0 dB, Cooldown 1000 ms
+_Kriegserklärung (eigene oder gegen uns)._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_war_declared_01.ogg` | deep war drum strike followed by a long ominous war horn blast, medieval, cinematic, no melody | 3,0 s | 0,6 | Horn + Trommel |
+| `sfx/ui/ui_war_declared_02.ogg` | iron gauntlet slammed onto a stone table and a low brass swell, threatening, short | 2,5 s | 0,6 | Fehdehandschuh |
+| `sfx/ui/ui_war_declared_03.ogg` | three slow war drum hits with a rising low choir hum, dark fantasy, short | 3,0 s | 0,6 | Trommelfolge |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_peace_made (Event `sfx.ui_peace_made`) · −1 dB, Cooldown 1000 ms
+_Frieden geschlossen._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_peace_made_01.ogg` | two sword blades sheathed one after another, a soft warm bell chime and a quiet sigh of wind, relief | 2,5 s | 0,6 | Schwerter in Scheiden |
+| `sfx/ui/ui_peace_made_02.ogg` | gentle brass fanfare of three notes with a warm bell, medieval peace treaty, short | 2,5 s | 0,6 | Fanfare |
+| `sfx/ui/ui_peace_made_03.ogg` | wax seal pressed on parchment, quill stroke, soft harp arpeggio, calm | 2,5 s | 0,6 | Siegel + Harfe |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_chronicle_page (Event `sfx.ui_chronicle_page`) · −4 dB, Cooldown 200 ms
+_Blättern in der Chronik._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_chronicle_page_01.ogg` | a heavy old book page being turned slowly, thick parchment, quiet room | 1,0 s | 0,6 | schwere Seite |
+| `sfx/ui/ui_chronicle_page_02.ogg` | thin parchment page flip with a light leather bookbinding creak | 1,0 s | 0,6 | Leder |
+| `sfx/ui/ui_chronicle_page_03.ogg` | quill scratching a few strokes on parchment, close, dry | 1,2 s | 0,6 | Schreibfeder |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_window_open (Event `sfx.ui_window_open`) · −8 dB, Cooldown 80 ms, 2 Instanzen
+_Verwaltungsfenster öffnet sich._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_window_open_01.ogg` | soft wooden panel slide with a faint metal latch click, very short, no reverb | 0,3 s | 0,6 | Holztafel |
+| `sfx/ui/ui_window_open_02.ogg` | light leather folder opening with a parchment rustle, very short | 0,3 s | 0,6 | Mappe |
+| `sfx/ui/ui_window_open_03.ogg` | small brass clasp unlatching and a tiny paper swish, very short | 0,3 s | 0,6 | Schließe |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_treaty_signed (Event `sfx.ui_treaty_signed`) · −2 dB, Cooldown 400 ms
+_Vertrag oder Ehe geschlossen._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_treaty_signed_01.ogg` | quill signing parchment, wax seal stamped firmly, short warm chime, medieval | 2,0 s | 0,6 | Siegeln |
+| `sfx/ui/ui_treaty_signed_02.ogg` | two goblets clinking with a soft string pluck, celebratory but quiet | 2,0 s | 0,6 | Becher |
+| `sfx/ui/ui_treaty_signed_03.ogg` | small bronze bell rung twice with a rustle of parchment | 2,0 s | 0,6 | Glocke |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_battle_alert (Event `sfx.ui_battle_alert`) · 0 dB, Cooldown 1500 ms
+_Schlacht steht an._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_battle_alert_01.ogg` | urgent war horn two short blasts and a distant clash of swords, medieval alarm | 2,5 s | 0,6 | Alarmhorn |
+| `sfx/ui/ui_battle_alert_02.ogg` | fast war drum roll building up to a single heavy hit, tense | 2,5 s | 0,6 | Trommelwirbel |
+| `sfx/ui/ui_battle_alert_03.ogg` | rapid bell alarm with metallic armour rattle, tense, short | 2,5 s | 0,6 | Sturmglocke |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_realm_fell (Event `sfx.ui_realm_fell`) · −1 dB, Cooldown 1500 ms
+_Ein Reich geht unter._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_realm_fell_01.ogg` | a crown falling and rolling on a stone floor, then a low mournful horn, dark fantasy | 3,0 s | 0,6 | Krone fällt |
+| `sfx/ui/ui_realm_fell_02.ogg` | a heavy banner being torn and falling, low drone and distant bell, grim | 3,0 s | 0,6 | Banner |
+| `sfx/ui/ui_realm_fell_03.ogg` | slow funeral drum with a deep brass note fading out, solemn | 3,5 s | 0,6 | Trauermarsch |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### ui_ruler_changed (Event `sfx.ui_ruler_changed`) · −1 dB, Cooldown 1500 ms
+_Thronwechsel._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/ui_ruler_changed_01.ogg` | a short ceremonial trumpet fanfare with a heavy bell toll, coronation, medieval | 3,0 s | 0,6 | Krönungsfanfare |
+| `sfx/ui/ui_ruler_changed_02.ogg` | a heavy iron crown placed on a stone, bell toll and a choir hum, solemn | 3,0 s | 0,6 | Krone |
+| `sfx/ui/ui_ruler_changed_03.ogg` | funeral bell tolling three times followed by a soft brass chord | 3,5 s | 0,6 | Glocke |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### map_army_move (Event `sfx.map_army_move`) · −5 dB, Cooldown 400 ms, 2 Instanzen
+_Marschbefehl auf der Weltkarte._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/world/map_army_move_01.ogg` | distant column of marching soldiers, rhythmic boots and armour rattle, short, medieval | 1,5 s | 0,6 | Marschkolonne |
+| `sfx/world/map_army_move_02.ogg` | horses and a wagon creaking on a dirt road with a brief horn call far away | 1,5 s | 0,6 | Tross |
+| `sfx/world/map_army_move_03.ogg` | war drum marching beat of four hits with cloth banners flapping | 1,5 s | 0,6 | Trommel |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### map_recruit (Event `sfx.map_recruit`) · −4 dB, Cooldown 300 ms, 2 Instanzen
+_Truppen ausgehoben._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/world/map_recruit_01.ogg` | a drill sergeant shout far away and a crowd of boots gathering, medieval camp, short | 1,5 s | 0,6 | Aushebung |
+| `sfx/world/map_recruit_02.ogg` | weapons being handed out, metal clanks and leather straps, short | 1,5 s | 0,6 | Waffen |
+| `sfx/world/map_recruit_03.ogg` | a recruitment drum roll and short horn call in a village square | 1,5 s | 0,6 | Werbetrommel |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
+### map_select (Event `sfx.map_select`) · −9 dB, Cooldown 60 ms, 2 Instanzen
+_Provinz oder Heer auf der Karte gewählt._
+
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/map_select_01.ogg` | a wooden game token set down on a parchment map, soft tap, very short | 0,2 s | 0,6 | Figur |
+| `sfx/ui/map_select_02.ogg` | a small brass compass tick on a map table, very short | 0,2 s | 0,6 | Kompass |
+| `sfx/ui/map_select_03.ogg` | finger tapping on rough parchment with a faint ember crackle, very short | 0,2 s | 0,6 | Pergament |
+
+**Nachbearbeitung:** Hochpass 150 Hz, Fade-out 20 ms, Peak ≤ −6 dBFS.
+
 ## 5. Welt – `sfx/world/`
 
 ### wood_chop (Event `sfx.wood_chop`) · −6 dB, 4 Instanzen, Cooldown 150 ms
@@ -429,3 +565,144 @@ Je Eintrag 3 Varianten einplanen (`_01`–`_03`), Variation durch Material/Inten
 | `sfx/buildings/bone_spire_pulse_01…03.ogg` | eerie bone tower pulsing with dark energy, low hum, bone rattle, whisper | 3,0 s | 0,45 |
 | `sfx/buildings/hollow_shrine_bell_01…03.ogg` | cracked funeral bell tolling once inside ruins, dissonant, long decay | 5,0 s | 0,55 |
 | `sfx/buildings/upgrade_complete_01…03.ogg` | building upgraded, sturdy hammer blows, metal fittings clank, short horn | 2,0 s | 0,5 |
+
+---
+
+## 7. Echtzeit-Militär (im Manifest seit Phase 8)
+
+Neue Events für Armbrust, Belagerung, Magie der Feuerschule und Heilung, Heldenfähigkeiten sowie Gegenstände. Fähigkeiten teilen sich Klangfamilien (siehe `crates/ashen_game/src/audio_bridge.rs`): `fire_spell` (Feuerball, Flammenwoge, Heilige Flamme, Phönixhieb, Feuersäule), `heal_spell` (Heilendes Licht, Flammenheilung, Neuerwachen), `bless_spell` (Segen der Flamme, Glaubensfeuer, Schlachtruf), `war_horn` (Ahnenruf, Kriegshörner), `shield_spell` (Schildwall, Eiserner Schwur, Letztes Aufgebot, Steinhaut, Flammenaegis), `ground_slam` (Erdspalter, Zorn der Ahnen); „Tote erwecken“ nutzt `hollow_summon`. Für Katapult und Rammbock gelten die Prompts hier statt 6.1.
+
+### crossbow_fire (Event `sfx.crossbow_fire`) – Armbrustschuss der Armbrustschützen · -3 dB, 6 Instanzen, Cooldown 40 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/crossbow_fire_01.ogg` | heavy crossbow release, sharp string snap with a wooden thump and a short bolt hiss, close, dry | 0,6 s | 0,6 | Sehnenschlag, Holzstoß |
+| `sfx/combat/crossbow_fire_02.ogg` | steel prod crossbow firing, deep twang and ratchet click, close, dry | 0,6 s | 0,6 | Stahlbogen, Spannklick |
+| `sfx/combat/crossbow_fire_03.ogg` | windlass crossbow discharging, thick string slap and bolt whoosh, close, dry | 0,7 s | 0,55 | Winde, dickes Schnalzen |
+
+**Nachbearbeitung:** Hochpass 80 Hz; tiefer und kürzer als `arrow_fire`, damit Armbrust und Bogen unterscheidbar bleiben.
+
+### catapult_launch (Event `sfx.catapult_launch`) – Katapult feuert (Wurfarm schnellt los) · -1 dB, 3 Instanzen, Cooldown 300 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/catapult_launch_01.ogg` | wooden catapult arm snapping forward, deep creaking release, rope twang and a heavy whoosh, close, dry | 1,6 s | 0,6 | Holzarm, Seilzwirbeln |
+| `sfx/combat/catapult_launch_02.ogg` | siege engine firing, huge timber thump with a rope snap and a rising boulder whoosh, dry | 1,5 s | 0,6 | Balkenschlag, Steinflug |
+| `sfx/combat/catapult_launch_03.ogg` | trebuchet-style arm release, groaning wood then sudden crack and whoosh, close | 1,8 s | 0,55 | Ächzen, dann Knall |
+
+**Nachbearbeitung:** Tieffrequenten Anteil (60–120 Hz) betonen; Ausklang 0,4 s kürzen.
+
+### boulder_impact (Event `sfx.boulder_impact`) – Felsbrocken schlägt ein (Flächenschaden) · 0 dB, 4 Instanzen, Cooldown 150 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/boulder_impact_01.ogg` | heavy boulder crashing into packed earth, deep thud with scattering debris, mid distance, dry | 1,4 s | 0,6 | Erdaufschlag, Gesteinssplitter |
+| `sfx/combat/boulder_impact_02.ogg` | large stone smashing wooden planks and armor, splintering crack with a rolling rumble | 1,5 s | 0,6 | Holzsplitter + Rumpeln |
+| `sfx/combat/boulder_impact_03.ogg` | catapult stone impact on stone wall, huge crunch and falling rubble | 1,6 s | 0,6 | Mauer, Schutt |
+
+**Nachbearbeitung:** Hochpass 40 Hz; Transiente −2 ms; Schuttfall als eigenes Layer nach 0,3 s.
+
+### ram_hit (Event `sfx.ram_hit`) – Rammbock trifft Tor oder Mauer · -1 dB, 3 Instanzen, Cooldown 200 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/ram_hit_01.ogg` | iron-capped battering ram hitting a heavy wooden gate, massive boom with splintering oak, close, dry | 1,2 s | 0,6 | Tor, Eichenholz |
+| `sfx/combat/ram_hit_02.ogg` | battering ram slamming stone wall, deep concussive thud and grinding crack, dry | 1,2 s | 0,6 | Stein, Mahlen |
+| `sfx/combat/ram_hit_03.ogg` | large log ram swinging and hitting timber barricade, creak then heavy impact | 1,3 s | 0,55 | Knarren, dann Aufprall |
+
+**Nachbearbeitung:** Referenz für Gebäudeschäden; −1 dB gegenüber `wall_hit`.
+
+### fire_spell (Event `sfx.fire_spell`) – Feuerzauber (Feuerball, Flammenwoge, Heilige Flamme, Phönixhieb, Feuersäule) · 0 dB, 3 Instanzen
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/fire_spell_01.ogg` | fireball spell cast, rising whoosh of flame igniting with crackling embers and a hot burst, close, dry | 1,4 s | 0,6 | Aufsteigende Flamme |
+| `sfx/magic/fire_spell_02.ogg` | column of fire erupting from the ground, roaring blaze with a deep bass thump | 1,6 s | 0,6 | Feuersäule, Bass |
+| `sfx/magic/fire_spell_03.ogg` | ring of flame expanding outward, sharp ignite and sizzling crackle, magical shimmer | 1,4 s | 0,55 | Flammenring, Funkeln |
+
+**Nachbearbeitung:** Referenz für alle Feuer-Fähigkeiten; Lautheit wie `ember_cleave`.
+
+### fireball_impact (Event `sfx.fireball_impact`) – Feuerball oder Magiegeschoss schlägt ein · -1 dB, 4 Instanzen, Cooldown 100 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/fireball_impact_01.ogg` | fireball exploding on impact, dull whump and crackling fire burst with scattering sparks, mid distance | 1,2 s | 0,6 | Verpuffung, Funken |
+| `sfx/magic/fireball_impact_02.ogg` | magical fire burst on ground, quick roar and ember pops, dry | 1,0 s | 0,6 | kurzes Auflodern |
+| `sfx/magic/fireball_impact_03.ogg` | flaming bolt impact, hot hiss and a sharp pop, close | 0,9 s | 0,6 | Zischen + Knall |
+
+**Nachbearbeitung:** kurz halten; sonst überlagert sich der Klang bei Salven.
+
+### heal_spell (Event `sfx.heal_spell`) – Heilzauber (Heilendes Licht, Flammenheilung, Neuerwachen) · -2 dB, 3 Instanzen
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/heal_spell_01.ogg` | warm healing chime swelling into a soft glowing shimmer, gentle airy choir pad, no music, close | 1,5 s | 0,55 | warmer Glockenklang |
+| `sfx/magic/heal_spell_02.ogg` | holy light spell, soft bright sparkle sweep with a low humming glow, magical | 1,6 s | 0,55 | Lichtschimmer |
+| `sfx/magic/heal_spell_03.ogg` | restorative magic wave, gentle rising tone with shimmering particles, dry | 1,5 s | 0,5 | sanfte Welle |
+
+**Nachbearbeitung:** Hochpass 120 Hz; kein hörbares Pad nach 1,5 s (Ausklang kurz).
+
+### bless_spell (Event `sfx.bless_spell`) – Segen und Stärkungszauber (Segen der Flamme, Glaubensfeuer, Schlachtruf) · -1 dB, 2 Instanzen
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/bless_spell_01.ogg` | blessing spell, bright rising shimmer with a soft golden bell tone, magical aura, dry | 1,5 s | 0,55 | goldener Glockenton |
+| `sfx/magic/bless_spell_02.ogg` | rallying magic pulse, warm swelling whoosh with a distant horn-like swell, no melody | 1,6 s | 0,55 | Pulswelle |
+| `sfx/magic/bless_spell_03.ogg` | fiery blessing, crackling warmth rising into a shining chime | 1,5 s | 0,55 | warme Glut, Chime |
+
+**Nachbearbeitung:** Gleiche Lautheit wie `rallying_banner`.
+
+### war_horn (Event `sfx.war_horn`) – Kriegshörner und Ahnenruf (Torvald) · 0 dB, 2 Instanzen
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/war_horn_01.ogg` | deep nordic war horn blast, long low brass-like bellow with rough breathy overtones, outdoors | 2,2 s | 0,6 | tiefes Horn |
+| `sfx/magic/war_horn_02.ogg` | two war horns sounding together, powerful droning call with slight dissonance, dry | 2,5 s | 0,6 | zwei Hörner |
+| `sfx/magic/war_horn_03.ogg` | ancestral roar mixed with a horn call, guttural shout over low drone | 2,0 s | 0,55 | Ruf + Horn |
+
+**Nachbearbeitung:** Kein Hall; Hochpass 50 Hz; Ausklang ca. 0,5 s.
+
+### shield_spell (Event `sfx.shield_spell`) – Schutzzauber und Schildwall (Schildwall, Eiserner Schwur, Steinhaut, Flammenaegis) · -2 dB, 2 Instanzen
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/shield_spell_01.ogg` | magical ward forming, metallic ringing shimmer with a low solid thud, dry | 1,2 s | 0,6 | metallisches Klingen |
+| `sfx/magic/shield_spell_02.ogg` | stone skin spell, grinding crunch with a low resonant hum, short | 1,2 s | 0,6 | Stein knirscht |
+| `sfx/magic/shield_spell_03.ogg` | flaming aegis igniting around a warrior, whoosh and soft crackle with a clang | 1,3 s | 0,55 | Feuerhaut |
+
+**Nachbearbeitung:** kurz; gut hörbar in lauter Schlacht (Mitten betonen).
+
+### ground_slam (Event `sfx.ground_slam`) – Erdspalter und Zorn der Ahnen · 0 dB, 2 Instanzen, Cooldown 100 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/ground_slam_01.ogg` | massive hammer striking the ground, deep earth-shaking boom with rubble and a shock wave, close | 1,5 s | 0,6 | Hammerschlag, Schockwelle |
+| `sfx/magic/ground_slam_02.ogg` | ancestral fury burst, thunderous impact with a layered guttural roar | 1,6 s | 0,55 | Donner + Grollen |
+| `sfx/magic/ground_slam_03.ogg` | ground cracking open under a heavy blow, loud crunch and rolling rumble | 1,5 s | 0,6 | Boden bricht auf |
+
+**Nachbearbeitung:** Hochpass 35 Hz; Tiefbass nur im Mono-Kern.
+
+### hero_revive (Event `sfx.hero_revive`) – Wiederbelebung eines Helden · -1 dB, 1 Instanz
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/magic/hero_revive_01.ogg` | hero revived by flame, sudden rush of air into a glowing resurgence swell with a deep heartbeat thump, dry | 2,0 s | 0,55 | Herzschlag + Glut |
+| `sfx/magic/hero_revive_02.ogg` | holy fire reigniting, rising crackle then a bright ring, close | 2,0 s | 0,55 | Feuer entfacht erneut |
+| `sfx/magic/hero_revive_03.ogg` | resurrection light, soft low drone blossoming into a bright shimmer, no music | 2,2 s | 0,5 | Licht erblüht |
+
+**Nachbearbeitung:** Ausklang weich; nicht lauter als `level up`-Stimmen.
+
+### item_pickup (Event `sfx.item_pickup`) – Gegenstand aufgenommen · -4 dB, 2 Instanzen, Cooldown 100 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/item_pickup_01.ogg` | small leather pouch clink, coins and metal jingle, quick pickup, close, dry | 0,5 s | 0,6 | Beutel, Münzen |
+| `sfx/ui/item_pickup_02.ogg` | pick up a sword from the ground, short metal scrape and clink | 0,5 s | 0,6 | Metallkratzer |
+| `sfx/ui/item_pickup_03.ogg` | magical item collected, brief bright chime with a soft whoosh | 0,6 s | 0,55 | kurzer Chime |
+
+**Nachbearbeitung:** Mono; Länge 0,4–0,6 s; Lautheit wie `ui_notify`.
+
+### potion_drink (Event `sfx.potion_drink`) – Trank getrunken · -3 dB, 1 Instanz, Cooldown 300 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/potion_drink_01.ogg` | drinking a potion, cork pop then gulping swallow and a soft glassy clink, close, dry | 1,0 s | 0,6 | Korken, Schlucken |
+| `sfx/ui/potion_drink_02.ogg` | potion vial uncorked and quaffed, short liquid gulp and exhale, close | 1,0 s | 0,6 | Schluck, Ausatmen |
+| `sfx/ui/potion_drink_03.ogg` | alchemical elixir drunk, bubbling then a quick warm shimmer | 1,1 s | 0,55 | Blubbern, Schimmer |
+
+**Nachbearbeitung:** Mono; trocken; ohne Stimme (Ausatmen sehr leise).
+
+### talent_learn (Event `sfx.talent_learn`) – Talentpunkt eingesetzt und Stufenaufstieg · -3 dB, 1 Instanz, Cooldown 200 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/ui/talent_learn_01.ogg` | level up ding, warm rising bell with a soft golden sparkle, short, no music | 1,0 s | 0,55 | Glocke, aufsteigend |
+| `sfx/ui/talent_learn_02.ogg` | skill learned, quick glowing swell with a crisp chime on top, dry | 1,0 s | 0,55 | Chime obenauf |
+| `sfx/ui/talent_learn_03.ogg` | hero empowered, deep warm hum rising into a bright flicker, brief | 1,1 s | 0,5 | Hum + Funkeln |
+
+**Nachbearbeitung:** Stereo erlaubt; Lautheit wie `objective_complete` minus 3 dB.

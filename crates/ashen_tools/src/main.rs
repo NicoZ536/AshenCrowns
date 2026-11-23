@@ -3,7 +3,10 @@
 //! ```text
 //! cargo run -p ashen_tools -- audio-scan [--assets <dir>] [--apply-renames] [--convert] [--report <datei.md>]
 //! cargo run -p ashen_tools -- validate-data [--assets <dir>] [--mod <mod-verzeichnis> ...]
+//! cargo run -p ashen_tools -- forge-scenarios [--assets <dir>]
 //! ```
+
+mod forge;
 
 use ashen_engine::audio::manifest::AudioManifest;
 use ashen_engine::audio::scanner;
@@ -23,7 +26,9 @@ Befehle:
       --report <datei>    Bericht als Markdown schreiben (Standard: assets/audio/audio_report.md)
   validate-data    Spieldaten, Missionen und Mods laden und auf Konsistenz prüfen
       --assets <dir>
-      --mod <dir>         Mod-Verzeichnis zusätzlich anwenden (mehrfach möglich)"
+      --mod <dir>         Mod-Verzeichnis zusätzlich anwenden (mehrfach möglich)
+  forge-scenarios  Die mitgelieferten historischen Szenarien neu erzeugen (assets/data/scenarios/)
+      --assets <dir>"
 }
 
 fn assets_dir(arg: Option<PathBuf>) -> Result<PathBuf, String> {
@@ -114,6 +119,35 @@ fn validate_data(assets: &Path, mods: &[PathBuf]) -> Result<(), String> {
         count += 1;
     }
     println!("{count} Mission(en) geprüft – alles konsistent.");
+
+    // Szenarien: laden, Karte prüfen, Welt aufbauen.
+    let mut errors = Vec::new();
+    let scenarios = ashen_sim::scenario::discover(&[(assets.join("data/scenarios"), ashen_sim::scenario::ScenarioSource::Bundled)], &mut errors);
+    if let Some(e) = errors.first() {
+        return Err(e.clone());
+    }
+    for s in &scenarios {
+        ashen_sim::SimWorld::new(&data, s.def.clone(), Default::default()).map_err(|e| format!("{}: {e}", s.path.display()))?;
+        println!("Szenario {} ({}) ok: {} Ziele, {} Auslöser, Karte {}", s.def.id, s.def.name, s.def.objectives.len(), s.def.triggers.len(), s.def.map.as_ref().map(|m| format!("{}×{}", m.width, m.height)).unwrap_or_else(|| "generiert".into()));
+    }
+    // Herausforderungen: Basis vorhanden, Modifikatoren anwendbar, Welt startet.
+    let challenges = ashen_sim::challenge::ChallengeDef::load_dir(&assets.join("data/challenges"), &mut errors);
+    if let Some(e) = errors.first() {
+        return Err(e.clone());
+    }
+    let mut missions: Vec<MissionDef> = scenarios.iter().map(|s| s.def.clone()).collect();
+    for e in std::fs::read_dir(&dir).map_err(|e| e.to_string())?.flatten() {
+        if let Ok(m) = MissionDef::load(&e.path()) {
+            missions.push(m);
+        }
+    }
+    for c in &challenges {
+        let base = missions.iter().find(|m| m.id == c.base).ok_or_else(|| format!("Herausforderung {}: Basis '{}' nicht gefunden", c.id, c.base))?;
+        let p = ashen_sim::challenge::prepare(c, base);
+        ashen_sim::SimWorld::new(&data, p.mission, p.settings).map_err(|e| format!("Herausforderung {}: {e}", c.id))?;
+        println!("Herausforderung {} ({}) ok", c.id, c.name);
+    }
+    println!("{} Szenario(en), {} Herausforderung(en) geprüft.", scenarios.len(), challenges.len());
     Ok(())
 }
 
@@ -165,6 +199,11 @@ fn main() -> ExitCode {
     let result = match cmd.as_str() {
         "audio-scan" => audio_scan(&assets, apply, convert, report).map(|ok| if ok {  } else { eprintln!("Beschädigte Audiodateien gefunden.") }),
         "validate-data" => validate_data(&assets, &mods),
+        "forge-scenarios" => forge::forge(&assets).map(|files| {
+            for f in files {
+                println!("geschrieben: {}", f.display());
+            }
+        }),
         _ => {
             println!("{}", usage());
             return ExitCode::from(2);

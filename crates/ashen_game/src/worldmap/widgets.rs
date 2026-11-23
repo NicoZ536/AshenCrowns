@@ -2,8 +2,8 @@
 
 use crate::ui_art::{self, PanelKind, UiArt};
 use crate::ui_common;
-use ashen_engine::ui::theme;
 use ashen_engine::Engine;
+use ashen_engine::ui::theme;
 use ashen_strategy::*;
 use egui::{Align2, Color32, Id, Order, Pos2, RichText, Sense, Ui, Vec2};
 
@@ -24,7 +24,19 @@ pub enum WinKind {
 }
 
 impl WinKind {
-    pub const ALL: [WinKind; 11] = [WinKind::Province, WinKind::Realm, WinKind::Family, WinKind::Court, WinKind::Diplomacy, WinKind::Military, WinKind::Economy, WinKind::Religion, WinKind::Magic, WinKind::Chronicle, WinKind::Victory];
+    pub const ALL: [WinKind; 11] = [
+        WinKind::Province,
+        WinKind::Realm,
+        WinKind::Family,
+        WinKind::Court,
+        WinKind::Diplomacy,
+        WinKind::Military,
+        WinKind::Economy,
+        WinKind::Religion,
+        WinKind::Magic,
+        WinKind::Chronicle,
+        WinKind::Victory,
+    ];
     pub fn title(self) -> &'static str {
         match self {
             WinKind::Province => "Provinz",
@@ -120,10 +132,16 @@ impl WinKind {
     }
     fn default_pos(self) -> Pos2 {
         match self {
-            WinKind::Province => Pos2::new(14.0, 70.0),
-            WinKind::Realm | WinKind::Economy | WinKind::Religion | WinKind::Magic | WinKind::Victory => Pos2::new(300.0, 80.0),
-            WinKind::Family | WinKind::Diplomacy | WinKind::Court | WinKind::Chronicle => Pos2::new(240.0, 72.0),
-            WinKind::Military => Pos2::new(14.0, 70.0),
+            WinKind::Province => Pos2::new(14.0, 120.0),
+            WinKind::Realm
+            | WinKind::Economy
+            | WinKind::Religion
+            | WinKind::Magic
+            | WinKind::Victory => Pos2::new(300.0, 120.0),
+            WinKind::Family | WinKind::Diplomacy | WinKind::Court | WinKind::Chronicle => {
+                Pos2::new(240.0, 120.0)
+            }
+            WinKind::Military => Pos2::new(14.0, 120.0),
         }
     }
 }
@@ -228,21 +246,37 @@ impl Cx<'_> {
 }
 
 pub fn text(ui: &mut Ui, s: impl Into<String>, size: f32, col: Color32) {
-    ui.label(RichText::new(s.into()).font(theme::body_font(size)).color(col));
+    ui.label(
+        RichText::new(s.into())
+            .font(theme::body_font(size))
+            .color(col),
+    );
 }
 
 pub fn dim(ui: &mut Ui, s: impl Into<String>) {
-    ui.label(RichText::new(s.into()).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
+    ui.label(
+        RichText::new(s.into())
+            .font(theme::italic_font(13.5))
+            .color(theme::PARCHMENT_DIM),
+    );
 }
 
 pub fn heading(ui: &mut Ui, s: impl Into<String>) {
-    ui.label(RichText::new(s.into()).font(theme::heading_font(16.0)).color(theme::GOLD));
+    ui.label(
+        RichText::new(s.into())
+            .font(theme::heading_font(16.0))
+            .color(theme::GOLD),
+    );
 }
 
 /// Abschnittstitel mit Trennlinie.
 pub fn section(ui: &mut Ui, art: &UiArt, title: &str) {
     ui.add_space(6.0);
-    ui.label(RichText::new(title).font(theme::caps_font(12.5)).color(theme::GOLD_DIM));
+    ui.label(
+        RichText::new(title)
+            .font(theme::caps_font(12.5))
+            .color(theme::GOLD_DIM),
+    );
     let r = ui.available_rect_before_wrap();
     art.divider(ui.painter(), r.min.x, r.max.x, r.min.y + 3.0);
     ui.add_space(8.0);
@@ -251,9 +285,17 @@ pub fn section(ui: &mut Ui, art: &UiArt, title: &str) {
 /// Zeile „Schlüssel … Wert“.
 pub fn kv(ui: &mut Ui, k: &str, v: impl Into<String>) {
     ui.horizontal(|ui| {
-        ui.label(RichText::new(k).font(theme::body_font(14.0)).color(theme::PARCHMENT_DIM));
+        ui.label(
+            RichText::new(k)
+                .font(theme::body_font(14.0))
+                .color(theme::PARCHMENT_DIM),
+        );
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            ui.label(RichText::new(v.into()).font(theme::body_bold_font(14.5)).color(theme::PARCHMENT));
+            ui.label(
+                RichText::new(v.into())
+                    .font(theme::body_bold_font(14.5))
+                    .color(theme::PARCHMENT),
+            );
         });
     });
 }
@@ -261,9 +303,17 @@ pub fn kv(ui: &mut Ui, k: &str, v: impl Into<String>) {
 /// Farbiger Wert in einer Zeile.
 pub fn kv_col(ui: &mut Ui, k: &str, v: impl Into<String>, col: Color32) {
     ui.horizontal(|ui| {
-        ui.label(RichText::new(k).font(theme::body_font(14.0)).color(theme::PARCHMENT_DIM));
+        ui.label(
+            RichText::new(k)
+                .font(theme::body_font(14.0))
+                .color(theme::PARCHMENT_DIM),
+        );
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            ui.label(RichText::new(v.into()).font(theme::body_bold_font(14.5)).color(col));
+            ui.label(
+                RichText::new(v.into())
+                    .font(theme::body_bold_font(14.5))
+                    .color(col),
+            );
         });
     });
 }
@@ -272,7 +322,13 @@ pub fn kv_col(ui: &mut Ui, k: &str, v: impl Into<String>, col: Color32) {
 pub fn bar_row(ui: &mut Ui, art: &UiArt, label: &str, frac: f32, color: Color32, value: &str) {
     ui.horizontal(|ui| {
         let (lr, _) = ui.allocate_exact_size(Vec2::new(128.0, 20.0), Sense::hover());
-        ui.painter().text(Pos2::new(lr.min.x, lr.center().y), Align2::LEFT_CENTER, label, theme::body_font(14.0), theme::PARCHMENT_DIM);
+        ui.painter().text(
+            Pos2::new(lr.min.x, lr.center().y),
+            Align2::LEFT_CENTER,
+            label,
+            theme::body_font(14.0),
+            theme::PARCHMENT_DIM,
+        );
         let w = (ui.available_width() - 4.0).max(60.0);
         let (r, _) = ui.allocate_exact_size(Vec2::new(w, 18.0), Sense::hover());
         art.bar(ui.painter(), r, frac, color, value);
@@ -280,38 +336,74 @@ pub fn bar_row(ui: &mut Ui, art: &UiArt, label: &str, frac: f32, color: Color32,
 }
 
 pub fn win_title(ui: &mut Ui, title: &str, sub: &str) {
-    ui.label(RichText::new(title).font(theme::title_bold_font(21.0)).color(theme::GOLD));
+    ui.label(
+        RichText::new(title)
+            .font(theme::title_bold_font(21.0))
+            .color(theme::GOLD),
+    );
     if !sub.is_empty() {
-        ui.label(RichText::new(sub).font(theme::italic_font(14.0)).color(theme::PARCHMENT_DIM));
+        ui.label(
+            RichText::new(sub)
+                .font(theme::italic_font(14.0))
+                .color(theme::PARCHMENT_DIM),
+        );
     }
 }
 
 /// Fenster mit Bronzerahmen, Titel und Schließrune. Liefert `true`, wenn geschlossen werden soll.
-pub fn window(ctx: &egui::Context, cx: &mut Cx, kind: WinKind, title: &str, sub: &str, add: impl FnOnce(&mut Cx, &mut Ui)) -> bool {
+pub fn window(
+    ctx: &egui::Context,
+    cx: &mut Cx,
+    kind: WinKind,
+    title: &str,
+    sub: &str,
+    add: impl FnOnce(&mut Cx, &mut Ui),
+) -> bool {
     let mut close = false;
     let art = cx.art;
     let max_h = (ctx.content_rect().height() - 150.0).max(300.0);
-    egui::Area::new(Id::unique(("wm_win", kind.id()))).order(Order::Middle).movable(true).default_pos(kind.default_pos()).constrain(true).show(ctx, |ui| {
-        art.panel(ui, PanelKind::Thin, egui::Margin { left: 22, right: 22, top: 16, bottom: 18 }, |ui| {
-            ui.set_width(kind.width().min(ctx.content_rect().width() - 60.0));
-            ui.horizontal(|ui| {
-                ui.vertical(|ui| win_title(ui, title, sub));
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-                    let (r, resp) = ui.allocate_exact_size(Vec2::splat(24.0), Sense::click());
-                    art.rune(ui.painter(), r.center(), "x", resp.hovered());
-                    ui_common::sfx(cx.engine, ui, &resp);
-                    if resp.clicked() {
-                        close = true;
-                    }
-                });
-            });
-            ui.add_space(2.0);
-            egui::ScrollArea::vertical().id_salt(("wm_scroll", kind.id())).max_height(max_h).auto_shrink([false, true]).show(ui, |ui| {
-                ui.set_width(ui.available_width());
-                add(cx, ui);
-            });
+    egui::Area::new(Id::unique(("wm_win", kind.id())))
+        .order(Order::Middle)
+        .movable(true)
+        .default_pos(kind.default_pos())
+        .constrain(true)
+        .show(ctx, |ui| {
+            art.panel(
+                ui,
+                PanelKind::Thin,
+                egui::Margin {
+                    left: 22,
+                    right: 22,
+                    top: 16,
+                    bottom: 18,
+                },
+                |ui| {
+                    ui.set_width(kind.width().min(ctx.content_rect().width() - 60.0));
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| win_title(ui, title, sub));
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                            let (r, resp) =
+                                ui.allocate_exact_size(Vec2::splat(24.0), Sense::click());
+                            art.rune(ui.painter(), r.center(), "x", resp.hovered());
+                            ui_common::sfx(cx.engine, ui, &resp);
+                            if resp.clicked() {
+                                close = true;
+                            }
+                        });
+                    });
+                    ui.add_space(2.0);
+                    egui::ScrollArea::vertical()
+                        .id_salt(("wm_scroll", kind.id()))
+                        .max_height(max_h)
+                        .min_scrolled_height(max_h)
+                        .auto_shrink([false, true])
+                        .show(ui, |ui| {
+                            ui.set_width(ui.available_width());
+                            add(cx, ui);
+                        });
+                },
+            );
         });
-    });
     close
 }
 
@@ -320,9 +412,19 @@ pub fn realm_chip(ui: &mut Ui, w: &StrategyWorld, r: RealmId) {
     let realm = &w.realms[r as usize];
     ui.horizontal(|ui| {
         let (rc, _) = ui.allocate_exact_size(Vec2::splat(12.0), Sense::hover());
-        ui.painter().rect_filled(rc, 0.0, super::mapview::realm_color(realm));
-        ui.painter().rect_stroke(rc, 0.0, egui::Stroke::new(1.0, Color32::BLACK), egui::StrokeKind::Outside);
-        ui.label(RichText::new(&realm.name).font(theme::body_bold_font(15.0)).color(theme::PARCHMENT));
+        ui.painter()
+            .rect_filled(rc, 0.0, super::mapview::realm_color(realm));
+        ui.painter().rect_stroke(
+            rc,
+            0.0,
+            egui::Stroke::new(1.0, Color32::BLACK),
+            egui::StrokeKind::Outside,
+        );
+        ui.label(
+            RichText::new(&realm.name)
+                .font(theme::body_bold_font(15.0))
+                .color(theme::PARCHMENT),
+        );
     });
 }
 
@@ -344,6 +446,14 @@ pub fn bad_col(v: f32) -> Color32 {
 /// Zeigt eine Befehlsrückmeldung als kleine Zeile.
 pub fn feedback(ui: &mut Ui, last: &Option<(bool, String)>) {
     if let Some((ok, m)) = last {
-        ui.label(RichText::new(m).font(theme::italic_font(13.5)).color(if *ok { Color32::from_rgb(150, 210, 120) } else { Color32::from_rgb(236, 120, 90) }));
+        ui.label(
+            RichText::new(m)
+                .font(theme::italic_font(13.5))
+                .color(if *ok {
+                    Color32::from_rgb(150, 210, 120)
+                } else {
+                    Color32::from_rgb(236, 120, 90)
+                }),
+        );
     }
 }

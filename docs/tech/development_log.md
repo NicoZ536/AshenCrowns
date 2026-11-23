@@ -14,7 +14,7 @@ Vertical Slice: eigene Engine, deterministische RTS-Simulation, Mission 1, 3D→
 ## Runde 2 (geplant)
 - R2: RTS-Militär – neue Einheiten inkl. Belagerung/Magie, Helden-Talente/Ausrüstung, Formationen, aufbauende Gegner-KI.
 - C: Kampagne Zeitalter I–VII (Missionen, Dialoge, Entscheidungen).
-- E: Karteneditor, eigene/historische Szenarien, Herausforderungsmodus.
+- E: Karteneditor, eigene/historische Szenarien, Herausforderungsmodus – umgesetzt: Editor-Szene (`crates/ashen_game/src/editor/`), Szenarioformat im Missionsformat (`ashen_sim::scenario`, `genmap`), Herausforderungen (`ashen_sim::challenge`), 4 historische Szenarien (`ashen_tools forge-scenarios`), Gefecht-Einrichtung; siehe `docs/design/editor_and_scenarios.md`.
 - I: Integration Weltkarte ↔ Echtzeitschlachten im Spiel (Hauptsession).
 
 ## Runde 3 (geplant)

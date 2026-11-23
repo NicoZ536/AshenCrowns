@@ -14,6 +14,32 @@
     rain_ranged_mult: 0.9,
     demolish_refund: 0.5,
 
+    // Helden: Wiederbelebung (Gold = Grundkosten + Zuschlag je Stufe), Aufnahmeradius der Beute.
+    hero_revive_base: 150.0,
+    hero_revive_per_level: 60.0,
+    hero_altar_hp: 0.8,
+    hero_keep_hp: 0.5,
+    pickup_radius: 1.3,
+    // Beute eines vollständig vernichteten Lagers (Gegenstand, Gewicht); je Lager zwei Würfe.
+    camp_loot: [
+        ("potion_heal", 6.0), ("potion_mana", 4.0), ("potion_heal_greater", 4.0), ("potion_ember", 2.0), ("potion_ward", 2.0),
+        ("steel_sword", 3.0), ("chain_hauberk", 3.0), ("embersteel_blade", 3.0), ("skarn_greataxe", 2.0), ("ember_plate", 2.0),
+        ("pilgrim_staff", 2.0), ("oath_medal", 2.0), ("ember_ring", 3.0), ("wolf_signet", 2.0), ("flamekeeper_pendant", 2.0),
+        ("edran_blade", 1.0), ("grauwall_aegis", 1.0), ("ashglass_heart", 1.0), ("varkhan_signet", 1.0),
+    ],
+
+    // Gegner-KI des Gefechts je Schwierigkeitsgrad: Leicht, Normal, Schwer, Albtraum (siehe docs/design/rts_military.md).
+    ai_levels: [
+        (name: "Leicht", think: 3.0, workers: 5, income_mult: 0.8, army_mult: 0.7, first_attack: 600.0, attack_interval: 240.0,
+         tech_interval: 900.0, counter_skill: 0.15, retreat_ratio: 0.3, max_army: 16, harass: false, towers: 0),
+        (name: "Normal", think: 2.0, workers: 8, income_mult: 1.0, army_mult: 1.0, first_attack: 420.0, attack_interval: 160.0,
+         tech_interval: 420.0, counter_skill: 0.6, retreat_ratio: 0.5, max_army: 28, harass: false, towers: 1),
+        (name: "Schwer", think: 1.5, workers: 10, income_mult: 1.25, army_mult: 1.3, first_attack: 330.0, attack_interval: 120.0,
+         tech_interval: 300.0, counter_skill: 0.85, retreat_ratio: 0.65, max_army: 44, harass: false, towers: 3),
+        (name: "Albtraum", think: 1.0, workers: 12, income_mult: 1.6, army_mult: 1.6, first_attack: 260.0, attack_interval: 90.0,
+         tech_interval: 210.0, counter_skill: 1.0, retreat_ratio: 0.75, max_army: 60, harass: true, towers: 4),
+    ],
+
     // Stadtsimulation: Lager, Arbeitskräfte, Bevölkerung, Steuern, Markt.
     city: (
         logistics_radius: 14.0,   // Produktion braucht ein Lager (Bergfried/Lagerhaus) in dieser Reichweite

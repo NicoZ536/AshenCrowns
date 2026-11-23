@@ -2,25 +2,44 @@
 
 use crate::art::ArtLibrary;
 use crate::content::Content;
+use crate::editor::{EditorAction, EditorInit, EditorScene};
 use crate::hud::{self, HudCtx};
-use crate::menu::{MenuAction, MenuScene};
+use crate::menu::{MenuAction, MenuScene, Page};
 use crate::mission::{MissionScene, SceneAction};
+use crate::play_modes::{self, ChallengeReport};
 use crate::settings::UserSettings;
 use crate::ui_art::UiArt;
 use crate::worldmap::battle::{self, BattleLink};
 use crate::worldmap::battle_ui::{self, BattleCtx, BattleUiAction};
-use crate::worldmap::{store, WorldAction, WorldAuto, WorldMapScene};
+use crate::worldmap::{WorldAction, WorldAuto, WorldMapScene, store};
 use ashen_engine::ui::theme;
 use ashen_engine::{Engine, Game, WindowRequest};
-use ashen_sim::mission::MatchSettings;
+use ashen_sim::challenge::ChallengeDef;
+use ashen_sim::mission::{MatchSettings, MissionDef};
 use ashen_strategy::{BattleMode, StrategyOptions, StrategyWorld};
 use egui::RichText;
 
 pub enum Scene {
     Menu(Box<MenuScene>),
     Mission(Box<MissionScene>),
+    Editor(Box<EditorScene>),
     /// Weltkarte der Großen Kampagne.
     WorldMap(Box<WorldMapScene>),
+}
+
+/// Was beim Neustart erneut gestartet wird.
+#[derive(Clone)]
+struct LastRun {
+    mission: MissionDef,
+    settings: MatchSettings,
+    challenge: Option<(ChallengeDef, bool)>,
+}
+
+/// Laufende Herausforderung samt Auswertungsstand.
+struct ActiveChallenge {
+    def: ChallengeDef,
+    iron_man: bool,
+    reported: bool,
 }
 
 /// Optionen für automatisierte Läufe (Screenshots, Demos).
@@ -36,8 +55,30 @@ pub struct AutoRun {
     pub zoom_lines: Option<f32>,
     pub hide_ui: bool,
     pub demo_city: bool,
-    /// Fenster für Screenshots öffnen (`storage`, `city`, `build[:Rubrik]`, `select:<id>`; auf der Weltkarte `province`, `diplomacy` …).
+    /// Militär-Vorführung: `army`, `siege` oder `hero`.
+    pub demo: Option<String>,
+    /// Fenster für Screenshots öffnen (`storage`, `city`, `build[:Rubrik]`, `select:<id>`).
     pub ui_open: Vec<String>,
+    /// Szenario (ID) statt der Kampagnenmission starten.
+    pub scenario: Option<String>,
+    /// Herausforderung (ID) starten.
+    pub challenge: Option<String>,
+    /// Ergebnis erzwingen (`victory`, `defeat`), um die Auswertung zu zeigen.
+    pub outcome: Option<String>,
+    /// Karteneditor statt Mission öffnen.
+    pub editor: bool,
+    /// Werkzeug des Editors (`terrain`, `trees`, `building`, …).
+    pub editor_tool: Option<String>,
+    /// Dialog des Editors (`data`, `new`, `load`).
+    pub editor_dialog: Option<String>,
+    /// Registerkarte der Missionsdaten (`general`, `objectives`, `triggers`, `rules`, `areas`, `validation`).
+    pub editor_tab: Option<String>,
+    /// Editor mit einigen Pinselstrichen füllen (für Screenshots).
+    pub editor_demo: bool,
+    /// Menüseite öffnen (`scenarios`, `challenges`, `skirmish`).
+    pub menu_page: Option<String>,
+    /// Szenario in der Liste vorwählen (Index) beziehungsweise Herausforderung.
+    pub menu_select: usize,
     /// Weltkarte der Großen Kampagne (`--scene worldmap`).
     pub world: Option<WorldAuto>,
     pub world_seed: u64,
@@ -52,7 +93,11 @@ pub struct AshenGame {
     atlas_tex: Option<egui::TextureId>,
     ui_art: Option<UiArt>,
     scene: Option<Scene>,
-    last_mission: Option<(usize, MatchSettings)>,
+    last_run: Option<LastRun>,
+    challenge: Option<ActiveChallenge>,
+    report: Option<ChallengeReport>,
+    /// Editor, der während eines Testspiels im Hintergrund wartet.
+    parked_editor: Option<Box<EditorScene>>,
     /// Laufende Schlacht aus der Großen Kampagne (die Weltkartenszene ruht darin).
     battle: Option<BattleCtx>,
     battle_action: Option<BattleUiAction>,
@@ -69,7 +114,22 @@ enum Deferred {
 
 impl AshenGame {
     pub fn new(settings: UserSettings, auto: AutoRun) -> AshenGame {
-        AshenGame { settings, content: None, art: None, atlas_tex: None, ui_art: None, scene: None, last_mission: None, battle: None, battle_action: None, auto, fatal: None }
+        AshenGame {
+            settings,
+            content: None,
+            art: None,
+            atlas_tex: None,
+            ui_art: None,
+            scene: None,
+            last_run: None,
+            challenge: None,
+            report: None,
+            parked_editor: None,
+            battle: None,
+            battle_action: None,
+            auto,
+            fatal: None,
+        }
     }
 
     fn max_particles(engine: &Engine) -> usize {
@@ -79,40 +139,97 @@ impl AshenGame {
     fn start_mission(&mut self, engine: &mut Engine, index: usize, settings: MatchSettings) {
         let Some(content) = &self.content else { return };
         let mission = content.missions[index.min(content.missions.len() - 1)].clone();
-        match MissionScene::new(&content.data, mission, settings.clone(), Self::max_particles(engine)) {
-            Ok(s) => {
-                self.last_mission = Some((index, settings));
-                self.battle = None;
-                engine.audio.stop_music(1.5);
-                self.scene = Some(Scene::Mission(Box::new(s)));
-            }
-            Err(e) => self.fatal = Some(e),
+        if let Err(e) = self.start_def(engine, mission, settings, None) {
+            self.fatal = Some(e);
         }
+    }
+
+    /// Startet eine Mission aus Daten. Ein wartender Editor wird für das Testspiel geparkt.
+    fn start_def(
+        &mut self,
+        engine: &mut Engine,
+        mission: MissionDef,
+        settings: MatchSettings,
+        challenge: Option<(ChallengeDef, bool)>,
+    ) -> Result<(), String> {
+        let Some(content) = &self.content else {
+            return Err("Keine Spieldaten geladen.".into());
+        };
+        let mut scene = MissionScene::new(
+            &content.data,
+            mission.clone(),
+            settings.clone(),
+            Self::max_particles(engine),
+        )?;
+        scene.no_save = challenge.as_ref().is_some_and(|c| c.1);
+        self.last_run = Some(LastRun {
+            mission,
+            settings,
+            challenge: challenge.clone(),
+        });
+        self.challenge = challenge.map(|(def, iron_man)| ActiveChallenge {
+            def,
+            iron_man,
+            reported: false,
+        });
+        self.report = None;
+        self.battle = None;
+        engine.audio.stop_music(1.5);
+        if let Some(Scene::Editor(e)) = self.scene.replace(Scene::Mission(Box::new(scene))) {
+            self.parked_editor = Some(e);
+        }
+        Ok(())
     }
 
     fn open_menu(&mut self, engine: &mut Engine) {
         if let Some(c) = &self.content {
-            self.battle = None;
             engine.audio.stop_music(1.0);
             engine.audio.set_ambience(&[]);
             engine.renderer.clear_fog_of_war();
-            self.scene = Some(Scene::Menu(Box::new(MenuScene::new(c, Self::max_particles(engine)))));
+            self.parked_editor = None;
+            self.challenge = None;
+            self.report = None;
+            self.battle = None;
+            self.scene = Some(Scene::Menu(Box::new(MenuScene::new(
+                c,
+                Self::max_particles(engine),
+            ))));
         }
     }
 
     /// Echtzeit-Szene betreten; gehört der Spielstand zu einer Weltkarten-Schlacht, wird der Rückkehrpunkt wiederhergestellt.
     fn enter_mission(&mut self, engine: &mut Engine, mut scene: MissionScene) {
         self.battle = None;
+        self.challenge = None;
         if let Some(link) = scene.battle.clone() {
             match store::load_return_point(&link.return_point) {
                 Ok(sw) => {
                     let ws = WorldMapScene::new(sw);
-                    match ws.world.pending_battles().iter().find(|b| b.id == link.battle_id).cloned() {
+                    match ws
+                        .world
+                        .pending_battles()
+                        .iter()
+                        .find(|b| b.id == link.battle_id)
+                        .cloned()
+                    {
                         Some(req) => {
-                            let player_attacks = req.attackers.iter().any(|a| a.realm == Some(ws.me()));
-                            self.battle = Some(BattleCtx { world: Box::new(ws), req, scale: link.scale, player_attacks, report: None, enemy_timer: 0.0 });
+                            let player_attacks =
+                                req.attackers.iter().any(|a| a.realm == Some(ws.me()));
+                            self.battle = Some(BattleCtx {
+                                world: Box::new(ws),
+                                req,
+                                scale: link.scale,
+                                player_attacks,
+                                report: None,
+                                enemy_timer: 0.0,
+                            });
                         }
-                        None => scene.status = Some("Die zugehörige Schlacht der Weltkarte ist bereits entschieden.".into()),
+                        None => {
+                            scene.status = Some(
+                                "Die zugehörige Schlacht der Weltkarte ist bereits entschieden."
+                                    .into(),
+                            )
+                        }
                     }
                 }
                 Err(e) => scene.status = Some(format!("Rückkehrpunkt der Weltkarte fehlt: {e}")),
@@ -124,6 +241,7 @@ impl AshenGame {
 
     fn enter_worldmap(&mut self, engine: &mut Engine, world: StrategyWorld) {
         self.battle = None;
+        self.challenge = None;
         engine.audio.stop_music(1.0);
         engine.audio.set_ambience(&[]);
         engine.renderer.clear_fog_of_war();
@@ -137,7 +255,13 @@ impl AshenGame {
             self.scene = Some(Scene::WorldMap(ws));
             return;
         };
-        let Some(req) = ws.world.pending_battles().iter().find(|b| b.id == id).cloned() else {
+        let Some(req) = ws
+            .world
+            .pending_battles()
+            .iter()
+            .find(|b| b.id == id)
+            .cloned()
+        else {
             ws.last_result = Some((false, "Schlacht nicht gefunden".into()));
             self.scene = Some(Scene::WorldMap(ws));
             return;
@@ -150,7 +274,8 @@ impl AshenGame {
         let (world, scale, player_attacks, focus) = match built {
             Ok(b) => b,
             Err(e) => {
-                ws.last_result = Some((false, format!("Schlacht konnte nicht erzeugt werden: {e}")));
+                ws.last_result =
+                    Some((false, format!("Schlacht konnte nicht erzeugt werden: {e}")));
                 self.scene = Some(Scene::WorldMap(ws));
                 return;
             }
@@ -163,20 +288,36 @@ impl AshenGame {
                 String::new()
             }
         };
-        let link = BattleLink { return_point, battle_id: id, scale };
+        let link = BattleLink {
+            return_point,
+            battle_id: id,
+            scale,
+        };
         let mut m = MissionScene::from_world(&content.data, world, max_particles);
         m.battle = Some(link);
         m.center_on(focus);
         m.speed = 1.0;
-        m.save_name = format!("schlacht_{}", req.province_name.to_lowercase().replace(' ', "_"));
+        m.save_name = format!(
+            "schlacht_{}",
+            req.province_name.to_lowercase().replace(' ', "_")
+        );
         engine.audio.stop_music(1.0);
-        self.battle = Some(BattleCtx { world: ws, req, scale, player_attacks, report: None, enemy_timer: 0.0 });
+        self.battle = Some(BattleCtx {
+            world: ws,
+            req,
+            scale,
+            player_attacks,
+            report: None,
+            enemy_timer: 0.0,
+        });
         self.scene = Some(Scene::Mission(Box::new(m)));
     }
 
     /// Schlacht beenden und zur Weltkarte zurückkehren (Ergebnis anwenden oder automatisch auflösen).
     fn finish_battle(&mut self, engine: &mut Engine, auto_resolve: bool) {
-        let Some(mut bc) = self.battle.take() else { return };
+        let Some(mut bc) = self.battle.take() else {
+            return;
+        };
         let id = bc.req.id;
         let note = if auto_resolve {
             match bc.world.world.auto_resolve_pending(id) {
@@ -185,7 +326,13 @@ impl AshenGame {
             }
         } else if let Some(rep) = bc.report.take() {
             match bc.world.world.apply_battle_result(rep.result) {
-                Ok(()) => if rep.player_won { "Sieg! Das Ergebnis der Schlacht wurde übernommen.".to_string() } else { "Niederlage. Das Ergebnis der Schlacht wurde übernommen.".to_string() },
+                Ok(()) => {
+                    if rep.player_won {
+                        "Sieg! Das Ergebnis der Schlacht wurde übernommen.".to_string()
+                    } else {
+                        "Niederlage. Das Ergebnis der Schlacht wurde übernommen.".to_string()
+                    }
+                }
                 Err(e) => format!("Ergebnis konnte nicht übernommen werden: {e}"),
             }
         } else {
@@ -229,14 +376,27 @@ impl AshenGame {
             b.breaches = 1;
         }
         self.start_battle_scene(engine, ws, id);
-        let (Some(Scene::Mission(m)), Some(content), Some(bc)) = (&mut self.scene, &self.content, &mut self.battle) else { return };
+        let (Some(Scene::Mission(m)), Some(content), Some(bc)) =
+            (&mut self.scene, &self.content, &mut self.battle)
+        else {
+            return;
+        };
         let data = &content.data;
         // Spielerseite rückt vor, damit der Schlachtverlauf sichtbar ist.
         let target = glam::Vec2::new(53.0, 53.0);
-        let ids: Vec<_> = m.world.units.iter().filter(|(_, u)| u.owner == ashen_sim::entity::PLAYER).map(|(i, _)| i).collect();
+        let ids: Vec<_> = m
+            .world
+            .units
+            .iter()
+            .filter(|(_, u)| u.owner == ashen_sim::entity::PLAYER)
+            .map(|(i, _)| i)
+            .collect();
         for i in ids {
             if let Some(u) = m.world.units.get_mut(i) {
-                u.order = ashen_sim::entity::Order::Move { target, attack_move: true };
+                u.order = ashen_sim::entity::Order::Move {
+                    target,
+                    attack_move: true,
+                };
                 u.request_path(target);
             }
         }
@@ -274,9 +434,52 @@ impl AshenGame {
             self.start_world_auto(engine, &wa);
             return;
         }
-        let Some(ms) = self.auto.start_mission.clone() else { return };
-        self.start_mission(engine, 0, ms);
-        let (Some(Scene::Mission(m)), Some(content)) = (&mut self.scene, &self.content) else { return };
+        if self.auto.editor {
+            self.apply_auto_editor(engine);
+            return;
+        }
+        if let Some(page) = self.auto.menu_page.clone() {
+            self.apply_auto_page(&page);
+            return;
+        }
+        if let Some(id) = self.auto.scenario.clone() {
+            let Some(content) = &self.content else { return };
+            let Some(def) = content.find_base(&id) else {
+                self.fatal = Some(format!("Szenario '{id}' nicht gefunden."));
+                return;
+            };
+            let settings = MatchSettings {
+                mode: ashen_sim::mission::GameMode::Campaign,
+                seed: def.map_seed,
+                ..Default::default()
+            };
+            if let Err(e) = self.start_def(engine, def, settings, None) {
+                self.fatal = Some(e);
+                return;
+            }
+        } else if let Some(id) = self.auto.challenge.clone() {
+            let Some(content) = &self.content else { return };
+            let Some(def) = content.challenges.iter().find(|c| c.id == id).cloned() else {
+                self.fatal = Some(format!("Herausforderung '{id}' nicht gefunden."));
+                return;
+            };
+            let Some(base) = content.find_base(&def.base) else {
+                return;
+            };
+            let p = ashen_sim::challenge::prepare(&def, &base);
+            if let Err(e) = self.start_def(engine, p.mission, p.settings, Some((def, p.iron_man))) {
+                self.fatal = Some(e);
+                return;
+            }
+        } else {
+            let Some(ms) = self.auto.start_mission.clone() else {
+                return;
+            };
+            self.start_mission(engine, 0, ms);
+        }
+        let (Some(Scene::Mission(m)), Some(content)) = (&mut self.scene, &self.content) else {
+            return;
+        };
         let data = &content.data;
         if let Some(w) = self.auto.weather {
             m.world.env.weather = w;
@@ -286,6 +489,17 @@ impl AshenGame {
         if self.auto.demo_city {
             crate::showcase::city(&mut m.world, data);
         }
+        match self.auto.demo.as_deref() {
+            Some("army") => crate::showcase::army(&mut m.world, data),
+            Some("siege") => crate::showcase::siege(&mut m.world, data),
+            Some("hero") => crate::showcase::hero(&mut m.world, data),
+            // Kriegsnebel aus (z. B. um die Basis der Gefechts-KI zu zeigen).
+            Some("reveal") => {
+                m.world.fog.disabled = true;
+                m.fog_enabled = false;
+            }
+            _ => {}
+        }
         let steps = (self.auto.sim_seconds * data.rules.tick_rate as f32) as u32;
         if self.auto.battle {
             // Eine Welle direkt vor die Basis setzen, damit Kampfgeschehen sichtbar ist.
@@ -294,9 +508,17 @@ impl AshenGame {
             for i in 0..8 {
                 let kind = if i == 7 { brute } else { thrall };
                 if let Some(k) = kind {
-                    let id = m.world.spawn_unit(data, k, ashen_sim::entity::ENEMY, glam::Vec2::new(24.0 + (i % 3) as f32, 47.0 + (i / 3) as f32));
+                    let id = m.world.spawn_unit(
+                        data,
+                        k,
+                        ashen_sim::entity::ENEMY,
+                        glam::Vec2::new(24.0 + (i % 3) as f32, 47.0 + (i / 3) as f32),
+                    );
                     if let Some(u) = m.world.units.get_mut(id) {
-                        u.order = ashen_sim::entity::Order::Move { target: glam::Vec2::new(15.0, 55.0), attack_move: true };
+                        u.order = ashen_sim::entity::Order::Move {
+                            target: glam::Vec2::new(15.0, 55.0),
+                            attack_move: true,
+                        };
                         u.request_path(glam::Vec2::new(15.0, 55.0));
                     }
                 }
@@ -328,18 +550,91 @@ impl AshenGame {
                 "city" => m.show_city = true,
                 "build" => {
                     m.mode = crate::mission::CommandMode::BuildMenu;
-                    if let Some(c) = ashen_sim::data::BuildCategory::ALL.iter().find(|c| format!("{c:?}").eq_ignore_ascii_case(arg)) {
+                    if let Some(c) = ashen_sim::data::BuildCategory::ALL
+                        .iter()
+                        .find(|c| format!("{c:?}").eq_ignore_ascii_case(arg))
+                    {
                         m.build_cat = *c;
                     }
                 }
+                "hero" => m.show_hero = true,
                 "select" => {
-                    m.selected_building = m.world.buildings.iter().find(|(_, b)| b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg).map(|(id, _)| id);
+                    m.selected_building = m
+                        .world
+                        .buildings
+                        .iter()
+                        .find(|(_, b)| {
+                            b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg
+                        })
+                        .map(|(id, _)| id);
                 }
                 _ => {}
             }
         }
+        match self.auto.outcome.as_deref() {
+            Some("victory") => m.world.mission.outcome = Some(ashen_sim::mission::Outcome::Victory),
+            Some("defeat") => m.world.mission.outcome = Some(ashen_sim::mission::Outcome::Defeat),
+            _ => {}
+        }
         if self.auto.select_army {
-            m.selection = m.world.units.iter().filter(|(_, u)| u.owner == ashen_sim::entity::PLAYER && data.unit(u.kind).class != ashen_sim::data::UnitClass::Worker).map(|(id, _)| id).collect();
+            m.selection = m
+                .world
+                .units
+                .iter()
+                .filter(|(_, u)| {
+                    u.owner == ashen_sim::entity::PLAYER
+                        && data.unit(u.kind).class != ashen_sim::data::UnitClass::Worker
+                })
+                .map(|(id, _)| id)
+                .collect();
+        }
+    }
+}
+
+impl AshenGame {
+    fn apply_auto_page(&mut self, page: &str) {
+        let (Some(Scene::Menu(m)), Some(content)) = (&mut self.scene, &self.content) else {
+            return;
+        };
+        m.modes.refresh_scenarios(content);
+        m.modes.refresh_challenges();
+        m.modes.scen_sel = self.auto.menu_select;
+        m.modes.chal_sel = self.auto.menu_select;
+        m.page = match page {
+            "scenarios" => Page::Scenarios,
+            "challenges" => Page::Challenges,
+            _ => Page::Skirmish,
+        };
+        if page == "scenarios-user" {
+            m.page = Page::Scenarios;
+        }
+    }
+
+    fn apply_auto_editor(&mut self, engine: &mut Engine) {
+        let Some(content) = &self.content else { return };
+        let init = EditorInit::New {
+            width: 72,
+            height: 72,
+            seed: 897,
+            preset: ashen_sim::genmap::GenPreset::Aschmark,
+            blank: false,
+        };
+        match EditorScene::new(content, init, Self::max_particles(engine)) {
+            Ok(mut e) => {
+                e.apply_auto(
+                    &content.data,
+                    &self.auto.editor_tool,
+                    &self.auto.editor_dialog,
+                    &self.auto.editor_tab,
+                    self.auto.editor_demo,
+                );
+                if let Some((x, y)) = self.auto.camera_tile {
+                    e.center_on(glam::Vec2::new(x, y));
+                    e.forced_cursor = Some(glam::Vec2::new(x + 1.5, y + 1.5));
+                }
+                self.scene = Some(Scene::Editor(Box::new(e)));
+            }
+            Err(err) => self.fatal = Some(err),
         }
     }
 }
@@ -377,12 +672,22 @@ impl Game for AshenGame {
         }
         if let Some(path) = std::env::var_os("ASHEN_DUMP_ATLAS") {
             match art.atlas.save_png(std::path::Path::new(&path)) {
-                Ok(()) => log::info!("Atlas gespeichert: {}", std::path::Path::new(&path).display()),
+                Ok(()) => log::info!(
+                    "Atlas gespeichert: {}",
+                    std::path::Path::new(&path).display()
+                ),
                 Err(e) => log::warn!("Atlas-Export fehlgeschlagen: {e}"),
             }
         }
-        engine.renderer.set_atlas(&engine.gpu, art.atlas.size, &art.atlas.albedo, &art.atlas.normal);
-        let tex = engine.ui.register_texture(&engine.gpu, engine.renderer.atlas_view());
+        engine.renderer.set_atlas(
+            &engine.gpu,
+            art.atlas.size,
+            &art.atlas.albedo,
+            &art.atlas.normal,
+        );
+        let tex = engine
+            .ui
+            .register_texture(&engine.gpu, engine.renderer.atlas_view());
         self.atlas_tex = Some(tex);
         self.art = Some(art);
         self.open_menu(engine);
@@ -394,26 +699,56 @@ impl Game for AshenGame {
         let mut deferred = Deferred::None;
         let mut battle_ui = self.battle_action.take();
         {
-            let (Some(content), Some(art)) = (&mut self.content, &self.art) else { return };
+            let (Some(content), Some(art)) = (&mut self.content, &self.art) else {
+                return;
+            };
             match &mut self.scene {
                 Some(Scene::Menu(m)) => {
                     m.update(content, dt);
-                    engine.audio.set_music_intensity(ashen_engine::audio::Intensity::Menu);
+                    engine
+                        .audio
+                        .set_music_intensity(ashen_engine::audio::Intensity::Menu);
                     let action = std::mem::replace(&mut m.action, MenuAction::None);
                     match action {
                         MenuAction::None => {}
-                        MenuAction::Start { mission, settings } => self.start_mission(engine, mission, settings),
-                        MenuAction::Load(p) => match MissionScene::load(&p, &content.data, Self::max_particles(engine)) {
-                            Ok(s) => self.enter_mission(engine, s),
-                            Err(e) => m.error = Some(e),
-                        },
+                        MenuAction::Start { mission, settings } => {
+                            self.start_mission(engine, mission, settings)
+                        }
+                        MenuAction::StartDef {
+                            mission,
+                            settings,
+                            challenge,
+                        } => {
+                            if let Err(e) =
+                                self.start_def(engine, *mission, settings, challenge.map(|c| *c))
+                                && let Some(Scene::Menu(m)) = &mut self.scene
+                            {
+                                m.error = Some(e);
+                            }
+                        }
+                        MenuAction::OpenEditor(init) => {
+                            match EditorScene::new(content, init, Self::max_particles(engine)) {
+                                Ok(e) => self.scene = Some(Scene::Editor(Box::new(e))),
+                                Err(e) => m.error = Some(e),
+                            }
+                        }
+                        MenuAction::Load(p) => {
+                            match MissionScene::load(&p, &content.data, Self::max_particles(engine))
+                            {
+                                Ok(s) => self.enter_mission(engine, s),
+                                Err(e) => m.error = Some(e),
+                            }
+                        }
                         MenuAction::NewCampaign(opts) => {
                             let world = StrategyWorld::new(*opts);
                             self.enter_worldmap(engine, world);
                         }
                         MenuAction::LoadStrategy(p) => match store::load(&p) {
                             Ok(w) => self.enter_worldmap(engine, w),
-                            Err(e) => m.error = Some(format!("Spielstand konnte nicht geladen werden: {e}")),
+                            Err(e) => {
+                                m.error =
+                                    Some(format!("Spielstand konnte nicht geladen werden: {e}"))
+                            }
                         },
                         MenuAction::ReloadContent => {
                             if let Some(assets) = engine.assets_dir.clone() {
@@ -421,7 +756,8 @@ impl Game for AshenGame {
                                     Ok(c) => {
                                         *content = c;
                                         let page = m.page;
-                                        let mut nm = MenuScene::new(content, Self::max_particles(engine));
+                                        let mut nm =
+                                            MenuScene::new(content, Self::max_particles(engine));
                                         nm.page = page;
                                         self.scene = Some(Scene::Menu(Box::new(nm)));
                                     }
@@ -434,6 +770,13 @@ impl Game for AshenGame {
                 }
                 Some(Scene::Mission(s)) => {
                     s.update(engine, &content.data, art, &self.settings, dt);
+                    if let Some(ch) = &mut self.challenge
+                        && !ch.reported
+                        && s.world.mission.outcome.is_some()
+                    {
+                        ch.reported = true;
+                        self.report = play_modes::finish_challenge(&ch.def, &s.world);
+                    }
                     // Weltkarten-Schlacht: Gegnerführung, Siegbedingung und Ergebnis.
                     if let Some(bc) = &mut self.battle {
                         if bc.report.is_none() {
@@ -442,11 +785,19 @@ impl Game for AshenGame {
                                 bc.enemy_timer = 0.0;
                                 battle::drive_enemy(&mut s.world, &content.data, bc.player_attacks);
                             }
-                            if let Some(won) = battle::battle_outcome(&s.world, &bc.req, bc.player_attacks) {
+                            if let Some(won) =
+                                battle::battle_outcome(&s.world, &bc.req, bc.player_attacks)
+                            {
                                 let me = bc.world.me();
                                 let permadeath = bc.world.world.options.rules.permadeath;
-                                bc.report = Some(battle::build_result(&s.world, &bc.req, bc.scale, me, won, permadeath));
-                                engine.audio.play_sting(if won { "victory_sting" } else { "defeat_sting" });
+                                bc.report = Some(battle::build_result(
+                                    &s.world, &bc.req, bc.scale, me, won, permadeath,
+                                ));
+                                engine.audio.play_sting(if won {
+                                    "victory_sting"
+                                } else {
+                                    "defeat_sting"
+                                });
                             }
                         }
                         if bc.report.is_some() {
@@ -457,7 +808,9 @@ impl Game for AshenGame {
                             Some(BattleUiAction::Retreat) if bc.report.is_none() => {
                                 let me = bc.world.me();
                                 let permadeath = bc.world.world.options.rules.permadeath;
-                                bc.report = Some(battle::build_result(&s.world, &bc.req, bc.scale, me, false, permadeath));
+                                bc.report = Some(battle::build_result(
+                                    &s.world, &bc.req, bc.scale, me, false, permadeath,
+                                ));
                             }
                             Some(BattleUiAction::AutoResolve) if bc.report.is_none() => {
                                 self.finish_battle(engine, true);
@@ -473,21 +826,70 @@ impl Game for AshenGame {
                     let action = std::mem::replace(&mut s.action, SceneAction::None);
                     match action {
                         SceneAction::None => {}
-                        SceneAction::MainMenu => deferred = Deferred::MainMenu,
+                        SceneAction::MainMenu if self.battle.is_some() => {
+                            deferred = Deferred::MainMenu
+                        }
+                        SceneAction::MainMenu => {
+                            if let Some(mut e) = self.parked_editor.take() {
+                                engine.audio.stop_music(1.0);
+                                engine.audio.set_ambience(&[]);
+                                engine.renderer.clear_fog_of_war();
+                                e.notify("Zurück vom Testspiel.", false);
+                                self.challenge = None;
+                                self.report = None;
+                                self.scene = Some(Scene::Editor(e));
+                            } else {
+                                self.open_menu(engine);
+                            }
+                        }
                         SceneAction::Restart => {
                             if let Some(mut bc) = self.battle.take() {
                                 bc.report = None;
                                 let id = bc.req.id;
                                 self.start_battle_scene(engine, bc.world, id);
-                            } else if let Some((i, ms)) = self.last_mission.clone() {
-                                self.start_mission(engine, i, ms);
+                            } else if let Some(r) = self.last_run.clone()
+                                && let Err(e) =
+                                    self.start_def(engine, r.mission, r.settings, r.challenge)
+                            {
+                                self.fatal = Some(e);
                             }
                         }
-                        SceneAction::Load(p) => match MissionScene::load(&p, &content.data, Self::max_particles(engine)) {
-                            Ok(ns) => self.enter_mission(engine, ns),
-                            Err(e) => s.status = Some(format!("Laden fehlgeschlagen: {e}")),
-                        },
+                        SceneAction::Load(_)
+                            if self.challenge.as_ref().is_some_and(|c| c.iron_man) =>
+                        {
+                            s.status = Some("Eiserner Mann: Laden ist gesperrt.".into());
+                        }
+                        SceneAction::Load(p) => {
+                            match MissionScene::load(&p, &content.data, Self::max_particles(engine))
+                            {
+                                Ok(ns) => self.enter_mission(engine, ns),
+                                Err(e) => s.status = Some(format!("Laden fehlgeschlagen: {e}")),
+                            }
+                        }
                         SceneAction::Quit => engine.request(WindowRequest::Exit),
+                    }
+                }
+                Some(Scene::Editor(e)) => {
+                    e.update(engine, content, art, &self.settings, dt);
+                    engine
+                        .audio
+                        .set_music_intensity(ashen_engine::audio::Intensity::Menu);
+                    match std::mem::replace(&mut e.action, EditorAction::None) {
+                        EditorAction::None => {}
+                        EditorAction::Exit => self.open_menu(engine),
+                        EditorAction::Test(def) => {
+                            let settings = MatchSettings {
+                                mode: ashen_sim::mission::GameMode::Campaign,
+                                difficulty: self.settings.difficulty,
+                                seed: def.map_seed,
+                                hero_permadeath: false,
+                            };
+                            if let Err(err) = self.start_def(engine, *def, settings, None)
+                                && let Some(Scene::Editor(e)) = &mut self.scene
+                            {
+                                e.notify(format!("Testspiel nicht möglich: {err}"), true);
+                            }
+                        }
                     }
                 }
                 Some(Scene::WorldMap(ws)) => {
@@ -536,12 +938,25 @@ impl Game for AshenGame {
         if self.auto.hide_ui {
             return;
         }
-        let (Some(content), Some(art), Some(tex), Some(ui_art)) = (&mut self.content, &self.art, self.atlas_tex, &self.ui_art) else { return };
+        let (Some(content), Some(art), Some(tex), Some(ui_art)) =
+            (&mut self.content, &self.art, self.atlas_tex, &self.ui_art)
+        else {
+            return;
+        };
         match &mut self.scene {
             Some(Scene::Menu(m)) => m.ui(ui, engine, content, &mut self.settings, ui_art),
             Some(Scene::Mission(s)) => {
-                let mut cx = HudCtx { data: &content.data, art, tex, ui: ui_art, settings: &mut self.settings };
+                let mut cx = HudCtx {
+                    data: &content.data,
+                    art,
+                    tex,
+                    ui: ui_art,
+                    settings: &mut self.settings,
+                };
                 hud::draw(s, ui, engine, &mut cx);
+                if let Some(r) = &self.report {
+                    draw_report(ui.ctx(), ui_art, r);
+                }
                 if let Some(bc) = &mut self.battle {
                     let a = battle_ui::draw(&ui.ctx().clone(), engine, ui_art, bc, s);
                     if !matches!(a, BattleUiAction::None) {
@@ -550,6 +965,7 @@ impl Game for AshenGame {
                 }
             }
             Some(Scene::WorldMap(ws)) => ws.ui(ui, engine, art, tex, ui_art, &mut self.settings),
+            Some(Scene::Editor(e)) => e.ui(ui, engine, content, ui_art, art, tex),
             None => {}
         }
         if self.settings.show_fps {
@@ -572,10 +988,13 @@ impl Game for AshenGame {
     }
 
     fn render(&mut self, engine: &mut Engine) {
-        let (Some(content), Some(art)) = (&self.content, &self.art) else { return };
+        let (Some(content), Some(art)) = (&self.content, &self.art) else {
+            return;
+        };
         match &mut self.scene {
             Some(Scene::Menu(m)) => m.render(engine, content, art),
             Some(Scene::Mission(s)) => s.render(engine, &content.data, art),
+            Some(Scene::Editor(e)) => e.render(engine, content, art),
             Some(Scene::WorldMap(_)) => {
                 // Die Karte wird vollständig in der Oberflächenebene gezeichnet.
                 engine.fow_enabled = false;
@@ -587,4 +1006,101 @@ impl Game for AshenGame {
     fn on_exit(&mut self, _engine: &mut Engine) {
         self.settings.save();
     }
+}
+
+/// Ergebnisfenster einer Herausforderung (links neben dem Siegbildschirm).
+fn draw_report(ctx: &egui::Context, art: &UiArt, r: &ChallengeReport) {
+    use crate::ui_art::PanelKind;
+    egui::Area::new(egui::Id::unique("challenge_report"))
+        .order(egui::Order::Foreground)
+        .anchor(egui::Align2::LEFT_CENTER, egui::vec2(18.0, 0.0))
+        .show(ctx, |ui| {
+            art.panel(
+                ui,
+                PanelKind::Ornate,
+                egui::Margin::symmetric(34, 32),
+                |ui| {
+                    ui.set_width(270.0);
+                    ui.label(
+                        RichText::new("Herausforderung")
+                            .font(theme::caps_font(13.0))
+                            .color(theme::PARCHMENT_DIM),
+                    );
+                    ui.label(
+                        RichText::new(&r.name)
+                            .font(theme::heading_font(18.0))
+                            .color(theme::GOLD),
+                    );
+                    ui.add_space(4.0);
+                    let res = &r.result;
+                    let verdict = if res.victory {
+                        "Bestanden"
+                    } else {
+                        "Gescheitert"
+                    };
+                    ui.label(
+                        RichText::new(verdict)
+                            .font(theme::heading_font(16.0))
+                            .color(if res.victory {
+                                egui::Color32::from_rgb(150, 220, 130)
+                            } else {
+                                theme::EMBER
+                            }),
+                    );
+                    ui.label(
+                        RichText::new(format!(
+                            "{} Punkte · Zeit {}",
+                            res.score,
+                            ashen_sim::challenge::format_time(res.time)
+                        ))
+                        .font(theme::body_bold_font(16.0))
+                        .color(theme::PARCHMENT),
+                    );
+                    ui.label(
+                        RichText::new(format!(
+                            "Gefallene Feinde {} · Verluste {} · Nächte {} · Wellen {}",
+                            res.kills, res.units_lost, res.nights, res.waves
+                        ))
+                        .font(theme::italic_font(13.5))
+                        .color(theme::PARCHMENT_DIM),
+                    );
+                    ui.add_space(6.0);
+                    match r.rank {
+                        Some(0) if r.new_best => {
+                            ui.label(
+                                RichText::new("Neuer Bestwert!")
+                                    .font(theme::heading_font(16.0))
+                                    .color(theme::EMBER_HOT),
+                            );
+                        }
+                        Some(i) => {
+                            ui.label(
+                                RichText::new(format!("Platz {} der Bestenliste", i + 1))
+                                    .font(theme::body_bold_font(15.0))
+                                    .color(theme::GOLD),
+                            );
+                        }
+                        None => {
+                            ui.label(
+                                RichText::new("Nicht in der Bestenliste")
+                                    .font(theme::italic_font(14.0))
+                                    .color(theme::PARCHMENT_DIM),
+                            );
+                        }
+                    }
+                    ui.add_space(4.0);
+                    for (i, e) in r.top.iter().enumerate() {
+                        ui.label(
+                            RichText::new(format!(
+                                "{}. {}",
+                                i + 1,
+                                play_modes::entry_text(r.rank_by, e)
+                            ))
+                            .font(theme::body_font(14.0))
+                            .color(theme::PARCHMENT),
+                        );
+                    }
+                },
+            );
+        });
 }

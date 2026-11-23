@@ -5,6 +5,7 @@
 //! alles Sichtbare/Hörbare als [`events::SimEvent`].
 
 pub mod arena;
+pub mod challenge;
 pub mod chronicle;
 pub mod command;
 pub mod data;
@@ -13,10 +14,13 @@ pub mod env;
 pub mod events;
 pub mod fog;
 pub mod map;
+pub mod genmap;
 pub mod mapgen;
 pub mod mission;
 pub mod path;
+pub mod rpg;
 pub mod save;
+pub mod scenario;
 pub mod spatial;
 pub mod systems;
 pub mod world;

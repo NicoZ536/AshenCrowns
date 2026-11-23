@@ -1,0 +1,12 @@
+// Herausforderung: schnellster Sieg.
+(
+    id: "ch_shrine_breaker",
+    name: "Schreinbrecher (Speedrun)",
+    description: "Reichlich Vorräte, schwächere Wellen – aber die Uhr läuft. Zerstört den Hohlschrein von Vael Dorn so schnell wie möglich.",
+    base: "m01_last_settlement",
+    mode: Campaign,
+    difficulty: Normal,
+    modifiers: [StartResources(1.6), WaveStrength(0.8), TimeLimit(1500.0)],
+    goal_text: "Zerstört den Hohlschrein in unter 25 Minuten. Die Bestzeit zählt.",
+    scoring: (victory_bonus: 1500.0, per_kill: 2.0, per_unit_lost: -5.0, per_building: 1.0, par_time: 1500.0, time_bonus_per_sec: 2.0, rank_by: Time),
+)
