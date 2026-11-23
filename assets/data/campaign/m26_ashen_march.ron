@@ -259,6 +259,7 @@
   year: Some(923),
   unit_cap: None,
   start_time: Some(0.7),
+  free_economy: false,
   kind: "Halten oder Evakuieren",
   victory_text: "Das Morgenlicht fand Brennhollow noch aufrecht. Die Legion wich, aber ihr Marsch war nicht zu Ende.",
   defeat_text: "Brennhollow fiel in Asche, und die Legion zog weiter nach Süden.",

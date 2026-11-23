@@ -203,6 +203,7 @@
   year: Some(905),
   unit_cap: None,
   start_time: Some(0.8),
+  free_economy: false,
   kind: "Verteidigung mit Verbündeten",
   victory_text: "Als der Morgen über Hrimgard anbrach, lagen die Hohlen in Reihen vor den Mauern – und die Ahnen sangen, so sagte man, bis ins Tal.",
   defeat_text: "Hrimgard fiel in einer Nacht aus Schnee und Asche. Die Pässe Skarnheims standen offen.",

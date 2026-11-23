@@ -71,6 +71,7 @@
   year: Some(900),
   unit_cap: None,
   start_time: Some(0.45),
+  free_economy: true,
   kind: "Wettlauf",
   victory_text: "Die drei Mörder lagen im Staub der Arena. Der König lebte – und fragte sich laut, wer ihm das Leben verdankte.",
   defeat_text: "Der letzte Mörder erreichte das Tor der Flucht. In Kaldris läuteten die Glocken für einen toten König.",

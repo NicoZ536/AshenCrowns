@@ -74,6 +74,7 @@
   year: Some(898),
   unit_cap: None,
   start_time: Some(0.3),
+  free_economy: true,
   kind: "Heldenmission ohne Basis",
   victory_text: "Die Straße nach Valemark lag frei. Fuhrleute fassten Mut, und in den Schenken der Aschmark sprach man wieder von Salz.",
   defeat_text: "Die Graue Straße behielt ihre Wegelagerer – und Isolde Raventhorn ihr Grab am Straßenrand.",

@@ -85,6 +85,7 @@
   year: Some(910),
   unit_cap: None,
   start_time: Some(0.46),
+  free_economy: true,
   kind: "Eroberung",
   victory_text: "Die drei Posten fielen. Auf den Aschglasfeldern wehte nun das Banner der Aschmark – und in den Fugen der erschlagenen Legionäre glomm es noch lange rot.",
   defeat_text: "Die Legion hielt ihre Posten. Das Aschglas blieb in ihren Händen, und die Wüste behielt die Besiegten.",

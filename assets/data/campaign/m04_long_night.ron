@@ -225,6 +225,7 @@
   year: Some(899),
   unit_cap: None,
   start_time: Some(0.72),
+  free_economy: false,
   kind: "Überleben bis zum Morgengrauen",
   victory_text: "Das erste Licht traf die Zinnen von Brennhollow. Die Mauern standen, die Fahne wehte – und auf der Südstraße näherte sich ein Reiter in Schwarz.",
   defeat_text: "Die Mauern fielen, die Glocke verstummte. Brennhollow ging in der Langen Nacht unter.",

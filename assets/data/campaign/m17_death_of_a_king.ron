@@ -76,6 +76,7 @@
   year: Some(916),
   unit_cap: None,
   start_time: Some(0.88),
+  free_economy: true,
   kind: "Ermittlung (Heldenmission)",
   victory_text: "Die Glocken von Kaldris läuteten für einen toten König – und der Hof hörte zum ersten Mal zu, was die Wächterin der Aschmark zu sagen hatte.",
   defeat_text: "Die Spur verlor sich im Dunkel der Gassen. Kaldris hat den Mörder des Königs nie gefunden.",

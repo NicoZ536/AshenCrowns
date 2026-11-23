@@ -80,6 +80,7 @@
   year: Some(917),
   unit_cap: None,
   start_time: Some(0.44),
+  free_economy: true,
   kind: "Feldschlacht",
   victory_text: "Das Heer des Feindes zerbrach an der Furt. Als der Rauch sich lichtete, wehten auf beiden Ufern Fahnen – aber nur noch eine sprach für den Thron.",
   defeat_text: "Die Furt von Kaldris färbte sich rot, und der Erbfolgekrieg ging weiter – ohne die Wächterin.",

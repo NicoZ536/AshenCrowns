@@ -86,6 +86,7 @@
   year: Some(923),
   unit_cap: None,
   start_time: Some(0.97),
+  free_economy: true,
   kind: "Endschlacht",
   victory_text: "Der Hohle König fiel, und mit ihm schwiegen die Glocken Solmeres. Was auch immer von der Welt blieb: Es blieb, weil jemand die Wahl getroffen hatte.",
   defeat_text: "Der Thronsaal von Solmere blieb in den Händen der Toten. Das Hohle Tief sprach – und die Welt hörte zu.",

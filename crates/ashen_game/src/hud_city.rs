@@ -126,7 +126,7 @@ pub fn draw(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx
 fn shortcut_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &HudCtx) {
     let art = cx.ui;
     let p = &scene.world.players[PLAYER as usize];
-    let (res, work, used, hap, unrest) = (p.residents, p.workforce, p.workers_used, p.avg_happiness, p.unrest);
+    let (res, work, used, hap, unrest) = (p.residents.max(0.0), p.workforce, p.workers_used, p.avg_happiness, p.unrest);
     egui::Area::new(Id::unique("city_shortcuts")).anchor(Align2::LEFT_TOP, Vec2::new(12.0, TOP_H + 14.0)).show(ui.ctx(), |ui| {
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 6.0;

@@ -135,6 +135,7 @@
   year: Some(902),
   unit_cap: None,
   start_time: Some(0.4),
+  free_economy: true,
   kind: "Belagerung",
   victory_text: "Das Tor von Kargsted fiel, und mit ihm die Hoffnung des Raubritters. In den Schmieden von Brennhollow brannte noch in derselben Nacht das erste Feuer mit eigenem Eisen.",
   defeat_text: "Der Sturm auf Kargsted scheiterte. Die Rammen brannten, und der Raubritter lachte über die Mauern.",

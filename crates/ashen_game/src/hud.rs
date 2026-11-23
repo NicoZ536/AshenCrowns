@@ -207,6 +207,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
     let food_rate: f32 = scene.world.buildings.iter().filter(|(_, b)| b.owner == PLAYER && b.complete).map(|(_, b)| cx.data.building(b.kind).food_per_sec).sum::<f32>()
         - scene.world.units.iter().filter(|(_, u)| u.owner == PLAYER).map(|(_, u)| cx.data.unit(u.kind).upkeep).sum::<f32>()
         - resident_food(&scene.world, cx.data);
+    let food_rate = if food_rate.abs() < 0.05 { 0.0 } else { food_rate };
     egui::Panel::top("topbar").exact_size(TOP_H).frame(Frame::NONE).show(ui, |ui| {
         let rect = ui.max_rect();
         let painter = ui.painter().clone();

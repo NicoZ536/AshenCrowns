@@ -79,6 +79,7 @@
   year: Some(906),
   unit_cap: None,
   start_time: Some(0.34),
+  free_economy: true,
   kind: "Heldenmission ohne Basis",
   victory_text: "Der Hain war still, und aus den grauen Wurzeln stieg ein Hauch, der nach Frühling roch. Wie teuer er bezahlt war, wusste nur, wer dabei gewesen war.",
   defeat_text: "Der Dornwald behielt seine Wanderer – und die Wurzelmutter ihren grauen Traum.",

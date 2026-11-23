@@ -77,6 +77,7 @@
   year: Some(897),
   unit_cap: None,
   start_time: Some(0.34),
+  free_economy: true,
   kind: "Eskorte",
   victory_text: "Die Fackeln von Brennhollow nahmen die Erschöpften auf. Harrowmere aber blieb im Moor zurück – ein Name mehr in der Liste der Verlorenen.",
   defeat_text: "Das Moor schloss sich über dem Zug der Flüchtlinge. Niemand aus Harrowmere erreichte Brennhollow.",

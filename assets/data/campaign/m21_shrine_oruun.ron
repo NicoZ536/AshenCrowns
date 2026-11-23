@@ -78,6 +78,7 @@
   year: Some(920),
   unit_cap: None,
   start_time: Some(0.55),
+  free_economy: true,
   kind: "Stollen und Bosskampf",
   victory_text: "Gharun zerfiel zu Staub, und der Eid fand Frieden. Im Schreinsaal sprach Oruun nicht – aber der Berg hörte auf, zu zittern.",
   defeat_text: "Gharun hielt seinen verdrehten Eid. Die Halle blieb stumm, der Berg zitterte weiter.",

@@ -15,6 +15,10 @@ pub(crate) fn all(data: &GameData, s: &mut Script) -> Vec<MissionDef> {
     let mut v = vec![m02(data, s), m03(data, s), m04(data, s), m06(data, s), m07(data, s)];
     v.extend(crate::campaign_missions_b::all(data, s));
     v.extend(crate::campaign_missions_c::all(data, s));
+    // Missionen ohne Hauptgebäude und Gehöft des Spielers haben keine Wirtschaft: kein Nahrungsunterhalt, kein Bevölkerungslimit.
+    for m in &mut v {
+        m.free_economy = !m.placements.iter().any(|p| p.owner == 0 && matches!(p.id.as_str(), "keep" | "farmstead"));
+    }
     v
 }
 

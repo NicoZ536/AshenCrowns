@@ -75,6 +75,7 @@
   year: Some(922),
   unit_cap: None,
   start_time: Some(0.36),
+  free_economy: true,
   kind: "Erkundung in den Außenbezirken von Solmere",
   victory_text: "Der Schrein Ithrens glomm einen Atemzug lang auf. Dann war es wieder still – aber im Stein stand, was geschehen war.",
   defeat_text: "Solmere behielt seine Geheimnisse und Isolde Raventhorn ihr Grab in den Ruinen.",

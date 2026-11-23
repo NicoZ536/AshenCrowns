@@ -206,6 +206,7 @@
   year: Some(923),
   unit_cap: None,
   start_time: Some(0.5),
+  free_economy: true,
   kind: "Belagerung",
   victory_text: "Das Tor von Solmere brach, und der Bund der Letzten Flamme ergoss sich in die Stadt der Toten. Hinter den Mauern wartete der Thron.",
   defeat_text: "Das Tor von Solmere hielt. Der Bund zerbrach vor den Mauern der Hauptstadt.",

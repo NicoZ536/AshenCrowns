@@ -74,6 +74,7 @@
   year: Some(912),
   unit_cap: None,
   start_time: Some(0.62),
+  free_economy: true,
   kind: "Bossjagd an der Küste",
   victory_text: "Isarre Mol sank mit dem Rest ihrer Flut. Über dem Schwarzen Riff stieg das Meer langsam, aber freiwillig wieder an die Küste.",
   defeat_text: "Das Schwarze Riff behielt seine Herrin. Die Flut stieg über die Strände, und die Küste verstummte.",

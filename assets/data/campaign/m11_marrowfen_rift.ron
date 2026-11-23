@@ -85,6 +85,7 @@
   year: Some(907),
   unit_cap: None,
   start_time: Some(0.52),
+  free_economy: true,
   kind: "Rettung",
   victory_text: "Der Damm von Marrowfen trug die Geretteten ins Trockene. Hinter ihnen schloss oder öffnete sich das Moor, je nachdem, wen man fragte.",
   defeat_text: "Marrowfen versank im Schleier. Wer den Damm nicht erreichte, kehrte nicht wieder.",
