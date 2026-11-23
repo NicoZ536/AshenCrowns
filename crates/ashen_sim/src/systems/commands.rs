@@ -193,6 +193,17 @@ pub fn apply(world: &mut SimWorld, data: &GameData, pc: PlayerCommand) {
                 world.error(player, "Ausbildungswarteschlange voll.");
                 return;
             }
+            if player == PLAYER
+                && let Some(cap) = world.mission_def.unit_cap
+                && !matches!(udef.class, UnitClass::Worker | UnitClass::Hero)
+            {
+                let alive = world.units.iter().filter(|(_, u)| u.owner == player && !matches!(data.unit(u.kind).class, UnitClass::Worker | UnitClass::Hero)).count();
+                let queued_mil = world.buildings.iter().filter(|(_, x)| x.owner == player).flat_map(|(_, x)| x.queue.iter()).filter(|q| !matches!(data.unit(q.unit).class, UnitClass::Worker | UnitClass::Hero)).count();
+                if (alive + queued_mil) as u32 >= cap {
+                    world.error(player, format!("Truppenobergrenze erreicht ({cap})."));
+                    return;
+                }
+            }
             let ps = &world.players[player as usize];
             let queued: u32 = world.buildings.iter().filter(|(_, x)| x.owner == player).flat_map(|(_, x)| x.queue.iter()).map(|q| data.unit(q.unit).pop).sum();
             if ps.pop + queued + udef.pop > ps.pop_cap.min(data.rules.max_population) {

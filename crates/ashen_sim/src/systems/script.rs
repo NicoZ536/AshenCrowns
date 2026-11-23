@@ -41,6 +41,13 @@ fn check(world: &SimWorld, data: &GameData, c: &Condition) -> bool {
         Condition::EraReached(e) => world.players[PLAYER as usize].era >= *e,
         Condition::Residents(n) => world.players[PLAYER as usize].residents >= *n as f32,
         Condition::Stock { item, amount } => data.item(item).is_some_and(|it| world.players[PLAYER as usize].stock(it) >= *amount),
+        Condition::UnitsInArea { area, count } => world
+            .mission_def
+            .area(area)
+            .is_some_and(|a| world.units.iter().filter(|(_, u)| u.owner == PLAYER && u.hp > 0.0 && a.contains(u.pos)).count() as u32 >= *count),
+        Condition::EnemyUnitsAtMost(n) => world.units.iter().filter(|(_, u)| u.owner == ENEMY && u.hp > 0.0).count() as u32 <= *n,
+        Condition::TagDamaged(t) => world.building_with_tag(t).and_then(|b| world.buildings.get(b)).is_some_and(|b| b.hp < b.max_hp * 0.999),
+        Condition::Not(c) => !check(world, data, c),
         Condition::All(v) => v.iter().all(|c| check(world, data, c)),
         Condition::Any(v) => v.iter().any(|c| check(world, data, c)),
     }
@@ -84,6 +91,26 @@ fn run(world: &mut SimWorld, data: &GameData, a: &Action) {
             world.events.push(SimEvent::WeatherChanged { weather: *w });
         }
         Action::Chronicle(t) => world.record(ChronicleKind::Omen, t.clone()),
+        Action::SpawnUnits { unit, owner, area, count, attack } => {
+            let (Some(ut), Some(a)) = (data.unit_id(unit), world.mission_def.area(area).cloned()) else { return };
+            let home = world
+                .building_with_tag(&world.mission_def.defeat_tag.clone())
+                .and_then(|b| world.buildings.get(b))
+                .map(|b| b.center())
+                .or_else(|| world.buildings.iter().find(|(_, b)| b.owner == PLAYER).map(|(_, b)| b.center()))
+                .or_else(|| world.units.iter().find(|(_, u)| u.owner == PLAYER).map(|(_, u)| u.pos));
+            for i in 0..*count {
+                let ang = i as f32 * 2.399;
+                let off = glam::Vec2::new(ang.cos(), ang.sin()) * (0.6 * (i as f32).sqrt());
+                let id = world.spawn_unit(data, ut, *owner, a.center() + off);
+                if *attack
+                    && let (Some(h), Some(u)) = (home, world.units.get_mut(id))
+                {
+                    u.order = Order::Move { target: h, attack_move: true };
+                    u.request_path(h);
+                }
+            }
+        }
     }
 }
 
@@ -95,11 +122,13 @@ fn finish(world: &mut SimWorld, o: Outcome) {
     match o {
         Outcome::Victory => {
             world.events.push(SimEvent::Victory);
-            world.record(ChronicleKind::Victory, "Brennhollow hielt stand. Die Aschmark erinnert sich an diesen Sieg.");
+            let text = if world.mission_def.map.is_some() { "Der Einsatz endete im Sieg. Die Aschmark erinnert sich daran." } else { "Brennhollow hielt stand. Die Aschmark erinnert sich an diesen Sieg." };
+            world.record(ChronicleKind::Victory, text);
         }
         Outcome::Defeat => {
             world.events.push(SimEvent::Defeat);
-            world.record(ChronicleKind::Defeat, "Brennhollow fiel in Asche und Schweigen.");
+            let text = if world.mission_def.map.is_some() { "Der Einsatz endete in Asche und Schweigen." } else { "Brennhollow fiel in Asche und Schweigen." };
+            world.record(ChronicleKind::Defeat, text);
         }
     }
 }
@@ -152,7 +181,7 @@ pub fn tick(world: &mut SimWorld, data: &GameData) {
 
     // Eingebaute Regeln.
     let defeat_tag = world.mission_def.defeat_tag.clone();
-    let keep_alive = world.building_with_tag(&defeat_tag).is_some();
+    let keep_alive = defeat_tag.is_empty() || world.building_with_tag(&defeat_tag).is_some();
     let anything_left = world.buildings.iter().any(|(_, b)| b.owner == PLAYER) || world.units.iter().any(|(_, u)| u.owner == PLAYER);
     if mode != GameMode::Sandbox && (!keep_alive || !anything_left) {
         finish(world, Outcome::Defeat);

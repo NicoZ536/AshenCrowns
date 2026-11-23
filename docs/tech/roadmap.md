@@ -36,7 +36,7 @@ Verwandte Dokumente: [`architecture.md`](architecture.md), [`modules.md`](module
 | 11 | Religion, Monster, neutrale Fraktionen und Bosse | teilweise (1 Fraktion, 1 Boss) | Die Hohlen, Fahler Vogt |
 | 12 | Dynamische Ereignisse und Chroniksystem | teilweise (Chronik-Kern) | Chronik mit 8 Kategorien, Wetter-/Tageszeitereignisse, Missions-Auslöser |
 | 13 | Kampagne und Endgame | teilweise (Mission 1) | Mission 1 mit Zielen, Dialogen und Skript |
-| 14 | Editor, Modding-Werkzeuge und Mehrspieler | teilweise (Datenmods, CLI) | Daten-Mods, `validate-data`, `audio-scan`, Headless-Screenshots, Shader-Hot-Reload |
+| 14 | Editor, Modding-Werkzeuge und Mehrspieler | teilweise (Datenmods, CLI, Karteneditor, Szenarien) | Daten-Mods, `validate-data`, `audio-scan`, Headless-Screenshots, Shader-Hot-Reload, Karteneditor mit Trigger-Editor und Testspiel, Szenarien/Herausforderungen als Daten (siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md)) |
 | 15 | Balancing, Polishing, Performance | teilweise (Grundlagen) | 3 Grafikprofile, Budgets, Autosave; Plattformen außer macOS ungetestet |
 
 Abhängigkeiten zwischen den Phasen (vereinfacht): 1 → 2 → {4, 5, 6, 7} → 3 → {8, 9, 10} → {11, 12} → 13 → 14 → 15.
@@ -465,7 +465,7 @@ Befehle als Daten sind dafür vorbereitet).
 
 *Offen:*
 
-* Karteneditor (Menüeintrag „Karteneditor“ ist deaktiviert, verweist auf diese Phase) und Szenario-/Missionseditor.
+* ~~Karteneditor und Szenario-/Missionseditor~~ – umgesetzt (Vertical-Slice-Umfang), siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md); offen bleiben Weltkarten-Szenarien, Höhenstufen und das Teilen über Export.
 * Mod-Manager (Ladereihenfolge-Oberfläche, Abhängigkeiten, Konfliktanzeige; aktuell nur Ein-/Ausschalten, Reihenfolge
   per `load_order`).
 * Mehrspieler: Lockstep-Netzcode auf Basis von `PlayerCommand`, Lobby, Desync-Erkennung mit `state_hash`.

@@ -1,0 +1,12 @@
+// Herausforderung auf dem Szenario „Der Fall von Grauwall“.
+(
+    id: "ch_grauwall_stand",
+    name: "Der letzte Wall",
+    description: "Grauwall in der Nacht des Falls, auf Schwer: kleine Besatzung, und der Bergfried darf keinen Schaden nehmen.",
+    base: "sc_fall_of_grauwall",
+    mode: Campaign,
+    difficulty: Hard,
+    modifiers: [UnitCap(14), KeepIntact],
+    goal_text: "Haltet Grauwall bis zum Morgen, ohne dass der Bergfried beschädigt wird.",
+    scoring: (victory_bonus: 3000.0, per_kill: 5.0, per_unit_lost: -15.0, per_building: 0.0, rank_by: Score),
+)

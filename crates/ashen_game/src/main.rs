@@ -7,11 +7,13 @@ mod art;
 mod art3d;
 mod audio_bridge;
 mod content;
+mod editor;
 mod game;
 mod hud;
 mod hud_city;
 mod menu;
 mod mission;
+mod play_modes;
 mod settings;
 mod showcase;
 mod ui_art;
@@ -32,7 +34,7 @@ fn usage() -> &'static str {
   --screenshot <datei.png>        Ohne Fenster rendern und Bild speichern
   --size <BxH>                    Bildgröße für Screenshots (Standard 1600x900)
   --frames <n>                    Gerenderte Frames vor dem Screenshot (Standard 90)
-  --scene <menu|mission|skirmish|sandbox>
+  --scene <menu|mission|skirmish|sandbox|editor|scenarios|challenges|skirmish-setup>
   --sim-seconds <s>               Simulation vor dem Screenshot vorlaufen lassen
   --time <0..1>                   Tageszeit (0.25 Morgen, 0.5 Mittag, 0.76 Dämmerung, 0.9 Nacht)
   --weather <clear|fog|rain|storm|ash|overcast>
@@ -42,7 +44,15 @@ fn usage() -> &'static str {
   --zoom <zeilen>                 Sichtbare Bildzeilen (220–480)
   --ui <liste>                    Fenster öffnen: storage, city, build[:rubrik], select:<gebäude-id>
   --demo-city                     Sandbox mit Vorführstadt (Produktion, Wohnhäuser, Mauern) füllen
-  --no-ui                         Oberfläche ausblenden"
+  --no-ui                         Oberfläche ausblenden
+  --scenario <id>                 Szenario statt Mission 1 starten (z. B. sc_fall_of_grauwall)
+  --challenge <id>                Herausforderung starten (z. B. ch_shrine_breaker)
+  --outcome <victory|defeat>      Ergebnis erzwingen (zeigt Wertung und Bestenliste)
+  --editor-tool <name>            Editor: Werkzeug (select, terrain, fill, trees, decor, nodes, building, unit, start, area, erase)
+  --editor-dialog <name>          Editor: Dialog öffnen (data, new, load)
+  --editor-tab <name>             Editor: Reiter der Missionsdaten (general, objectives, triggers, rules, areas, validation)
+  --editor-demo                   Editor: einige Pinselstriche und Objekte setzen (für Screenshots)
+  --select <n>                    Szenarien-/Herausforderungsliste: Eintrag vorwählen"
 }
 
 fn main() {
@@ -85,12 +95,19 @@ fn main() {
                 }
             }
             "--scene" => {
-                let mode = match next(&mut i).as_str() {
+                let scene = next(&mut i);
+                let mode = match scene.as_str() {
                     "mission" => Some(GameMode::Campaign),
                     "skirmish" => Some(GameMode::Skirmish),
                     "sandbox" => Some(GameMode::Sandbox),
                     _ => None,
                 };
+                match scene.as_str() {
+                    "editor" => auto.editor = true,
+                    "scenarios" | "challenges" => auto.menu_page = Some(scene.clone()),
+                    "skirmish-setup" => auto.menu_page = Some("skirmish".into()),
+                    _ => {}
+                }
                 auto.start_mission = mode.map(|m| MatchSettings { mode: m, ..Default::default() });
             }
             "--sim-seconds" => auto.sim_seconds = next(&mut i).parse().unwrap_or(0.0),
@@ -117,6 +134,20 @@ fn main() {
             "--demo-city" => auto.demo_city = true,
             "--ui" => auto.ui_open = next(&mut i).split(',').map(str::to_string).collect(),
             "--no-ui" => auto.hide_ui = true,
+            "--scenario" => {
+                auto.scenario = Some(next(&mut i));
+                auto.start_mission = Some(MatchSettings::default());
+            }
+            "--challenge" => {
+                auto.challenge = Some(next(&mut i));
+                auto.start_mission = Some(MatchSettings::default());
+            }
+            "--outcome" => auto.outcome = Some(next(&mut i)),
+            "--editor-tool" => auto.editor_tool = Some(next(&mut i)),
+            "--editor-dialog" => auto.editor_dialog = Some(next(&mut i)),
+            "--editor-tab" => auto.editor_tab = Some(next(&mut i)),
+            "--editor-demo" => auto.editor_demo = true,
+            "--select" => auto.menu_select = next(&mut i).parse().unwrap_or(0),
             other => {
                 eprintln!("Unbekannte Option {other}\n{}", usage());
                 std::process::exit(2);

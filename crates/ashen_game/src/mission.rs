@@ -69,6 +69,8 @@ pub struct MissionScene {
     pub menu_page: crate::hud::MenuPage,
     pub show_objectives: bool,
     pub autosave_timer: f32,
+    /// Eiserner Mann: Speichern und Laden sind gesperrt.
+    pub no_save: bool,
     pub last_click: (f32, Option<UnitId>),
     pub hovered: Option<UnitId>,
     pub minimap: Option<egui::TextureHandle>,
@@ -101,7 +103,9 @@ impl MissionScene {
             .building_with_tag(&world.mission_def.defeat_tag)
             .and_then(|b| world.buildings.get(b))
             .map(|b| b.center() + Vec2::new(3.0, -1.0))
-            .unwrap_or(Vec2::new(36.0, 36.0));
+            .or_else(|| world.mission_def.starts.iter().find(|s| s.owner == PLAYER).map(|s| Vec2::new(s.x, s.y)))
+            .or_else(|| world.units.iter().find(|(_, u)| u.owner == PLAYER).map(|(_, u)| u.pos))
+            .unwrap_or(Vec2::new(world.map.width as f32 * 0.5, world.map.height as f32 * 0.5));
         let fog = !world.fog.disabled;
         MissionScene {
             step: FixedStep::new(data.rules.tick_rate),
@@ -120,6 +124,7 @@ impl MissionScene {
             menu_page: crate::hud::MenuPage::Main,
             show_objectives: true,
             autosave_timer: 0.0,
+            no_save: false,
             last_click: (-10.0, None),
             hovered: None,
             minimap: None,
@@ -157,6 +162,10 @@ impl MissionScene {
     }
 
     pub fn save(&mut self, data: &GameData, slot: &str) {
+        if self.no_save {
+            self.status = Some("Eiserner Mann: Speichern ist gesperrt.".into());
+            return;
+        }
         match ashen_sim::save::save_to(&saves_dir(), slot, &self.world, data, self.client_state()) {
             Ok(p) => self.status = Some(format!("Gespeichert: {}", p.file_name().map(|s| s.to_string_lossy()).unwrap_or_default())),
             Err(e) => self.status = Some(format!("Speichern fehlgeschlagen: {e}")),
@@ -327,7 +336,7 @@ impl MissionScene {
         engine.audio.set_music_intensity(audio_bridge::music_intensity(&self.world, data));
         audio_bridge::ambience(&mut engine.audio, &self.world, world_to_tile(self.camera.center));
         // Autosave.
-        if settings.autosave_minutes > 0.0 && self.world.mission.outcome.is_none() && !paused {
+        if settings.autosave_minutes > 0.0 && !self.no_save && self.world.mission.outcome.is_none() && !paused {
             self.autosave_timer += dt;
             if self.autosave_timer > settings.autosave_minutes * 60.0 {
                 self.autosave_timer = 0.0;

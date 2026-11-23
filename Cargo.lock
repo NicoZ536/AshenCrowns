@@ -283,6 +283,7 @@ dependencies = [
  "ashen_engine",
  "ashen_sim",
  "env_logger",
+ "glam",
  "log",
 ]
 

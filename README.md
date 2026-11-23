@@ -15,14 +15,15 @@ A18 Pro mit 5-Kern-GPU und 8 GB Unified Memory. Windows und Linux sind architekt
 | Simulation | Deterministisch (20 Hz), A*-Wegfindung mit Glättung und Budget, Formationen, Separation, Kampf mit Rüstungs-/Schadenstypen, Moral & Flucht, Projektile, Türme, Helden mit Stufen und Fähigkeiten, Wirtschaft (Sammeln, Bauen, Ausbilden, Nahrung als Unterhalt, Hungersnot), Tag/Nacht, Wetter, Gegner-KI (Wellen, Wachen, Boss), datengetriebene Missionen, Chronik |
 | Inhalte | 30 eigene + 2 gegnerische Gebäude, 5 Einheitentypen, Heldin Isolde Raventhorn (3 Fähigkeiten), 3 Gegnertypen + Boss „Der Fahle Vogt“, Mission „Die letzte Siedlung“ |
 | Wirtschaft & Städtebau | Echtzeit-Wirtschaft: 17 Waren (RON), Lager mit Kapazität, 26 neue Produktions-, Wohn- und Stadtgebäude mit Ketten (Holz→Bretter, Erz→Eisen→Waffen/Rüstung, Korn→Mehl→Brot, Wolle→Tuch→Kleidung, Bier, Kräuter), Arbeiter aus Wohnhäusern, Wohnstufen Hütte→Haus→Bürgerhaus mit Bedürfnissen, Zufriedenheit und einstellbaren Steuern, Markt mit dynamischen Preisen, Ausbau Bergfried→Burg, Mauern (als Linie gezogen), Tore und Mauertürme mit Torrechten in der Wegfindung, Belagerung von Mauern und Toren – siehe [Wirtschaft](docs/design/rts_economy.md) |
-| Modi | Kampagne, Gefecht, Überleben, Sandbox |
+| Modi | Kampagne, Gefecht (mit Einrichtung: generierte Karten in sechs Vorlagen oder Szenario, Schwierigkeit, Startressourcen, Siegbedingung), Überleben, Sandbox, **Szenarien** (4 historische: Grauwall 893, Vael Dorn 894, Kaltherd 896, Grauwall 898; eigene und Mod-Szenarien), **Herausforderungen** (8 Regelvarianten mit Wertung und lokaler Bestenliste) – siehe [Editor und Szenarien](docs/design/editor_and_scenarios.md) |
 | UI | Dark-Fantasy-Oberfläche aus prozedural erzeugter Pixel-Art (geschmiedete Eisenrahmen mit Goldfiligran und Edelsteinen, Leder, Stein, Pergament), Schriften Cinzel/Cinzel Decorative/Alegreya (OFL); Hauptmenü mit Glut-Titel und lebendem Hintergrund, Neues Spiel, Laden, Einstellungen, Mods, Credits; HUD mit Ressourcenplakette, Rauten-Minimap, Porträt im Prunkrahmen, Befehlskarte mit Abklingzeiten, Zielrolle, Nachrichten, Pausenmenü, Chronik, Sieg/Niederlage |
 | Speichern | Versioniert, CRC32, atomar, Backup, rotierende Autosaves |
 | Audio | Manifest, Asset-Scanner, automatische Zuordnung, Validierung, Duplikat-/Fehlbericht, Event-Registry, Musik-Intensitäten mit Crossfade, Ambience-Schichten, Dialogsequenzen mit Ducking |
-| Modding | Datenmods (Einheiten, Gebäude, Fähigkeiten, Missionen) mit Beispiel-Mod |
+| Modding | Datenmods (Einheiten, Gebäude, Fähigkeiten, Missionen, Szenarien, Herausforderungen) mit Beispiel-Mod |
+| Karteneditor | Eigene Szene: Gelände-, Wald-, Deko-, Quellen-, Gebäude- und Einheitenwerkzeuge, Startpositionen, Bereiche, Trigger-Editor (alle Bedingungen und Aktionen), Ziele, Regeln, Rückgängig/Wiederholen, Prüfung, Testspiel, Speichern als spielbares RON-Szenario |
 
 Geplant (siehe [Roadmap](docs/tech/roadmap.md)): Grand Campaign/Weltkarte, Dynastien, Diplomatie,
-Religion, Magie-Schulen, Karteneditor u. a.
+Religion, Magie-Schulen u. a.
 
 ## Starten
 
@@ -61,7 +62,7 @@ cargo run --release -- --screenshot shot.png --scene mission --time 0.88 --battl
 ## Dokumentation
 
 - [Kanon (verbindliche Namen/IDs)](docs/canon.md)
-- [Game Design Document](docs/design/game_design_document.md) · [Kampagne](docs/design/campaign.md) · [Echtzeit-Wirtschaft](docs/design/rts_economy.md)
+- [Game Design Document](docs/design/game_design_document.md) · [Kampagne](docs/design/campaign.md) · [Echtzeit-Wirtschaft](docs/design/rts_economy.md) · [Editor, Szenarien, Herausforderungen](docs/design/editor_and_scenarios.md)
 - [Weltbibel](docs/lore/world_bible.md) · [Glossar](docs/lore/glossary.md)
 - [Architektur](docs/tech/architecture.md) · [Module](docs/tech/modules.md) · [Datenmodell](docs/tech/data_model.md) · [Projektstruktur](docs/tech/project_structure.md) · [Roadmap](docs/tech/roadmap.md) · [Modding](docs/tech/modding.md)
 - [Grafik & Shader](docs/art/graphics_and_shaders.md) · [3D→Pixel-Pipeline](docs/art/3d_pixel_pipeline.md) · [Asset-Produktionsplan](docs/art/asset_production_plan.md)

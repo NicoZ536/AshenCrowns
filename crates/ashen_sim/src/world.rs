@@ -151,7 +151,10 @@ pub struct SimWorld {
 impl SimWorld {
     /// Erzeugt eine neue Partie aus Missionsdefinition und Startoptionen.
     pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings) -> Result<SimWorld, String> {
-        let map = crate::mapgen::generate(mission.map_seed, settings.seed);
+        let map = match &mission.map {
+            Some(md) => md.to_tilemap()?,
+            None => crate::mapgen::generate(mission.map_seed, settings.seed),
+        };
         let (w, h) = (map.width, map.height);
         let mut world = SimWorld {
             tick: 0,
@@ -182,13 +185,22 @@ impl SimWorld {
             mission_def: mission,
         };
         world.apply_mode_rules(data);
-        crate::mapgen::populate_resources(&mut world, data);
+        if world.mission_def.map.is_some() {
+            crate::genmap::populate_from_data(&mut world, data);
+        } else {
+            crate::mapgen::populate_resources(&mut world, data);
+        }
         world.apply_placements(data)?;
         systems::economy::recompute_population(&mut world, data);
         systems::city::recompute_capacity(&mut world, data);
         systems::fog::update(&mut world, data);
         let name = world.mission_def.name.clone();
-        world.record(ChronicleKind::Founding, format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})"));
+        let founding = if world.mission_def.map.is_some() {
+            format!("Die Wächterin der Aschmark übernimmt den Befehl. ({name})")
+        } else {
+            format!("Die Wächterin der Aschmark übernimmt den Befehl über Brennhollow. ({name})")
+        };
+        world.record(ChronicleKind::Founding, founding);
         Ok(world)
     }
 
@@ -197,6 +209,10 @@ impl SimWorld {
             if let Some(it) = data.item(&id) {
                 *self.players[PLAYER as usize].stock_mut(it) += n;
             }
+        }
+        if let Some(t) = self.mission_def.start_time {
+            self.env.time_of_day = t.rem_euclid(1.0);
+            self.env.was_night = self.env.is_night();
         }
         let waves = self.mission_def.waves.clone();
         self.director.enabled = waves.enabled;
