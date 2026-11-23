@@ -51,19 +51,12 @@ pub fn build(atlas: &mut AtlasBuilder) {
     for f in 0..4 {
         let mut c = Canvas::new(8, 12);
         for y in 0..12 {
-            let w =
-                ((12 - y) as f32 / 12.0 * 3.5 + ((y + f * 3) as f32 * 1.3).sin() * 0.8).max(0.0);
+            let w = ((12 - y) as f32 / 12.0 * 3.5 + ((y + f * 3) as f32 * 1.3).sin() * 0.8).max(0.0);
             for x in 0..8 {
                 let dx = (x as f32 + 0.5 - 4.0 - ((y + f * 2) as f32 * 0.9).sin() * 0.8).abs();
                 if dx < w {
                     let t = 1.0 - y as f32 / 12.0;
-                    let col = if dx < w * 0.4 && t > 0.3 {
-                        pal::EMBER_HOT
-                    } else if t > 0.25 {
-                        pal::EMBER
-                    } else {
-                        pal::FIRE_DEEP
-                    };
+                    let col = if dx < w * 0.4 && t > 0.3 { pal::EMBER_HOT } else if t > 0.25 { pal::EMBER } else { pal::FIRE_DEEP };
                     c.px(x, y, col);
                     c.glow(x, y, 1.0);
                 }
@@ -96,11 +89,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
     }
     atlas.add("proj_soul", soul, Vec2::new(3.5, 3.5));
     // Schatten (weich) in drei Größen.
-    for (name, rx, ry) in [
-        ("shadow_s", 6.0, 2.5),
-        ("shadow_m", 9.0, 3.5),
-        ("shadow_l", 14.0, 5.0),
-    ] {
+    for (name, rx, ry) in [("shadow_s", 6.0, 2.5), ("shadow_m", 9.0, 3.5), ("shadow_l", 14.0, 5.0)] {
         let w = (rx * 2.0) as i32 + 2;
         let h = (ry * 2.0) as i32 + 2;
         let mut c = Canvas::new(w, h);
@@ -110,8 +99,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
                 let dy = (y as f32 + 0.5 - h as f32 * 0.5) / ry;
                 let d = dx * dx + dy * dy;
                 if d <= 1.0 {
-                    c.color[(y * w + x) as usize] =
-                        Rgba(0, 0, 0, ((1.0 - d).powf(0.7) * 255.0) as u8);
+                    c.color[(y * w + x) as usize] = Rgba(0, 0, 0, ((1.0 - d).powf(0.7) * 255.0) as u8);
                 }
             }
         }
@@ -119,11 +107,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
         atlas.add(name, c, a);
     }
     // Auswahlring (Ellipse) in drei Größen.
-    for (name, rx, ry) in [
-        ("ring_s", 7.0, 3.5),
-        ("ring_m", 10.0, 5.0),
-        ("ring_l", 16.0, 8.0),
-    ] {
+    for (name, rx, ry) in [("ring_s", 7.0, 3.5), ("ring_m", 10.0, 5.0), ("ring_l", 16.0, 8.0)] {
         let w = (rx * 2.0) as i32 + 3;
         let h = (ry * 2.0) as i32 + 3;
         let mut c = Canvas::new(w, h);
@@ -149,18 +133,11 @@ pub fn build(atlas: &mut AtlasBuilder) {
     }
     atlas.add("rally_flag", flag, Vec2::new(1.5, 13.0));
     // Zielmarkierung für Befehle.
-    for (name, col) in [
-        ("marker_move", Rgba::hex(0x8fe08f)),
-        ("marker_attack", Rgba::hex(0xe05040)),
-    ] {
+    for (name, col) in [("marker_move", Rgba::hex(0x8fe08f)), ("marker_attack", Rgba::hex(0xe05040))] {
         let mut c = Canvas::new(11, 7);
         for i in 0..40 {
             let a = i as f32 / 40.0 * std::f32::consts::TAU;
-            c.px(
-                (5.5 + a.cos() * 4.5) as i32,
-                (3.5 + a.sin() * 2.5) as i32,
-                col,
-            );
+            c.px((5.5 + a.cos() * 4.5) as i32, (3.5 + a.sin() * 2.5) as i32, col);
         }
         c.px(5, 3, col);
         atlas.add(name, c, Vec2::new(5.5, 3.5));

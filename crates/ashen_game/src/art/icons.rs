@@ -44,15 +44,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
     for y in 5..12 {
         for x in 3..13 {
             let top = y < 7;
-            c.px(
-                x - (y - 5) / 3,
-                y,
-                pal::stone().at(if top {
-                    0.8
-                } else {
-                    0.5 - (x - 3) as f32 * 0.02
-                }),
-            );
+            c.px(x - (y - 5) / 3, y, pal::stone().at(if top { 0.8 } else { 0.5 - (x - 3) as f32 * 0.02 }));
         }
     }
     add("stone", c);
@@ -100,26 +92,14 @@ pub fn build(atlas: &mut AtlasBuilder) {
     for y in 3..13 {
         for x in 5..11 {
             let edge = x == 5 || x == 10 || y == 3;
-            c.px(
-                x,
-                y,
-                if edge {
-                    pal::steel().at(0.9)
-                } else {
-                    pal::crimson().at(0.55)
-                },
-            );
+            c.px(x, y, if edge { pal::steel().at(0.9) } else { pal::crimson().at(0.55) });
         }
     }
     add("hold", c);
     let mut c = icon();
     for i in 0..10 {
         let a = i as f32 / 10.0 * std::f32::consts::TAU;
-        c.px(
-            (8.0 + a.cos() * 5.0) as i32,
-            (8.0 + a.sin() * 5.0) as i32,
-            Rgba::hex(0xd0c080),
-        );
+        c.px((8.0 + a.cos() * 5.0) as i32, (8.0 + a.sin() * 5.0) as i32, Rgba::hex(0xd0c080));
     }
     c.line(12, 4, 13, 8, Rgba::hex(0xd0c080));
     add("patrol", c);
@@ -180,11 +160,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
     for y in 3..14 {
         let w = if y < 10 { 5 } else { 5 - (y - 9) };
         for x in 8 - w..8 + w {
-            c.px(
-                x,
-                y,
-                Rgba::hex(0x6a6870).lerp(pal::EMBER, ((y - 3) as f32 / 11.0) * 0.5),
-            );
+            c.px(x, y, Rgba::hex(0x6a6870).lerp(pal::EMBER, ((y - 3) as f32 / 11.0) * 0.5));
         }
     }
     c.px(8, 7, pal::EMBER_HOT);

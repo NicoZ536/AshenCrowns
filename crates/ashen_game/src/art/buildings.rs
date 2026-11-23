@@ -23,10 +23,7 @@ struct Iso {
 
 impl Iso {
     fn canvas(&self) -> Canvas {
-        Canvas::new(
-            ((self.w + self.h) * 16.0) as i32,
-            ((self.w + self.h) * 8.0 + self.oy) as i32 + 1,
-        )
+        Canvas::new(((self.w + self.h) * 16.0) as i32, ((self.w + self.h) * 8.0 + self.oy) as i32 + 1)
     }
 
     fn anchor(&self) -> Vec2 {
@@ -34,10 +31,7 @@ impl Iso {
     }
 
     fn p(&self, tx: f32, ty: f32, z: f32) -> Vec2 {
-        Vec2::new(
-            16.0 * (tx - ty) + 16.0 * self.h,
-            8.0 * (tx + ty) + self.oy - z,
-        )
+        Vec2::new(16.0 * (tx - ty) + 16.0 * self.h, 8.0 * (tx + ty) + self.oy - z)
     }
 }
 
@@ -50,12 +44,7 @@ fn scaffold(w: f32, h: f32) -> (Canvas, Vec2) {
     let iso = Iso { w, h, oy: 36.0 };
     let mut c = iso.canvas();
     let wood = pal::wood();
-    let corners = [
-        (0.15, 0.15),
-        (w - 0.15, 0.15),
-        (0.15, h - 0.15),
-        (w - 0.15, h - 0.15),
-    ];
+    let corners = [(0.15, 0.15), (w - 0.15, 0.15), (0.15, h - 0.15), (w - 0.15, h - 0.15)];
     for &(tx, ty) in &corners {
         let p = iso.p(tx, ty, 0.0);
         for dy in 0..32 {
@@ -63,26 +52,11 @@ fn scaffold(w: f32, h: f32) -> (Canvas, Vec2) {
         }
     }
     for z in [10.0, 22.0] {
-        for (a, b) in [
-            ((0.15, h - 0.15), (w - 0.15, h - 0.15)),
-            ((w - 0.15, h - 0.15), (w - 0.15, 0.15)),
-        ] {
+        for (a, b) in [((0.15, h - 0.15), (w - 0.15, h - 0.15)), ((w - 0.15, h - 0.15), (w - 0.15, 0.15))] {
             let pa = iso.p(a.0, a.1, z);
             let pb = iso.p(b.0, b.1, z);
-            c.line(
-                pa.x as i32,
-                pa.y as i32,
-                pb.x as i32,
-                pb.y as i32,
-                wood.at(0.65),
-            );
-            c.line(
-                pa.x as i32,
-                pa.y as i32 + 1,
-                pb.x as i32,
-                pb.y as i32 + 1,
-                wood.at(0.35),
-            );
+            c.line(pa.x as i32, pa.y as i32, pb.x as i32, pb.y as i32, wood.at(0.65));
+            c.line(pa.x as i32, pa.y as i32 + 1, pb.x as i32, pb.y as i32 + 1, wood.at(0.35));
         }
     }
     // Diagonalstrebe.

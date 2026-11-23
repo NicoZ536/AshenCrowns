@@ -1,15 +1,15 @@
 //! Heldenleiste und Heldenfenster (Taste H oder Klick auf das Porträt): Werte, Talentbaum,
 //! Ausrüstung (Waffe, Rüstung, Amulett, zwei Ringe), Inventar und Tränke.
 
-use crate::hud::{HudCtx, TOP_H, shadow_text, sprite};
+use crate::hud::{shadow_text, sprite, HudCtx, TOP_H};
 use crate::mission::MissionScene;
 use crate::ui_art::{self, BtnState, PanelKind};
 use crate::ui_common;
-use ashen_engine::Engine;
 use ashen_engine::ui::theme;
+use ashen_engine::Engine;
 use ashen_sim::data::{GameData, UnitClass};
-use ashen_sim::entity::{PLAYER, Unit, UnitId};
-use ashen_sim::rpg::{EQUIP_LABELS, EQUIP_SLOTS, INVENTORY_SIZE, ItemId, ItemSlot, StatMods};
+use ashen_sim::entity::{Unit, UnitId, PLAYER};
+use ashen_sim::rpg::{ItemId, ItemSlot, StatMods, EQUIP_LABELS, EQUIP_SLOTS, INVENTORY_SIZE};
 use ashen_sim::systems::heroes;
 use egui::{Align2, Color32, Id, Pos2, Rect, RichText, Sense, Stroke, StrokeKind, Ui, Vec2};
 
@@ -29,11 +29,7 @@ fn rarity_color(data: &GameData, id: ItemId) -> Color32 {
 
 /// Zahl mit deutschem Dezimalkomma, ohne überflüssige Nachkommastellen.
 fn num(v: f32) -> String {
-    if (v - v.round()).abs() < 0.005 {
-        format!("{v:.0}")
-    } else {
-        format!("{v:.1}").replace('.', ",")
-    }
+    if (v - v.round()).abs() < 0.005 { format!("{v:.0}") } else { format!("{v:.1}").replace('.', ",") }
 }
 
 /// Wertezeilen einer Wertänderung („+10 Schaden“).
@@ -47,25 +43,13 @@ pub fn mod_lines(m: &StatMods) -> Vec<String> {
     add(m.hp, &|x| format!("{:+} Leben", x.round() as i32));
     add(m.mana, &|x| format!("{:+} Mana", x.round() as i32));
     add(m.damage, &|x| format!("{:+} Schaden", x.round() as i32));
-    add(m.damage_pct, &|x| {
-        format!("{:+} % Schaden", (x * 100.0).round() as i32)
-    });
+    add(m.damage_pct, &|x| format!("{:+} % Schaden", (x * 100.0).round() as i32));
     add(m.armor, &|x| format!("{:+} Rüstung", x.round() as i32));
-    add(m.speed_pct, &|x| {
-        format!("{:+} % Tempo", (x * 100.0).round() as i32)
-    });
-    add(m.hp_regen, &|x| {
-        format!("{}{} Leben/s", if x > 0.0 { "+" } else { "" }, num(x))
-    });
-    add(m.mana_regen, &|x| {
-        format!("{}{} Mana/s", if x > 0.0 { "+" } else { "" }, num(x))
-    });
-    add(m.xp_pct, &|x| {
-        format!("{:+} % Erfahrung", (x * 100.0).round() as i32)
-    });
-    add(m.cooldown_pct, &|x| {
-        format!("−{} % Abklingzeit", (x * 100.0).round() as i32)
-    });
+    add(m.speed_pct, &|x| format!("{:+} % Tempo", (x * 100.0).round() as i32));
+    add(m.hp_regen, &|x| format!("{}{} Leben/s", if x > 0.0 { "+" } else { "" }, num(x)));
+    add(m.mana_regen, &|x| format!("{}{} Mana/s", if x > 0.0 { "+" } else { "" }, num(x)));
+    add(m.xp_pct, &|x| format!("{:+} % Erfahrung", (x * 100.0).round() as i32));
+    add(m.cooldown_pct, &|x| format!("−{} % Abklingzeit", (x * 100.0).round() as i32));
     v
 }
 
@@ -87,134 +71,51 @@ fn item_icon_sprite(cx: &HudCtx, id: ItemId) -> ashen_engine::render::SpriteRect
 fn item_tooltip(ui: &mut Ui, cx: &HudCtx, id: ItemId, hint: &str) {
     let d = cx.data.item_def(id);
     ui.set_max_width(300.0);
-    ui.label(
-        RichText::new(&d.name)
-            .font(theme::heading_font(16.0))
-            .color(rarity_color(cx.data, id)),
-    );
-    ui.label(
-        RichText::new(format!("{} · {}", d.slot.label(), d.rarity.label()))
-            .font(theme::caps_font(11.5))
-            .color(theme::GOLD_DIM),
-    );
-    ui.label(
-        RichText::new(&d.description)
-            .font(theme::italic_font(13.5))
-            .color(theme::PARCHMENT_DIM),
-    );
+    ui.label(RichText::new(&d.name).font(theme::heading_font(16.0)).color(rarity_color(cx.data, id)));
+    ui.label(RichText::new(format!("{} · {}", d.slot.label(), d.rarity.label())).font(theme::caps_font(11.5)).color(theme::GOLD_DIM));
+    ui.label(RichText::new(&d.description).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
     for l in mod_lines(&d.mods) {
-        ui.label(
-            RichText::new(l)
-                .size(14.0)
-                .color(Color32::from_rgb(150, 220, 140)),
-        );
+        ui.label(RichText::new(l).size(14.0).color(Color32::from_rgb(150, 220, 140)));
     }
     if let Some(u) = d.use_effect {
         if u.heal > 0.0 {
-            ui.label(
-                RichText::new(format!("Stellt {} Leben her", num(u.heal)))
-                    .size(14.0)
-                    .color(Color32::from_rgb(150, 220, 140)),
-            );
+            ui.label(RichText::new(format!("Stellt {} Leben her", num(u.heal))).size(14.0).color(Color32::from_rgb(150, 220, 140)));
         }
         if u.mana > 0.0 {
-            ui.label(
-                RichText::new(format!("Stellt {} Mana her", num(u.mana)))
-                    .size(14.0)
-                    .color(Color32::from_rgb(120, 170, 250)),
-            );
+            ui.label(RichText::new(format!("Stellt {} Mana her", num(u.mana))).size(14.0).color(Color32::from_rgb(120, 170, 250)));
         }
         if u.duration > 0.0 {
             let mut parts = Vec::new();
             if u.damage_mult > 1.0 {
-                parts.push(format!(
-                    "+{} % Schaden",
-                    ((u.damage_mult - 1.0) * 100.0).round()
-                ));
+                parts.push(format!("+{} % Schaden", ((u.damage_mult - 1.0) * 100.0).round()));
             }
             if u.armor_bonus > 0.0 {
                 parts.push(format!("+{} Rüstung", num(u.armor_bonus)));
             }
-            ui.label(
-                RichText::new(format!("{} für {} s", parts.join(", "), u.duration))
-                    .size(14.0)
-                    .color(Color32::from_rgb(150, 220, 140)),
-            );
+            ui.label(RichText::new(format!("{} für {} s", parts.join(", "), u.duration)).size(14.0).color(Color32::from_rgb(150, 220, 140)));
         }
     }
-    ui.label(
-        RichText::new(format!("Wert {} Gold", num(d.value)))
-            .font(theme::italic_font(12.5))
-            .color(theme::PARCHMENT_DIM),
-    );
+    ui.label(RichText::new(format!("Wert {} Gold", num(d.value))).font(theme::italic_font(12.5)).color(theme::PARCHMENT_DIM));
     if !hint.is_empty() {
-        ui.label(
-            RichText::new(hint)
-                .font(theme::italic_font(12.5))
-                .color(theme::EMBER_HOT),
-        );
+        ui.label(RichText::new(hint).font(theme::italic_font(12.5)).color(theme::EMBER_HOT));
     }
 }
 
 /// Eine Gegenstandskachel: leerer Platz oder Gegenstand mit Seltenheitsrahmen.
-fn item_cell(
-    ui: &mut Ui,
-    engine: &mut Engine,
-    cx: &HudCtx,
-    item: Option<ItemId>,
-    hint: &str,
-    empty_hint: &str,
-) -> egui::Response {
+fn item_cell(ui: &mut Ui, engine: &mut Engine, cx: &HudCtx, item: Option<ItemId>, hint: &str, empty_hint: &str) -> egui::Response {
     let art = cx.ui;
-    let (rect, resp) = ui.allocate_exact_size(
-        Vec2::splat(CELL),
-        if item.is_some() {
-            Sense::click()
-        } else {
-            Sense::hover()
-        },
-    );
+    let (rect, resp) = ui.allocate_exact_size(Vec2::splat(CELL), if item.is_some() { Sense::click() } else { Sense::hover() });
     let st = BtnState::of(&resp, true);
     let p = ui.painter();
-    art.image(
-        p,
-        art.slot_tex(
-            if st == BtnState::Hover && item.is_some() {
-                1
-            } else {
-                0
-            },
-            false,
-        ),
-        rect,
-        Color32::WHITE,
-    );
+    art.image(p, art.slot_tex(if st == BtnState::Hover && item.is_some() { 1 } else { 0 }, false), rect, Color32::WHITE);
     if let Some(id) = item {
-        ui_common::paint_sprite(
-            p,
-            cx.tex,
-            item_icon_sprite(cx, id),
-            Rect::from_center_size(rect.center(), Vec2::splat(CELL - 14.0)),
-            Color32::WHITE,
-        );
-        p.rect_stroke(
-            rect.shrink(4.0),
-            2.0,
-            Stroke::new(1.5, rarity_color(cx.data, id)),
-            StrokeKind::Inside,
-        );
+        ui_common::paint_sprite(p, cx.tex, item_icon_sprite(cx, id), Rect::from_center_size(rect.center(), Vec2::splat(CELL - 14.0)), Color32::WHITE);
+        p.rect_stroke(rect.shrink(4.0), 2.0, Stroke::new(1.5, rarity_color(cx.data, id)), StrokeKind::Inside);
         ui_common::sfx(engine, ui, &resp);
         return ui_art::tooltip(resp, art, |ui| item_tooltip(ui, cx, id, hint));
     }
     if !empty_hint.is_empty() {
-        shadow_text(
-            p,
-            rect.center(),
-            Align2::CENTER_CENTER,
-            empty_hint,
-            theme::caps_font(9.5),
-            Color32::from_rgb(120, 104, 80),
-        );
+        shadow_text(p, rect.center(), Align2::CENTER_CENTER, empty_hint, theme::caps_font(9.5), Color32::from_rgb(120, 104, 80));
     }
     resp
 }
@@ -226,21 +127,9 @@ fn item_cell(
 fn hero_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx: &HudCtx) {
     let art = cx.ui;
     let data = cx.data;
-    let mut heroes_alive: Vec<(UnitId, Unit)> = scene
-        .world
-        .units
-        .iter()
-        .filter(|(_, u)| u.owner == PLAYER && data.unit(u.kind).class == UnitClass::Hero)
-        .map(|(id, u)| (id, u.clone()))
-        .collect();
+    let mut heroes_alive: Vec<(UnitId, Unit)> = scene.world.units.iter().filter(|(_, u)| u.owner == PLAYER && data.unit(u.kind).class == UnitClass::Hero).map(|(id, u)| (id, u.clone())).collect();
     heroes_alive.sort_by_key(|(id, _)| id.index);
-    let fallen: Vec<(String, f32, u32)> = scene
-        .world
-        .fallen
-        .iter()
-        .map(|f| (f.unit.kind, f.timer, f.unit.level))
-        .map(|(k, t, l)| (data.unit(k).id.clone(), t, l))
-        .collect();
+    let fallen: Vec<(String, f32, u32)> = scene.world.fallen.iter().map(|f| (f.unit.kind, f.timer, f.unit.level)).map(|(k, t, l)| (data.unit(k).id.clone(), t, l)).collect();
     if heroes_alive.is_empty() && fallen.is_empty() {
         return;
     }
@@ -311,9 +200,7 @@ fn hero_window(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine,
         scene.show_hero = false;
         return;
     };
-    let Some(u) = scene.world.units.get(hid).cloned() else {
-        return;
-    };
+    let Some(u) = scene.world.units.get(hid).cloned() else { return };
     let def = data.unit(u.kind);
     let tree = data.talent_tree(&def.id).cloned();
     let free = heroes::free_points(data, &u);

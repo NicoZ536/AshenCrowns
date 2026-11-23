@@ -22,8 +22,8 @@ mod ui_common;
 mod view;
 mod worldmap;
 
-use ashen_engine::AppConfig;
 use ashen_engine::render::GraphicsProfile;
+use ashen_engine::AppConfig;
 use ashen_sim::env::Weather;
 use ashen_sim::mission::{Difficulty, GameMode, MatchSettings};
 use game::{AshenGame, AutoRun};
@@ -72,19 +72,10 @@ fn usage() -> &'static str {
 }
 
 fn main() {
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info,wgpu_core=warn,wgpu_hal=warn,naga=warn"),
-    )
-    .init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info,wgpu_core=warn,wgpu_hal=warn,naga=warn")).init();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mut settings = settings::UserSettings::load();
-    let mut config = AppConfig {
-        title: "Ashen Crowns – The Age of the Fallen".into(),
-        fullscreen: settings.fullscreen,
-        vsync: settings.vsync,
-        profile: settings.profile,
-        ..Default::default()
-    };
+    let mut config = AppConfig { title: "Ashen Crowns – The Age of the Fallen".into(), fullscreen: settings.fullscreen, vsync: settings.vsync, profile: settings.profile, ..Default::default() };
     let mut screenshot: Option<std::path::PathBuf> = None;
     let mut frames = 90;
     let mut size = (1600, 900);
@@ -151,11 +142,7 @@ fn main() {
                     "skirmish-setup" => auto.menu_page = Some("skirmish".into()),
                     _ => {}
                 }
-                auto.start_mission = mode.map(|m| MatchSettings {
-                    mode: m,
-                    difficulty,
-                    ..Default::default()
-                });
+                auto.start_mission = mode.map(|m| MatchSettings { mode: m, difficulty, ..Default::default() });
             }
             "--sim-seconds" => auto.sim_seconds = next(&mut i).parse().unwrap_or(0.0),
             "--time" => auto.time_of_day = next(&mut i).parse().ok(),
@@ -229,8 +216,7 @@ fn main() {
         Some(path) => {
             config.width = size.0;
             config.height = size.1;
-            ashen_engine::run_headless(config, game, frames, 1.0 / 60.0, &path)
-                .map(|_| println!("Screenshot gespeichert: {}", path.display()))
+            ashen_engine::run_headless(config, game, frames, 1.0 / 60.0, &path).map(|_| println!("Screenshot gespeichert: {}", path.display()))
         }
         None => ashen_engine::run(config, game),
     };

@@ -17,24 +17,13 @@ pub struct UnitModel {
 }
 
 pub enum Kind {
-    Humanoid {
-        bones: Bones,
-        look: Look,
-    },
+    Humanoid { bones: Bones, look: Look },
     /// Reiter auf Pferd (Ritter, Spähreiter, Berittene Bogenschützen).
-    Knight {
-        horse: HorseBones,
-        rider: Bones,
-        look: Look,
-    },
+    Knight { horse: HorseBones, rider: Bones, look: Look },
     /// Belagerungsmaschine (Rammbock, Katapult).
-    Machine {
-        bones: MachineBones,
-    },
+    Machine { bones: MachineBones },
     /// Fledermausschwarm.
-    Swarm {
-        bones: SwarmBones,
-    },
+    Swarm { bones: SwarmBones },
 }
 
 #[derive(Clone, Copy)]
@@ -77,13 +66,7 @@ pub type UnitSpec = (&'static str, Look, (u32, u32), Vec<Anim>);
 
 pub fn looks() -> Vec<UnitSpec> {
     let std_anims = vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death];
-    let cast_anims = vec![
-        Anim::Idle,
-        Anim::Walk,
-        Anim::Attack,
-        Anim::Death,
-        Anim::Cast,
-    ];
+    let cast_anims = vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death, Anim::Cast];
     let worker = Look {
         torso: (0x93804f, Mat::Cloth),
         arms: (0xad7c5c, Mat::Skin),
@@ -249,13 +232,7 @@ pub fn looks() -> Vec<UnitSpec> {
         hunch: 10.0,
         ..base(1.7)
     };
-    let hollow_archer = Look {
-        helm: Helm::Hood,
-        helm_color: 0x212428,
-        weapon: Weapon::BoneBow,
-        cape: Some(0x17191c),
-        ..thrall.clone()
-    };
+    let hollow_archer = Look { helm: Helm::Hood, helm_color: 0x212428, weapon: Weapon::BoneBow, cape: Some(0x17191c), ..thrall.clone() };
     let digger = Look {
         torso: (0x3a3228, Mat::Cloth),
         arms: (0x8f8a6e, Mat::Bone),
@@ -324,19 +301,7 @@ pub fn looks() -> Vec<UnitSpec> {
         ..base(2.5)
     };
     vec![
-        (
-            "worker",
-            worker,
-            (56, 64),
-            vec![
-                Anim::Idle,
-                Anim::Walk,
-                Anim::Attack,
-                Anim::Death,
-                Anim::Work,
-                Anim::Carry,
-            ],
-        ),
+        ("worker", worker, (56, 64), vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death, Anim::Work, Anim::Carry]),
         ("swordsman", swordsman, (60, 66), std_anims.clone()),
         ("spearman", spearman, (76, 70), std_anims.clone()),
         ("archer", archer, (58, 66), std_anims.clone()),
@@ -350,19 +315,7 @@ pub fn looks() -> Vec<UnitSpec> {
         ("hero_torvald", torvald, (72, 78), cast_anims.clone()),
         ("hollow_thrall", thrall, (60, 66), std_anims.clone()),
         ("hollow_archer", hollow_archer, (58, 66), std_anims.clone()),
-        (
-            "hollow_digger",
-            digger,
-            (58, 66),
-            vec![
-                Anim::Idle,
-                Anim::Walk,
-                Anim::Attack,
-                Anim::Death,
-                Anim::Work,
-                Anim::Carry,
-            ],
-        ),
+        ("hollow_digger", digger, (58, 66), vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death, Anim::Work, Anim::Carry]),
         ("ghoul", ghoul, (62, 62), std_anims.clone()),
         ("ash_witch", witch, (60, 72), cast_anims.clone()),
         ("grave_brute", brute, (84, 84), std_anims.clone()),
@@ -373,14 +326,7 @@ pub fn looks() -> Vec<UnitSpec> {
 /// Modelle, die nicht auf dem Humanoiden-Rig beruhen oder beritten sind: (ID, Animationen).
 pub fn special_anims() -> Vec<(&'static str, Vec<Anim>)> {
     let std = vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death];
-    vec![
-        ("knight", std.clone()),
-        ("scout_rider", std.clone()),
-        ("horse_archer", std.clone()),
-        ("battering_ram", std.clone()),
-        ("catapult", std.clone()),
-        ("bat_swarm", std),
-    ]
+    vec![("knight", std.clone()), ("scout_rider", std.clone()), ("horse_archer", std.clone()), ("battering_ram", std.clone()), ("catapult", std.clone()), ("bat_swarm", std)]
 }
 
 pub fn build_all() -> Vec<UnitModel> {
@@ -391,14 +337,7 @@ pub fn build_all() -> Vec<UnitModel> {
             let bones = rig::build_skeleton(&mut sk, &look, None, Vec3::ZERO);
             let mut mesh = rig::build_mesh(&look, &bones);
             mesh.verts.shrink_to_fit();
-            UnitModel {
-                id,
-                skeleton: sk,
-                mesh,
-                kind: Kind::Humanoid { bones, look },
-                cell,
-                anims,
-            }
+            UnitModel { id, skeleton: sk, mesh, kind: Kind::Humanoid { bones, look }, cell, anims }
         })
         .collect();
     out.push(knight());
@@ -457,142 +396,37 @@ fn horse_archer() -> UnitModel {
 }
 
 /// Reiter auf Pferd: `coat` = Fellfarbe, `cloth` = Schabracke.
-fn mounted(
-    id: &'static str,
-    look: Look,
-    coat_hex: u32,
-    cloth_hex: u32,
-    cell: (u32, u32),
-) -> UnitModel {
+fn mounted(id: &'static str, look: Look, coat_hex: u32, cloth_hex: u32, cell: (u32, u32)) -> UnitModel {
     let mut sk = Skeleton::default();
     let body = sk.add("horse_body", None, Vec3::new(0.0, 0.95, 0.0));
     let neck = sk.add("horse_neck", Some(body), Vec3::new(0.0, 0.12, 0.55));
     let head = sk.add("horse_head", Some(neck), Vec3::new(0.0, 0.42, 0.16));
     let mut legs = [(0, 0); 4];
-    for (i, (x, z)) in [
-        (-0.17f32, 0.46f32),
-        (0.17, 0.46),
-        (-0.17, -0.48),
-        (0.17, -0.48),
-    ]
-    .iter()
-    .enumerate()
-    {
+    for (i, (x, z)) in [(-0.17f32, 0.46f32), (0.17, 0.46), (-0.17, -0.48), (0.17, -0.48)].iter().enumerate() {
         let up = sk.add("leg_up", Some(body), Vec3::new(*x, -0.14, *z));
         let low = sk.add("leg_low", Some(up), Vec3::new(0.0, -0.38, 0.0));
         legs[i] = (up, low);
     }
     let tail = sk.add("horse_tail", Some(body), Vec3::new(0.0, 0.1, -0.5));
-    let rider = rig::build_skeleton(
-        &mut sk,
-        &look,
-        Some(body),
-        Vec3::new(0.0, 0.2 - 0.46 * look.height, -0.04),
-    );
+    let rider = rig::build_skeleton(&mut sk, &look, Some(body), Vec3::new(0.0, 0.2 - 0.46 * look.height, -0.04));
     let mut m = rig::build_mesh(&look, &rider);
-    let hb = HorseBones {
-        body,
-        neck,
-        head,
-        legs,
-        tail,
-    };
+    let hb = HorseBones { body, neck, head, legs, tail };
     let coat = |b| Paint::new(coat_hex, Mat::Leather).bone(b);
     m.ellipsoid(&coat(body), Vec3::ZERO, Vec3::new(0.25, 0.27, 0.7), 10, 6);
     // Schabracke mit Goldsaum.
-    m.frustum(
-        &Paint::new(cloth_hex, Mat::Cloth).bone(body),
-        Vec3::new(0.0, 0.06, -0.42),
-        Vec3::new(0.0, 0.06, 0.34),
-        0.29,
-        0.29,
-        10,
-    );
-    m.frustum(
-        &Paint::new(0xcfa23f, Mat::Gold).bone(body),
-        Vec3::new(0.0, -0.16, -0.43),
-        Vec3::new(0.0, -0.16, 0.35),
-        0.295,
-        0.295,
-        10,
-    );
-    m.frustum(
-        &coat(neck),
-        Vec3::ZERO,
-        Vec3::new(0.0, 0.42, 0.14),
-        0.14,
-        0.1,
-        7,
-    );
-    m.frustum(
-        &Paint::new(0x1a110c, Mat::Hair).bone(neck),
-        Vec3::new(0.0, 0.05, -0.06),
-        Vec3::new(0.0, 0.4, 0.05),
-        0.04,
-        0.03,
-        4,
-    );
-    m.frustum(
-        &coat(head),
-        Vec3::ZERO,
-        Vec3::new(0.0, -0.1, 0.38),
-        0.09,
-        0.06,
-        6,
-    );
-    m.ellipsoid(
-        &Paint::new(0x8b969e, Mat::Metal).bone(head),
-        Vec3::new(0.0, 0.03, 0.12),
-        Vec3::new(0.075, 0.06, 0.14),
-        6,
-        4,
-    );
+    m.frustum(&Paint::new(cloth_hex, Mat::Cloth).bone(body), Vec3::new(0.0, 0.06, -0.42), Vec3::new(0.0, 0.06, 0.34), 0.29, 0.29, 10);
+    m.frustum(&Paint::new(0xcfa23f, Mat::Gold).bone(body), Vec3::new(0.0, -0.16, -0.43), Vec3::new(0.0, -0.16, 0.35), 0.295, 0.295, 10);
+    m.frustum(&coat(neck), Vec3::ZERO, Vec3::new(0.0, 0.42, 0.14), 0.14, 0.1, 7);
+    m.frustum(&Paint::new(0x1a110c, Mat::Hair).bone(neck), Vec3::new(0.0, 0.05, -0.06), Vec3::new(0.0, 0.4, 0.05), 0.04, 0.03, 4);
+    m.frustum(&coat(head), Vec3::ZERO, Vec3::new(0.0, -0.1, 0.38), 0.09, 0.06, 6);
+    m.ellipsoid(&Paint::new(0x8b969e, Mat::Metal).bone(head), Vec3::new(0.0, 0.03, 0.12), Vec3::new(0.075, 0.06, 0.14), 6, 4);
     for ((up, low), _) in legs.iter().zip(0..) {
-        m.frustum(
-            &coat(*up),
-            Vec3::ZERO,
-            Vec3::new(0.0, -0.38, 0.0),
-            0.08,
-            0.055,
-            6,
-        );
-        m.frustum(
-            &coat(*low),
-            Vec3::ZERO,
-            Vec3::new(0.0, -0.36, 0.0),
-            0.05,
-            0.042,
-            6,
-        );
-        m.frustum(
-            &Paint::new(0x101010, Mat::Plain).bone(*low),
-            Vec3::new(0.0, -0.34, 0.0),
-            Vec3::new(0.0, -0.4, 0.0),
-            0.06,
-            0.06,
-            6,
-        );
+        m.frustum(&coat(*up), Vec3::ZERO, Vec3::new(0.0, -0.38, 0.0), 0.08, 0.055, 6);
+        m.frustum(&coat(*low), Vec3::ZERO, Vec3::new(0.0, -0.36, 0.0), 0.05, 0.042, 6);
+        m.frustum(&Paint::new(0x101010, Mat::Plain).bone(*low), Vec3::new(0.0, -0.34, 0.0), Vec3::new(0.0, -0.4, 0.0), 0.06, 0.06, 6);
     }
-    m.frustum(
-        &Paint::new(0x1a110c, Mat::Hair).bone(tail),
-        Vec3::ZERO,
-        Vec3::new(0.0, -0.45, -0.12),
-        0.05,
-        0.03,
-        4,
-    );
-    UnitModel {
-        id,
-        skeleton: sk,
-        mesh: m,
-        kind: Kind::Knight {
-            horse: hb,
-            rider,
-            look,
-        },
-        cell,
-        anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death],
-    }
+    m.frustum(&Paint::new(0x1a110c, Mat::Hair).bone(tail), Vec3::ZERO, Vec3::new(0.0, -0.45, -0.12), 0.05, 0.03, 4);
+    UnitModel { id, skeleton: sk, mesh: m, kind: Kind::Knight { horse: hb, rider, look }, cell, anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death] }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -613,40 +447,11 @@ fn wheel_mesh(m: &mut Mesh, bone: usize, r: f32, left: bool) {
     let dark = Paint::new(0x2c1c13, Mat::WoodPlank).bone(bone);
     let iron = Paint::new(0x4a4a52, Mat::Metal).bone(bone);
     let s = if left { -1.0 } else { 1.0 };
-    m.frustum(
-        &wood,
-        Vec3::new(s * -0.05, 0.0, 0.0),
-        Vec3::new(s * 0.05, 0.0, 0.0),
-        r,
-        r,
-        10,
-    );
-    m.frustum(
-        &iron,
-        Vec3::new(s * 0.05, 0.0, 0.0),
-        Vec3::new(s * 0.065, 0.0, 0.0),
-        r,
-        r,
-        10,
-    );
-    m.bx(
-        &dark,
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.065, 0.018, r * 0.97),
-    );
-    m.bx(
-        &dark,
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.065, r * 0.97, 0.018),
-    );
-    m.frustum(
-        &iron,
-        Vec3::new(s * -0.07, 0.0, 0.0),
-        Vec3::new(s * 0.09, 0.0, 0.0),
-        0.04,
-        0.04,
-        6,
-    );
+    m.frustum(&wood, Vec3::new(s * -0.05, 0.0, 0.0), Vec3::new(s * 0.05, 0.0, 0.0), r, r, 10);
+    m.frustum(&iron, Vec3::new(s * 0.05, 0.0, 0.0), Vec3::new(s * 0.065, 0.0, 0.0), r, r, 10);
+    m.bx(&dark, Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.065, 0.018, r * 0.97));
+    m.bx(&dark, Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.065, r * 0.97, 0.018));
+    m.frustum(&iron, Vec3::new(s * -0.07, 0.0, 0.0), Vec3::new(s * 0.09, 0.0, 0.0), 0.04, 0.04, 6);
 }
 
 fn ram() -> UnitModel {
@@ -654,10 +459,7 @@ fn ram() -> UnitModel {
     let body = sk.add("body", None, Vec3::ZERO);
     let moving = sk.add("log", Some(body), Vec3::new(0.0, 0.78, 0.0));
     let mut wheels = [0; 4];
-    for (i, (x, z)) in [(-0.4f32, 0.5f32), (0.4, 0.5), (-0.4, -0.5), (0.4, -0.5)]
-        .iter()
-        .enumerate()
-    {
+    for (i, (x, z)) in [(-0.4f32, 0.5f32), (0.4, 0.5), (-0.4, -0.5), (0.4, -0.5)].iter().enumerate() {
         wheels[i] = sk.add("wheel", Some(body), Vec3::new(*x, 0.17, *z));
     }
     let mut m = Mesh::default();
@@ -667,121 +469,39 @@ fn ram() -> UnitModel {
     let iron = Paint::new(0x4a4a52, Mat::Metal).bone(body);
     // Rahmen, Pfosten und Dach.
     for sx in [-1.0f32, 1.0] {
-        m.bx(
-            &wood,
-            Vec3::new(sx * 0.34, 0.3, 0.0),
-            Vec3::new(0.05, 0.05, 0.82),
-        );
+        m.bx(&wood, Vec3::new(sx * 0.34, 0.3, 0.0), Vec3::new(0.05, 0.05, 0.82));
         for sz in [-1.0f32, 1.0] {
-            m.bx(
-                &dark,
-                Vec3::new(sx * 0.34, 0.55, sz * 0.55),
-                Vec3::new(0.04, 0.27, 0.04),
-            );
+            m.bx(&dark, Vec3::new(sx * 0.34, 0.55, sz * 0.55), Vec3::new(0.04, 0.27, 0.04));
         }
-        let t = Mat4::from_translation(Vec3::new(sx * 0.25, 0.9, 0.0))
-            * Mat4::from_rotation_z(sx * 0.5);
-        m.cuboid(
-            &hide,
-            Vec3::new(-0.27, -0.025, -0.78),
-            Vec3::new(0.27, 0.025, 0.78),
-            t,
-        );
-        m.cuboid(
-            &wood,
-            Vec3::new(-0.27, 0.02, -0.78),
-            Vec3::new(0.27, 0.04, -0.74),
-            t,
-        );
-        m.cuboid(
-            &wood,
-            Vec3::new(-0.27, 0.02, 0.74),
-            Vec3::new(0.27, 0.04, 0.78),
-            t,
-        );
+        let t = Mat4::from_translation(Vec3::new(sx * 0.25, 0.9, 0.0)) * Mat4::from_rotation_z(sx * 0.5);
+        m.cuboid(&hide, Vec3::new(-0.27, -0.025, -0.78), Vec3::new(0.27, 0.025, 0.78), t);
+        m.cuboid(&wood, Vec3::new(-0.27, 0.02, -0.78), Vec3::new(0.27, 0.04, -0.74), t);
+        m.cuboid(&wood, Vec3::new(-0.27, 0.02, 0.74), Vec3::new(0.27, 0.04, 0.78), t);
     }
-    m.bx(
-        &dark,
-        Vec3::new(0.0, 0.3, 0.55),
-        Vec3::new(0.34, 0.04, 0.04),
-    );
-    m.bx(
-        &dark,
-        Vec3::new(0.0, 0.3, -0.55),
-        Vec3::new(0.34, 0.04, 0.04),
-    );
+    m.bx(&dark, Vec3::new(0.0, 0.3, 0.55), Vec3::new(0.34, 0.04, 0.04));
+    m.bx(&dark, Vec3::new(0.0, 0.3, -0.55), Vec3::new(0.34, 0.04, 0.04));
     m.bx(&dark, Vec3::new(0.0, 1.03, 0.0), Vec3::new(0.03, 0.03, 0.8));
     // Eisenbeschläge und Banner.
     for sz in [-0.55f32, 0.55] {
         m.bx(&iron, Vec3::new(0.0, 0.84, sz), Vec3::new(0.3, 0.02, 0.025));
     }
-    m.bx(
-        &Paint::new(0x8f2220, Mat::Cloth).bone(body),
-        Vec3::new(0.0, 1.05, -0.8),
-        Vec3::new(0.12, 0.1, 0.012),
-    );
+    m.bx(&Paint::new(0x8f2220, Mat::Cloth).bone(body), Vec3::new(0.0, 1.05, -0.8), Vec3::new(0.12, 0.1, 0.012));
     for (i, w) in wheels.iter().enumerate() {
         wheel_mesh(&mut m, *w, 0.17, i % 2 == 0);
     }
     // Rammbaum mit Eisenkopf, an Seilen aufgehängt (Drehpunkt unter dem Dach).
     let bark = Paint::new(0x4a3322, Mat::Bark).bone(moving);
     let band = Paint::new(0x3a3a42, Mat::Metal).bone(moving);
-    m.frustum(
-        &bark,
-        Vec3::new(0.0, -0.4, -0.85),
-        Vec3::new(0.0, -0.4, 0.9),
-        0.1,
-        0.1,
-        8,
-    );
+    m.frustum(&bark, Vec3::new(0.0, -0.4, -0.85), Vec3::new(0.0, -0.4, 0.9), 0.1, 0.1, 8);
     for z in [-0.4f32, 0.0, 0.4, 0.8] {
-        m.frustum(
-            &band,
-            Vec3::new(0.0, -0.4, z - 0.03),
-            Vec3::new(0.0, -0.4, z + 0.03),
-            0.112,
-            0.112,
-            8,
-        );
+        m.frustum(&band, Vec3::new(0.0, -0.4, z - 0.03), Vec3::new(0.0, -0.4, z + 0.03), 0.112, 0.112, 8);
     }
-    m.frustum(
-        &band,
-        Vec3::new(0.0, -0.4, 0.9),
-        Vec3::new(0.0, -0.4, 1.1),
-        0.13,
-        0.1,
-        8,
-    );
-    m.frustum(
-        &band,
-        Vec3::new(0.0, -0.4, 1.1),
-        Vec3::new(0.0, -0.4, 1.22),
-        0.07,
-        0.0,
-        6,
-    );
+    m.frustum(&band, Vec3::new(0.0, -0.4, 0.9), Vec3::new(0.0, -0.4, 1.1), 0.13, 0.1, 8);
+    m.frustum(&band, Vec3::new(0.0, -0.4, 1.1), Vec3::new(0.0, -0.4, 1.22), 0.07, 0.0, 6);
     for z in [-0.3f32, 0.55] {
-        m.bx(
-            &Paint::new(0x7a6a50, Mat::Thatch).bone(moving),
-            Vec3::new(0.0, -0.1, z),
-            Vec3::new(0.012, 0.3, 0.012),
-        );
+        m.bx(&Paint::new(0x7a6a50, Mat::Thatch).bone(moving), Vec3::new(0.0, -0.1, z), Vec3::new(0.012, 0.3, 0.012));
     }
-    UnitModel {
-        id: "battering_ram",
-        skeleton: sk,
-        mesh: m,
-        kind: Kind::Machine {
-            bones: MachineBones {
-                body,
-                moving,
-                wheels,
-                catapult: false,
-            },
-        },
-        cell: (96, 84),
-        anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death],
-    }
+    UnitModel { id: "battering_ram", skeleton: sk, mesh: m, kind: Kind::Machine { bones: MachineBones { body, moving, wheels, catapult: false } }, cell: (96, 84), anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death] }
 }
 
 fn catapult() -> UnitModel {
@@ -789,15 +509,7 @@ fn catapult() -> UnitModel {
     let body = sk.add("body", None, Vec3::ZERO);
     let moving = sk.add("arm", Some(body), Vec3::new(0.0, 0.8, 0.0));
     let mut wheels = [0; 4];
-    for (i, (x, z)) in [
-        (-0.45f32, 0.55f32),
-        (0.45, 0.55),
-        (-0.45, -0.55),
-        (0.45, -0.55),
-    ]
-    .iter()
-    .enumerate()
-    {
+    for (i, (x, z)) in [(-0.45f32, 0.55f32), (0.45, 0.55), (-0.45, -0.55), (0.45, -0.55)].iter().enumerate() {
         wheels[i] = sk.add("wheel", Some(body), Vec3::new(*x, 0.18, *z));
     }
     let mut m = Mesh::default();
@@ -805,96 +517,29 @@ fn catapult() -> UnitModel {
     let dark = Paint::new(0x2c1c13, Mat::WoodPlank).bone(body);
     let iron = Paint::new(0x4a4a52, Mat::Metal).bone(body);
     for sx in [-1.0f32, 1.0] {
-        m.bx(
-            &wood,
-            Vec3::new(sx * 0.34, 0.28, 0.0),
-            Vec3::new(0.055, 0.055, 0.85),
-        );
-        m.bx(
-            &dark,
-            Vec3::new(sx * 0.34, 0.55, 0.0),
-            Vec3::new(0.045, 0.3, 0.07),
-        );
-        m.bx(
-            &iron,
-            Vec3::new(sx * 0.34, 0.35, 0.0),
-            Vec3::new(0.06, 0.02, 0.09),
-        );
+        m.bx(&wood, Vec3::new(sx * 0.34, 0.28, 0.0), Vec3::new(0.055, 0.055, 0.85));
+        m.bx(&dark, Vec3::new(sx * 0.34, 0.55, 0.0), Vec3::new(0.045, 0.3, 0.07));
+        m.bx(&iron, Vec3::new(sx * 0.34, 0.35, 0.0), Vec3::new(0.06, 0.02, 0.09));
     }
     for z in [-0.8f32, -0.3, 0.3, 0.8] {
         m.bx(&dark, Vec3::new(0.0, 0.28, z), Vec3::new(0.34, 0.035, 0.04));
     }
     // Querachse und Anschlagbalken.
-    m.bx(
-        &dark,
-        Vec3::new(0.0, 0.8, 0.0),
-        Vec3::new(0.38, 0.035, 0.035),
-    );
-    m.bx(
-        &wood,
-        Vec3::new(0.0, 0.5, 0.32),
-        Vec3::new(0.3, 0.04, 0.035),
-    );
-    m.bx(
-        &Paint::new(0x8f2220, Mat::Cloth).bone(body),
-        Vec3::new(0.0, 0.32, -0.85),
-        Vec3::new(0.14, 0.08, 0.012),
-    );
+    m.bx(&dark, Vec3::new(0.0, 0.8, 0.0), Vec3::new(0.38, 0.035, 0.035));
+    m.bx(&wood, Vec3::new(0.0, 0.5, 0.32), Vec3::new(0.3, 0.04, 0.035));
+    m.bx(&Paint::new(0x8f2220, Mat::Cloth).bone(body), Vec3::new(0.0, 0.32, -0.85), Vec3::new(0.14, 0.08, 0.012));
     for (i, w) in wheels.iter().enumerate() {
         wheel_mesh(&mut m, *w, 0.18, i % 2 == 0);
     }
     // Wurfarm (zeigt in Ruhe nach oben), Gegengewicht und Schleuder mit Felsbrocken.
     let arm = Paint::new(0x6e4a2e, Mat::WoodPlank).bone(moving);
-    m.bx(
-        &arm,
-        Vec3::new(0.0, 0.3, 0.0),
-        Vec3::new(0.045, 0.62, 0.045),
-    );
-    m.bx(
-        &Paint::new(0x4a4a52, Mat::Metal).bone(moving),
-        Vec3::new(0.0, -0.02, 0.0),
-        Vec3::new(0.06, 0.05, 0.06),
-    );
-    m.bx(
-        &Paint::new(0x4c4a43, Mat::Rock).bone(moving),
-        Vec3::new(0.0, -0.36, 0.0),
-        Vec3::new(0.15, 0.13, 0.13),
-    );
-    m.bx(
-        &Paint::new(0x4a4a52, Mat::Metal).bone(moving),
-        Vec3::new(0.0, -0.36, 0.0),
-        Vec3::new(0.16, 0.02, 0.14),
-    );
-    m.frustum(
-        &Paint::new(0x3a2c1c, Mat::Leather).bone(moving),
-        Vec3::new(0.0, 0.88, 0.0),
-        Vec3::new(0.0, 0.96, 0.0),
-        0.08,
-        0.13,
-        8,
-    );
-    m.ellipsoid(
-        &Paint::new(0x5a5a60, Mat::Rock).bone(moving),
-        Vec3::new(0.0, 1.02, 0.0),
-        Vec3::splat(0.1),
-        7,
-        4,
-    );
-    UnitModel {
-        id: "catapult",
-        skeleton: sk,
-        mesh: m,
-        kind: Kind::Machine {
-            bones: MachineBones {
-                body,
-                moving,
-                wheels,
-                catapult: true,
-            },
-        },
-        cell: (100, 100),
-        anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death],
-    }
+    m.bx(&arm, Vec3::new(0.0, 0.3, 0.0), Vec3::new(0.045, 0.62, 0.045));
+    m.bx(&Paint::new(0x4a4a52, Mat::Metal).bone(moving), Vec3::new(0.0, -0.02, 0.0), Vec3::new(0.06, 0.05, 0.06));
+    m.bx(&Paint::new(0x4c4a43, Mat::Rock).bone(moving), Vec3::new(0.0, -0.36, 0.0), Vec3::new(0.15, 0.13, 0.13));
+    m.bx(&Paint::new(0x4a4a52, Mat::Metal).bone(moving), Vec3::new(0.0, -0.36, 0.0), Vec3::new(0.16, 0.02, 0.14));
+    m.frustum(&Paint::new(0x3a2c1c, Mat::Leather).bone(moving), Vec3::new(0.0, 0.88, 0.0), Vec3::new(0.0, 0.96, 0.0), 0.08, 0.13, 8);
+    m.ellipsoid(&Paint::new(0x5a5a60, Mat::Rock).bone(moving), Vec3::new(0.0, 1.02, 0.0), Vec3::splat(0.1), 7, 4);
+    UnitModel { id: "catapult", skeleton: sk, mesh: m, kind: Kind::Machine { bones: MachineBones { body, moving, wheels, catapult: true } }, cell: (100, 100), anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death] }
 }
 
 /// Pose einer Belagerungsmaschine.
@@ -917,30 +562,19 @@ fn machine_pose(model: &UnitModel, b: &MachineBones, anim: Anim, t: f32) -> Pose
                 // Spannen, Auslösen, Nachschwingen.
                 let a = keys6(t, &[-72.0, -72.0, -40.0, 28.0, 62.0, 14.0]);
                 ps.euler(b.moving, a - cocked, 0.0, 0.0);
-                ps.shift(
-                    b.body,
-                    Vec3::new(0.0, 0.0, -0.05 * keys6(t, &[0.0, 0.0, 0.0, 1.0, 0.4, 0.0])),
-                );
+                ps.shift(b.body, Vec3::new(0.0, 0.0, -0.05 * keys6(t, &[0.0, 0.0, 0.0, 1.0, 0.4, 0.0])));
             } else {
                 // Rammbaum zurückziehen, vorschnellen, auspendeln (Vorwärtsschwung = negative Drehung).
                 let a = keys6(t, &[0.0, 24.0, 30.0, -34.0, -8.0, 0.0]);
                 ps.euler(b.moving, a, 0.0, 0.0);
-                ps.shift(
-                    b.body,
-                    Vec3::new(0.0, 0.0, 0.1 * keys6(t, &[0.0, 0.0, 0.0, 1.0, 0.5, 0.0])),
-                );
+                ps.shift(b.body, Vec3::new(0.0, 0.0, 0.1 * keys6(t, &[0.0, 0.0, 0.0, 1.0, 0.5, 0.0])));
             }
         }
         Anim::Death => {
             let f = keys6(t, &[0.0, 0.3, 0.7, 0.95, 1.0, 1.0]);
             ps.euler(b.body, 4.0 * f, 0.0, 24.0 * f);
             ps.shift(b.body, Vec3::new(0.0, -0.1 * f, 0.0));
-            ps.euler(
-                b.moving,
-                if b.catapult { 140.0 * f } else { -70.0 * f },
-                0.0,
-                12.0 * f,
-            );
+            ps.euler(b.moving, if b.catapult { 140.0 * f } else { -70.0 * f }, 0.0, 12.0 * f);
             ps.euler(b.wheels[1], 0.0, 0.0, -30.0 * f);
             ps.euler(b.wheels[2], 25.0 * f, 0.0, 0.0);
         }
@@ -971,12 +605,7 @@ pub struct SwarmBones {
     pub bats: Vec<(usize, usize, usize, Vec3)>,
 }
 
-const BAT_SPOTS: [(f32, f32, f32); 4] = [
-    (0.0, 1.0, 0.0),
-    (0.75, 0.75, 0.25),
-    (-0.75, 0.85, 0.0),
-    (0.05, 1.35, -0.6),
-];
+const BAT_SPOTS: [(f32, f32, f32); 4] = [(0.0, 1.0, 0.0), (0.75, 0.75, 0.25), (-0.75, 0.85, 0.0), (0.05, 1.35, -0.6)];
 
 fn bat_swarm() -> UnitModel {
     let mut sk = Skeleton::default();
@@ -991,79 +620,24 @@ fn bat_swarm() -> UnitModel {
         let wl = sk.add("wing_l", Some(body), Vec3::new(-0.035 * k, 0.0, 0.0));
         let wr = sk.add("wing_r", Some(body), Vec3::new(0.035 * k, 0.0, 0.0));
         let fur = Paint::new(0x4a3c5c, Mat::Cloth).bone(body);
-        m.ellipsoid(
-            &fur,
-            Vec3::ZERO,
-            Vec3::new(0.06 * k, 0.05 * k, 0.1 * k),
-            6,
-            4,
-        );
-        m.ellipsoid(
-            &fur,
-            Vec3::new(0.0, 0.02 * k, 0.1 * k),
-            Vec3::splat(0.045 * k),
-            5,
-            3,
-        );
+        m.ellipsoid(&fur, Vec3::ZERO, Vec3::new(0.06 * k, 0.05 * k, 0.1 * k), 6, 4);
+        m.ellipsoid(&fur, Vec3::new(0.0, 0.02 * k, 0.1 * k), Vec3::splat(0.045 * k), 5, 3);
         for sx in [-1.0f32, 1.0] {
-            m.frustum(
-                &fur,
-                Vec3::new(sx * 0.025 * k, 0.05 * k, 0.11 * k),
-                Vec3::new(sx * 0.04 * k, 0.11 * k, 0.1 * k),
-                0.016 * k,
-                0.0,
-                3,
-            );
-            m.ellipsoid(
-                &Paint::new(0x86f2a0, Mat::Glow).bone(body).glow(1.0),
-                Vec3::new(sx * 0.02 * k, 0.035 * k, 0.14 * k),
-                Vec3::splat(0.016 * k),
-                3,
-                2,
-            );
+            m.frustum(&fur, Vec3::new(sx * 0.025 * k, 0.05 * k, 0.11 * k), Vec3::new(sx * 0.04 * k, 0.11 * k, 0.1 * k), 0.016 * k, 0.0, 3);
+            m.ellipsoid(&Paint::new(0x86f2a0, Mat::Glow).bone(body).glow(1.0), Vec3::new(sx * 0.02 * k, 0.035 * k, 0.14 * k), Vec3::splat(0.016 * k), 3, 2);
         }
         // Flügel: Membran mit Spitze und hellen Fingerstreben.
         for (bone, s) in [(wl, -1.0f32), (wr, 1.0)] {
             let w = Paint::new(0x8a78a4, Mat::Cloth).bone(bone);
-            let (x0, x1) = if s < 0.0 {
-                (-0.34 * k, 0.0)
-            } else {
-                (0.0, 0.34 * k)
-            };
-            m.cuboid(
-                &w,
-                Vec3::new(x0, -0.01 * k, -0.13 * k),
-                Vec3::new(x1, 0.01 * k, 0.15 * k),
-                Mat4::IDENTITY,
-            );
-            m.tri_flat(
-                &w,
-                Vec3::new(s * 0.34 * k, 0.0, -0.13 * k),
-                Vec3::new(s * 0.34 * k, 0.0, 0.15 * k),
-                Vec3::new(s * 0.5 * k, 0.0, -0.05 * k),
-            );
+            let (x0, x1) = if s < 0.0 { (-0.34 * k, 0.0) } else { (0.0, 0.34 * k) };
+            m.cuboid(&w, Vec3::new(x0, -0.01 * k, -0.13 * k), Vec3::new(x1, 0.01 * k, 0.15 * k), Mat4::IDENTITY);
+            m.tri_flat(&w, Vec3::new(s * 0.34 * k, 0.0, -0.13 * k), Vec3::new(s * 0.34 * k, 0.0, 0.15 * k), Vec3::new(s * 0.5 * k, 0.0, -0.05 * k));
             let strut = Paint::new(0xa898bc, Mat::Bone).bone(bone);
-            m.frustum(
-                &strut,
-                Vec3::new(0.0, 0.012 * k, -0.08 * k),
-                Vec3::new(s * 0.47 * k, 0.012 * k, -0.04 * k),
-                0.016 * k,
-                0.006 * k,
-                3,
-            );
+            m.frustum(&strut, Vec3::new(0.0, 0.012 * k, -0.08 * k), Vec3::new(s * 0.47 * k, 0.012 * k, -0.04 * k), 0.016 * k, 0.006 * k, 3);
         }
         bats.push((body, wl, wr, pos));
     }
-    UnitModel {
-        id: "bat_swarm",
-        skeleton: sk,
-        mesh: m,
-        kind: Kind::Swarm {
-            bones: SwarmBones { root, bats },
-        },
-        cell: (96, 92),
-        anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death],
-    }
+    UnitModel { id: "bat_swarm", skeleton: sk, mesh: m, kind: Kind::Swarm { bones: SwarmBones { root, bats } }, cell: (96, 92), anims: vec![Anim::Idle, Anim::Walk, Anim::Attack, Anim::Death] }
 }
 
 fn swarm_pose(model: &UnitModel, b: &SwarmBones, anim: Anim, t: f32) -> Pose {
@@ -1091,27 +665,12 @@ fn swarm_pose(model: &UnitModel, b: &SwarmBones, anim: Anim, t: f32) -> Pose {
             }
             Anim::Attack => {
                 let dive = (t * std::f32::consts::PI).sin();
-                ps.shift(
-                    *body,
-                    Vec3::new(0.0, -0.45 * dive * (0.6 + (i % 3) as f32 * 0.2), 0.3 * dive),
-                );
+                ps.shift(*body, Vec3::new(0.0, -0.45 * dive * (0.6 + (i % 3) as f32 * 0.2), 0.3 * dive));
                 ps.euler(*body, 35.0 * dive, 0.0, 0.0);
             }
             _ => {
-                ps.shift(
-                    *body,
-                    Vec3::new(
-                        (ph + off).cos() * 0.07,
-                        (ph * 2.0 + off).sin() * 0.05,
-                        (ph + off * 2.0).sin() * 0.06,
-                    ),
-                );
-                ps.euler(
-                    *body,
-                    (ph * cycles + off).sin() * 6.0,
-                    0.0,
-                    (ph + off).cos() * 8.0,
-                );
+                ps.shift(*body, Vec3::new((ph + off).cos() * 0.07, (ph * 2.0 + off).sin() * 0.05, (ph + off * 2.0).sin() * 0.06));
+                ps.euler(*body, (ph * cycles + off).sin() * 6.0, 0.0, (ph + off).cos() * 8.0);
             }
         }
     }
@@ -1122,35 +681,19 @@ fn swarm_pose(model: &UnitModel, b: &SwarmBones, anim: Anim, t: f32) -> Pose {
 pub fn pose(model: &UnitModel, anim: Anim, t: f32) -> Pose {
     match &model.kind {
         Kind::Humanoid { bones, look } => {
-            let r = rig::Rig {
-                skeleton: model.skeleton.clone(),
-                bones: *bones,
-                look: look.clone(),
-            };
+            let r = rig::Rig { skeleton: model.skeleton.clone(), bones: *bones, look: look.clone() };
             rig::pose(&r, anim, t)
         }
         Kind::Machine { bones } => machine_pose(model, bones, anim, t),
         Kind::Swarm { bones } => swarm_pose(model, bones, anim, t),
         Kind::Knight { horse, rider, look } => {
-            let r = rig::Rig {
-                skeleton: model.skeleton.clone(),
-                bones: *rider,
-                look: look.clone(),
-            };
+            let r = rig::Rig { skeleton: model.skeleton.clone(), bones: *rider, look: look.clone() };
             // Reiterhaltung: Grundpose des Rigs (Idle/Angriff), Beine gespreizt.
             let rider_anim = match anim {
                 Anim::Walk => Anim::Idle,
                 other => other,
             };
-            let mut ps = rig::pose(
-                &r,
-                if rider_anim == Anim::Death {
-                    Anim::Idle
-                } else {
-                    rider_anim
-                },
-                t,
-            );
+            let mut ps = rig::pose(&r, if rider_anim == Anim::Death { Anim::Idle } else { rider_anim }, t);
             ps.euler(rider.thigh_l, -70.0, 0.0, -28.0);
             ps.euler(rider.thigh_r, -70.0, 0.0, 28.0);
             ps.euler(rider.shin_l, 60.0, 0.0, 0.0);
@@ -1196,15 +739,8 @@ pub fn head_position(model: &UnitModel) -> Vec3 {
     let ps = pose(model, Anim::Idle, 0.0);
     let w = model.skeleton.world(&ps);
     match &model.kind {
-        Kind::Humanoid { bones, look }
-        | Kind::Knight {
-            rider: bones, look, ..
-        } => w[bones.head].transform_point3(Vec3::new(0.0, 0.075 * look.height, 0.0)),
-        Kind::Machine { bones } => w[bones.body].transform_point3(Vec3::new(
-            0.0,
-            if bones.catapult { 0.85 } else { 0.7 },
-            0.1,
-        )),
+        Kind::Humanoid { bones, look } | Kind::Knight { rider: bones, look, .. } => w[bones.head].transform_point3(Vec3::new(0.0, 0.075 * look.height, 0.0)),
+        Kind::Machine { bones } => w[bones.body].transform_point3(Vec3::new(0.0, if bones.catapult { 0.85 } else { 0.7 }, 0.1)),
         Kind::Swarm { bones } => w[bones.root].transform_point3(Vec3::new(0.0, 0.95, 0.0)),
     }
 }

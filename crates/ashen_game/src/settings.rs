@@ -45,21 +45,13 @@ pub fn data_dir() -> PathBuf {
     if let Some(p) = std::env::var_os("ASHEN_USER_DIR") {
         return PathBuf::from(p);
     }
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."));
+    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     if cfg!(target_os = "macos") {
         home.join("Library/Application Support/AshenCrowns")
     } else if cfg!(target_os = "windows") {
-        std::env::var_os("APPDATA")
-            .map(PathBuf::from)
-            .unwrap_or(home)
-            .join("AshenCrowns")
+        std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or(home).join("AshenCrowns")
     } else {
-        std::env::var_os("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home.join(".local/share"))
-            .join("ashen_crowns")
+        std::env::var_os("XDG_DATA_HOME").map(PathBuf::from).unwrap_or_else(|| home.join(".local/share")).join("ashen_crowns")
     }
 }
 

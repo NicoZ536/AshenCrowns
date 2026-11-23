@@ -21,11 +21,7 @@ fn hex(h: u32) -> Rgba {
 /// Mischt zwei Farben (t = 0 → a, 1 → b).
 fn mix(a: u32, b: u32, t: f32) -> u32 {
     let t = t.clamp(0.0, 1.0);
-    let ch = |s: u32| {
-        (((a >> s) & 0xff) as f32 * (1.0 - t) + ((b >> s) & 0xff) as f32 * t)
-            .round()
-            .clamp(0.0, 255.0) as u32
-    };
+    let ch = |s: u32| (((a >> s) & 0xff) as f32 * (1.0 - t) + ((b >> s) & 0xff) as f32 * t).round().clamp(0.0, 255.0) as u32;
     (ch(16) << 16) | (ch(8) << 8) | ch(0)
 }
 
@@ -34,15 +30,7 @@ fn disc(c: &mut Canvas, cx: f32, cy: f32, r: f32, col: u32, glow: bool) {
         for x in 0..16 {
             let d = ((x as f32 + 0.5 - cx).powi(2) + (y as f32 + 0.5 - cy).powi(2)).sqrt();
             if d <= r {
-                c.px(
-                    x,
-                    y,
-                    hex(mix(
-                        col,
-                        0xffffff,
-                        ((r - d) / r).max(0.0) * 0.25 - (d / r) * 0.1,
-                    )),
-                );
+                c.px(x, y, hex(mix(col, 0xffffff, ((r - d) / r).max(0.0) * 0.25 - (d / r) * 0.1)));
                 if glow {
                     c.glow(x, y, 1.0);
                 }
@@ -56,20 +44,7 @@ fn disc(c: &mut Canvas, cx: f32, cy: f32, r: f32, col: u32, glow: bool) {
 // ---------------------------------------------------------------------------------------------
 
 fn flame(c: &mut Canvas, main: u32, hi: u32) {
-    let rows = [
-        (2, 7, 8),
-        (3, 6, 9),
-        (4, 5, 10),
-        (5, 5, 10),
-        (6, 4, 11),
-        (7, 4, 11),
-        (8, 4, 11),
-        (9, 4, 11),
-        (10, 5, 10),
-        (11, 5, 10),
-        (12, 6, 9),
-        (13, 7, 8),
-    ];
+    let rows = [(2, 7, 8), (3, 6, 9), (4, 5, 10), (5, 5, 10), (6, 4, 11), (7, 4, 11), (8, 4, 11), (9, 4, 11), (10, 5, 10), (11, 5, 10), (12, 6, 9), (13, 7, 8)];
     for (y, x0, x1) in rows {
         for x in x0..x1 {
             let t = (y as f32 - 2.0) / 11.0;
@@ -113,15 +88,7 @@ fn shield(c: &mut Canvas, col: u32, boss: u32) {
         let w = if y < 9 { 5 } else { 5 - (y - 8) };
         for x in 8 - w..8 + w {
             let edge = x == 8 - w || x == 7 + w || y == 2;
-            c.px(
-                x,
-                y,
-                hex(if edge {
-                    mix(col, 0xffffff, 0.45)
-                } else {
-                    mix(col, 0x000000, (y - 2) as f32 * 0.025)
-                }),
-            );
+            c.px(x, y, hex(if edge { mix(col, 0xffffff, 0.45) } else { mix(col, 0x000000, (y - 2) as f32 * 0.025) }));
         }
     }
     disc(c, 8.0, 7.0, 2.0, boss, false);
@@ -142,16 +109,7 @@ fn skull(c: &mut Canvas, col: u32, eye: u32) {
     for x in [6, 8, 10] {
         c.px(x, 12, hex(mix(col, 0x000000, 0.35)));
     }
-    for (x, y) in [
-        (5, 5),
-        (6, 5),
-        (5, 6),
-        (6, 6),
-        (9, 5),
-        (10, 5),
-        (9, 6),
-        (10, 6),
-    ] {
+    for (x, y) in [(5, 5), (6, 5), (5, 6), (6, 6), (9, 5), (10, 5), (9, 6), (10, 6)] {
         c.px(x, y, hex(eye));
         c.glow(x, y, 1.0);
     }
@@ -160,17 +118,7 @@ fn skull(c: &mut Canvas, col: u32, eye: u32) {
 }
 
 fn horn(c: &mut Canvas, col: u32) {
-    let pts = [
-        (3, 11),
-        (4, 10),
-        (5, 9),
-        (6, 8),
-        (7, 7),
-        (8, 6),
-        (9, 5),
-        (10, 4),
-        (11, 3),
-    ];
+    let pts = [(3, 11), (4, 10), (5, 9), (6, 8), (7, 7), (8, 6), (9, 5), (10, 4), (11, 3)];
     for (i, (x, y)) in pts.iter().enumerate() {
         let w = (i as f32 / 3.0) as i32;
         for k in 0..=w {
@@ -199,16 +147,8 @@ fn axe(c: &mut Canvas, col: u32) {
 fn burst(c: &mut Canvas, col: u32, ring: u32) {
     for i in 0..16 {
         let a = i as f32 / 16.0 * std::f32::consts::TAU;
-        c.px(
-            (8.0 + a.cos() * 5.5) as i32,
-            (8.0 + a.sin() * 5.0) as i32,
-            hex(ring),
-        );
-        c.glow(
-            (8.0 + a.cos() * 5.5) as i32,
-            (8.0 + a.sin() * 5.0) as i32,
-            0.8,
-        );
+        c.px((8.0 + a.cos() * 5.5) as i32, (8.0 + a.sin() * 5.0) as i32, hex(ring));
+        c.glow((8.0 + a.cos() * 5.5) as i32, (8.0 + a.sin() * 5.0) as i32, 0.8);
     }
     disc(c, 8.0, 8.0, 3.0, col, true);
 }
@@ -311,27 +251,8 @@ fn ability_icon(id: &str) -> Canvas {
 }
 
 pub const ABILITY_IDS: [&str; 21] = [
-    "shield_wall",
-    "fireball",
-    "flame_nova",
-    "holy_heal",
-    "blessing",
-    "raise_dead",
-    "flame_mend",
-    "sacred_flame",
-    "beacon_of_faith",
-    "clan_roar",
-    "ground_slam",
-    "iron_vow",
-    "phoenix_cut",
-    "war_cry",
-    "last_stand",
-    "pillar_of_fire",
-    "resurgence",
-    "aegis_of_flame",
-    "ancestral_fury",
-    "stone_skin",
-    "war_horns",
+    "shield_wall", "fireball", "flame_nova", "holy_heal", "blessing", "raise_dead", "flame_mend", "sacred_flame", "beacon_of_faith", "clan_roar", "ground_slam", "iron_vow", "phoenix_cut", "war_cry",
+    "last_stand", "pillar_of_fire", "resurgence", "aegis_of_flame", "ancestral_fury", "stone_skin", "war_horns",
 ];
 
 // ---------------------------------------------------------------------------------------------
@@ -341,50 +262,11 @@ pub const ABILITY_IDS: [&str; 21] = [
 fn formation_icon(name: &str) -> Canvas {
     let mut c = icon();
     let dots: Vec<(i32, i32)> = match name {
-        "line" => (0..6)
-            .map(|i| (2 + i * 2, 5))
-            .chain((0..6).map(|i| (2 + i * 2, 9)))
-            .collect(),
-        "wedge" => vec![
-            (8, 2),
-            (6, 5),
-            (10, 5),
-            (4, 8),
-            (8, 8),
-            (12, 8),
-            (2, 11),
-            (6, 11),
-            (10, 11),
-            (14, 11),
-        ],
-        "column" => (0..5)
-            .flat_map(|i| [(6, 2 + i * 3), (10, 2 + i * 3)])
-            .collect(),
-        "square" => vec![
-            (3, 3),
-            (6, 3),
-            (9, 3),
-            (12, 3),
-            (3, 6),
-            (12, 6),
-            (3, 9),
-            (12, 9),
-            (3, 12),
-            (6, 12),
-            (9, 12),
-            (12, 12),
-        ],
-        _ => vec![
-            (4, 4),
-            (8, 4),
-            (12, 4),
-            (4, 8),
-            (8, 8),
-            (12, 8),
-            (4, 12),
-            (8, 12),
-            (12, 12),
-        ],
+        "line" => (0..6).map(|i| (2 + i * 2, 5)).chain((0..6).map(|i| (2 + i * 2, 9))).collect(),
+        "wedge" => vec![(8, 2), (6, 5), (10, 5), (4, 8), (8, 8), (12, 8), (2, 11), (6, 11), (10, 11), (14, 11)],
+        "column" => (0..5).flat_map(|i| [(6, 2 + i * 3), (10, 2 + i * 3)]).collect(),
+        "square" => vec![(3, 3), (6, 3), (9, 3), (12, 3), (3, 6), (12, 6), (3, 9), (12, 9), (3, 12), (6, 12), (9, 12), (12, 12)],
+        _ => vec![(4, 4), (8, 4), (12, 4), (4, 8), (8, 8), (12, 8), (4, 12), (8, 12), (12, 12)],
     };
     for (x, y) in dots {
         c.rect(x - 1, y - 1, 2, 2, hex(0xe8dcb0));
@@ -428,13 +310,7 @@ fn item_glyph(g: Glyph, accent: u32) -> Canvas {
         }
         Glyph::Armor => {
             for y in 3..14 {
-                let w = if y < 6 {
-                    5
-                } else if y < 12 {
-                    4
-                } else {
-                    3
-                };
+                let w = if y < 6 { 5 } else if y < 12 { 4 } else { 3 };
                 for x in 8 - w..8 + w {
                     c.px(x, y, hex(mix(0x8b969e, 0x000000, (y - 3) as f32 * 0.03)));
                 }
@@ -473,11 +349,7 @@ fn item_glyph(g: Glyph, accent: u32) -> Canvas {
             for y in 7..14 {
                 let w = if y < 9 { 3 } else { 4 };
                 for x in 8 - w..8 + w {
-                    c.px(
-                        x,
-                        y,
-                        hex(mix(accent, 0xffffff, if x < 7 { 0.25 } else { 0.0 })),
-                    );
+                    c.px(x, y, hex(mix(accent, 0xffffff, if x < 7 { 0.25 } else { 0.0 })));
                     c.glow(x, y, 0.5);
                 }
             }
@@ -526,41 +398,12 @@ fn item_icon_for(id: &str) -> Canvas {
 }
 
 const ITEM_IDS: [&str; 25] = [
-    "rusty_sword",
-    "steel_sword",
-    "pilgrim_staff",
-    "embersteel_blade",
-    "skarn_greataxe",
-    "edran_blade",
-    "padded_jerkin",
-    "chain_hauberk",
-    "ember_plate",
-    "grauwall_aegis",
-    "bone_charm",
-    "flamekeeper_pendant",
-    "oath_medal",
-    "ashglass_heart",
-    "copper_ring",
-    "iron_band",
-    "wolf_signet",
-    "ember_ring",
-    "varkhan_signet",
-    "vael_dorn_seal",
-    "potion_heal",
-    "potion_heal_greater",
-    "potion_mana",
-    "potion_ember",
-    "potion_ward",
+    "rusty_sword", "steel_sword", "pilgrim_staff", "embersteel_blade", "skarn_greataxe", "edran_blade", "padded_jerkin", "chain_hauberk", "ember_plate", "grauwall_aegis", "bone_charm", "flamekeeper_pendant", "oath_medal",
+    "ashglass_heart", "copper_ring", "iron_band", "wolf_signet", "ember_ring", "varkhan_signet", "vael_dorn_seal", "potion_heal", "potion_heal_greater", "potion_mana", "potion_ember", "potion_ward",
 ];
 
 /// Ersatzicons für Gegenstände aus Mods: Platz × Glyph.
-const FALLBACK: [(&str, Glyph, u32); 5] = [
-    ("weapon", Glyph::Sword, 0x8b969e),
-    ("armor", Glyph::Armor, 0x8b969e),
-    ("amulet", Glyph::Amulet, 0x9aa4ac),
-    ("ring", Glyph::Ring, 0x9aa4ac),
-    ("potion", Glyph::Potion, 0x9aa4ac),
-];
+const FALLBACK: [(&str, Glyph, u32); 5] = [("weapon", Glyph::Sword, 0x8b969e), ("armor", Glyph::Armor, 0x8b969e), ("amulet", Glyph::Amulet, 0x9aa4ac), ("ring", Glyph::Ring, 0x9aa4ac), ("potion", Glyph::Potion, 0x9aa4ac)];
 
 // ---------------------------------------------------------------------------------------------
 // Upgrades und sonstige Symbole
@@ -628,13 +471,7 @@ fn talent_icon() -> Canvas {
     for i in 0..8 {
         let a = i as f32 / 8.0 * std::f32::consts::TAU;
         let r = if i % 2 == 0 { 6.5 } else { 3.0 };
-        c.line(
-            8,
-            8,
-            (8.0 + a.cos() * r) as i32,
-            (8.0 + a.sin() * r) as i32,
-            hex(0xe8c050),
-        );
+        c.line(8, 8, (8.0 + a.cos() * r) as i32, (8.0 + a.sin() * r) as i32, hex(0xe8c050));
     }
     disc(&mut c, 8.0, 8.0, 2.4, 0xffe9a0, true);
     c
@@ -659,13 +496,7 @@ fn projectiles(atlas: &mut AtlasBuilder) {
         for x in 0..10 {
             let d = ((x as f32 - 4.5).powi(2) + (y as f32 - 4.5).powi(2)).sqrt();
             if d <= 4.2 {
-                let col = if d < 1.8 {
-                    0xfff0b0
-                } else if d < 3.0 {
-                    0xffb040
-                } else {
-                    0xff6a20
-                };
+                let col = if d < 1.8 { 0xfff0b0 } else if d < 3.0 { 0xffb040 } else { 0xff6a20 };
                 f.px(x, y, hex(col));
                 f.glow(x, y, 1.0);
             }
@@ -678,8 +509,7 @@ fn projectiles(atlas: &mut AtlasBuilder) {
         for x in 0..12 {
             let d = ((x as f32 - 5.5).powi(2) + (y as f32 - 5.5).powi(2)).sqrt();
             if d <= 5.3 {
-                let shade =
-                    0.35 + (11 - y) as f32 * 0.03 + if (x + y * 3) % 5 == 0 { -0.08 } else { 0.0 };
+                let shade = 0.35 + (11 - y) as f32 * 0.03 + if (x + y * 3) % 5 == 0 { -0.08 } else { 0.0 };
                 r.px(x, y, hex(mix(0x2a2a2e, 0xa8a49a, shade.clamp(0.0, 1.0))));
             }
         }
@@ -692,32 +522,16 @@ pub fn build(atlas: &mut AtlasBuilder) {
         atlas.add(format!("icon_{id}"), finish(ability_icon(id)), Vec2::ZERO);
     }
     for f in ["block", "line", "wedge", "column", "square"] {
-        atlas.add(
-            format!("icon_formation_{f}"),
-            finish(formation_icon(f)),
-            Vec2::ZERO,
-        );
+        atlas.add(format!("icon_formation_{f}"), finish(formation_icon(f)), Vec2::ZERO);
     }
     for id in ITEM_IDS {
-        atlas.add(
-            format!("icon_item_{id}"),
-            finish(item_icon_for(id)),
-            Vec2::ZERO,
-        );
+        atlas.add(format!("icon_item_{id}"), finish(item_icon_for(id)), Vec2::ZERO);
     }
     for (slot, g, accent) in FALLBACK {
-        atlas.add(
-            format!("icon_itemslot_{slot}"),
-            finish(item_glyph(g, accent)),
-            Vec2::ZERO,
-        );
+        atlas.add(format!("icon_itemslot_{slot}"), finish(item_glyph(g, accent)), Vec2::ZERO);
     }
     for id in ["forge_weapons", "forge_armor", "fletching"] {
-        atlas.add(
-            format!("icon_up_{id}"),
-            finish(upgrade_icon(id)),
-            Vec2::ZERO,
-        );
+        atlas.add(format!("icon_up_{id}"), finish(upgrade_icon(id)), Vec2::ZERO);
     }
     atlas.add("icon_hero", finish(hero_icon()), Vec2::ZERO);
     atlas.add("icon_talent", finish(talent_icon()), Vec2::ZERO);

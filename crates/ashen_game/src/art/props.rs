@@ -13,11 +13,7 @@ fn grass_tuft(seed: u32) -> Canvas {
         let x = 1 + i + (rand2(i, 0, seed) * 1.5) as i32;
         let hgt = 2 + (rand2(i, 1, seed) * 3.0) as i32;
         for k in 0..hgt {
-            c.px(
-                x + if k == hgt - 1 && i % 2 == 0 { 1 } else { 0 },
-                5 - k,
-                ramp.at(0.45 + k as f32 * 0.1),
-            );
+            c.px(x + if k == hgt - 1 && i % 2 == 0 { 1 } else { 0 }, 5 - k, ramp.at(0.45 + k as f32 * 0.1));
         }
     }
     c
@@ -25,11 +21,7 @@ fn grass_tuft(seed: u32) -> Canvas {
 
 fn flowers(seed: u32) -> Canvas {
     let mut c = Canvas::new(8, 5);
-    let cols = [
-        Rgba::hex(0x8a6aa0),
-        Rgba::hex(0xb0a050),
-        Rgba::hex(0xa04a40),
-    ];
+    let cols = [Rgba::hex(0x8a6aa0), Rgba::hex(0xb0a050), Rgba::hex(0xa04a40)];
     for i in 0..4 {
         let x = 1 + (rand2(i, 0, seed) * 6.0) as i32;
         let y = 1 + (rand2(i, 1, seed) * 3.0) as i32;
@@ -54,20 +46,8 @@ fn reeds(seed: u32) -> Canvas {
 
 pub fn build(atlas: &mut AtlasBuilder) {
     for v in 0..3u32 {
-        atlas.add(
-            format!("decor_tuft_{v}"),
-            grass_tuft(v + 30),
-            Vec2::new(4.0, 5.0),
-        );
-        atlas.add(
-            format!("decor_flowers_{v}"),
-            flowers(v + 40),
-            Vec2::new(4.0, 4.0),
-        );
-        atlas.add(
-            format!("decor_reeds_{v}"),
-            reeds(v + 50),
-            Vec2::new(5.0, 11.0),
-        );
+        atlas.add(format!("decor_tuft_{v}"), grass_tuft(v + 30), Vec2::new(4.0, 5.0));
+        atlas.add(format!("decor_flowers_{v}"), flowers(v + 40), Vec2::new(4.0, 4.0));
+        atlas.add(format!("decor_reeds_{v}"), reeds(v + 50), Vec2::new(5.0, 11.0));
     }
 }

@@ -8,18 +8,18 @@ pub mod validate;
 
 use crate::art::ArtLibrary;
 use crate::content::Content;
-use crate::settings::{UserSettings, scenarios_dir};
+use crate::settings::{scenarios_dir, UserSettings};
 use crate::view::{Overlay, WorldView};
 use ashen_core::iso::{tile_to_world, world_to_tile};
-use ashen_engine::Engine;
 use ashen_engine::input::{KeyCode, MouseButton};
 use ashen_engine::render::{Camera2D, ViewParams};
-use ashen_sim::SimWorld;
+use ashen_engine::Engine;
 use ashen_sim::entity::NodeKind;
 use ashen_sim::genmap::GenPreset;
 use ashen_sim::map::{DecorKind, Terrain};
 use ashen_sim::mission::{GameMode, MatchSettings, MissionDef};
 use ashen_sim::scenario::{AreaDef, StartPos};
+use ashen_sim::SimWorld;
 use doc::{BrushShape, EditDoc, History};
 use glam::{IVec2, Vec2};
 use std::path::PathBuf;
@@ -30,13 +30,7 @@ use validate::Issue;
 #[derive(Clone, Debug)]
 pub enum EditorInit {
     /// Neue Karte aus dem Generator.
-    New {
-        width: i32,
-        height: i32,
-        seed: u64,
-        preset: GenPreset,
-        blank: bool,
-    },
+    New { width: i32, height: i32, seed: u64, preset: GenPreset, blank: bool },
     /// Gespeichertes Szenario bearbeiten.
     Load(PathBuf),
 }
@@ -66,19 +60,7 @@ pub enum Tool {
 }
 
 impl Tool {
-    pub const ALL: [Tool; 11] = [
-        Tool::Select,
-        Tool::Terrain,
-        Tool::Fill,
-        Tool::Trees,
-        Tool::Decor,
-        Tool::Nodes,
-        Tool::Building,
-        Tool::Unit,
-        Tool::Start,
-        Tool::Area,
-        Tool::Erase,
-    ];
+    pub const ALL: [Tool; 11] = [Tool::Select, Tool::Terrain, Tool::Fill, Tool::Trees, Tool::Decor, Tool::Nodes, Tool::Building, Tool::Unit, Tool::Start, Tool::Area, Tool::Erase];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -98,28 +80,16 @@ impl Tool {
 
     pub fn hint(self) -> &'static str {
         match self {
-            Tool::Select => {
-                "Klicken wählt Objekte, Startpunkte und Bereiche. Ziehen verschiebt. Entf löscht."
-            }
-            Tool::Terrain => {
-                "Malt Gelände mit Pinsel. Wasser entfernt Bäume und Dekoration darunter."
-            }
+            Tool::Select => "Klicken wählt Objekte, Startpunkte und Bereiche. Ziehen verschiebt. Entf löscht.",
+            Tool::Terrain => "Malt Gelände mit Pinsel. Wasser entfernt Bäume und Dekoration darunter.",
             Tool::Fill => "Füllt zusammenhängendes gleiches Gelände.",
             Tool::Trees => "Linke Maustaste pflanzt Bäume (Dichte), Umschalt entfernt sie.",
-            Tool::Decor => {
-                "Setzt Dekoration. Blockierende Objekte (Felsbrocken, Ruinen …) sperren die Kachel."
-            }
+            Tool::Decor => "Setzt Dekoration. Blockierende Objekte (Felsbrocken, Ruinen …) sperren die Kachel.",
             Tool::Nodes => "Setzt Goldminen, Steinbrüche und einzelne Bäume.",
-            Tool::Building => {
-                "Setzt fertige Gebäude beider Seiten. Entfernen mit dem Radierer oder über die Auswahl."
-            }
-            Tool::Unit => {
-                "Setzt Einheitengruppen. Wächter-Haltung stellt Ihr in den Eigenschaften ein."
-            }
+            Tool::Building => "Setzt fertige Gebäude beider Seiten. Entfernen mit dem Radierer oder über die Auswahl.",
+            Tool::Unit => "Setzt Einheitengruppen. Wächter-Haltung stellt Ihr in den Eigenschaften ein.",
             Tool::Start => "Setzt die Startposition der gewählten Seite.",
-            Tool::Area => {
-                "Zieht einen benannten Bereich auf (für Auslöser: Einheiten im Bereich, Erscheinen)."
-            }
+            Tool::Area => "Zieht einen benannten Bereich auf (für Auslöser: Einheiten im Bereich, Erscheinen).",
             Tool::Erase => "Entfernt Objekte unter dem Zeiger (Einheiten, Gebäude, Quellen, Deko).",
         }
     }
@@ -166,13 +136,7 @@ pub struct NewMapForm {
 
 impl Default for NewMapForm {
     fn default() -> Self {
-        NewMapForm {
-            width: 72,
-            height: 72,
-            seed: 897,
-            preset: GenPreset::Aschmark,
-            blank: false,
-        }
+        NewMapForm { width: 72, height: 72, seed: 897, preset: GenPreset::Aschmark, blank: false }
     }
 }
 
@@ -225,24 +189,10 @@ pub struct EditorScene {
 }
 
 impl EditorScene {
-    pub fn new(
-        content: &Content,
-        init: EditorInit,
-        max_particles: usize,
-    ) -> Result<EditorScene, String> {
+    pub fn new(content: &Content, init: EditorInit, max_particles: usize) -> Result<EditorScene, String> {
         let (doc, path) = match init {
-            EditorInit::New {
-                width,
-                height,
-                seed,
-                preset,
-                blank,
-            } => {
-                let doc = if blank {
-                    EditDoc::blank(width, height, Terrain::Grass)
-                } else {
-                    EditDoc::generated(width, height, seed, preset)
-                };
+            EditorInit::New { width, height, seed, preset, blank } => {
+                let doc = if blank { EditDoc::blank(width, height, Terrain::Grass) } else { EditDoc::generated(width, height, seed, preset) };
                 (doc, None)
             }
             EditorInit::Load(p) => {
@@ -257,26 +207,9 @@ impl EditorScene {
             }
         };
         let (cx, cy) = (doc.map.width as f32 * 0.5, doc.map.height as f32 * 0.5);
-        let start = doc
-            .def
-            .starts
-            .first()
-            .map(|s| Vec2::new(s.x, s.y))
-            .unwrap_or(Vec2::new(cx, cy));
-        let building_id = content
-            .data
-            .buildings
-            .iter()
-            .find(|b| b.faction == ashen_sim::data::Faction::EmberCrown && b.buildable)
-            .map(|b| b.id.clone())
-            .unwrap_or_else(|| "keep".into());
-        let unit_id = content
-            .data
-            .units
-            .iter()
-            .find(|u| u.faction == ashen_sim::data::Faction::EmberCrown)
-            .map(|u| u.id.clone())
-            .unwrap_or_else(|| "swordsman".into());
+        let start = doc.def.starts.first().map(|s| Vec2::new(s.x, s.y)).unwrap_or(Vec2::new(cx, cy));
+        let building_id = content.data.buildings.iter().find(|b| b.faction == ashen_sim::data::Faction::EmberCrown && b.buildable).map(|b| b.id.clone()).unwrap_or_else(|| "keep".into());
+        let unit_id = content.data.units.iter().find(|u| u.faction == ashen_sim::data::Faction::EmberCrown).map(|u| u.id.clone()).unwrap_or_else(|| "swordsman".into());
         let mut s = EditorScene {
             last_stable: doc.clone(),
             doc,
@@ -285,10 +218,7 @@ impl EditorScene {
             world: None,
             dirty_world: true,
             view: WorldView::new(max_particles),
-            camera: Camera2D {
-                center: tile_to_world(start),
-                target_lines: 420.0,
-            },
+            camera: Camera2D { center: tile_to_world(start), target_lines: 420.0 },
             last_view: None,
             tool: Tool::Terrain,
             terrain: Terrain::Grass,
@@ -331,9 +261,7 @@ impl EditorScene {
 
     /// Übernimmt Änderungen des Frames in die Undo-Liste (mit Zusammenfassung gleicher Eingaben).
     pub fn commit(&mut self, key: &str) {
-        let merge_text = key.starts_with("text")
-            && self.last_commit.0 == key
-            && self.time - self.last_commit.1 < 1.5;
+        let merge_text = key.starts_with("text") && self.last_commit.0 == key && self.time - self.last_commit.1 < 1.5;
         let merge_stroke = key.starts_with("stroke") && self.last_commit.0 == key;
         if !(merge_text || merge_stroke) {
             self.history.record(&self.last_stable);
@@ -382,14 +310,7 @@ impl EditorScene {
     }
 
     fn rebuild_world(&mut self, data: &ashen_sim::GameData) {
-        match SimWorld::new(
-            data,
-            self.doc.to_mission(),
-            MatchSettings {
-                mode: GameMode::Sandbox,
-                ..Default::default()
-            },
-        ) {
+        match SimWorld::new(data, self.doc.to_mission(), MatchSettings { mode: GameMode::Sandbox, ..Default::default() }) {
             Ok(mut w) => {
                 w.env.time_of_day = 0.46;
                 w.env.weather = ashen_sim::env::Weather::Clear;
@@ -422,17 +343,10 @@ impl EditorScene {
         let path = self.file_name();
         match ashen_sim::scenario::save(&self.doc.to_mission(), &path) {
             Ok(()) => {
-                let errors = self
-                    .issues
-                    .iter()
-                    .filter(|i| i.level == validate::Level::Error)
-                    .count();
+                let errors = self.issues.iter().filter(|i| i.level == validate::Level::Error).count();
                 self.file_path = Some(path.clone());
                 self.modified = false;
-                let name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().to_string())
-                    .unwrap_or_default();
+                let name = path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
                 if errors > 0 {
                     self.notify(format!("Gespeichert als {name} – aber {errors} Fehler in der Prüfung, die Karte ist so nicht fair spielbar."), true);
                 } else {
@@ -484,19 +398,12 @@ impl EditorScene {
         if let Some(s) = self.doc.def.starts.first() {
             self.camera.center = tile_to_world(Vec2::new(s.x, s.y));
         }
-        self.notify(
-            "Vorlage geladen – Speichern legt eine eigene Fassung an.",
-            false,
-        );
+        self.notify("Vorlage geladen – Speichern legt eine eigene Fassung an.", false);
     }
 
     pub fn new_map(&mut self, data: &ashen_sim::GameData) {
         let f = self.new_form.clone();
-        let doc = if f.blank {
-            EditDoc::blank(f.width, f.height, Terrain::Grass)
-        } else {
-            EditDoc::generated(f.width, f.height, f.seed, f.preset)
-        };
+        let doc = if f.blank { EditDoc::blank(f.width, f.height, Terrain::Grass) } else { EditDoc::generated(f.width, f.height, f.seed, f.preset) };
         self.doc = doc;
         self.last_stable = self.doc.clone();
         self.history.clear();
@@ -519,93 +426,27 @@ impl EditorScene {
         let mut dirs = vec![(scenarios_dir(), ashen_sim::scenario::ScenarioSource::User)];
         dirs.extend(content.scenario_dirs());
         for e in ashen_sim::scenario::discover(&dirs, &mut errors) {
-            list.push((
-                e.path,
-                format!("{} · {}", e.def.name, e.source.label()),
-                e.def.id,
-            ));
+            list.push((e.path, format!("{} · {}", e.def.name, e.source.label()), e.def.id));
         }
         self.saved_list = list;
     }
 
     /// Zustand für automatisierte Läufe (Screenshots): Werkzeug, Dialog, Reiter, Beispielstriche.
-    pub fn apply_auto(
-        &mut self,
-        data: &ashen_sim::GameData,
-        tool: &Option<String>,
-        dialog: &Option<String>,
-        tab: &Option<String>,
-        demo: bool,
-    ) {
+    pub fn apply_auto(&mut self, data: &ashen_sim::GameData, tool: &Option<String>, dialog: &Option<String>, tab: &Option<String>, demo: bool) {
         if demo {
             // Ein Teich und ein Wäldchen nahe der Spielersiedlung, Auswahl des Bergfrieds.
-            let c = self
-                .doc
-                .def
-                .starts
-                .first()
-                .map(|s| IVec2::new(s.x as i32, s.y as i32))
-                .unwrap_or(IVec2::new(20, 50));
+            let c = self.doc.def.starts.first().map(|s| IVec2::new(s.x as i32, s.y as i32)).unwrap_or(IVec2::new(20, 50));
             let pond = c + IVec2::new(10, -6);
-            self.doc
-                .paint_terrain(&BrushShape::Circle.tiles(pond, 6), Terrain::Water);
-            self.doc.paint_terrain(
-                &BrushShape::Circle
-                    .tiles(pond, 8)
-                    .into_iter()
-                    .filter(|t| {
-                        self.doc
-                            .map
-                            .terrain_at(*t)
-                            .is_some_and(|x| x.walkable() && x != Terrain::Road)
-                    })
-                    .collect::<Vec<_>>(),
-                Terrain::Sand,
-            );
-            self.doc
-                .paint_terrain(&BrushShape::Circle.tiles(pond, 4), Terrain::DeepWater);
-            self.doc.paint_terrain(
-                &BrushShape::Diamond.tiles(c + IVec2::new(-4, 10), 7),
-                Terrain::DarkGrass,
-            );
-            self.doc.paint_trees(
-                &BrushShape::Circle.tiles(c + IVec2::new(-4, 10), 7),
-                true,
-                0.7,
-                11,
-            );
-            let _ = self.doc.place_decor(
-                DecorKind::Ruin,
-                glam::Vec2::new(c.x as f32 + 6.5, c.y as f32 + 8.5),
-                0,
-            );
-            let _ = self.doc.place_decor(
-                DecorKind::Brazier,
-                glam::Vec2::new(c.x as f32 + 3.5, c.y as f32 + 10.5),
-                0,
-            );
-            let _ = self.doc.place_object(
-                data,
-                "swordsman",
-                0,
-                glam::Vec2::new(c.x as f32 + 5.5, c.y as f32 + 5.5),
-                4,
-            );
-            self.doc.def.areas.push(AreaDef {
-                id: "lager".into(),
-                name: "Lager".into(),
-                x: c.x - 8,
-                y: c.y - 8,
-                w: 8,
-                h: 6,
-            });
-            self.selection = self
-                .doc
-                .def
-                .placements
-                .iter()
-                .position(|p| p.id == "keep")
-                .map(Sel::Placement);
+            self.doc.paint_terrain(&BrushShape::Circle.tiles(pond, 6), Terrain::Water);
+            self.doc.paint_terrain(&BrushShape::Circle.tiles(pond, 8).into_iter().filter(|t| self.doc.map.terrain_at(*t).is_some_and(|x| x.walkable() && x != Terrain::Road)).collect::<Vec<_>>(), Terrain::Sand);
+            self.doc.paint_terrain(&BrushShape::Circle.tiles(pond, 4), Terrain::DeepWater);
+            self.doc.paint_terrain(&BrushShape::Diamond.tiles(c + IVec2::new(-4, 10), 7), Terrain::DarkGrass);
+            self.doc.paint_trees(&BrushShape::Circle.tiles(c + IVec2::new(-4, 10), 7), true, 0.7, 11);
+            let _ = self.doc.place_decor(DecorKind::Ruin, glam::Vec2::new(c.x as f32 + 6.5, c.y as f32 + 8.5), 0);
+            let _ = self.doc.place_decor(DecorKind::Brazier, glam::Vec2::new(c.x as f32 + 3.5, c.y as f32 + 10.5), 0);
+            let _ = self.doc.place_object(data, "swordsman", 0, glam::Vec2::new(c.x as f32 + 5.5, c.y as f32 + 5.5), 4);
+            self.doc.def.areas.push(AreaDef { id: "lager".into(), name: "Lager".into(), x: c.x - 8, y: c.y - 8, w: 8, h: 6 });
+            self.selection = self.doc.def.placements.iter().position(|p| p.id == "keep").map(Sel::Placement);
             self.commit("demo");
             self.rebuild_world(data);
         }
@@ -661,14 +502,7 @@ impl EditorScene {
         self.camera.center = tile_to_world(p);
     }
 
-    pub fn update(
-        &mut self,
-        engine: &mut Engine,
-        content: &Content,
-        _art: &ArtLibrary,
-        _settings: &UserSettings,
-        dt: f32,
-    ) {
+    pub fn update(&mut self, engine: &mut Engine, content: &Content, _art: &ArtLibrary, _settings: &UserSettings, dt: f32) {
         self.time += dt;
         if let Some((_, t, _)) = &mut self.status {
             *t -= dt;
@@ -676,9 +510,7 @@ impl EditorScene {
         if self.status.as_ref().is_some_and(|(_, t, _)| *t <= 0.0) {
             self.status = None;
         }
-        let view = self
-            .camera
-            .view(engine.size, engine.renderer.settings.min_lines);
+        let view = self.camera.view(engine.size, engine.renderer.settings.min_lines);
         self.last_view = Some(view);
         self.view.update(dt);
         self.controls(engine, content, &view, dt);
@@ -691,8 +523,7 @@ impl EditorScene {
                 u.activity_time += dt;
             }
         }
-        if self.issues_dirty && self.dialog == Dialog::Data && self.data_tab == DataTab::Validation
-        {
+        if self.issues_dirty && self.dialog == Dialog::Data && self.data_tab == DataTab::Validation {
             self.refresh_issues(&content.data);
         }
     }
@@ -702,34 +533,23 @@ impl EditorScene {
         let scale = view.pixel_scale as f32;
         // Kamera: Pfeiltasten, WASD ist für Befehle frei; mittlere Maustaste zieht.
         let mut pan = Vec2::ZERO;
-        for (k, d) in [
-            (KeyCode::ArrowUp, Vec2::NEG_Y),
-            (KeyCode::ArrowDown, Vec2::Y),
-            (KeyCode::ArrowLeft, Vec2::NEG_X),
-            (KeyCode::ArrowRight, Vec2::X),
-        ] {
+        for (k, d) in [(KeyCode::ArrowUp, Vec2::NEG_Y), (KeyCode::ArrowDown, Vec2::Y), (KeyCode::ArrowLeft, Vec2::NEG_X), (KeyCode::ArrowRight, Vec2::X)] {
             if input.key_down(k) {
                 pan += d;
             }
         }
-        self.camera.center +=
-            pan.normalize_or_zero() * 420.0 * (self.camera.target_lines / 330.0) * dt;
+        self.camera.center += pan.normalize_or_zero() * 420.0 * (self.camera.target_lines / 330.0) * dt;
         if input.mouse_down(MouseButton::Middle) {
             self.camera.center -= input.mouse_delta / scale;
         }
         if input.wheel != 0.0 && !input.ui_wants_pointer {
-            self.camera.target_lines =
-                (self.camera.target_lines * (1.0 - input.wheel * 0.1)).clamp(200.0, 720.0);
+            self.camera.target_lines = (self.camera.target_lines * (1.0 - input.wheel * 0.1)).clamp(200.0, 720.0);
         }
         self.clamp_camera();
 
         let cmd = input.command_mod();
         if input.key_pressed(KeyCode::KeyZ) && cmd {
-            if input.shift {
-                self.redo()
-            } else {
-                self.undo()
-            }
+            if input.shift { self.redo() } else { self.undo() }
         }
         if input.key_pressed(KeyCode::KeyY) && cmd {
             self.redo();
@@ -755,13 +575,8 @@ impl EditorScene {
 
         let mouse = input.mouse;
         let world_pos = world_to_tile(view.screen_to_world(mouse));
-        let inside = world_pos.x >= 0.0
-            && world_pos.y >= 0.0
-            && world_pos.x < self.doc.map.width as f32
-            && world_pos.y < self.doc.map.height as f32;
-        self.mouse_tile = (inside && input.cursor_inside)
-            .then_some(world_pos)
-            .or(self.forced_cursor);
+        let inside = world_pos.x >= 0.0 && world_pos.y >= 0.0 && world_pos.x < self.doc.map.width as f32 && world_pos.y < self.doc.map.height as f32;
+        self.mouse_tile = (inside && input.cursor_inside).then_some(world_pos).or(self.forced_cursor);
         if input.ui_wants_pointer || self.dialog != Dialog::None {
             if !input.mouse_down(MouseButton::Left) {
                 self.stroking = false;
@@ -803,25 +618,14 @@ impl EditorScene {
             Tool::Trees if self.stroking && down => {
                 let tiles = self.brush_tiles(tile);
                 let seed = self.stroke_id.wrapping_mul(2654435761);
-                changed = self
-                    .doc
-                    .paint_trees(&tiles, !shift, self.tree_density, seed)
-                    > 0;
+                changed = self.doc.paint_trees(&tiles, !shift, self.tree_density, seed) > 0;
             }
             Tool::Decor if self.stroking && down => {
-                let center = if self.decor_kind.blocks() {
-                    TileCenter::center(tile)
-                } else {
-                    p
-                };
+                let center = if self.decor_kind.blocks() { TileCenter::center(tile) } else { p };
                 let moved = self.last_decor_tile != Some(tile);
                 if pressed || moved {
                     self.last_decor_tile = Some(tile);
-                    if let Err(e) = self.doc.place_decor(
-                        self.decor_kind,
-                        center,
-                        (tile.x + tile.y).rem_euclid(8) as u8,
-                    ) {
+                    if let Err(e) = self.doc.place_decor(self.decor_kind, center, (tile.x + tile.y).rem_euclid(8) as u8) {
                         if pressed {
                             self.notify(e, true);
                         }
@@ -830,11 +634,7 @@ impl EditorScene {
                     }
                 }
             }
-            Tool::Nodes if pressed => match self.doc.place_node(
-                self.node_kind,
-                tile,
-                (tile.x + tile.y).rem_euclid(6) as u8,
-            ) {
+            Tool::Nodes if pressed => match self.doc.place_node(self.node_kind, tile, (tile.x + tile.y).rem_euclid(6) as u8) {
                 Ok(()) => changed = true,
                 Err(e) => self.notify(e, true),
             },
@@ -850,11 +650,7 @@ impl EditorScene {
             }
             Tool::Unit if pressed => {
                 let id = self.unit_id.clone();
-                let count = if EditDoc::is_hero(data, &id) {
-                    1
-                } else {
-                    self.unit_count
-                };
+                let count = if EditDoc::is_hero(data, &id) { 1 } else { self.unit_count };
                 match self.doc.place_object(data, &id, self.owner, p, count) {
                     Ok(i) => {
                         self.selection = Some(Sel::Placement(i));
@@ -872,11 +668,7 @@ impl EditorScene {
                         s.x = p.x;
                         s.y = p.y;
                     } else {
-                        self.doc.def.starts.push(StartPos {
-                            owner,
-                            x: p.x,
-                            y: p.y,
-                        });
+                        self.doc.def.starts.push(StartPos { owner, x: p.x, y: p.y });
                     }
                     changed = true;
                 }
@@ -890,14 +682,7 @@ impl EditorScene {
                     let (x1, y1) = (a.x.max(tile.x), a.y.max(tile.y));
                     let ids: Vec<&str> = self.doc.def.areas.iter().map(|a| a.id.as_str()).collect();
                     let id = EditDoc::fresh_id(&ids, "bereich");
-                    self.doc.def.areas.push(AreaDef {
-                        name: id.clone(),
-                        id,
-                        x: x0,
-                        y: y0,
-                        w: x1 - x0 + 1,
-                        h: y1 - y0 + 1,
-                    });
+                    self.doc.def.areas.push(AreaDef { name: id.clone(), id, x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 });
                     self.selection = Some(Sel::Area(self.doc.def.areas.len() - 1));
                     changed = true;
                 }
@@ -914,10 +699,7 @@ impl EditorScene {
                     self.selection = self.pick(data, p);
                     self.move_origin = self.selection.map(|s| (p, self.sel_pos(s)));
                 }
-                if down
-                    && self.stroking
-                    && let (Some(sel), Some((grab, origin))) = (self.selection, self.move_origin)
-                {
+                if down && self.stroking && let (Some(sel), Some((grab, origin))) = (self.selection, self.move_origin) {
                     let target = origin + (p - grab);
                     if self.move_selected(data, sel, target) {
                         changed = true;
@@ -960,19 +742,11 @@ impl EditorScene {
     /// Bezugspunkt einer Auswahl (für Verschieben).
     fn sel_pos(&self, s: Sel) -> Vec2 {
         match s {
-            Sel::Placement(i) => {
-                Vec2::new(self.doc.def.placements[i].x, self.doc.def.placements[i].y)
-            }
+            Sel::Placement(i) => Vec2::new(self.doc.def.placements[i].x, self.doc.def.placements[i].y),
             Sel::Decor(i) => Vec2::new(self.doc.map.decor[i].x, self.doc.map.decor[i].y),
-            Sel::Node(i) => Vec2::new(
-                self.doc.map.nodes[i].x as f32,
-                self.doc.map.nodes[i].y as f32,
-            ),
+            Sel::Node(i) => Vec2::new(self.doc.map.nodes[i].x as f32, self.doc.map.nodes[i].y as f32),
             Sel::Start(i) => Vec2::new(self.doc.def.starts[i].x, self.doc.def.starts[i].y),
-            Sel::Area(i) => Vec2::new(
-                self.doc.def.areas[i].x as f32,
-                self.doc.def.areas[i].y as f32,
-            ),
+            Sel::Area(i) => Vec2::new(self.doc.def.areas[i].x as f32, self.doc.def.areas[i].y as f32),
         }
     }
 
@@ -987,24 +761,15 @@ impl EditorScene {
                     if tile.x as f32 == old_x && tile.y as f32 == old_y {
                         return false;
                     }
-                    if self
-                        .doc
-                        .can_place_building(data, &id, tile, Some(i))
-                        .is_ok()
-                    {
+                    if self.doc.can_place_building(data, &id, tile, Some(i)).is_ok() {
                         self.doc.def.placements[i].x = tile.x as f32;
                         self.doc.def.placements[i].y = tile.y as f32;
                         return true;
                     }
                     false
                 } else {
-                    let (nx, ny) = (
-                        (target.x * 2.0).round() / 2.0,
-                        (target.y * 2.0).round() / 2.0,
-                    );
-                    if nx == old_x && ny == old_y
-                        || self.doc.can_place_unit(Vec2::new(nx, ny)).is_err()
-                    {
+                    let (nx, ny) = ((target.x * 2.0).round() / 2.0, (target.y * 2.0).round() / 2.0);
+                    if nx == old_x && ny == old_y || self.doc.can_place_unit(Vec2::new(nx, ny)).is_err() {
                         return false;
                     }
                     self.doc.def.placements[i].x = nx;
@@ -1014,11 +779,7 @@ impl EditorScene {
             }
             Sel::Decor(i) => {
                 let d = self.doc.map.decor[i].clone();
-                let np = if d.kind.blocks() {
-                    TileCenter::center(IVec2::new(target.x.floor() as i32, target.y.floor() as i32))
-                } else {
-                    target
-                };
+                let np = if d.kind.blocks() { TileCenter::center(IVec2::new(target.x.floor() as i32, target.y.floor() as i32)) } else { target };
                 if (np - Vec2::new(d.x, d.y)).length() < 0.05 {
                     return false;
                 }
@@ -1076,9 +837,7 @@ impl EditorScene {
     }
 
     pub fn delete_selection(&mut self) {
-        let Some(sel) = self.selection.take() else {
-            return;
-        };
+        let Some(sel) = self.selection.take() else { return };
         match sel {
             Sel::Placement(i) if i < self.doc.def.placements.len() => {
                 self.doc.def.placements.remove(i);
@@ -1105,9 +864,7 @@ impl EditorScene {
     pub fn render(&mut self, engine: &mut Engine, content: &Content, art: &ArtLibrary) {
         engine.frame.camera = self.camera;
         engine.fow_enabled = false;
-        let view = self
-            .camera
-            .view(engine.size, engine.renderer.settings.min_lines);
+        let view = self.camera.view(engine.size, engine.renderer.settings.min_lines);
         let mut overlay = Overlay::default();
         if self.tool == Tool::Building
             && let Some(p) = self.mouse_tile
@@ -1115,23 +872,11 @@ impl EditorScene {
         {
             let def = content.data.building(b);
             let tile = IVec2::new(p.x.floor() as i32, p.y.floor() as i32);
-            let ok = self
-                .doc
-                .can_place_building(&content.data, &self.building_id, tile, None)
-                .is_ok();
+            let ok = self.doc.can_place_building(&content.data, &self.building_id, tile, None).is_ok();
             overlay.ghost = Some((def.id.clone(), tile, def.size, ok));
         }
         if let Some(w) = &self.world {
-            self.view.render(
-                w,
-                &content.data,
-                art,
-                &mut engine.frame,
-                &view,
-                1.0,
-                &overlay,
-                false,
-            );
+            self.view.render(w, &content.data, art, &mut engine.frame, &view, 1.0, &overlay, false);
             engine.frame.atmosphere.vignette = 0.35;
         }
     }

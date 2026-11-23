@@ -5,8 +5,8 @@ use crate::content::Content;
 use crate::editor::{EditorAction, EditorInit, EditorScene};
 use crate::hud::{self, HudCtx};
 use crate::menu::{MenuAction, MenuScene, Page};
-use crate::mission::{MissionScene, SceneAction};
 use crate::play_modes::{self, ChallengeReport};
+use crate::mission::{MissionScene, SceneAction};
 use crate::settings::UserSettings;
 use crate::ui_art::UiArt;
 use crate::worldmap::battle::{self, BattleLink};
@@ -145,33 +145,12 @@ impl AshenGame {
     }
 
     /// Startet eine Mission aus Daten. Ein wartender Editor wird für das Testspiel geparkt.
-    fn start_def(
-        &mut self,
-        engine: &mut Engine,
-        mission: MissionDef,
-        settings: MatchSettings,
-        challenge: Option<(ChallengeDef, bool)>,
-    ) -> Result<(), String> {
-        let Some(content) = &self.content else {
-            return Err("Keine Spieldaten geladen.".into());
-        };
-        let mut scene = MissionScene::new(
-            &content.data,
-            mission.clone(),
-            settings.clone(),
-            Self::max_particles(engine),
-        )?;
+    fn start_def(&mut self, engine: &mut Engine, mission: MissionDef, settings: MatchSettings, challenge: Option<(ChallengeDef, bool)>) -> Result<(), String> {
+        let Some(content) = &self.content else { return Err("Keine Spieldaten geladen.".into()) };
+        let mut scene = MissionScene::new(&content.data, mission.clone(), settings.clone(), Self::max_particles(engine))?;
         scene.no_save = challenge.as_ref().is_some_and(|c| c.1);
-        self.last_run = Some(LastRun {
-            mission,
-            settings,
-            challenge: challenge.clone(),
-        });
-        self.challenge = challenge.map(|(def, iron_man)| ActiveChallenge {
-            def,
-            iron_man,
-            reported: false,
-        });
+        self.last_run = Some(LastRun { mission, settings, challenge: challenge.clone() });
+        self.challenge = challenge.map(|(def, iron_man)| ActiveChallenge { def, iron_man, reported: false });
         self.report = None;
         self.battle = None;
         engine.audio.stop_music(1.5);
@@ -448,11 +427,7 @@ impl AshenGame {
                 self.fatal = Some(format!("Szenario '{id}' nicht gefunden."));
                 return;
             };
-            let settings = MatchSettings {
-                mode: ashen_sim::mission::GameMode::Campaign,
-                seed: def.map_seed,
-                ..Default::default()
-            };
+            let settings = MatchSettings { mode: ashen_sim::mission::GameMode::Campaign, seed: def.map_seed, ..Default::default() };
             if let Err(e) = self.start_def(engine, def, settings, None) {
                 self.fatal = Some(e);
                 return;
@@ -463,23 +438,17 @@ impl AshenGame {
                 self.fatal = Some(format!("Herausforderung '{id}' nicht gefunden."));
                 return;
             };
-            let Some(base) = content.find_base(&def.base) else {
-                return;
-            };
+            let Some(base) = content.find_base(&def.base) else { return };
             let p = ashen_sim::challenge::prepare(&def, &base);
             if let Err(e) = self.start_def(engine, p.mission, p.settings, Some((def, p.iron_man))) {
                 self.fatal = Some(e);
                 return;
             }
         } else {
-            let Some(ms) = self.auto.start_mission.clone() else {
-                return;
-            };
+            let Some(ms) = self.auto.start_mission.clone() else { return };
             self.start_mission(engine, 0, ms);
         }
-        let (Some(Scene::Mission(m)), Some(content)) = (&mut self.scene, &self.content) else {
-            return;
-        };
+        let (Some(Scene::Mission(m)), Some(content)) = (&mut self.scene, &self.content) else { return };
         let data = &content.data;
         if let Some(w) = self.auto.weather {
             m.world.env.weather = w;
@@ -508,17 +477,9 @@ impl AshenGame {
             for i in 0..8 {
                 let kind = if i == 7 { brute } else { thrall };
                 if let Some(k) = kind {
-                    let id = m.world.spawn_unit(
-                        data,
-                        k,
-                        ashen_sim::entity::ENEMY,
-                        glam::Vec2::new(24.0 + (i % 3) as f32, 47.0 + (i / 3) as f32),
-                    );
+                    let id = m.world.spawn_unit(data, k, ashen_sim::entity::ENEMY, glam::Vec2::new(24.0 + (i % 3) as f32, 47.0 + (i / 3) as f32));
                     if let Some(u) = m.world.units.get_mut(id) {
-                        u.order = ashen_sim::entity::Order::Move {
-                            target: glam::Vec2::new(15.0, 55.0),
-                            attack_move: true,
-                        };
+                        u.order = ashen_sim::entity::Order::Move { target: glam::Vec2::new(15.0, 55.0), attack_move: true };
                         u.request_path(glam::Vec2::new(15.0, 55.0));
                     }
                 }
@@ -550,23 +511,13 @@ impl AshenGame {
                 "city" => m.show_city = true,
                 "build" => {
                     m.mode = crate::mission::CommandMode::BuildMenu;
-                    if let Some(c) = ashen_sim::data::BuildCategory::ALL
-                        .iter()
-                        .find(|c| format!("{c:?}").eq_ignore_ascii_case(arg))
-                    {
+                    if let Some(c) = ashen_sim::data::BuildCategory::ALL.iter().find(|c| format!("{c:?}").eq_ignore_ascii_case(arg)) {
                         m.build_cat = *c;
                     }
                 }
                 "hero" => m.show_hero = true,
                 "select" => {
-                    m.selected_building = m
-                        .world
-                        .buildings
-                        .iter()
-                        .find(|(_, b)| {
-                            b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg
-                        })
-                        .map(|(id, _)| id);
+                    m.selected_building = m.world.buildings.iter().find(|(_, b)| b.owner == ashen_sim::entity::PLAYER && data.building(b.kind).id == arg).map(|(id, _)| id);
                 }
                 _ => {}
             }
@@ -577,25 +528,14 @@ impl AshenGame {
             _ => {}
         }
         if self.auto.select_army {
-            m.selection = m
-                .world
-                .units
-                .iter()
-                .filter(|(_, u)| {
-                    u.owner == ashen_sim::entity::PLAYER
-                        && data.unit(u.kind).class != ashen_sim::data::UnitClass::Worker
-                })
-                .map(|(id, _)| id)
-                .collect();
+            m.selection = m.world.units.iter().filter(|(_, u)| u.owner == ashen_sim::entity::PLAYER && data.unit(u.kind).class != ashen_sim::data::UnitClass::Worker).map(|(id, _)| id).collect();
         }
     }
 }
 
 impl AshenGame {
     fn apply_auto_page(&mut self, page: &str) {
-        let (Some(Scene::Menu(m)), Some(content)) = (&mut self.scene, &self.content) else {
-            return;
-        };
+        let (Some(Scene::Menu(m)), Some(content)) = (&mut self.scene, &self.content) else { return };
         m.modes.refresh_scenarios(content);
         m.modes.refresh_challenges();
         m.modes.scen_sel = self.auto.menu_select;
@@ -612,22 +552,10 @@ impl AshenGame {
 
     fn apply_auto_editor(&mut self, engine: &mut Engine) {
         let Some(content) = &self.content else { return };
-        let init = EditorInit::New {
-            width: 72,
-            height: 72,
-            seed: 897,
-            preset: ashen_sim::genmap::GenPreset::Aschmark,
-            blank: false,
-        };
+        let init = EditorInit::New { width: 72, height: 72, seed: 897, preset: ashen_sim::genmap::GenPreset::Aschmark, blank: false };
         match EditorScene::new(content, init, Self::max_particles(engine)) {
             Ok(mut e) => {
-                e.apply_auto(
-                    &content.data,
-                    &self.auto.editor_tool,
-                    &self.auto.editor_dialog,
-                    &self.auto.editor_tab,
-                    self.auto.editor_demo,
-                );
+                e.apply_auto(&content.data, &self.auto.editor_tool, &self.auto.editor_dialog, &self.auto.editor_tab, self.auto.editor_demo);
                 if let Some((x, y)) = self.auto.camera_tile {
                     e.center_on(glam::Vec2::new(x, y));
                     e.forced_cursor = Some(glam::Vec2::new(x + 1.5, y + 1.5));
@@ -672,22 +600,12 @@ impl Game for AshenGame {
         }
         if let Some(path) = std::env::var_os("ASHEN_DUMP_ATLAS") {
             match art.atlas.save_png(std::path::Path::new(&path)) {
-                Ok(()) => log::info!(
-                    "Atlas gespeichert: {}",
-                    std::path::Path::new(&path).display()
-                ),
+                Ok(()) => log::info!("Atlas gespeichert: {}", std::path::Path::new(&path).display()),
                 Err(e) => log::warn!("Atlas-Export fehlgeschlagen: {e}"),
             }
         }
-        engine.renderer.set_atlas(
-            &engine.gpu,
-            art.atlas.size,
-            &art.atlas.albedo,
-            &art.atlas.normal,
-        );
-        let tex = engine
-            .ui
-            .register_texture(&engine.gpu, engine.renderer.atlas_view());
+        engine.renderer.set_atlas(&engine.gpu, art.atlas.size, &art.atlas.albedo, &art.atlas.normal);
+        let tex = engine.ui.register_texture(&engine.gpu, engine.renderer.atlas_view());
         self.atlas_tex = Some(tex);
         self.art = Some(art);
         self.open_menu(engine);
@@ -938,21 +856,11 @@ impl Game for AshenGame {
         if self.auto.hide_ui {
             return;
         }
-        let (Some(content), Some(art), Some(tex), Some(ui_art)) =
-            (&mut self.content, &self.art, self.atlas_tex, &self.ui_art)
-        else {
-            return;
-        };
+        let (Some(content), Some(art), Some(tex), Some(ui_art)) = (&mut self.content, &self.art, self.atlas_tex, &self.ui_art) else { return };
         match &mut self.scene {
             Some(Scene::Menu(m)) => m.ui(ui, engine, content, &mut self.settings, ui_art),
             Some(Scene::Mission(s)) => {
-                let mut cx = HudCtx {
-                    data: &content.data,
-                    art,
-                    tex,
-                    ui: ui_art,
-                    settings: &mut self.settings,
-                };
+                let mut cx = HudCtx { data: &content.data, art, tex, ui: ui_art, settings: &mut self.settings };
                 hud::draw(s, ui, engine, &mut cx);
                 if let Some(r) = &self.report {
                     draw_report(ui.ctx(), ui_art, r);
@@ -988,9 +896,7 @@ impl Game for AshenGame {
     }
 
     fn render(&mut self, engine: &mut Engine) {
-        let (Some(content), Some(art)) = (&self.content, &self.art) else {
-            return;
-        };
+        let (Some(content), Some(art)) = (&self.content, &self.art) else { return };
         match &mut self.scene {
             Some(Scene::Menu(m)) => m.render(engine, content, art),
             Some(Scene::Mission(s)) => s.render(engine, &content.data, art),
@@ -1011,96 +917,33 @@ impl Game for AshenGame {
 /// Ergebnisfenster einer Herausforderung (links neben dem Siegbildschirm).
 fn draw_report(ctx: &egui::Context, art: &UiArt, r: &ChallengeReport) {
     use crate::ui_art::PanelKind;
-    egui::Area::new(egui::Id::unique("challenge_report"))
-        .order(egui::Order::Foreground)
-        .anchor(egui::Align2::LEFT_CENTER, egui::vec2(18.0, 0.0))
-        .show(ctx, |ui| {
-            art.panel(
-                ui,
-                PanelKind::Ornate,
-                egui::Margin::symmetric(34, 32),
-                |ui| {
-                    ui.set_width(270.0);
-                    ui.label(
-                        RichText::new("Herausforderung")
-                            .font(theme::caps_font(13.0))
-                            .color(theme::PARCHMENT_DIM),
-                    );
-                    ui.label(
-                        RichText::new(&r.name)
-                            .font(theme::heading_font(18.0))
-                            .color(theme::GOLD),
-                    );
-                    ui.add_space(4.0);
-                    let res = &r.result;
-                    let verdict = if res.victory {
-                        "Bestanden"
-                    } else {
-                        "Gescheitert"
-                    };
-                    ui.label(
-                        RichText::new(verdict)
-                            .font(theme::heading_font(16.0))
-                            .color(if res.victory {
-                                egui::Color32::from_rgb(150, 220, 130)
-                            } else {
-                                theme::EMBER
-                            }),
-                    );
-                    ui.label(
-                        RichText::new(format!(
-                            "{} Punkte · Zeit {}",
-                            res.score,
-                            ashen_sim::challenge::format_time(res.time)
-                        ))
-                        .font(theme::body_bold_font(16.0))
-                        .color(theme::PARCHMENT),
-                    );
-                    ui.label(
-                        RichText::new(format!(
-                            "Gefallene Feinde {} · Verluste {} · Nächte {} · Wellen {}",
-                            res.kills, res.units_lost, res.nights, res.waves
-                        ))
-                        .font(theme::italic_font(13.5))
-                        .color(theme::PARCHMENT_DIM),
-                    );
-                    ui.add_space(6.0);
-                    match r.rank {
-                        Some(0) if r.new_best => {
-                            ui.label(
-                                RichText::new("Neuer Bestwert!")
-                                    .font(theme::heading_font(16.0))
-                                    .color(theme::EMBER_HOT),
-                            );
-                        }
-                        Some(i) => {
-                            ui.label(
-                                RichText::new(format!("Platz {} der Bestenliste", i + 1))
-                                    .font(theme::body_bold_font(15.0))
-                                    .color(theme::GOLD),
-                            );
-                        }
-                        None => {
-                            ui.label(
-                                RichText::new("Nicht in der Bestenliste")
-                                    .font(theme::italic_font(14.0))
-                                    .color(theme::PARCHMENT_DIM),
-                            );
-                        }
-                    }
-                    ui.add_space(4.0);
-                    for (i, e) in r.top.iter().enumerate() {
-                        ui.label(
-                            RichText::new(format!(
-                                "{}. {}",
-                                i + 1,
-                                play_modes::entry_text(r.rank_by, e)
-                            ))
-                            .font(theme::body_font(14.0))
-                            .color(theme::PARCHMENT),
-                        );
-                    }
-                },
-            );
+    egui::Area::new(egui::Id::unique("challenge_report")).order(egui::Order::Foreground).anchor(egui::Align2::LEFT_CENTER, egui::vec2(18.0, 0.0)).show(ctx, |ui| {
+        art.panel(ui, PanelKind::Ornate, egui::Margin::symmetric(34, 32), |ui| {
+            ui.set_width(270.0);
+            ui.label(RichText::new("Herausforderung").font(theme::caps_font(13.0)).color(theme::PARCHMENT_DIM));
+            ui.label(RichText::new(&r.name).font(theme::heading_font(18.0)).color(theme::GOLD));
+            ui.add_space(4.0);
+            let res = &r.result;
+            let verdict = if res.victory { "Bestanden" } else { "Gescheitert" };
+            ui.label(RichText::new(verdict).font(theme::heading_font(16.0)).color(if res.victory { egui::Color32::from_rgb(150, 220, 130) } else { theme::EMBER }));
+            ui.label(RichText::new(format!("{} Punkte · Zeit {}", res.score, ashen_sim::challenge::format_time(res.time))).font(theme::body_bold_font(16.0)).color(theme::PARCHMENT));
+            ui.label(RichText::new(format!("Gefallene Feinde {} · Verluste {} · Nächte {} · Wellen {}", res.kills, res.units_lost, res.nights, res.waves)).font(theme::italic_font(13.5)).color(theme::PARCHMENT_DIM));
+            ui.add_space(6.0);
+            match r.rank {
+                Some(0) if r.new_best => {
+                    ui.label(RichText::new("Neuer Bestwert!").font(theme::heading_font(16.0)).color(theme::EMBER_HOT));
+                }
+                Some(i) => {
+                    ui.label(RichText::new(format!("Platz {} der Bestenliste", i + 1)).font(theme::body_bold_font(15.0)).color(theme::GOLD));
+                }
+                None => {
+                    ui.label(RichText::new("Nicht in der Bestenliste").font(theme::italic_font(14.0)).color(theme::PARCHMENT_DIM));
+                }
+            }
+            ui.add_space(4.0);
+            for (i, e) in r.top.iter().enumerate() {
+                ui.label(RichText::new(format!("{}. {}", i + 1, play_modes::entry_text(r.rank_by, e))).font(theme::body_font(14.0)).color(theme::PARCHMENT));
+            }
         });
+    });
 }
