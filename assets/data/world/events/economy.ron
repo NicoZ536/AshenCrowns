@@ -1,0 +1,107 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Wirtschaft und Handel.
+(
+    events: [
+        (
+            id: "bread_price_rises", scope: Province, category: "Wirtschaft",
+            title: "Brotpreis steigt in {province}",
+            text: "Das Getreide ist knapp, und die Bäcker verlangen das Doppelte. Vor den Läden bilden sich Schlangen.",
+            conditions: [VarAbove("grain_price_ratio", 1.4), NotState("bread_cap")],
+            mtth_months: 1.0, cooldown_months: 10, chronicle_weight: 22,
+            options: [
+                (id: "price_cap", text: "Preisdeckel: Die Krone zahlt die Differenz (200 Gold)", cost: 200.0, effects: [AddGold(-200.0), AddUnrest(-6.0), AddSatisfaction(4.0), PriceFactor("bread", 0.85, 3), SetState("bread_cap", 3)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 1200.0), 5.0)]),
+                (id: "ban_export", text: "Getreideausfuhr verbieten", effects: [PriceFactor("grain", 0.85, 3), AddUnrest(-3.0), NeighborOpinion(-6.0), SetState("bread_cap", 3)], ai_weight: 3.0),
+                (id: "cut_taxes", text: "Abgaben senken (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddSatisfaction(5.0), AddUnrest(-3.0), SetState("bread_cap", 3)], ai_weight: 3.0),
+                (id: "let_market", text: "Dem Markt freien Lauf lassen", effects: [AddUnrest(3.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "merchant_boom", scope: Realm, category: "Wirtschaft",
+            title: "Handelsblüte in {realm}",
+            text: "Die Märkte sind voll, die Karawanen kommen beladen an. Die Zöllner zählen müde Münzen.",
+            conditions: [VarAbove("satisfaction", 58.0), VarAbove("provinces", 2.0), Chance(0.5), AtWar(false)],
+            mtth_months: 24.0, cooldown_months: 60, chronicle_weight: 18,
+            options: [
+                (id: "tax_boom", text: "Zölle anheben und die Kasse füllen", effects: [AddGold(260.0), AddSatisfaction(-1.0)], ai_weight: 3.0, ai_when: [(VarBelow("gold", 500.0), 6.0)]),
+                (id: "invest_boom", text: "In neue Märkte investieren", effects: [AddGold(120.0), AddTradeBoost(0.1), AddPrestige(20.0)], ai_weight: 4.0),
+            ],
+        ),
+        (
+            id: "banker_crisis", scope: Realm, category: "Wirtschaft",
+            title: "Gläubiger drängen {realm}",
+            text: "Die Bankiers erinnern höflich an ausstehende Raten. Höflichkeit ist hier die schärfste Drohung.",
+            conditions: [VarAbove("debt_ratio", 0.9)],
+            mtth_months: 3.0, cooldown_months: 24, chronicle_weight: 25,
+            options: [
+                (id: "austerity", text: "Sparprogramm verordnen", effects: [AddSatisfaction(-4.0), AddGold(300.0), AddPrestige(-20.0)], ai_weight: 5.0),
+                (id: "debase", text: "Die Münze beschneiden lassen", effects: [AddGold(500.0), AddTyranny(5.0), AddPrestige(-40.0), AddSatisfaction(-2.0)], ai_weight: 2.0),
+                (id: "beg_time", text: "Um Aufschub bitten", effects: [AddPrestige(-30.0), AddGold(150.0)], ai_weight: 3.0),
+            ],
+        ),
+        (
+            id: "mine_collapse", scope: Province, category: "Unglück",
+            title: "Grubenunglück in {province}",
+            text: "Ein Stollen ist eingestürzt. Die Familien der Verschütteten versammeln sich vor dem Schacht.",
+            conditions: [Biome("Mountain"), VarAbove("pop", 300.0), Chance(0.3)],
+            mtth_months: 80.0, cooldown_months: 60, chronicle_weight: 20,
+            options: [
+                (id: "compensate", text: "Witwen entschädigen (80 Gold)", cost: 80.0, effects: [AddGold(-80.0), AddPopulationPct(-0.8), AddUnrest(-1.0)], ai_weight: 4.0),
+                (id: "reopen", text: "Den Schacht sofort wieder öffnen", effects: [AddPopulationPct(-1.2), AddUnrest(5.0)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "market_fair", scope: Province, category: "Wirtschaft",
+            title: "Jahrmarkt in {province}",
+            text: "Gaukler, Händler und Pilger füllen die Straßen. Wer Münzen hat, gibt sie aus.",
+            conditions: [VarAbove("pop", 1200.0), Season([Summer]), VarAbove("satisfaction", 45.0), Chance(0.6)],
+            mtth_months: 6.0, cooldown_months: 24, chronicle_weight: 12,
+            options: [
+                (id: "host_fair", text: "Den Markt großzügig fördern (60 Gold)", cost: 60.0, effects: [AddGold(-60.0), AddGold(220.0), AddSatisfaction(5.0)], ai_weight: 4.0),
+                (id: "tax_fair", text: "Standgebühren erheben", effects: [AddGold(120.0), AddSatisfaction(1.0)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "smuggling_ring", scope: Realm, category: "Wirtschaft",
+            title: "Schmugglerring in {realm}",
+            text: "Zollbeamte melden Waren, die nie über eine Grenze gingen, aber auf allen Märkten auftauchen.",
+            conditions: [VarAbove("provinces", 3.0), Chance(0.3)],
+            mtth_months: 40.0, cooldown_months: 48, chronicle_weight: 14,
+            options: [
+                (id: "crackdown", text: "Hart durchgreifen (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddGold(260.0), AddUnrest(2.0), AddTyranny(1.0)], ai_weight: 4.0),
+                (id: "turn_blind_eye", text: "Wegsehen und mitverdienen", effects: [AddGold(120.0), AddLegitimacy(-3.0)], ai_weight: 2.0, ai_when: [(RulerTrait("greedy"), 8.0)]),
+            ],
+        ),
+        (
+            id: "tax_unrest", scope: Realm, category: "Wirtschaft",
+            title: "Steuerzorn in {realm}",
+            text: "Die Steuereintreiber werden mit Steinen empfangen. Die Zufriedenheit sinkt, die Kasse füllt sich noch.",
+            conditions: [VarAbove("tax_level", 2.5), VarBelow("satisfaction", 45.0)],
+            mtth_months: 2.0, cooldown_months: 18, chronicle_weight: 18,
+            options: [
+                (id: "lower_tax", text: "Steuern senken", effects: [AddSatisfaction(6.0), AddGold(-150.0), AddUnrest(-5.0)], ai_weight: 5.0),
+                (id: "garrison_tax", text: "Die Eintreiber mit Soldaten begleiten", effects: [AddUnrest(-3.0), AddTyranny(4.0), AddSatisfaction(-3.0)], ai_weight: 2.0, ai_when: [(RulerTrait("cruel"), 5.0)]),
+            ],
+        ),
+        (
+            id: "war_profiteers", scope: Realm, category: "Wirtschaft",
+            title: "Kriegsgewinnler in {realm}",
+            text: "Waffenschmiede und Getreidehändler verdienen am Krieg. Das Volk murrt über ihren neuen Reichtum.",
+            conditions: [AtWar(true), Chance(0.4)],
+            mtth_months: 20.0, cooldown_months: 36, chronicle_weight: 14,
+            options: [
+                (id: "tax_profit", text: "Kriegsgewinnsteuer erheben", effects: [AddGold(350.0), AddSatisfaction(2.0), HouseLoyalty(-3.0)], ai_weight: 4.0),
+                (id: "reward_merchants", text: "Die Händler belohnen", effects: [AddGold(-100.0), HouseLoyalty(4.0), AddPrestige(10.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "ruins_treasure", scope: Province, category: "Entdeckung",
+            title: "Schatzfund in {province}",
+            text: "Bauern stoßen beim Pflügen auf ein verschüttetes Gewölbe. Darin liegen Münzen mit dem Bild des Sonnenkönigs.",
+            conditions: [Biome("Ruins"), Chance(0.3)],
+            mtth_months: 60.0, cooldown_months: 120, chronicle_weight: 22,
+            options: [
+                (id: "take_gold", text: "Den Schatz bergen", effects: [AddGold(450.0), AddHollowing(1.0)], ai_weight: 5.0),
+                (id: "leave_vault", text: "Das Gewölbe versiegeln", effects: [AddPiety(30.0), AddVeil(-0.05)], ai_weight: 1.0, ai_when: [(Religion("eternal_flame"), 4.0)]),
+            ],
+        ),
+    ],
+)

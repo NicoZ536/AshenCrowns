@@ -1,0 +1,93 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Monster, Banditen, Kultisten, Bosse und uralte Bedrohungen.
+(
+    events: [
+        (
+            id: "wolf_pack", scope: Province, category: "Bedrohung",
+            title: "Aschwölfe bei {province}",
+            text: "Ein Rudel hungriger Wölfe reißt Vieh und Hirten. Nachts sind ihre Augen am Waldrand zu sehen.",
+            conditions: [VarAbove("veil", 0.8), Chance(0.4), Season([Winter, Autumn])],
+            mtth_months: 12.0, cooldown_months: 24, chronicle_weight: 14,
+            options: [
+                (id: "hunt_wolves", text: "Jagd ausrufen (60 Gold)", cost: 60.0, effects: [AddGold(-60.0), AddStock("hides", 40.0), AddUnrest(-2.0)], ai_weight: 5.0),
+                (id: "let_wolves", text: "Die Hirten sich selbst überlassen", effects: [SpawnNeutral("AshWolves", 14.0), AddUnrest(3.0), AddPopulationPct(-0.3)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "bandits_rise", scope: Province, category: "Bedrohung",
+            title: "Banditen bei {province}",
+            text: "Verarmte Bauern und entlassene Söldner überfallen Karawanen. Die Landstraße gehört ihnen.",
+            conditions: [VarAbove("unrest", 38.0), VarBelow("garrison_ratio", 2.0), Chance(0.5)],
+            mtth_months: 10.0, cooldown_months: 24, chronicle_weight: 18,
+            options: [
+                (id: "send_patrols", text: "Patrouillen verstärken (80 Gold)", cost: 80.0, effects: [AddGold(-80.0), AddUnrest(-4.0)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 500.0), 3.0)]),
+                (id: "ignore_bandits", text: "Ignorieren", effects: [SpawnNeutral("Bandits", 25.0), AddUnrest(2.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "cult_whispers", scope: Province, category: "Hohlung",
+            title: "Kultisten bei {province}",
+            text: "Nachts werden Gräber geöffnet und Kerzen aus schwarzem Wachs entzündet. Wer redet, verschwindet.",
+            conditions: [VarAbove("hollowing", 15.0), Chance(0.4)],
+            mtth_months: 20.0, cooldown_months: 36, chronicle_weight: 24,
+            options: [
+                (id: "purge_cult", text: "Den Kult ausräuchern (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddHollowing(-3.0), AddUnrest(2.0), AddPiety(20.0)], ai_weight: 5.0),
+                (id: "ignore_cult", text: "Wegsehen", effects: [SpawnNeutral("Cultists", 18.0), AddHollowing(2.0)], ai_weight: 0.5),
+            ],
+        ),
+        (
+            id: "dragon_omen", scope: Province, category: "Vorzeichen",
+            title: "Vyrmathax regt sich nahe {province}",
+            text: "Der Himmel im Südosten glüht rot. Die Vögel fliegen nach Norden, die Hunde heulen.",
+            conditions: [Biome("Volcanic"), Chance(0.4)],
+            mtth_months: 40.0, cooldown_months: 60, chronicle_weight: 26,
+            options: [
+                (id: "tribute_omen", text: "Dem Drachen Gaben senden (300 Gold)", cost: 300.0, effects: [AddGold(-300.0), AddUnrest(-3.0)], ai_weight: 3.0),
+                (id: "fortify_omen", text: "Fernkampfstellungen bauen (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddFortification(1)], ai_weight: 3.0),
+            ],
+        ),
+        (
+            id: "hollow_raid_warning", scope: Province, category: "Hohlung",
+            title: "Hohle sammeln sich bei {province}",
+            text: "Knochenschlurfen im Nebel, fahle Lichter an den Gräbern. Die Wachen verlangen Verstärkung.",
+            conditions: [VarAbove("hollow_force", 35.0)],
+            mtth_months: 2.0, cooldown_months: 12, chronicle_weight: 26,
+            options: [
+                (id: "reinforce_watch", text: "Wachen verstärken (120 Gold)", cost: 120.0, effects: [AddGold(-120.0), AddFortification(1), AddUnrest(-3.0)], ai_weight: 5.0),
+                (id: "evacuate_hollow", text: "Dörfer evakuieren", effects: [AddRefugees(60.0), AddPopulationPct(-1.0), AddUnrest(4.0)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "portal_opens", scope: Province, category: "Endzeit",
+            title: "Ein Portal öffnet sich bei {province}",
+            text: "Ein Riss in der Welt, hinter dem ein Licht ohne Quelle brennt. Was hindurchblickt, ist älter als die Götter.",
+            conditions: [YearFrom(930), VarAbove("veil", 3.2), VarAbove("veil_pressure", 45.0), Chance(0.4)],
+            mtth_months: 30.0, cooldown_months: 120, chronicle_weight: 55,
+            options: [
+                (id: "ward_portal", text: "Mit Bannkreis versiegeln (400 Gold)", cost: 400.0, effects: [AddGold(-400.0), AddVeil(-0.5), AddHollowing(-4.0)], ai_weight: 5.0, ai_when: [(VarAbove("gold", 1500.0), 4.0)]),
+                (id: "study_portal", text: "Erforschen", effects: [AddResearch(200.0), AddVeil(0.4), AddHollowing(4.0), SpawnNeutral("Cultists", 30.0)], ai_weight: 1.0, ai_when: [(RulerTrait("cynical"), 5.0)]),
+            ],
+        ),
+        (
+            id: "voice_from_the_deep", scope: Realm, category: "Hohlung",
+            title: "Die Stimme aus dem Tief spricht zu {realm}",
+            text: "Sie bietet Wissen und Dauer. Sie verlangt nur, dass man zuhört.",
+            conditions: [VarAbove("hollow_path", 0.5), Chance(0.4)],
+            mtth_months: 24.0, cooldown_months: 48, chronicle_weight: 34,
+            options: [
+                (id: "answer_voice", text: "Antworten", effects: [AddResearch(200.0), AddRulerHollowing(4.0), AddAshglass(10.0), AddPiety(-60.0)], ai_weight: 1.0, ai_when: [(VarAbove("hollow_path", 2.0), 8.0)]),
+                (id: "refuse_voice", text: "Schweigen und beten", effects: [AddPiety(30.0), AddRulerHollowing(-2.0)], ai_weight: 4.0),
+            ],
+        ),
+        (
+            id: "prophet_of_the_sun", scope: Realm, category: "Glaube",
+            title: "Ein Prophet verkündet die Rückkehr in {realm}",
+            text: "Ein Mann in geflicktem Gold predigt, Varkhan Aurelith werde zurückkehren. Viele glauben ihm, einige fürchten ihn.",
+            conditions: [YearFrom(900), Chance(0.3), VarAbove("provinces", 1.0)],
+            mtth_months: 80.0, cooldown_months: 120, chronicle_weight: 24,
+            options: [
+                (id: "hear_prophet", text: "Anhören", effects: [AddFaith("sun_heresy", 0.04), AddSatisfaction(2.0), AddPiety(-15.0)], ai_weight: 2.0, ai_when: [(RulerTrait("cynical"), 4.0)]),
+                (id: "silence_prophet", text: "Zum Schweigen bringen", effects: [AddFaith("sun_heresy", -0.03), AddTyranny(2.0), AddPiety(20.0)], ai_weight: 4.0),
+            ],
+        ),
+    ],
+)

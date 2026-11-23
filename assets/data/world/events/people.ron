@@ -1,0 +1,132 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Bevölkerung und Herrscherpersonen.
+(
+    events: [
+        (
+            id: "famine_province", scope: Province, category: "Hunger",
+            title: "Hunger in {province}",
+            text: "Das Nahrungskonto ist leer. Die Schwachen sterben, die Starken verlassen das Land.",
+            conditions: [VarBelow("food_ratio", 0.55), VarAbove("pop", 150.0), NotState("famine_relief")],
+            mtth_months: 1.0, cooldown_months: 8, chronicle_weight: 35,
+            sets_state: Some(("famine", 6)),
+            options: [
+                (id: "seize_noble_stores", text: "Adelsvorräte beschlagnahmen", effects: [AddFood(400.0), HouseLoyalty(-15.0), AddSatisfaction(4.0), SetState("famine_relief", 3)], ai_weight: 3.0, ai_when: [(RulerTrait("just"), 4.0)]),
+                (id: "church_alms", text: "Kirche um Spenden bitten", effects: [AddFood(250.0), AddPiety(-100.0), SetState("famine_relief", 3)], ai_weight: 4.0, ai_when: [(Religion("eternal_flame"), 4.0)]),
+                (id: "buy_grain", text: "Getreide kaufen (200 Gold)", cost: 200.0, effects: [AddGold(-200.0), AddFood(500.0), SetState("famine_relief", 3)], ai_weight: 5.0, ai_when: [(VarAbove("gold", 1000.0), 6.0)]),
+                (id: "let_starve", text: "Es hinnehmen", effects: [AddPopulationPct(-3.0), AddUnrest(8.0)], ai_weight: 0.5),
+            ],
+        ),
+        (
+            id: "bread_riot", scope: Province, category: "Unruhe",
+            title: "Brotaufruhr in {province}",
+            text: "Lagerhäuser werden geplündert, auf dem Marktplatz brennen Karren. Die Garnison wartet auf Befehle.",
+            conditions: [VarAbove("unrest", 55.0), VarBelow("food_ratio", 0.85), NotState("riot_calmed")],
+            mtth_months: 1.0, cooldown_months: 10, chronicle_weight: 30,
+            options: [
+                (id: "use_garrison", text: "Garnison einsetzen", effects: [AddUnrest(-20.0), AddTension(0, 10.0), AddPopulationPct(-0.4), AddTyranny(2.0), SetState("riot_calmed", 3)], ai_weight: 4.0),
+                (id: "meet_demands", text: "Forderungen erfüllen (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddUnrest(-15.0), AddFood(200.0), SetState("riot_calmed", 3)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 900.0), 4.0), (RulerTrait("merciful"), 5.0)]),
+                (id: "ignore_riot", text: "Abwarten", effects: [AddUnrest(5.0)], ai_weight: 0.5),
+            ],
+        ),
+        (
+            id: "rebel_demands", scope: Province, category: "Unruhe",
+            title: "Aufständische fordern in {province}",
+            text: "Eine Abordnung der Unzufriedenen tritt vor den Vogt: Niedrigere Abgaben, oder sie greifen zu den Waffen.",
+            conditions: [VarAbove("unrest", 72.0), NotState("riot_calmed")],
+            mtth_months: 1.5, cooldown_months: 12, chronicle_weight: 28,
+            options: [
+                (id: "concede", text: "Nachgeben (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddUnrest(-25.0), AddSatisfaction(5.0), SetState("riot_calmed", 4)], ai_weight: 4.0, ai_when: [(RulerTrait("merciful"), 5.0)]),
+                (id: "repress", text: "Anführer verhaften", effects: [AddUnrest(-10.0), AddTyranny(5.0), AddSatisfaction(-5.0), SetState("riot_calmed", 2)], ai_weight: 3.0, ai_when: [(RulerTrait("cruel"), 6.0)]),
+            ],
+        ),
+        (
+            id: "guild_strike", scope: Province, category: "Unruhe",
+            title: "Streik der Handwerker in {province}",
+            text: "Die Werkstätten bleiben dunkel. Die Zunftmeister verlangen Marktrechte und gerechte Preise.",
+            conditions: [VarAbove("tension_max", 55.0), VarAbove("pop", 800.0), NotState("strike_settled")],
+            mtth_months: 2.0, cooldown_months: 18, chronicle_weight: 20,
+            options: [
+                (id: "grant_charter", text: "Zunftrechte gewähren", effects: [AddTension(1, -25.0), AddSatisfaction(4.0), AddGold(-80.0), SetState("strike_settled", 6)], ai_weight: 4.0),
+                (id: "break_strike", text: "Streik brechen lassen", effects: [AddTension(1, 8.0), AddUnrest(5.0), AddTyranny(2.0), SetState("strike_settled", 3)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "epidemic_warning", scope: Province, category: "Seuche",
+            title: "Seuchengefahr in {province}",
+            text: "Ratten in den Gassen, Fieber in den Armenvierteln. Der Arzt rät zur Vorsicht.",
+            conditions: [VarAbove("disease", 55.0), VarAbove("pop", 400.0), NotState("quarantine")],
+            mtth_months: 1.0, cooldown_months: 12, chronicle_weight: 20,
+            options: [
+                (id: "quarantine", text: "Quarantäne verhängen (60 Gold)", cost: 60.0, effects: [AddGold(-60.0), AddDisease(-18.0), AddUnrest(3.0), SetState("quarantine", 4)], ai_weight: 5.0),
+                (id: "hospital_fund", text: "Das Hospital stärken (120 Gold)", cost: 120.0, effects: [AddGold(-120.0), AddDisease(-12.0), AddSatisfaction(2.0)], ai_weight: 3.0, ai_when: [(VarAbove("gold", 800.0), 4.0)]),
+                (id: "do_nothing_epi", text: "Auf Gottes Gnade vertrauen", effects: [AddDisease(6.0)], ai_weight: 0.5),
+            ],
+        ),
+        (
+            id: "refugee_wave", scope: Province, category: "Flucht",
+            title: "Flüchtlinge erreichen {province}",
+            text: "Familien mit Karren und Kindern stehen vor den Toren. Sie kommen aus Gebieten, die der Krieg oder das Tief erreicht haben.",
+            conditions: [VarAbove("refugees", 80.0)],
+            mtth_months: 1.0, cooldown_months: 12, chronicle_weight: 22,
+            options: [
+                (id: "accept_refugees", text: "Aufnehmen", effects: [AddPopulationPct(3.0), AddTension(4, 15.0), AddPrestige(10.0), AddRefugees(-100.0)], ai_weight: 4.0, ai_when: [(RulerTrait("merciful"), 5.0), (RulerTrait("just"), 3.0)]),
+                (id: "turn_away", text: "Abweisen", effects: [AddRefugees(-100.0), NeighborOpinion(-4.0), AddPrestige(-15.0)], ai_weight: 2.0, ai_when: [(RulerTrait("cruel"), 5.0)]),
+            ],
+        ),
+        (
+            id: "harvest_festival", scope: Province, category: "Fest",
+            title: "Fest in {province}",
+            text: "Die Menschen laden zum Fest. Banner, Musik, und für einen Abend vergessen alle ihre Sorgen.",
+            conditions: [VarAbove("satisfaction", 55.0), Season([Summer, Autumn]), Chance(0.4), VarAbove("pop", 500.0)],
+            mtth_months: 10.0, cooldown_months: 30, chronicle_weight: 10,
+            options: [
+                (id: "fund_festival", text: "Fest ausrichten (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddSatisfaction(8.0), AddUnrest(-6.0), AddPopularity(3.0)], ai_weight: 3.0),
+                (id: "skip_festival", text: "Zurückhaltend bleiben", effects: [], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "ruler_illness", scope: Character, category: "Herrscher",
+            title: "Der Herrscher erkrankt",
+            text: "Fieber wirft den Herrscher aufs Lager. Die Ärzte zucken mit den Schultern, die Höflinge rechnen.",
+            conditions: [VarAbove("ruler_age", 48.0), Chance(0.3)],
+            mtth_months: 40.0, cooldown_months: 48, chronicle_weight: 25,
+            options: [
+                (id: "call_physicians", text: "Die besten Ärzte rufen (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddHealth(0.5)], ai_weight: 5.0, ai_when: [(VarAbove("gold", 500.0), 3.0)]),
+                (id: "pray_ruler", text: "Priester rufen", effects: [AddPiety(40.0), AddHealth(-0.5)], ai_weight: 2.0, ai_when: [(RulerTrait("zealous"), 6.0)]),
+            ],
+        ),
+        (
+            id: "ruler_breakdown", scope: Character, category: "Herrscher",
+            title: "Der Herrscher zerbricht",
+            text: "Der Druck der Krone hat den Herrscher an den Rand gebracht. Er spricht nicht mehr, oder zu viel.",
+            conditions: [VarAbove("ruler_stress", 60.0)],
+            mtth_months: 4.0, cooldown_months: 36, chronicle_weight: 28,
+            options: [
+                (id: "monastery_retreat", text: "Rückzug ins Kloster", effects: [AddStress(-40.0), AddPrestige(-40.0), AddHealth(0.5)], ai_weight: 4.0),
+                (id: "drown_in_wine", text: "Im Wein Trost suchen", effects: [GrantTrait("drunkard"), AddStress(-30.0)], ai_weight: 2.0),
+                (id: "push_on", text: "Weitermachen", effects: [AddStress(5.0), AddLegitimacy(-3.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "hunting_accident", scope: Character, category: "Herrscher",
+            title: "Unfall auf der Jagd",
+            text: "Ein Pferd scheut, ein Ast bricht, ein Pfeil trifft das falsche Ziel. Der Herrscher wird bewusstlos ins Lager getragen.",
+            conditions: [VarBelow("ruler_age", 60.0), Chance(0.2)],
+            mtth_months: 150.0, cooldown_months: 120, chronicle_weight: 20,
+            options: [
+                (id: "rest_ruler", text: "Genesung abwarten", effects: [AddHealth(-1.0), AddStress(5.0)], ai_weight: 3.0),
+                (id: "keep_secret", text: "Den Unfall geheim halten", effects: [AddHealth(-1.0), AddLegitimacy(-2.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "court_scandal", scope: Realm, category: "Hof",
+            title: "Skandal am Hof von {realm}",
+            text: "Ein Brief wird gefunden, ein Name flüstert durch die Gänge. Binnen Tagen weiß es der ganze Hof.",
+            conditions: [VarAbove("provinces", 1.0), Chance(0.3)],
+            mtth_months: 50.0, cooldown_months: 60, chronicle_weight: 18,
+            options: [
+                (id: "hush_up", text: "Vertuschen (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddPrestige(-10.0)], ai_weight: 4.0),
+                (id: "punish_scandal", text: "Öffentlich bestrafen", effects: [AddPrestige(20.0), AddLegitimacy(2.0), HouseLoyalty(-4.0)], ai_weight: 2.0, ai_when: [(RulerTrait("just"), 5.0)]),
+            ],
+        ),
+    ],
+)

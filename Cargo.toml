@@ -6,6 +6,7 @@ members = [
     "crates/ashen_engine",
     "crates/ashen_game",
     "crates/ashen_tools",
+    "crates/ashen_strategy",
 ]
 default-members = ["crates/ashen_game"]
 
@@ -19,6 +20,7 @@ rust-version = "1.88"
 [workspace.dependencies]
 ashen_core = { path = "crates/ashen_core" }
 ashen_sim = { path = "crates/ashen_sim" }
+ashen_strategy = { path = "crates/ashen_strategy" }
 ashen_engine = { path = "crates/ashen_engine", default-features = false }
 wgpu = "30.0"
 winit = "0.30"

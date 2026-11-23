@@ -1,0 +1,22 @@
+[package]
+name = "ashen_strategy"
+description = "Deterministische Grand-Campaign-Simulation (Weltkarte) für Ashen Crowns, ohne Grafik"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ashen_core.workspace = true
+glam.workspace = true
+serde.workspace = true
+ron.workspace = true
+bincode.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+uuid.workspace = true
+crc32fast.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+ashen_sim.workspace = true
+serde_json.workspace = true

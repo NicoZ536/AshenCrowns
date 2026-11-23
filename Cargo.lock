@@ -277,6 +277,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ashen_strategy"
+version = "0.1.0"
+dependencies = [
+ "ashen_core",
+ "ashen_sim",
+ "bincode",
+ "crc32fast",
+ "glam",
+ "log",
+ "rand",
+ "rand_chacha",
+ "ron",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "ashen_tools"
 version = "0.1.0"
 dependencies = [

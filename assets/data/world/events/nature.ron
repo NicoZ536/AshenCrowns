@@ -1,0 +1,98 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Natur und Katastrophen.
+// Ereignisse sind Interventionspunkte der Simulation: sie lösen nichts aus, was die Systeme nicht ohnehin tun
+// würden, sondern machen es sichtbar und beeinflussbar (GDD 15.1). Variablennamen: docs/tech/strategy_layer.md.
+(
+    events: [
+        (
+            id: "drought_province", scope: Province, category: "Katastrophe",
+            title: "Dürre in {province}",
+            text: "Drei Monate lang ist kein Regen gefallen. Die Brunnen sinken, das Korn steht welk auf den Feldern. Der Vogt fragt, was zu tun sei.",
+            conditions: [VarBelow("rainfall_ratio", 0.6), DryMonths(3), Season([Spring, Summer]), NotState("drought")],
+            mtth_months: 1.0, cooldown_months: 12, chronicle_weight: 30,
+            sets_state: Some(("drought", 8)),
+            options: [
+                (id: "open_granaries", text: "Kornspeicher öffnen", effects: [AddStock("grain", 160.0), AddUnrest(-3.0)], ai_weight: 6.0),
+                (id: "import_grain", text: "Getreide importieren (120 Gold)", cost: 120.0, effects: [AddGold(-120.0), AddStock("grain", 320.0)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 1500.0), 6.0)]),
+                (id: "harvest_ritual", text: "Ernteritual der Wachstumsmagie (80 Gold)", cost: 80.0, effects: [AddGold(-80.0), AddFertility(0.03), AddUnrest(-2.0)], ai_weight: 2.0, ai_when: [(Faction("thorn_covenant"), 8.0)]),
+                (id: "do_nothing", text: "Nichts tun", effects: [], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "river_flood", scope: Province, category: "Katastrophe",
+            title: "Hochwasser in {province}",
+            text: "Nach tagelangem Regen tritt der Fluss über die Ufer. Felder und Kellern stehen unter Wasser.",
+            conditions: [VarAbove("rainfall_ratio", 1.55), Season([Spring, Autumn]), Chance(0.5)],
+            mtth_months: 2.0, cooldown_months: 24, chronicle_weight: 25,
+            options: [
+                (id: "relief", text: "Hilfe leisten (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), Devastate(0.05), AddUnrest(-3.0), AddDisease(-5.0)], ai_weight: 5.0, ai_when: [(VarAbove("gold", 800.0), 4.0)]),
+                (id: "ignore", text: "Das Wasser fallen lassen", effects: [Devastate(0.2), AddUnrest(4.0), AddDisease(10.0), AddStock("grain", -80.0)], ai_weight: 2.0),
+            ],
+        ),
+        (
+            id: "locust_swarm", scope: Province, category: "Katastrophe",
+            title: "Heuschreckenschwarm über {province}",
+            text: "Eine dunkle Wolke zieht über die Felder. Wo sie niedergeht, bleibt nur kahle Erde.",
+            conditions: [Season([Summer]), VarAbove("fertility", 0.45), Chance(0.4)],
+            mtth_months: 40.0, cooldown_months: 60, chronicle_weight: 35,
+            options: [
+                (id: "burn_fields", text: "Felder abbrennen, um den Schwarm aufzuhalten", effects: [Devastate(0.1), AddStock("grain", -120.0), AddUnrest(2.0)], ai_weight: 3.0),
+                (id: "pray", text: "Prozession abhalten und beten", effects: [AddPiety(20.0), AddStock("grain", -260.0), AddUnrest(5.0)], ai_weight: 2.0, ai_when: [(Religion("eternal_flame"), 3.0)]),
+            ],
+        ),
+        (
+            id: "hard_winter", scope: Province, category: "Katastrophe",
+            title: "Der Eiswinter von {province}",
+            text: "Der Frost hält bis in den Frühling. Holz wird knapp, die Alten sterben zuerst.",
+            conditions: [Season([Winter]), Chance(0.35)],
+            mtth_months: 50.0, cooldown_months: 48, chronicle_weight: 25,
+            options: [
+                (id: "firewood", text: "Brennholz aus Reserven verteilen (60 Gold)", cost: 60.0, effects: [AddGold(-60.0), AddStock("wood", 150.0), AddDisease(-3.0)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 400.0), 3.0)]),
+                (id: "endure", text: "Den Winter überstehen", effects: [AddStock("wood", -120.0), AddDisease(8.0), AddPopulationPct(-0.8), AddUnrest(3.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "forest_fire", scope: Province, category: "Katastrophe",
+            title: "Waldbrand bei {province}",
+            text: "In der Trockenheit hat ein Funke den Wald entzündet. Der Rauch steht tagelang über dem Land.",
+            conditions: [Biome("Forest"), DryMonths(2), Season([Summer]), Chance(0.5)],
+            mtth_months: 6.0, cooldown_months: 36, chronicle_weight: 20,
+            options: [
+                (id: "firebreak", text: "Schneisen schlagen lassen (50 Gold)", cost: 50.0, effects: [AddGold(-50.0), Devastate(0.05), AddStock("wood", -40.0)], ai_weight: 4.0),
+                (id: "let_burn", text: "Brennen lassen", effects: [Devastate(0.2), AddStock("wood", -160.0), AddUnrest(3.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "bountiful_harvest", scope: Province, category: "Segen",
+            title: "Erntesegen in {province}",
+            text: "Die Speicher quellen über. Das Volk feiert, und die Händler rechnen.",
+            conditions: [VarAbove("harvest", 1.25), Season([Autumn]), Chance(0.7)],
+            mtth_months: 1.5, cooldown_months: 18, chronicle_weight: 20,
+            options: [
+                (id: "harvest_feast", text: "Erntefest ausrichten (80 Gold)", cost: 80.0, effects: [AddGold(-80.0), AddSatisfaction(8.0), AddUnrest(-6.0), AddPopularity(2.0)], ai_weight: 4.0),
+                (id: "sell_surplus", text: "Überschüsse verkaufen", effects: [AddGold(140.0), AddSatisfaction(2.0)], ai_weight: 3.0, ai_when: [(VarBelow("gold", 500.0), 5.0)]),
+            ],
+        ),
+        (
+            id: "ash_rain", scope: Province, category: "Vorzeichen",
+            title: "Ascheregen über {province}",
+            text: "Feine graue Asche fällt vom Himmel. Die Alten sagen, der Schleier sei hier dünn geworden.",
+            conditions: [VarAbove("veil", 2.0), Chance(0.4)],
+            mtth_months: 8.0, cooldown_months: 18, chronicle_weight: 22,
+            options: [
+                (id: "wardfires", text: "Wachfeuer entzünden (60 Gold)", cost: 60.0, effects: [AddGold(-60.0), AddVeil(-0.15), AddHollowing(-1.0), AddUnrest(-2.0)], ai_weight: 5.0),
+                (id: "endure_ash", text: "Die Asche ertragen", effects: [AddHollowing(2.0), AddFertility(-0.03), AddUnrest(2.0)], ai_weight: 1.0),
+            ],
+        ),
+        (
+            id: "mountain_quake", scope: Province, category: "Katastrophe",
+            title: "Erdbeben in {province}",
+            text: "Die Erde bebt, Steine lösen sich aus den Hängen. Mauern reißen, Stollen stürzen ein.",
+            conditions: [Biome("Mountain"), Chance(0.2)],
+            mtth_months: 150.0, cooldown_months: 120, chronicle_weight: 40,
+            options: [
+                (id: "rebuild", text: "Wiederaufbau anordnen (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddPopulationPct(-0.5), AddUnrest(1.0)], ai_weight: 4.0, ai_when: [(VarAbove("gold", 700.0), 4.0)]),
+                (id: "abandon", text: "Ruinen aufgeben", effects: [AddFortification(-1), AddPopulationPct(-2.0), AddUnrest(4.0)], ai_weight: 1.0),
+            ],
+        ),
+    ],
+)

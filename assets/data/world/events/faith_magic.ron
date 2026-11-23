@@ -1,0 +1,95 @@
+// ASHEN CROWNS – Ereignisse der Weltkarte: Religion, Magie und die Hohlung.
+(
+    events: [
+        (
+            id: "heresy_sermons", scope: Province, category: "Glaube",
+            title: "Wanderprediger in {province}",
+            text: "Barfüßige Prediger verkünden, der Sonnenkönig werde zurückkehren und jeden Hunger stillen. Die Leibeigenen hören zu.",
+            conditions: [Religion("eternal_flame"), VarBelow("faith_strength", 0.45), VarAbove("pop", 200.0)],
+            mtth_months: 6.0, cooldown_months: 24, chronicle_weight: 22,
+            options: [
+                (id: "persecute_heresy", text: "Ketzer verfolgen", effects: [AddFaith("sun_heresy", -0.08), AddUnrest(6.0), AddPiety(30.0)], ai_weight: 4.0, ai_when: [(RulerTrait("zealous"), 6.0)]),
+                (id: "tolerate_heresy", text: "Dulden", effects: [AddFaith("sun_heresy", 0.05), AddSatisfaction(2.0)], ai_weight: 2.0, ai_when: [(RulerTrait("cynical"), 5.0)]),
+                (id: "preach_counter", text: "Gegenpredigt entsenden (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddFaith("eternal_flame", 0.05), AddFaith("sun_heresy", -0.03)], ai_weight: 3.0),
+            ],
+        ),
+        (
+            id: "flame_miracle", scope: Province, category: "Glaube",
+            title: "Das Wunder von {province}",
+            text: "Am Herdfeuer des Schreins erlischt die Flamme nicht, obwohl der Sturm drei Tage tobt. Pilger strömen herbei.",
+            conditions: [Religion("eternal_flame"), Chance(0.4), VarAbove("faith_strength", 0.5)],
+            mtth_months: 60.0, cooldown_months: 120, chronicle_weight: 26,
+            options: [
+                (id: "proclaim_miracle", text: "Das Wunder verkünden", effects: [AddFaith("eternal_flame", 0.05), AddSatisfaction(6.0), AddPiety(40.0)], ai_weight: 4.0),
+                (id: "investigate_miracle", text: "Prüfen lassen", effects: [AddPiety(10.0), AddResearch(20.0)], ai_weight: 1.0, ai_when: [(RulerTrait("cynical"), 5.0)]),
+            ],
+        ),
+        (
+            id: "pilgrim_wave", scope: Realm, category: "Glaube",
+            title: "Pilgerstrom nach {realm}",
+            text: "Gläubige ziehen in Scharen zu den heiligen Stätten. Die Herbergen sind voll, die Opferstöcke auch.",
+            conditions: [VarAbove("piety", 100.0), Chance(0.4)],
+            mtth_months: 30.0, cooldown_months: 48, chronicle_weight: 14,
+            options: [
+                (id: "welcome_pilgrims", text: "Pilger willkommen heißen", effects: [AddGold(150.0), AddPiety(25.0), AddDisease(3.0)], ai_weight: 4.0),
+                (id: "tax_pilgrims", text: "Pilgerzoll erheben", effects: [AddGold(300.0), AddPiety(-10.0)], ai_weight: 2.0, ai_when: [(RulerTrait("greedy"), 6.0)]),
+            ],
+        ),
+        (
+            id: "veil_tear", scope: Province, category: "Magie",
+            title: "Der Schleier reißt über {province}",
+            text: "Die Luft flimmert, Tiere scheuen. Im Dämmerlicht erscheinen Gestalten, die dort nicht sein dürften.",
+            conditions: [VarAbove("veil", 2.6), Chance(0.5)],
+            mtth_months: 8.0, cooldown_months: 24, chronicle_weight: 32,
+            options: [
+                (id: "seal_tear", text: "Mit Priestern versiegeln (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddVeil(-0.3), AddHollowing(-2.0)], ai_weight: 5.0, ai_when: [(VarAbove("gold", 700.0), 3.0)]),
+                (id: "harvest_tear", text: "Aschglas aus dem Riss bergen", effects: [AddAshglass(10.0), AddVeil(0.3), AddHollowing(2.0)], ai_weight: 2.0, ai_when: [(RulerTrait("greedy"), 5.0), (RulerTrait("cynical"), 3.0)]),
+                (id: "ignore_tear", text: "Ignorieren", effects: [AddVeil(0.1), AddHollowing(2.0), AddUnrest(3.0)], ai_weight: 0.5),
+            ],
+        ),
+        (
+            id: "ashglass_vein", scope: Province, category: "Magie",
+            title: "Aschglasader bei {province}",
+            text: "Schürfer bringen fahlgrüne Splitter aus einer neuen Ader. Die Gelehrten reiben sich die Hände, die Priester die Stirn.",
+            conditions: [VarAbove("veil", 1.8), Chance(0.4)],
+            mtth_months: 50.0, cooldown_months: 60, chronicle_weight: 24,
+            options: [
+                (id: "mine_vein", text: "Abbauen lassen", effects: [AddAshglass(12.0), AddVeil(0.15), AddHollowing(1.0), AddGold(100.0)], ai_weight: 4.0),
+                (id: "seal_vein", text: "Versiegeln", effects: [AddPiety(30.0), AddVeil(-0.1)], ai_weight: 2.0, ai_when: [(RulerTrait("zealous"), 5.0)]),
+            ],
+        ),
+        (
+            id: "rogue_mage", scope: Realm, category: "Magie",
+            title: "Abtrünniger Magier in {realm}",
+            text: "Ein Gelehrter hat ohne Lizenz geforscht, und was er fand, ist größer, als gut ist.",
+            conditions: [VarAbove("provinces", 2.0), Chance(0.3)],
+            mtth_months: 60.0, cooldown_months: 60, chronicle_weight: 20,
+            options: [
+                (id: "hunt_mage", text: "Jagen lassen (100 Gold)", cost: 100.0, effects: [AddGold(-100.0), AddPrestige(10.0)], ai_weight: 4.0),
+                (id: "recruit_mage", text: "In den Dienst nehmen", effects: [AddResearch(90.0), AddRulerHollowing(1.0), AddPiety(-20.0)], ai_weight: 3.0, ai_when: [(RulerTrait("cynical"), 6.0)]),
+            ],
+        ),
+        (
+            id: "forbidden_whispers", scope: Character, category: "Hohlung",
+            title: "Das Flüstern im Tief",
+            text: "Nachts hört der Herrscher eine Stimme ohne Mund. Sie spricht von Dingen, die er immer wissen wollte.",
+            conditions: [VarAbove("ruler_hollowing", 15.0), Chance(0.5)],
+            mtth_months: 8.0, cooldown_months: 36, chronicle_weight: 30,
+            options: [
+                (id: "resist_whisper", text: "Widerstehen", effects: [AddStress(10.0), AddRulerHollowing(-3.0), AddPiety(20.0)], ai_weight: 4.0, ai_when: [(RulerTrait("zealous"), 6.0)]),
+                (id: "listen_whisper", text: "Zuhören", effects: [AddResearch(100.0), AddRulerHollowing(5.0), GrantTrait("hollow_touched")], ai_weight: 1.0, ai_when: [(RulerTrait("cynical"), 6.0), (RulerTrait("ambitious"), 4.0)]),
+            ],
+        ),
+        (
+            id: "scholars_breakthrough", scope: Realm, category: "Magie",
+            title: "Durchbruch der Gelehrten in {realm}",
+            text: "Nach Nächten bei Kerzenlicht legen die Gelehrten ein Manuskript vor, das alles ändert – oder zumindest vieles.",
+            conditions: [VarAbove("scholars", 40.0), Chance(0.4)],
+            mtth_months: 40.0, cooldown_months: 60, chronicle_weight: 18,
+            options: [
+                (id: "fund_scholars", text: "Weitere Mittel bewilligen (150 Gold)", cost: 150.0, effects: [AddGold(-150.0), AddResearch(160.0), AddPrestige(10.0)], ai_weight: 4.0),
+                (id: "bank_scholars", text: "Ergebnis nutzen, ohne zu investieren", effects: [AddResearch(70.0)], ai_weight: 3.0),
+            ],
+        ),
+    ],
+)
