@@ -36,7 +36,7 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/worker_move_01.ogg` | [dryly] Gut, bin unterwegs. | knapp, bodenständig |
-| `voices/units/worker_move_02.ogg` | [calmly] Dann mal los. | leichtes Brummen, gemütlich |
+| `voices/units/worker_move_02.ogg` | [gruffly] Dann mal los. | leichtes Brummen, gemütlich |
 | `voices/units/worker_move_03.ogg` | [quietly] Pass auf den Schlamm auf … [pause] geh ja schon. | zu sich selbst, halblaut |
 | `voices/units/worker_move_04.ogg` | [calmly] Jo, ich kenn den Weg. | selbstsicher |
 | `voices/units/worker_move_05.ogg` | [tired] Geh ja, geh ja. | müde, leicht genervt |
@@ -224,8 +224,8 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/archer_select_01.ogg` | [dryly] Bogen gespannt. | knapp, wach |
-| `voices/units/archer_select_02.ogg` | [calmly] Augen aufs Feld. | konzentriert |
-| `voices/units/archer_select_03.ogg` | [calmly] Worauf schieß ich? | keck |
+| `voices/units/archer_select_02.ogg` | [eagerly] Augen aufs Feld. | konzentriert |
+| `voices/units/archer_select_03.ogg` | [playfully] Worauf schieß ich? | keck |
 | `voices/units/archer_select_04.ogg` | [commanding] Schützin bereit. | militärisch |
 | `voices/units/archer_select_05.ogg` | [mockingly] Freie Schussbahn. Wer ist zuerst dran? | selbstbewusst, leicht spöttisch |
 
@@ -234,8 +234,8 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 |---|---|---|
 | `voices/units/archer_move_01.ogg` | [seriously] Beziehe Stellung. | sachlich |
 | `voices/units/archer_move_02.ogg` | [softly] [whispers] Schnell und leise. | geflüstert, verschwörerisch |
-| `voices/units/archer_move_03.ogg` | [calmly] Such mir 'ne Anhöhe. | zielstrebig |
-| `voices/units/archer_move_04.ogg` | [calmly] Bin dran. | flink |
+| `voices/units/archer_move_03.ogg` | [eagerly] Such mir 'ne Anhöhe. | zielstrebig |
+| `voices/units/archer_move_04.ogg` | [eagerly] Bin dran. | flink |
 
 ### archer_attack (Event `voice.archer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -287,7 +287,7 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 | `voices/units/knight_select_01.ogg` | [calmly] Euer Befehl? | edel, aufrecht |
 | `voices/units/knight_select_02.ogg` | [proudly] Stahl und Sattel, bereit. | stolz |
 | `voices/units/knight_select_03.ogg` | [solemn] Die Lanze der Krone wartet. | feierlich |
-| `voices/units/knight_select_04.ogg` | [calmly] Sprecht, und ich reite. | formell |
+| `voices/units/knight_select_04.ogg` | [politely] Sprecht, und ich reite. | formell |
 | `voices/units/knight_select_05.ogg` | [firmly] Bei der Flamme, ich bin bereit. | gläubig, fest |
 
 ### knight_move (Event `voice.knight.move`)
@@ -296,7 +296,7 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 | `voices/units/knight_move_01.ogg` | [dryly] Reite aus. | knapp, sicher |
 | `voices/units/knight_move_02.ogg` | [firmly] Vorwärts! | kraftvoll |
 | `voices/units/knight_move_03.ogg` | [commanding] Sporen in die Flanke. | Reiterjargon, zackig |
-| `voices/units/knight_move_04.ogg` | [calmly] Wie Ihr befehlt. | höflich-formell |
+| `voices/units/knight_move_04.ogg` | [politely] Wie Ihr befehlt. | höflich-formell |
 | `voices/units/knight_move_05.ogg` | [calmly] Die Straße gehört uns. | selbstbewusst |
 
 ### knight_attack (Event `voice.knight.attack`)
@@ -754,7 +754,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | `voices/units/crossbowman_select_01.ogg` | [seriously] Armbrust bereit. | knapp, sachlich |
 | `voices/units/crossbowman_select_02.ogg` | [dryly] [quietly] Bolzen liegt in der Rinne. | trocken, leise |
 | `voices/units/crossbowman_select_03.ogg` | [calmly] Jawohl. Ruhige Hände. | ruhig-selbstsicher |
-| `voices/units/crossbowman_select_04.ogg` | [calmly] Sagt's, und ich schieß einen durch. | leicht grimmig |
+| `voices/units/crossbowman_select_04.ogg` | [grimly] Sagt's, und ich schieß einen durch. | leicht grimmig |
 
 ### crossbowman_move (Event `voice.crossbowman.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -874,7 +874,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/shieldbearer_move_01.ogg` | [calmly] Rücke vor, Schilde verhakt. | gleichmäßig |
-| `voices/units/shieldbearer_move_02.ogg` | [calmly] Langsam und stetig. | brummend |
+| `voices/units/shieldbearer_move_02.ogg` | [gruffly] Langsam und stetig. | brummend |
 | `voices/units/shieldbearer_move_03.ogg` | [dryly] Nach vorn. | knapp |
 | `voices/units/shieldbearer_move_04.ogg` | [calmly] Marschiere. | neutral |
 
@@ -939,7 +939,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 |---|---|---|
 | `voices/units/scout_rider_move_01.ogg` | [cheerfully] Los wie der Wind! | freudig |
 | `voices/units/scout_rider_move_02.ogg` | [quickly] Dem Staub voraus! | schnell |
-| `voices/units/scout_rider_move_03.ogg` | [calmly] Ich bin vor dem Abendessen zurück. | leichthin |
+| `voices/units/scout_rider_move_03.ogg` | [playfully] Ich bin vor dem Abendessen zurück. | leichthin |
 | `voices/units/scout_rider_move_04.ogg` | [commanding] Hü! | Zuruf, kurz |
 
 ### scout_rider_attack (Event `voice.scout_rider.attack`)
@@ -989,13 +989,13 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | `voices/units/horse_archer_select_01.ogg` | [calmly] Bogen gespannt, Pferd gefüttert. | selbstsicher |
 | `voices/units/horse_archer_select_02.ogg` | [mockingly] Macht es zum bewegten Ziel. | spöttisch |
 | `voices/units/horse_archer_select_03.ogg` | [calmly] Ihr habt meinen Bogen. | ruhig |
-| `voices/units/horse_archer_select_04.ogg` | [calmly] Wohin, Wächterin? | locker |
+| `voices/units/horse_archer_select_04.ogg` | [playfully] Wohin, Wächterin? | locker |
 
 ### horse_archer_move (Event `voice.horse_archer.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/horse_archer_move_01.ogg` | [calmly] Reite weit aus. | kurz |
-| `voices/units/horse_archer_move_02.ogg` | [calmly] Fangt mich, wenn ihr könnt. | neckend |
+| `voices/units/horse_archer_move_02.ogg` | [playfully] Fangt mich, wenn ihr könnt. | neckend |
 | `voices/units/horse_archer_move_03.ogg` | [dryly] Flanke, dann Feuer. | knapp |
 | `voices/units/horse_archer_move_04.ogg` | [commanding] Hü! | Zuruf |
 
@@ -1045,7 +1045,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 |---|---|---|
 | `voices/units/battle_mage_select_01.ogg` | [calmly] Die Flamme antwortet. | ruhig, tief |
 | `voices/units/battle_mage_select_02.ogg` | [dryly] Glut und Wille. | knapp |
-| `voices/units/battle_mage_select_03.ogg` | [calmly] Nennt das Ziel. | konzentriert |
+| `voices/units/battle_mage_select_03.ogg` | [eagerly] Nennt das Ziel. | konzentriert |
 | `voices/units/battle_mage_select_04.ogg` | [quietly] Ich bin bereit zu brennen. | leise-intensiv |
 
 ### battle_mage_move (Event `voice.battle_mage.move`)
@@ -1109,7 +1109,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 |---|---|---|
 | `voices/units/priest_select_01.ogg` | [gently] Die Flamme sei mit Euch. | warm, sanft |
 | `voices/units/priest_select_02.ogg` | [warmly] Wie kann ich dienen? | freundlich |
-| `voices/units/priest_select_03.ogg` | [calmly] Ich bin hier, Kind. | tröstend |
+| `voices/units/priest_select_03.ogg` | [gently] Ich bin hier, Kind. | tröstend |
 | `voices/units/priest_select_04.ogg` | [calmly] Lasst das Licht uns leiten. | ruhig |
 
 ### priest_move (Event `voice.priest.move`)
@@ -1117,7 +1117,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 |---|---|---|
 | `voices/units/priest_move_01.ogg` | [calmly] Wir gehen im Licht. | gelassen |
 | `voices/units/priest_move_02.ogg` | [calmly] Geht voran, ich folge. | ruhig |
-| `voices/units/priest_move_03.ogg` | [calmly] Gebt auf die Verwundeten acht. | sorgend |
+| `voices/units/priest_move_03.ogg` | [worried] Gebt auf die Verwundeten acht. | sorgend |
 | `voices/units/priest_move_04.ogg` | [urgently] Ja, ja, ich gehe. | leicht gehetzt |
 
 ### priest_attack (Event `voice.priest.attack`)
@@ -1173,15 +1173,15 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 |---|---|---|
 | `voices/units/battering_ram_select_01.ogg` | [commanding] Ramme bereit! | Chor, Zuruf |
 | `voices/units/battering_ram_select_02.ogg` | [gruffly] Jawohl, das Tor hält nicht. | grimmig, rau |
-| `voices/units/battering_ram_select_03.ogg` | [calmly] Legt Euch ins Zeug! | Anfeuerung |
+| `voices/units/battering_ram_select_03.ogg` | [encouraging] Legt Euch ins Zeug! | Anfeuerung |
 | `voices/units/battering_ram_select_04.ogg` | [calmly] Hau ruck, Jungs! | rhythmisch |
 
 ### battering_ram_move (Event `voice.battering_ram.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battering_ram_move_01.ogg` | [calmly] Schieben, schieben! | Anstrengung, im Takt |
+| `voices/units/battering_ram_move_01.ogg` | [strained] Schieben, schieben! | Anstrengung, im Takt |
 | `voices/units/battering_ram_move_02.ogg` | [urgently] Achtet auf die Räder! | hektisch |
-| `voices/units/battering_ram_move_03.ogg` | [calmly] Langsam … langsam … | gepresst |
+| `voices/units/battering_ram_move_03.ogg` | [strained] Langsam … langsam … | gepresst |
 | `voices/units/battering_ram_move_04.ogg` | [commanding] Rollt sie vor! | Zuruf |
 
 ### battering_ram_attack (Event `voice.battering_ram.attack`)
@@ -1215,10 +1215,10 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### catapult_move (Event `voice.catapult.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/catapult_move_01.ogg` | [calmly] Zieht sie, zieht sie! | Anstrengung |
+| `voices/units/catapult_move_01.ogg` | [strained] Zieht sie, zieht sie! | Anstrengung |
 | `voices/units/catapult_move_02.ogg` | [worried] Vorsicht mit dem Arm! | besorgt |
 | `voices/units/catapult_move_03.ogg` | [urgently] Achtet auf die Spurrillen! | hektisch |
-| `voices/units/catapult_move_04.ogg` | [calmly] Langsam, langsam! | gepresst |
+| `voices/units/catapult_move_04.ogg` | [strained] Langsam, langsam! | gepresst |
 
 ### catapult_attack (Event `voice.catapult.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1254,7 +1254,7 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | `voices/heroes/hero_hal_venn_select_02.ogg` | [calmly] Die Flamme ist mit uns. | ruhig |
 | `voices/heroes/hero_hal_venn_select_03.ogg` | [gently] Meine Hände gehören Euch. | sanft |
 | `voices/heroes/hero_hal_venn_select_04.ogg` | [cynically] Ach, alte Knochen, bereit wie immer. | selbstironisch |
-| `voices/heroes/hero_hal_venn_select_05.ogg` | [calmly] Was braucht Brennhollow von mir? | sorgend |
+| `voices/heroes/hero_hal_venn_select_05.ogg` | [worried] Was braucht Brennhollow von mir? | sorgend |
 
 ### hero_hal_venn_move (Event `voice.hero_hal_venn.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1262,7 +1262,7 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | `voices/heroes/hero_hal_venn_move_01.ogg` | [calmly] Geht voran, ich folge. | ruhig |
 | `voices/heroes/hero_hal_venn_move_02.ogg` | [dryly] Langsam, meine Knie erinnern sich an Aureth. | trocken |
 | `voices/heroes/hero_hal_venn_move_03.ogg` | [seriously] Dorthin, wo die Not am größten ist. | ernst |
-| `voices/heroes/hero_hal_venn_move_04.ogg` | [calmly] Ich gehe, ich gehe. | gemütlich |
+| `voices/heroes/hero_hal_venn_move_04.ogg` | [gruffly] Ich gehe, ich gehe. | gemütlich |
 | `voices/heroes/hero_hal_venn_move_05.ogg` | [calmly] Dann vorwärts. | neutral |
 
 ### hero_hal_venn_attack (Event `voice.hero_hal_venn.attack`)
@@ -1320,14 +1320,14 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_hal_venn_levelup_01.ogg` | [surprised] [quickly] Die Flamme brennt heller in mir. | überrascht, froh |
-| `voices/heroes/hero_hal_venn_levelup_02.ogg` | [calmly] Stärker. Und das macht demütig. | bescheiden |
+| `voices/heroes/hero_hal_venn_levelup_02.ogg` | [sincerely] Stärker. Und das macht demütig. | bescheiden |
 | `voices/heroes/hero_hal_venn_levelup_03.ogg` | [quietly] Die Gnade wächst. | leise |
 
 ### hero_hal_venn_lowhp (Event `voice.hero_hal_venn.lowhp`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_lowhp_01.ogg` | [calmly] Ich muss … mich selbst versorgen … | angestrengt |
-| `voices/heroes/hero_hal_venn_lowhp_02.ogg` | [calmly] Noch nicht, Flamme, noch nicht. | gepresst |
+| `voices/heroes/hero_hal_venn_lowhp_01.ogg` | [strained] Ich muss … mich selbst versorgen … | angestrengt |
+| `voices/heroes/hero_hal_venn_lowhp_02.ogg` | [strained] Noch nicht, Flamme, noch nicht. | gepresst |
 | `voices/heroes/hero_hal_venn_lowhp_03.ogg` | [dryly] [quietly] Ich blute. Natürlich. | trocken-schwach |
 
 ### 13.2 Held – `hero_torvald` (Torvald Eisenhand, Clanfürst von Skarnheim)
@@ -1341,13 +1341,13 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | `voices/heroes/hero_torvald_select_01.ogg` | [firmly] Torvald Eisenhand hört zu. | tief, kräftig |
 | `voices/heroes/hero_torvald_select_02.ogg` | [impatiently] Sprecht, und macht's kurz. | ungeduldig |
 | `voices/heroes/hero_torvald_select_03.ogg` | [seriously] Die Ahnen sehen zu. | ernst |
-| `voices/heroes/hero_torvald_select_04.ogg` | [calmly] Ha! Ein Kampf, hoffe ich? | gut gelaunt |
-| `voices/heroes/hero_torvald_select_05.ogg` | [calmly] Skarnheim steht an Eurer Seite. | ehrlich |
+| `voices/heroes/hero_torvald_select_04.ogg` | [playfully] Ha! Ein Kampf, hoffe ich? | gut gelaunt |
+| `voices/heroes/hero_torvald_select_05.ogg` | [sincerely] Skarnheim steht an Eurer Seite. | ehrlich |
 
 ### hero_torvald_move (Event `voice.hero_torvald.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_move_01.ogg` | [calmly] Der Weg ist lang, die Axt ist leicht! | grob-fröhlich |
+| `voices/heroes/hero_torvald_move_01.ogg` | [playfully] Der Weg ist lang, die Axt ist leicht! | grob-fröhlich |
 | `voices/heroes/hero_torvald_move_02.ogg` | [shouting] Vorwärts, vorwärts! | laut |
 | `voices/heroes/hero_torvald_move_03.ogg` | [gruffly] Meine Füße kennen den Berg, nicht diesen Matsch. | brummig |
 | `voices/heroes/hero_torvald_move_04.ogg` | [warmly] Führt an, Wächterin! | herzlich |
@@ -1415,7 +1415,7 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_torvald_lowhp_01.ogg` | [firmly] [panting] Ich hatte Schlimmeres – glaube ich. | keuchend-trotzig |
-| `voices/heroes/hero_torvald_lowhp_02.ogg` | [calmly] Noch … nicht … Ahnen! | gepresst |
+| `voices/heroes/hero_torvald_lowhp_02.ogg` | [strained] Noch … nicht … Ahnen! | gepresst |
 | `voices/heroes/hero_torvald_lowhp_03.ogg` | [quietly] Mein Blut verlässt mich … | schwach |
 
 

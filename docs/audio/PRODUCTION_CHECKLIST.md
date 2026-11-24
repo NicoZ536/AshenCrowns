@@ -2237,7 +2237,7 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 
 - [ ] `voices/heroes/hero_hal_venn_select_05.ogg` · Regie: sorgend
   ```text
-  [calmly] Was braucht Brennhollow von mir?
+  [worried] Was braucht Brennhollow von mir?
   ```
 
 ##### hero_hal_venn_move (Event `voice.hero_hal_venn.move`)
@@ -2259,7 +2259,7 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 
 - [ ] `voices/heroes/hero_hal_venn_move_04.ogg` · Regie: gemütlich
   ```text
-  [calmly] Ich gehe, ich gehe.
+  [gruffly] Ich gehe, ich gehe.
   ```
 
 - [ ] `voices/heroes/hero_hal_venn_move_05.ogg` · Regie: neutral
@@ -2405,7 +2405,7 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 
 - [ ] `voices/heroes/hero_hal_venn_levelup_02.ogg` · Regie: bescheiden
   ```text
-  [calmly] Stärker. Und das macht demütig.
+  [sincerely] Stärker. Und das macht demütig.
   ```
 
 - [ ] `voices/heroes/hero_hal_venn_levelup_03.ogg` · Regie: leise
@@ -2417,12 +2417,12 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_01.ogg` · Regie: angestrengt
   ```text
-  [calmly] Ich muss … mich selbst versorgen …
+  [strained] Ich muss … mich selbst versorgen …
   ```
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_02.ogg` · Regie: gepresst
   ```text
-  [calmly] Noch nicht, Flamme, noch nicht.
+  [strained] Noch nicht, Flamme, noch nicht.
   ```
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_03.ogg` · Regie: trocken-schwach
@@ -2761,19 +2761,19 @@ Kontext: Letzte Wahl: Hohle Krone nehmen.
 
 - [ ] `voices/heroes/hero_torvald_select_04.ogg` · Regie: gut gelaunt
   ```text
-  [calmly] Ha! Ein Kampf, hoffe ich?
+  [playfully] Ha! Ein Kampf, hoffe ich?
   ```
 
 - [ ] `voices/heroes/hero_torvald_select_05.ogg` · Regie: ehrlich
   ```text
-  [calmly] Skarnheim steht an Eurer Seite.
+  [sincerely] Skarnheim steht an Eurer Seite.
   ```
 
 ##### hero_torvald_move (Event `voice.hero_torvald.move`)
 
 - [ ] `voices/heroes/hero_torvald_move_01.ogg` · Regie: grob-fröhlich
   ```text
-  [calmly] Der Weg ist lang, die Axt ist leicht!
+  [playfully] Der Weg ist lang, die Axt ist leicht!
   ```
 
 - [ ] `voices/heroes/hero_torvald_move_02.ogg` · Regie: laut
@@ -2951,7 +2951,7 @@ Kontext: Letzte Wahl: Hohle Krone nehmen.
 
 - [ ] `voices/heroes/hero_torvald_lowhp_02.ogg` · Regie: gepresst
   ```text
-  [calmly] Noch … nicht … Ahnen!
+  [strained] Noch … nicht … Ahnen!
   ```
 
 - [ ] `voices/heroes/hero_torvald_lowhp_03.ogg` · Regie: schwach
@@ -2995,7 +2995,7 @@ Kontext: Entscheidung: Bezahlung in Gold. Söldner statt Torvald.
 
 - [ ] `voices/characters/char_torvald_m09_schwur_b_b_01.ogg` · Regie: ernüchtert, abweisend · Zeile 2 der Szene
   ```text
-  [calmly] Gold also. Eisen bekommst du, und Krieger gegen Lohn. Aber erwarte nicht, dass sie für dich sterben.
+  [dismissively] Gold also. Eisen bekommst du, und Krieger gegen Lohn. Aber erwarte nicht, dass sie für dich sterben.
   ```
 
 ##### `m09_kolosse` · Mission 9 – Der Schwarze Winter (`m09`)
@@ -3392,7 +3392,7 @@ Kontext: Entscheidung: Treueeid auf die Krone.
 
 - [ ] `voices/characters/char_kassian_m04_eid_a_b_01.ogg` · Regie: höflich, mit Unterton · Zeile 2 der Szene
   ```text
-  [calmly] Wie standhaft. Der König wird es zu schätzen wissen – [pause] und die Herzogin sich Euren Namen merken.
+  [politely] Wie standhaft. Der König wird es zu schätzen wissen – [pause] und die Herzogin sich Euren Namen merken.
   ```
 
 ##### `m04_eid_b` · Mission 4 – Die Lange Nacht (`m04`)
@@ -3529,7 +3529,7 @@ Kontext: Isolde erreicht den Riss; die Stimme aus dem Tief macht ihr Angebot.
 
 - [ ] `voices/characters/char_deep_voice_m11_riss_a_01.ogg` · Regie: schmeichelnd, tief, mehrschichtig · Zeile 1 der Szene
   ```text
-  [calmly] Du bist weit gekommen, kleine Flamme. [short pause] Sieh, was ich dir zeige: Aschglas, so rein, dass es singt. Nimm davon, und deine Heere werden nie wieder hungern.
+  [seductively] Du bist weit gekommen, kleine Flamme. [short pause] Sieh, was ich dir zeige: Aschglas, so rein, dass es singt. Nimm davon, und deine Heere werden nie wieder hungern.
   ```
 
 ##### `m11_riss_a` · Mission 11 – Der Riss von Marrowfen (`m11`)
@@ -3712,7 +3712,7 @@ Kontext: Nel, die in Brennhollow aufgenommene Waise, weist den Weg (nur wenn sie
 
 - [ ] `voices/characters/char_nel_m11_nel_a_01.ogg` · Regie: kindlich, abwesend · Zeile 1 der Szene
   ```text
-  [calmly] Hört ihr es? Es klingt wie eine Spieluhr, die jemand zu langsam aufzieht. Dort entlang geht es – [pause] das Schilf weiß den Weg.
+  [nervously] Hört ihr es? Es klingt wie eine Spieluhr, die jemand zu langsam aufzieht. Dort entlang geht es – [pause] das Schilf weiß den Weg.
   ```
 
 ##### `m29_ende_c` · Mission 29 – Der Hohle Thron (`m29`)
@@ -3917,7 +3917,7 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 
 - [ ] `voices/characters/boss_hollow_king_m29_ende_c_b_01.ogg` · Regie: zitternd, menschlich · Zeile 2 der Szene
   ```text
-  [calmly] Sereth … Sereth. Ich habe den Namen so lange nicht gehört. Wer – [pause] wer hat ihn dir gesagt?
+  [nervously] Sereth … Sereth. Ich habe den Namen so lange nicht gehört. Wer – [pause] wer hat ihn dir gesagt?
   ```
 
 #### Die Wurzelmutter – Stimme `AC_boss_root_mother` (2 Dateien)
@@ -4083,7 +4083,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/worker_move_02.ogg` · Regie: leichtes Brummen, gemütlich
   ```text
-  [calmly] Dann mal los.
+  [gruffly] Dann mal los.
   ```
 
 - [ ] `voices/units/worker_move_03.ogg` · Regie: zu sich selbst, halblaut
@@ -4567,12 +4567,12 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/archer_select_02.ogg` · Regie: konzentriert
   ```text
-  [calmly] Augen aufs Feld.
+  [eagerly] Augen aufs Feld.
   ```
 
 - [ ] `voices/units/archer_select_03.ogg` · Regie: keck
   ```text
-  [calmly] Worauf schieß ich?
+  [playfully] Worauf schieß ich?
   ```
 
 - [ ] `voices/units/archer_select_04.ogg` · Regie: militärisch
@@ -4599,12 +4599,12 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/archer_move_03.ogg` · Regie: zielstrebig
   ```text
-  [calmly] Such mir 'ne Anhöhe.
+  [eagerly] Such mir 'ne Anhöhe.
   ```
 
 - [ ] `voices/units/archer_move_04.ogg` · Regie: flink
   ```text
-  [calmly] Bin dran.
+  [eagerly] Bin dran.
   ```
 
 ##### archer_attack (Event `voice.archer.attack`)
@@ -4736,7 +4736,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/knight_select_04.ogg` · Regie: formell
   ```text
-  [calmly] Sprecht, und ich reite.
+  [politely] Sprecht, und ich reite.
   ```
 
 - [ ] `voices/units/knight_select_05.ogg` · Regie: gläubig, fest
@@ -4763,7 +4763,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/knight_move_04.ogg` · Regie: höflich-formell
   ```text
-  [calmly] Wie Ihr befehlt.
+  [politely] Wie Ihr befehlt.
   ```
 
 - [ ] `voices/units/knight_move_05.ogg` · Regie: selbstbewusst
@@ -4893,7 +4893,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/crossbowman_select_04.ogg` · Regie: leicht grimmig
   ```text
-  [calmly] Sagt's, und ich schieß einen durch.
+  [grimly] Sagt's, und ich schieß einen durch.
   ```
 
 ##### crossbowman_move (Event `voice.crossbowman.move`)
@@ -5198,7 +5198,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/shieldbearer_move_02.ogg` · Regie: brummend
   ```text
-  [calmly] Langsam und stetig.
+  [gruffly] Langsam und stetig.
   ```
 
 - [ ] `voices/units/shieldbearer_move_03.ogg` · Regie: knapp
@@ -5367,7 +5367,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/scout_rider_move_03.ogg` · Regie: leichthin
   ```text
-  [calmly] Ich bin vor dem Abendessen zurück.
+  [playfully] Ich bin vor dem Abendessen zurück.
   ```
 
 - [ ] `voices/units/scout_rider_move_04.ogg` · Regie: Zuruf, kurz
@@ -5496,7 +5496,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/horse_archer_select_04.ogg` · Regie: locker
   ```text
-  [calmly] Wohin, Wächterin?
+  [playfully] Wohin, Wächterin?
   ```
 
 ##### horse_archer_move (Event `voice.horse_archer.move`)
@@ -5508,7 +5508,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/horse_archer_move_02.ogg` · Regie: neckend
   ```text
-  [calmly] Fangt mich, wenn ihr könnt.
+  [playfully] Fangt mich, wenn ihr könnt.
   ```
 
 - [ ] `voices/units/horse_archer_move_03.ogg` · Regie: knapp
@@ -5637,7 +5637,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/battle_mage_select_03.ogg` · Regie: konzentriert
   ```text
-  [calmly] Nennt das Ziel.
+  [eagerly] Nennt das Ziel.
   ```
 
 - [ ] `voices/units/battle_mage_select_04.ogg` · Regie: leise-intensiv
@@ -5801,7 +5801,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/priest_select_03.ogg` · Regie: tröstend
   ```text
-  [calmly] Ich bin hier, Kind.
+  [gently] Ich bin hier, Kind.
   ```
 
 - [ ] `voices/units/priest_select_04.ogg` · Regie: ruhig
@@ -5823,7 +5823,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/priest_move_03.ogg` · Regie: sorgend
   ```text
-  [calmly] Gebt auf die Verwundeten acht.
+  [worried] Gebt auf die Verwundeten acht.
   ```
 
 - [ ] `voices/units/priest_move_04.ogg` · Regie: leicht gehetzt
@@ -5964,7 +5964,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/battering_ram_select_03.ogg` · Regie: Anfeuerung
   ```text
-  [calmly] Legt Euch ins Zeug!
+  [encouraging] Legt Euch ins Zeug!
   ```
 
 - [ ] `voices/units/battering_ram_select_04.ogg` · Regie: rhythmisch
@@ -5976,7 +5976,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/battering_ram_move_01.ogg` · Regie: Anstrengung, im Takt
   ```text
-  [calmly] Schieben, schieben!
+  [strained] Schieben, schieben!
   ```
 
 - [ ] `voices/units/battering_ram_move_02.ogg` · Regie: hektisch
@@ -5986,7 +5986,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/battering_ram_move_03.ogg` · Regie: gepresst
   ```text
-  [calmly] Langsam … langsam …
+  [strained] Langsam … langsam …
   ```
 
 - [ ] `voices/units/battering_ram_move_04.ogg` · Regie: Zuruf
@@ -6071,7 +6071,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/catapult_move_01.ogg` · Regie: Anstrengung
   ```text
-  [calmly] Zieht sie, zieht sie!
+  [strained] Zieht sie, zieht sie!
   ```
 
 - [ ] `voices/units/catapult_move_02.ogg` · Regie: besorgt
@@ -6086,7 +6086,7 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 - [ ] `voices/units/catapult_move_04.ogg` · Regie: gepresst
   ```text
-  [calmly] Langsam, langsam!
+  [strained] Langsam, langsam!
   ```
 
 ##### catapult_attack (Event `voice.catapult.attack`)

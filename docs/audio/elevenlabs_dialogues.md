@@ -14,7 +14,7 @@ Grundlage: `assets/audio/manifest.ron` (Events `narrator.*`, `char_*.*`, `boss_*
   (`[pause]`, `[short pause]`, `[softly]`, `[slowly]`, `[rising tension]` …). Die Spalte **Regie** bleibt als Kurzhinweis zur Absicht stehen; maßgeblich ist der Text mit Tags.
 - **Abweichungen zwischen Ton und Spieltext** werden nach der Lieferung von uns behoben, indem die Spieltexte an den gesprochenen Ton angepasst werden. Nachbearbeiten oder Schneiden ist nicht nötig.
 - **Teil 2** (nicht im Manifest) ist ein Vorschlagstext in deutscher Sprechfassung; englische Referenztexte entfallen.
-- **Optionsmarker** wie **[Option A – …]** in Teil 2 sind Regie: vor der Generierung **entfernen** (sonst interpretiert v3 sie als Tag oder spricht sie).
+- **Optionsmarker** („Option A – …“) der Entscheidungszeilen in Teil 2 stehen in der Spalte **Regie**, nicht im Sprechtext; der Sprechtext ist einfügefertig.
 - **Abspielmodus:** Jede Zeile ist ein eigenes Event mit einer Datei; die Engine spielt sie einmal ab (Erzähler/Dialog über die Sprecherwarteschlange mit Musik-Ducking, Pausen zwischen aufeinanderfolgenden Zeilen ergeben sich aus der Warteschlange).
   Eine Datei wird mit höchstens 300 ms Schwanzstille erwartet; ein Kürzen übernimmt die Integration.
 
@@ -467,7 +467,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/hero_isolde_m04_eid_a_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [firmly] Mein Vater starb, als er Valemarks Grenze hielt. Ich werde sie auch halten. Für die Glutkrone, Majestät. | fest, förmlich |
-| 2 | `voices/characters/char_kassian_m04_eid_a_b_01.ogg` | Kassian Vale (`AC_char_kassian`) | [calmly] Wie standhaft. Der König wird es zu schätzen wissen – [pause] und die Herzogin sich Euren Namen merken. | höflich, mit Unterton |
+| 2 | `voices/characters/char_kassian_m04_eid_a_b_01.ogg` | Kassian Vale (`AC_char_kassian`) | [politely] Wie standhaft. Der König wird es zu schätzen wissen – [pause] und die Herzogin sich Euren Namen merken. | höflich, mit Unterton |
 
 ### `m04_eid_b`
 *Kontext:* Entscheidung: Bündnis mit Herzogin Mireille Corvane.
@@ -590,7 +590,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/hero_isolde_m09_schwur_b_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [seriously] Ich bin keine Sippe, Torvald. Aber mein Gold ist gut und mein Wort ist besser. Nenne deinen Preis. | ruhig, geschäftsmäßig |
-| 2 | `voices/characters/char_torvald_m09_schwur_b_b_01.ogg` | Torvald Eisenhand (`AC_char_torvald`) | [calmly] Gold also. Eisen bekommst du, und Krieger gegen Lohn. Aber erwarte nicht, dass sie für dich sterben. | ernüchtert, abweisend |
+| 2 | `voices/characters/char_torvald_m09_schwur_b_b_01.ogg` | Torvald Eisenhand (`AC_char_torvald`) | [dismissively] Gold also. Eisen bekommst du, und Krieger gegen Lohn. Aber erwarte nicht, dass sie für dich sterben. | ernüchtert, abweisend |
 
 ### `m09_sturm`
 *Kontext:* Der Sturm setzt ein; die erste Welle naht.
@@ -702,7 +702,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
-| 1 | `voices/characters/char_deep_voice_m11_riss_a_01.ogg` | Die Stimme aus dem Tief (`AC_char_deep_voice`) | [calmly] Du bist weit gekommen, kleine Flamme. [short pause] Sieh, was ich dir zeige: Aschglas, so rein, dass es singt. Nimm davon, und deine Heere werden nie wieder hungern. | schmeichelnd, tief, mehrschichtig |
+| 1 | `voices/characters/char_deep_voice_m11_riss_a_01.ogg` | Die Stimme aus dem Tief (`AC_char_deep_voice`) | [seductively] Du bist weit gekommen, kleine Flamme. [short pause] Sieh, was ich dir zeige: Aschglas, so rein, dass es singt. Nimm davon, und deine Heere werden nie wieder hungern. | schmeichelnd, tief, mehrschichtig |
 | 2 | `voices/characters/char_hal_venn_m11_riss_b_01.ogg` | Bruder Hal Venn (`AC_char_hal_venn`) | [worried] Hör nicht hin, Isolde. Was dort flüstert, hat Harrowmere verbrannt. | scharf, besorgt |
 | 3 | `voices/characters/char_hal_venn_m11_riss_c_01.ogg` | Bruder Hal Venn (`AC_char_hal_venn`) | [seriously] Der Riss kann geschlossen werden, wenn wir den Schrein an seinem Grund zerschlagen. Oder wir nehmen, was er uns reicht – [pause] und tragen die Folgen. | ernst, beschwörend |
 
@@ -727,7 +727,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
-| 1 | `voices/characters/char_nel_m11_nel_a_01.ogg` | Nel (`AC_char_nel`) | [calmly] Hört ihr es? Es klingt wie eine Spieluhr, die jemand zu langsam aufzieht. Dort entlang geht es – [pause] das Schilf weiß den Weg. | kindlich, abwesend |
+| 1 | `voices/characters/char_nel_m11_nel_a_01.ogg` | Nel (`AC_char_nel`) | [nervously] Hört ihr es? Es klingt wie eine Spieluhr, die jemand zu langsam aufzieht. Dort entlang geht es – [pause] das Schilf weiß den Weg. | kindlich, abwesend |
 
 ### `m11_sieg`
 *Kontext:* Schlusswort.
@@ -1182,7 +1182,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/hero_isolde_m29_ende_c_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [gently] Varkhan. Deine Tochter hieß Sereth. Sie hat dir nie gesagt, dass sie dir verzeiht, weil sie nie dachte, dass du es brauchst. Sie tut es. | weich, ruhig, ohne Kälte |
-| 2 | `voices/characters/boss_hollow_king_m29_ende_c_b_01.ogg` | Der Hohle König (`AC_boss_hollow_king`) | [calmly] Sereth … Sereth. Ich habe den Namen so lange nicht gehört. Wer – [pause] wer hat ihn dir gesagt? | zitternd, menschlich |
+| 2 | `voices/characters/boss_hollow_king_m29_ende_c_b_01.ogg` | Der Hohle König (`AC_boss_hollow_king`) | [nervously] Sereth … Sereth. Ich habe den Namen so lange nicht gehört. Wer – [pause] wer hat ihn dir gesagt? | zitternd, menschlich |
 | 3 | `voices/characters/char_nel_m29_ende_c_c_01.ogg` | Nel (`AC_char_nel`) | [quietly] Sie hat ihn mir gesagt. Im Schlaf. Sie wartet auf dich. | kindlich, klar, leise |
 
 ### `m29_ende_d`
@@ -1256,6 +1256,9 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | 4 | `voices/narrator/narrator_age_ende_d_01.ogg` | Erzähler (`AC_narrator`) | [solemn] [slowly] Und so wurde der Schleier geschlossen. [short pause] Niemand krönte die Wächterin der Aschmark. Aber in Brennhollow brennt seither jede Nacht ein Feuer, und niemand hat es je erlöschen lassen. | ruhig, getragen, langsam im letzten Satz |
 
 <!-- END KAMPAGNE -->
+
+---
+
 
 ---
 
