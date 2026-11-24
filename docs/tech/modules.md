@@ -1,6 +1,6 @@
 # ASHEN CROWNS – Modulübersicht
 
-Jedes Modul jeder Crate mit Zweck, wichtigsten Typen/Funktionen und Abhängigkeiten. Pfade sind relativ zum
+Jedes Modul jeder der sechs Crates (`ashen_core`, `ashen_sim`, `ashen_strategy`, `ashen_engine`, `ashen_game`, `ashen_tools`) mit Zweck, wichtigsten Typen/Funktionen und Abhängigkeiten. Pfade sind relativ zum
 Repository-Wurzelverzeichnis. Überblick und Abhängigkeitsdiagramm: [`architecture.md`](architecture.md). Datenstrukturen
 im Detail: [`data_model.md`](data_model.md).
 
@@ -46,6 +46,13 @@ Deterministische, render-unabhängige RTS-Simulation. Externe Abhängigkeiten: `
 | `env.rs` | Tageszeit und Wetter | `Environment` (`tick`, `phase`, `is_night`, `sun_elevation`), `Weather` (6 Arten), `DayPhase`, `EnvTransitions` | `rand_chacha` |
 | `chronicle.rs` | Chronik bemerkenswerter Ereignisse | `Chronicle` (`record`, `narrative`), `ChronicleEntry`, `ChronicleKind` | `serde` |
 | `save.rs` | Robustes Speichersystem (`.acsave`) | `encode`, `decode`, `save_to`, `load_from`, `autosave`, `list`, `read_header`, `write_atomic`, `SaveHeader`, `SavePayload`, `SaveError`, `MAGIC`, `FORMAT_VERSION`, `EXTENSION` | `world`, `data`, `bincode`, `crc32fast`, `uuid` |
+| `rpg.rs` | RPG- und Militärdefinitionen: Gegenstände, Talente, Schmiede-Upgrades, Formationen | `ItemDef`, `TalentDef`, `UpgradeDef`, `Formation` | `data` |
+| `scenario.rs` | Szenario-Erweiterungen des Missionsformats: explizite Kartendaten, benannte Bereiche, Startpositionen (alle Felder in `MissionDef` optional) | siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md) | `mission`, `map` |
+| `genmap.rs` | Parametrischer Kartengenerator für Gefechte und den Karteneditor (sechs Vorlagen) | – | `map`, `ashen_core::noise` |
+| `challenge.rs` | Herausforderungen: datengetriebene Regelvarianten auf Missionen und Szenarien, Wertung, lokal gespeicherte Bestenliste | – | `mission` |
+| `campaign.rs` | Echtzeit-Kampagne „Das Zeitalter der Gefallenen“: Zeitalter, Missionen, Freischaltung, Entscheidungen (Flags), Enden, gespeicherter Fortschritt je Profil | `CampaignDef` (`load`), `CampaignProgress` (`load`, `save`), `slot_path` | `mission` |
+| `balance.rs` | Balancemessung des Echtzeit-Gefechts: skriptgesteuerter Testspieler gegen die Gegner-KI, 1v1-Gruppenduelle für die Konter-Matrix (Werkzeug `rts-balance`) | `BotStyle` | `world`, `systems::commands` |
+| `bench.rs` | Reproduzierbare Last für Leistungsmessungen: Schlacht mit n Einheiten je Seite (verwendet von `sim_bench`, `tests/bench_smoke.rs`, `--bench`) | – | `world` |
 
 ### 2.2 Systeme (`systems/`)
 
@@ -64,12 +71,21 @@ Jedes System ist eine freie Funktion über `&mut SimWorld` (und `&GameData`).
 | `abilities.rs` | Führt `AbilityDef`-Effekte aus (`Damage`, `Shield`, `Rally`, `Drain`, `Summon`, `Terror`) mit Stufenbonus 8 % je Stufe | `cast` |
 | `fog.rs` | Aktualisiert den Kriegsnebel aus den Sichtweiten des Spielers (Nacht- und Nebelmultiplikatoren) | `update` |
 | `script.rs` | Wertet Missions-Auslöser (`Condition` → `Action`) aus, Entdeckung markierter Ziele, eingebaute Sieg-/Niederlageregeln | `tick` |
+| `ai_player.rs` | KI-Spieler der Hohlen im Gefecht: baut eine Basis wirtschaftlich auf, stellt Armeen nach Konterlogik zusammen, greift an, verteidigt, zieht sich zurück (4 Schwierigkeitsgrade über `rules.ron → ai_levels`) | `tick` |
+| `tactics.rs` | Taktische Kampf-KI für reine Kampfmodi (Weltkarten-Schlachten, Gefechte ohne Wirtschaft): Fokusfeuer, Fernkämpfer hinter dem Nahkampf, Rückzug, Belagerungsziele, Turmbesatzung; zustandslos und deterministisch | siehe [`../design/rts_military.md`](../design/rts_military.md) §10.6 |
+| `casters.rs` | Selbstständig wirkende Fähigkeiten (`UnitDef::autocast`): Priester heilen, Beschwörer rufen Diener, Zauberer entfesseln Flächenzauber | `tick` |
+| `city.rs` | Stadtsimulation in Echtzeit: Lager und Kapazität, Produktionsketten, Arbeitskräfte, Bevölkerung (Bedürfnisse, Zufriedenheit, Steuern, Wohnstufen), Markt, Ausbaustufen | `tick` |
+| `formation.rs` | Formationslayouts (Linie, Keil, Kolonne, Karree); reine Geometrie: Versätze relativ zum Zielpunkt der Gruppe (verwendet von `commands::formation_slots`) | – |
+| `heroes.rs` | Helden: Werte aus Ausrüstung und Talenten, Inventar, Tränke, Beute, Wiederbelebung | – |
 
 ### 2.3 Tests
 
-`crates/ashen_sim/tests/simulation.rs`: Missionsstart nach Kanon, Sammeln, Bauen und Ausbilden, Determinismus,
-Wellen und Langzeitlauf, Spielstand-Roundtrip, Heldenfähigkeit, Mod-Überlagerung. Dazu Modultests in `arena.rs`,
-`env.rs`, `path.rs`, `mapgen.rs` (und weiteren).
+Integrationstests in `crates/ashen_sim/tests/`: `simulation.rs` (Missionsstart nach Kanon, Sammeln, Bauen und Ausbilden,
+Determinismus, Wellen und Langzeitlauf, Spielstand-Roundtrip, Heldenfähigkeit, Mod-Überlagerung), `economy.rs`
+(Echtzeit-Wirtschaft), `military.rs` (Einheiten, Belagerung, Helden, Formationen), `tactics.rs` (taktische Führung),
+`balance.rs` (Schwierigkeitsstufen, Konter-Matrix), `campaign.rs` (Kampagne), `scenarios.rs` (Szenarien, Herausforderungen),
+`bench_smoke.rs` (400 Einheiten, 30 s). Dazu Modultests in `arena.rs`, `env.rs`, `path.rs`, `mapgen.rs` (und weiteren) und das
+Beispiel `examples/sim_bench.rs`.
 
 ---
 
@@ -133,7 +149,7 @@ Das Spiel (Binary `ashen_crowns`, `default-run`). Abhängigkeiten: `ashen_core`,
 | Modul | Zweck | Wichtigste Typen/Funktionen | Abhängigkeiten |
 |---|---|---|---|
 | `main.rs` | Einstiegspunkt, Kommandozeile (`usage()`), Start im Fenster oder Headless | `main`, `usage` | `game`, `settings`, `ashen_engine` |
-| `game.rs` | Verbindet Engine, Inhalte, Grafik und Szenen; `AutoRun` für Screenshots/Demos | `AshenGame` (implementiert `Game`), `Scene` (`Menu`, `Mission`), `AutoRun` | `content`, `art`, `menu`, `mission`, `hud` |
+| `game.rs` | Verbindet Engine, Inhalte, Grafik und Szenen; `AutoRun` für Screenshots/Demos | `AshenGame` (implementiert `Game`), `Scene` (`Menu`, `Mission`, `Editor`, `WorldMap`), `AutoRun` | `content`, `art`, `menu`, `mission`, `hud` |
 | `content.rs` | Lädt Spielinhalte inklusive Mods und Missionen | `Content` (`load`), `ModInfo`, `discover_mods` | `ashen_sim::data`, `ashen_sim::mission` |
 | `settings.rs` | Benutzereinstellungen und plattformgerechte Verzeichnisse | `UserSettings` (`load`, `save`), `data_dir`, `saves_dir` | `ashen_engine::render::GraphicsProfile`, `audio::Volumes` |
 | `menu.rs` | Hauptmenü mit lebendigem Hintergrund (Sandbox-Welt in der Dämmerung) | `MenuScene`, `Page` (Main, NewGame, Load, Settings, Mods, Credits), `MenuAction` | `view`, `content`, `ui_common` |
@@ -142,6 +158,14 @@ Das Spiel (Binary `ashen_crowns`, `default-run`). Abhängigkeiten: `ashen_core`,
 | `ui_common.rs` | Gemeinsame UI-Bausteine | `image_from_rect`, `atlas_image`, `save_list`, `settings_ui` | `art`, `settings` |
 | `view.rs` | Weltdarstellung: Simulationszustand → Sprites, Lichter, Partikel, Atmosphäre | `WorldView` (`render`, `on_event`, `update`, `atmosphere`, `add_marker`), `Overlay`, `depth_from_world_y` | `art`, `ashen_engine::render`, `ashen_sim` |
 | `audio_bridge.rs` | Simulationsereignisse → Audio-Events, Musikintensität, Ambience | `on_event`, `music_intensity`, `ambience` | `ashen_engine::audio` |
+| `hud_city.rs` | Oberfläche der Echtzeit-Wirtschaft: Lagerfenster, Stadtübersicht (Steuern, Bürger, Ausbau), Baumenü mit Rubriken, Marktfenster, Betriebsansicht eines Gebäudes | `hud` |
+| `hud_hero.rs` | Heldenleiste und Heldenfenster: Werte, Talentbaum, Ausrüstung (Waffe, Rüstung, Amulett, 2 Ringe), Inventar, Tränke | `hud`, `ui_art` |
+| `ui_art.rs` | Prozedurale UI-Grafik (geschmiedetes Eisen, Bronze, Leder, Pergament, Goldfiligran, Edelsteine) und darauf aufbauende Widgets | `art`, `ashen_engine::ui` |
+| `campaign_ui.rs` | Menüseiten der Echtzeit-Kampagne: Profile, Zeitalter-Übersicht auf der Pergamentkarte, Briefing, Entscheidungsfenster, Zusammenfassung, Ende | `ashen_sim::campaign`, `menu` |
+| `play_modes.rs` | Spielmodi neben der Kampagne: Szenarien, Herausforderungen, Gefecht-Einrichtung | `ashen_sim::{scenario,challenge,genmap}` |
+| `showcase.rs` | Vorführstadt (`--demo-city`) und Stresslast (`--bench stress`) für Screenshots, Art-Reviews und Benchmarks | `mission` |
+| `editor/` | Karteneditor als eigene Szene: `mod.rs` (Szene, Werkzeuge), `doc.rs` (Dokument, Pinsel, Rückgängig/Wiederholen), `panels.rs` (Oberfläche), `triggers.rs` (Trigger-Editor), `validate.rs` (Prüfung); siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md) | `ashen_sim::{mission,scenario,genmap}` |
+| `worldmap/` | Weltkarten-Szene der Großen Kampagne; die Simulation liegt vollständig in `ashen_strategy`. `mod.rs` (Szene), `mapview.rs` (Kartenbild, sieben Kartenmodi, Overlays), `panels.rs` (Leisten, Dialoge, Pausenmenü), `windows.rs` (11 Fenster; alle Aktionen über `StrategyCommand`), `widgets.rs`, `battle.rs` (`BattleRequest` → Echtzeitmission, `BattleResult`), `battle_ui.rs` (Schlachtleiste, Ergebnisdialog), `store.rs` (`.acstrat`, Rückkehrpunkte) | `ashen_strategy`, `ashen_sim`, `view` |
 
 ### 4.1 `art/` – prozedurale Pixel-Art
 
@@ -155,16 +179,42 @@ Das Spiel (Binary `ashen_crowns`, `default-run`). Abhängigkeiten: `ashen_core`,
 | `art/props.rs` | 2D-Bodendetails: Grasbüschel, Blumen, Schilf | `decor_tuft_*`, `decor_flowers_*`, `decor_reeds_*` |
 | `art/fx.rs` | Weiche Partikel, Schatten, Auswahlringe, Projektile, Fahne, Befehlsmarker | `fx_*`, `proj_*`, `shadow_*`, `ring_*`, `marker_*`, `rally_flag` |
 | `art/icons.rs` | 16×16-Symbole für Ressourcen, Befehle und Fähigkeiten | `icon_*` |
+| `art/goods_icons.rs`, `art/military_icons.rs` | Symbole für Waren bzw. Militär (Einheiten, Upgrades, Gegenstände) | `icon_*` |
 
 ---
 
-## 5. `ashen_tools` (`crates/ashen_tools`)
+## 5. `ashen_strategy` (`crates/ashen_strategy`)
+
+Deterministische Simulation der Strategieebene („Weltkarte“, Große Kampagne) ohne Grafik; `ashen_game::worldmap` stellt sie dar.
+Abhängigkeiten: `ashen_core`, `glam`, `serde`, `ron`, `bincode`, `rand`, `rand_chacha`, `uuid`, `crc32fast`, `log`; `ashen_sim` und
+`serde_json` nur in Tests (`tests/world.rs`).
+
+| Modul | Zweck |
+|---|---|
+| `types.rs`, `model.rs`, `world.rs` | IDs, Kalender, Datenmodell (`Province`, `Realm`, `Character`, `Dynasty`, `NobleHouse`, `Army`, `War`, `Treaty`, `Plot`, `Market` …), `StrategyWorld`, Optionen, Tagestakt |
+| `mapgen.rs`, `scenario.rs` | Kartenerzeugung (8 Regionen, 50 Kern- und 14 optionale Provinzen), Startzustand 897 n.F. |
+| `goods.rs`, `catalog.rs`, `data.rs` | Waren, Gebäude, Einheitenkatalog, Eigenschaften; RON-Laden und Mod-Overlays |
+| `character.rs`, `politics.rs`, `diplomacy.rs`, `ai.rs` | Charaktere und Dynastien, Ämter/Adel/Intrigen, Diplomatie, KI |
+| `economy.rs`, `population.rs`, `religion.rs`, `magic.rs` | Wirtschaft, Bevölkerung, Religion, Magie und Hohlung |
+| `military.rs`, `neutral.rs` | Heere, Belagerung, Auto-Resolve, `BattleRequest`/`BattleResult`; Monster, Banditen, Bosse |
+| `events.rs`, `chronicle.rs`, `endgame.rs` | Ereignisse, Chronik, Siegziele und Schleierdruck |
+| `command.rs`, `observe.rs`, `save.rs` | `StrategyCommand`, Beobachterläufe (für `strategy-stats`), Speichern/Laden `.acstrat` |
+
+Vollständige Beschreibung mit Zahlen und Regeln: [`strategy_layer.md`](strategy_layer.md).
+
+---
+
+## 6. `ashen_tools` (`crates/ashen_tools`)
 
 | Modul | Zweck | Befehle |
 |---|---|---|
-| `main.rs` | Entwicklerwerkzeuge | `audio-scan [--assets <dir>] [--apply-renames] [--convert] [--report <datei.md>]` und `validate-data [--assets <dir>] [--mod <dir> ...]` |
+| `main.rs` | Einstieg, Befehlsauswertung, `audio-scan`, `validate-data` | `audio-scan [--assets <dir>] [--import <ordner>] [--apply-renames] [--convert] [--report <datei.md>]`, `validate-data [--assets <dir>] [--mod <dir> ...]` |
+| `audio_list.rs` | Liste aller erwarteten Audiodateien, Import eines Lieferordners | `audio-list [--assets <dir>] [--format md\|csv] [--out <datei>]` |
+| `forge.rs` | Schmiede der mitgelieferten Szenarien | `forge-scenarios` |
+| `campaign_forge.rs`, `campaign_missions.rs`, `campaign_missions_b.rs`, `campaign_missions_c.rs` | Schmiede der Echtzeit-Kampagne (Missionen, Plan, Audio-Events, Sprechskript) | `forge-campaign` |
+| `rts_balance.rs` | Gefecht-KI gegen Testspieler, Konter-Matrix (`ashen_sim::balance`) | `rts-balance [--seeds 12] [--minutes 30]` |
+| `strategy_stats.rs` | Balancemessung der Strategieebene (`ashen_strategy::observe`) | `strategy-stats [--seeds 12] [--years 200] [--first-seed 1]` |
 
-Abhängigkeiten: `ashen_sim` (`GameData`, `MissionDef`, `SimWorld`), `ashen_engine` (`audio::manifest`,
-`audio::scanner`, `assets::find_assets_dir`), `log`, `env_logger`. Exit-Codes: `0` Erfolg, `1` Fehler, `2` falsche
-Bedienung. Details: [`project_structure.md`](project_structure.md), [`../audio/audio_integration.md`](../audio/audio_integration.md),
-[`modding.md`](modding.md).
+Abhängigkeiten: `ashen_sim`, `ashen_strategy`, `ashen_engine` (`audio::manifest`, `audio::scanner`, `assets::find_assets_dir`), `log`,
+`env_logger`. Exit-Codes: `0` Erfolg, `1` Fehler, `2` falsche Bedienung. Details: [`project_structure.md`](project_structure.md),
+[`../audio/audio_integration.md`](../audio/audio_integration.md), [`modding.md`](modding.md).
