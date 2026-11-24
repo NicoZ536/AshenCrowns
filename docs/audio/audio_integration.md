@@ -22,7 +22,7 @@ Alles liegt unter `assets/audio/`. Pfade im Manifest sind relativ dazu und **ohn
 assets/audio/
 ├── manifest.ron                     Zuordnung Event → Dateimuster (siehe Abschnitt 3)
 ├── audio_report.md                  Letzter Scanner-Bericht (wird von audio-scan geschrieben)
-├── music/                           Musikspuren: <track>_loop.ogg, <track>_intro.ogg, Stings
+├── music/                           Musikspuren: <track>.ogg (eine Datei je Track, auch Stings)
 ├── ambience/                        Dauerhafte Umgebungsschichten: ambience_<id>_loop.ogg
 ├── sfx/
 │   ├── combat/                      Kampfgeräusche
@@ -57,11 +57,11 @@ Verbindlich (Scanner-geprüft, `docs/canon.md`):
 Muster nach Kategorie:
 
 ```text
-assets/audio/music/<track_id>[_intro|_loop].ogg                  music/build_calm_loop.ogg
+assets/audio/music/<track_id>.ogg                                music/build_calm.ogg
 assets/audio/voices/heroes/<hero_id>_<situation>_<NN>.ogg        voices/heroes/hero_isolde_select_01.ogg
 assets/audio/voices/units/<unit_id>_<situation>_<NN>.ogg         voices/units/archer_move_02.ogg
-assets/audio/voices/characters/<char_id>_<line_id>_<NN>.ogg      voices/characters/char_hal_venn_m01_intro_03.ogg
-assets/audio/voices/narrator/narrator_<line_id>_<NN>.ogg         voices/narrator/narrator_m01_opening_01.ogg
+assets/audio/voices/characters/<char_id>_<line_id>_01.ogg        voices/characters/char_hal_venn_m01_intro_01.ogg
+assets/audio/voices/narrator/narrator_<line_id>_01.ogg           voices/narrator/narrator_m01_opening_01.ogg
 assets/audio/sfx/<kategorie>/<sfx_id>_<NN>.ogg                   sfx/combat/sword_hit_01.ogg
 assets/audio/ambience/<ambience_id>_loop.ogg                     ambience/ambience_day_loop.ogg
 ```
@@ -72,7 +72,7 @@ SFX-Kategorien: `combat`, `magic`, `buildings`, `ui`, `units`, `world`.
 
 **Varianten-Regel (Scanner):** Das Muster `<basis>_*` passt auf Dateien im **selben Ordner**, deren Name genau
 `<basis>_` plus **zwei Ziffern** ist. `worker_select_1.ogg` (einstellig) oder `worker_select_01_alt.ogg` passen nicht.
-Einzeldateien ohne `_*` (z. B. `music/build_calm_loop`) werden über den exakten relativen Pfad zugeordnet.
+Einzeldateien ohne `_*` (z. B. `music/build_calm`) werden über den exakten relativen Pfad zugeordnet.
 
 Namensnormalisierung (`scanner::normalize_name`), angewandt bei ungültigen Namen: Umlaute `ä/ö/ü/ß` → `a/o/u/s`,
 alle Nicht-Alphanumerika → `_` (mehrfache zusammengefasst, am Ende entfernt), Kleinschreibung, einstellige Endnummer
@@ -89,15 +89,14 @@ RON mit benannten Strukturen. Wurzel `AudioManifest(version, music, events, ambi
 AudioManifest(
     version: 1,
     music: [
-        MusicTrack(id: "build_calm", intensity: Calm, file: "music/build_calm_loop",
-                   intro: Some("music/build_calm_intro"), looped: true),
+        MusicTrack(id: "build_calm", intensity: Calm, file: "music/build_calm", intro: None, looped: true),
         MusicTrack(id: "victory_sting", intensity: Sting, file: "music/victory_sting", intro: None, looped: false),
     ],
     events: [
         SoundEvent(id: "voice.archer.move", category: Voice, files: ["voices/units/archer_move_*"],
                    volume_db: 0.0, cooldown_ms: 250, max_instances: 1),
         SoundEvent(id: "narrator.m01_opening", category: Narration, files: ["voices/narrator/narrator_m01_opening_*"],
-                   volume_db: 2.0, cooldown_ms: 0, max_instances: 1, playback: Sequential),
+                   volume_db: 2.0, cooldown_ms: 0, max_instances: 1),
     ],
     ambience: [
         AmbienceLayer(id: "ambience_day", file: "ambience/ambience_day_loop", volume_db: -6.0),
@@ -110,26 +109,25 @@ AudioManifest(
 | `AudioManifest` | `version` | Manifestversion (derzeit 1) |
 | `MusicTrack` | `id` | Spur-ID (z. B. `build_calm`) |
 | | `intensity` | `Menu`, `Calm`, `Tension`, `Combat`, `Battle`, `Boss`, `Sting` |
-| | `file` | Muster der Hauptdatei (Loop) ohne Endung |
-| | `intro` | Optionales Intro (`Some("…")`/`None`) |
-| | `looped` | `true` = Endlosschleife der gesamten Datei |
+| | `file` | Pfad der Musikdatei `music/<id>` ohne Endung (komplette Suno-Ausgabe) |
+| | `intro` | Optionales Intro (`Some("…")`/`None`); im Manifest immer `None` (eine Datei je Track), die Engine unterstützt es weiterhin |
+| | `looped` | `true` = Endlosschleife der gesamten Datei (Stings: `false`) |
 | `SoundEvent` | `id` | Event-ID (`voice.<unit>.<situation>`, `sfx.<id>`, `narrator.<line>`, `char_<id>.<line>`) |
 | | `category` | `Voice`, `Narration`, `Dialogue`, `Sfx`, `Ui` |
 | | `files` | Liste von Mustern (mit `_*` für Varianten) |
 | | `volume_db` | Pegel des Events in dB (Standard 0) |
 | | `cooldown_ms` | Mindestabstand zwischen zwei Auslösungen desselben Events |
 | | `max_instances` | Höchstzahl gleichzeitiger Wiedergaben (0 = unbegrenzt) |
-| | `playback` | **Optional**, Standard `Random`. `Sequential` spielt alle Teile nacheinander. |
+| | `playback` | **Optional**, Standard `Random`. `Sequential` spielt alle Dateien nacheinander (derzeit von keinem Event genutzt). |
 | `AmbienceLayer` | `id`, `file`, `volume_db` | Umgebungsschicht (Schleife) |
 
 **`playback`:**
 
 * `Random` (Standard): Zufällige Variante, nie dieselbe zweimal direkt hintereinander (bei mindestens zwei Varianten).
-* `Sequential`: Alle zugeordneten Dateien (`_01`, `_02`, … in Nummernreihenfolge) werden **nacheinander** abgespielt –
-  für Erzählerpassagen und mehrteilige Dialoge. Im aktuellen Manifest tragen acht Events `Sequential`:
-  `narrator.m01_opening`, `narrator.m01_victory`, `narrator.m01_defeat` und fünf Hal-Venn-Dialoge
-  (`m01_intro`, `m01_first_farm`, `m01_barracks`, `m01_shrine_found`, `m01_victory`). `narrator.m01_night_falls` und
-  `char_hal_venn.m01_wave_warning` sind `Random` (je eine Zeile, evtl. mit Varianten).
+* `Sequential`: Alle zugeordneten Dateien (`_01`, `_02`, … in Nummernreihenfolge) werden **nacheinander** abgespielt.
+  Seit der Umstellung auf **eine Datei je Erzähler-/Dialogzeile** (`<stem>_01` mit dem vollständigen Text) nutzt **kein** Manifest-Event mehr `Sequential`;
+  ein Event mit nur einer Datei spielt in beiden Modi korrekt (Test `single_file_spoken_line_plays_in_random_and_sequential_mode`).
+  Mehrere Dateien gibt es nur noch bei Barks (`voice.*`): jede Datei ist dort eine echte Textvariante (`Random`).
 
 **Kategorie und Bus:**
 
@@ -150,11 +148,11 @@ läuft über die Warteschlange, nicht über zählbare One-Shot-Handles).
 
 | Bereich | Anzahl |
 |---|---|
-| Musikspuren | 34 (davon 23 mit Intro; Kern-Spuren, Weltkarte, Kampagne, Bosse, Fraktionen, Endspiel) |
+| Musikspuren | 34 (je eine Datei `music/<id>`, kein Intro; Kern-Spuren, Weltkarte, Kampagne, Bosse, Fraktionen, Endspiel) |
 | Events | 466: 157 `Voice`, 52 `Narration`, 187 `Dialogue`, 51 `Sfx`, 19 `Ui` |
 | Ambience | 6 (`ambience_day`, `_night`, `_rain`, `_ash_wind`, `_village`, `_ruins`) |
-| Erwartete Dateimuster | 529 (34 Musik + 23 Intros, 466 Event-Muster, 6 Ambience) |
-| Erwartete Dateien | 1087 (Varianten einzeln gezählt; `ashen_tools audio-list`, Abschnitt 5) |
+| Erwartete Dateimuster | 506 (34 Musik, 466 Event-Muster, 6 Ambience) |
+| Erwartete Dateien | 1041 (Varianten einzeln gezählt; `ashen_tools audio-list`, Abschnitt 5) |
 
 ---
 
@@ -274,7 +272,7 @@ werden vollständig in den Speicher geladen und zwischengespeichert; Musik und A
 3. **Instanzgrenze** (`max_instances`) anhand noch laufender Handles prüfen.
 4. Dateien des Events auflösen (`files_for`); keine Dateien → `false` (einmalige Debug-Meldung).
 5. Pegel: `volume_db + 20·log10(1 − Dämpfung)` (Dämpfung höchstens 0,95).
-6. Variante wählen (zufällig ohne direkte Wiederholung) bzw. bei `Sequential` alle Teile einreihen; `Narration`/`Dialogue`
+6. Variante wählen (zufällig ohne direkte Wiederholung; bei einer Datei diese) bzw. bei `Sequential` alle Dateien einreihen; `Narration`/`Dialogue`
    in die Sprachwarteschlange, sonst One-Shot mit Stereo-Pan (−1…1).
 
 ### 6.3 Musiksteuerung
@@ -300,12 +298,9 @@ Regeln:
   Absenkung übernommen. Fordert das Spiel zwischenzeitlich eine andere Intensität, beginnt der Timer von vorn; kehrt es zur
   aktuellen zurück, wird die Absenkung verworfen. So flackert die Musik nicht bei kurzen Kampfpausen.
 * **Crossfade 2,5 s:** Beim Spurwechsel blendet die alte Spur über 2,5 s aus (`stop` mit Fade), die neue über 2,5 s ein.
-* **Intro → Loop:** Hat die Spur ein Intro (`intro`), wird zuerst das Intro **einmal** (nicht geloopt, ohne Einblendung)
-  gespielt; sobald es endet, startet die Loop-Datei nahtlos (ohne Fade, geloopt über die gesamte Datei). Fehlt die
-  Intro-Datei, startet direkt der Loop mit Crossfade. **Das Intro wird nur gespielt, wenn die Musik aus der Stille
-  beginnt oder die Menü-Spur startet** (Missionsstart, Menü); bei Wechseln zwischen Intensitäten innerhalb einer
-  Mission (z. B. Ruhe → Gefecht) wird der Loop direkt per Crossfade gestartet. Die Intros von `battle_small`,
-  `battle_large` und `boss_pale_reeve` greifen daher nur, wenn diese Spur aus der Stille startet.
+* **Eine Datei je Track:** Das Manifest führt jeden Track mit `intro: None`; die Engine startet die **komplette Datei** (bei `looped: true` als Ganzes geloopt,
+  mit Crossfade beim Spurwechsel). Die Loop-Naht (Ende → Anfang) und den Pegel stellt die Integration her (siehe unten). Die Engine unterstützt weiterhin ein optionales
+  `intro` (nur aus der Stille oder beim Menü gespielt, danach Loop); kein Manifest-Track nutzt es.
 * **Stings (`play_sting(id)`):** Spielt die Datei einmalig auf dem Musikbus (kein Loop, kein Fade). Die laufende Musik wird
   währenddessen auf **−18 dB** abgesenkt (0,8 s) und nach Ende des Stings über 2 s auf den normalen Pegel
   zurückgeführt. Stings: `victory_sting` bei `Victory`, `defeat_sting` bei `Defeat`.
@@ -405,8 +400,10 @@ müssten; ohne Eintrag bleiben sie stumm.
 
 ## 8. Ablauf, wenn die Audiodateien geliefert werden (10 Schritte)
 
-1. **Lieferung sichten.** Dateien und Herkunft (ElevenLabs/Suno-Exporte, siehe `docs/audio/*.md`) prüfen. Bevorzugtes Format
-   ist `.ogg` (Vorbis); Musikschleifen müssen als **ganze Datei nahtlos loopbar** sein, Intros sind eigene Dateien.
+1. **Lieferung sichten.** Der Nutzer liefert **unveränderte, komplette Generierungen** (ElevenLabs/Suno-Exporte, siehe `docs/audio/*.md`) in beliebigem Format,
+   in einem Ordner, mit exakten Dateinamen: Stimmen eine Datei je Zeile, Musik die komplette Suno-Ausgabe je Track (`music/<id>`).
+   **Die Integration übernimmt:** Stille trimmen, Lautheit normalisieren, Loop-Nähte (Musik als Ganzes, Ambience), Formatkonvertierung, Mono/Stereo
+   (Zielwerte: `elevenlabs_production_guide.md`, Teil II). Der Nutzer macht davon nichts.
 2. **In die Ordnerstruktur kopieren** (Abschnitt 1) – nach Möglichkeit direkt mit den Zielnamen aus Abschnitt 2.
 3. **Namen normalisieren:** `cargo run -p ashen_tools -- audio-scan --apply-renames`. Bei Meldungen
    „übersprungen (Ziel existiert)“ Dubletten manuell auflösen. Wiederholen, bis keine ungültigen Namen mehr gemeldet werden.
@@ -415,18 +412,18 @@ müssten; ohne Eintrag bleiben sie stumm.
 5. **Bericht lesen:** `assets/audio/audio_report.md` – beschädigte Dateien, Duplikate, Lücken in Variantennummern, unbekannte
    Dateien, mehrdeutige Zuordnungen und fehlende Muster abarbeiten (Dateien nachliefern, umbenennen oder löschen).
 6. **Manifest anpassen**, falls nötig: neue Events oder Spuren in `assets/audio/manifest.ron`, `volume_db`, `cooldown_ms`,
-   `max_instances`, `playback: Sequential` für mehrteilige Erzähler-/Dialogzeilen. Neue Events, die der Spielcode auslösen soll,
+   `max_instances`. Neue Events, die der Spielcode auslösen soll,
    brauchen eine passende Zuordnung in `audio_bridge.rs` (siehe Abschnitt 7).
 7. **Erneut scannen**, bis `is_clean` erreicht ist (Zusammenfassung ohne ungültige Namen, Duplikate, Mehrdeutigkeiten,
    beschädigte Dateien). Fehlende Muster für bewusst noch nicht gelieferte Events sind zulässig.
 8. **Spiel starten:** `RUST_LOG=debug cargo run --release`. Kontrollieren: Logzeile `Audio: <n> Dateien zugeordnet, <m> Muster
    ohne Datei`; keine Warnungen `nicht ladbar`; in den Einstellungen `Audio: kira`. Fehlende Events erscheinen als Debug-Meldungen.
-9. **Hörtest** nach Checkliste: Menümusik (Intro → Loop); Missionsstart (`build_calm`-Intro); Nachteinbruch (Tension,
+9. **Hörtest** nach Checkliste: Menümusik (Loop als Ganzes, Naht unhörbar); Missionsstart (`build_calm`); Nachteinbruch (Tension,
    Ambience-Wechsel Tag → Nacht); Regen/Sturm (`ambience_rain`, Donner); Ruinen und Dorf (Ambience-Schichten); kleiner Kampf
    (Combat), große Schlacht (Battle, Crossfade 2,5 s, Rückkehr nach 8 s); Boss (`Boss`); Sieg und Niederlage (Stings, Absenken der
-   Musik); Erzähler und Hal-Venn-Dialoge (Reihenfolge der Teile, Ducking −8 dB); Einheitenstimmen (Auswahl, Befehle, Tod);
+   Musik); Erzähler und Hal-Venn-Dialoge (je Zeile eine Datei, Ducking −8 dB); Einheitenstimmen (Auswahl, Befehle, Tod);
    Kampf-, Bau- und Arbeits-SFX (Cooldowns, Instanzgrenzen); Pan und Distanzdämpfung beim Scrollen; Lautstärkeregler.
-10. **Feinabstimmung und Abnahme:** Pegel angleichen (`volume_db` je Event), Schleifenübergänge und Intro-Übergänge prüfen,
+10. **Feinabstimmung und Abnahme:** Pegel angleichen (`volume_db` je Event), Schleifenübergänge prüfen,
     Cooldowns und `max_instances` justieren, Bericht erneut erzeugen und mit den Dateien ins Repository übernehmen
     (`assets/audio/**`, `audio_report.md`); Produktionsdokumente in `docs/audio` bei Abweichungen aktualisieren. Offene
     Auslöser aus Abschnitt 7 (nicht ausgelöste oder stumme Events) als Aufgaben festhalten.
@@ -435,7 +432,8 @@ müssten; ohne Eintrag bleiben sie stumm.
 
 ## 9. Grenzen und Ausblick
 
-* Die Intros der Kampf- und Boss-Spuren werden im laufenden Spiel nur bei Start aus der Stille abgespielt (siehe 6.3).
+* Intros sind im Manifest nicht mehr vorgesehen (eine Datei je Track, 6.3); die Engine-Unterstützung für `intro` bleibt als Option erhalten.
+* Nach der Lieferung passen wir die Spieltexte (Untertitel) an den gesprochenen Ton an; Abweichungen zwischen Ton und Spieltext sind kein Lieferfehler.
 * Die Sprachsituation `victory` der regulären Einheiten sowie `sfx.ui_hover`, `sfx.ui_notify` und `sfx.fire_crackle`
   haben noch keine Auslöser (Phase 15).
 * Eine Audio-Erweiterung durch Mods (eigene Events/Spuren) ist nicht vorgesehen; das Manifest ist global
