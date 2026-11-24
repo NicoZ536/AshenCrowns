@@ -1,9 +1,10 @@
 # ASHEN CROWNS – Architekturüberblick
 
-Stand: Vertical Slice (Mission 1 „Die letzte Siedlung“, `m01_last_settlement`) und Phase 1 der Roadmap
-(Technisches Fundament). Dieses Dokument beschreibt den **tatsächlichen Code-Stand**. Was noch nicht
-implementiert ist, ist ausdrücklich als „geplant“ mit Roadmap-Phase gekennzeichnet (siehe
-[`roadmap.md`](roadmap.md)).
+Stand: alle Roadmap-Phasen außer Sounddesign sind umgesetzt (Echtzeit-Kampagne, Große Kampagne auf der Strategieebene,
+Editor, Szenarien, Herausforderungen). Dieses Dokument beschreibt den **tatsächlichen Code-Stand**. Was nicht
+implementiert ist (Mehrspieler, Wiederholungen, Mod-Manager), ist ausdrücklich als „geplant“ bzw. „nicht umgesetzt“
+gekennzeichnet (siehe [`roadmap.md`](roadmap.md)). Die Strategieebene hat ein eigenes Dokument:
+[`strategy_layer.md`](strategy_layer.md).
 
 Verwandte Dokumente: [`modules.md`](modules.md) (Modulübersicht), [`data_model.md`](data_model.md)
 (Datenmodell), [`project_structure.md`](project_structure.md) (Verzeichnisse und Befehle),
@@ -28,35 +29,40 @@ Verwandte Dokumente: [`modules.md`](modules.md) (Modulübersicht), [`data_model.
 
 ## 2. Schichten und Abhängigkeiten
 
-Die fünf Workspace-Crates (`Cargo.toml`, Edition 2024, `rust-version = "1.88"`) bilden folgende Schichten:
+Die sechs Workspace-Crates (`Cargo.toml`, Edition 2024, `rust-version = "1.88"`) bilden folgende Schichten:
 
 | Schicht | Crate | Verantwortung | Interne Abhängigkeiten |
 |---|---|---|---|
 | 0 | `ashen_core` | Mathe-Re-Exporte (`glam`), isometrische Projektion, Rauschen, Farben/Rampen | – |
 | 1 | `ashen_sim` | Deterministische RTS-Simulation (Zustand, Systeme, Daten, Missionen, Spielstände) – **ohne Grafik** | `ashen_core` |
+| 1 | `ashen_strategy` | Deterministische Simulation der Strategieebene (Große Kampagne: Welt, Reiche, Dynastien, Politik, Diplomatie, Wirtschaft, Religion, Magie, Ereignisse, Chronik, Endgame) – **ohne Grafik**, siehe [`strategy_layer.md`](strategy_layer.md) | `ashen_core` (`ashen_sim` nur in Tests) |
 | 1 | `ashen_engine` | Spielunabhängige 2D-Engine: Fenster, Hauptschleife, Renderer, Atlas, UI-Integration, Audio | `ashen_core` |
-| 2 | `ashen_game` | Das Spiel: Inhalte laden, prozedurale Kunst, Szenen, HUD, Weltdarstellung, Audio-Brücke | `ashen_core`, `ashen_sim`, `ashen_engine` |
-| 3 | `ashen_tools` | Kommandozeilenwerkzeuge (`audio-scan`, `validate-data`) | `ashen_sim`, `ashen_engine` |
+| 2 | `ashen_game` | Das Spiel: Inhalte laden, prozedurale Kunst, Szenen (Menü, Mission, Editor, Weltkarte), HUD, Weltdarstellung, Audio-Brücke | `ashen_core`, `ashen_sim`, `ashen_strategy`, `ashen_engine` |
+| 3 | `ashen_tools` | Kommandozeilenwerkzeuge (`audio-scan`, `audio-list`, `validate-data`, `forge-scenarios`, `forge-campaign`, `rts-balance`, `strategy-stats`) | `ashen_sim`, `ashen_strategy`, `ashen_engine` |
 
 Die lineare Lesart „core → sim → engine → game → tools“ beschreibt die konzeptionelle Schichtung. Der
-tatsächliche Abhängigkeitsgraph ist ein Diamant: **`ashen_sim` und `ashen_engine` kennen einander nicht**; nur
-`ashen_game` führt beide zusammen. `ashen_tools` hängt von `ashen_sim` und `ashen_engine` ab, nicht von
-`ashen_game`.
+tatsächliche Abhängigkeitsgraph ist ein Diamant: **`ashen_sim`, `ashen_strategy` und `ashen_engine` kennen einander nicht** (Ausnahme: `ashen_strategy` verwendet `ashen_sim`
+nur in Tests, um Einheiten-IDs abzugleichen); nur `ashen_game` führt sie zusammen. `ashen_tools` hängt von `ashen_sim`,
+`ashen_strategy` und `ashen_engine` ab, nicht von `ashen_game`.
 
 ```mermaid
 graph TD
     core["ashen_core<br/>Mathe, Iso-Projektion, Rauschen, Farben"]
-    sim["ashen_sim<br/>Deterministische Simulation (ohne Grafik)"]
+    sim["ashen_sim<br/>Deterministische RTS-Simulation (ohne Grafik)"]
+    strat["ashen_strategy<br/>Deterministische Strategieebene (ohne Grafik)"]
     engine["ashen_engine<br/>Spielunabhängige Engine<br/>wgpu, winit, egui, kira"]
     game["ashen_game<br/>Spiel (Binary ashen_crowns)"]
     tools["ashen_tools<br/>CLI-Werkzeuge"]
 
     sim --> core
+    strat --> core
     engine --> core
     game --> core
     game --> sim
+    game --> strat
     game --> engine
     tools --> sim
+    tools --> strat
     tools --> engine
 ```
 
@@ -71,7 +77,7 @@ Externe Abhängigkeiten (Workspace-Versionen aus `Cargo.toml`):
 | `glam` | 0.34 (`serde`, `bytemuck`) | alle Crates |
 | `bytemuck`, `image` (nur PNG), `pollster` | 1.25 / 0.25 / 1.0 | `ashen_engine` |
 | `serde`, `ron` 0.12 | 1.0 / 0.12 | `ashen_core`, `ashen_sim`, `ashen_engine`, `ashen_game` |
-| `serde_json`, `bincode` 2.0, `uuid`, `crc32fast` | – | `ashen_sim` (Spielstände) |
+| `serde_json`, `bincode` 2.0, `uuid`, `crc32fast` | – | `ashen_sim` (Spielstände); `ashen_strategy` (nur `bincode`, `crc32fast`; `serde_json` nur in Tests) |
 | `rand` 0.10, `rand_chacha` 0.10 | – | `ashen_sim` |
 | `log`, `env_logger` | 0.4 / 0.11 | alle bzw. Binaries |
 
@@ -343,7 +349,10 @@ nicht über Panics. Logging: `env_logger`, Standardfilter des Spiels `info,wgpu_
 Spielstandlisten), CRC32 über den bincode-Payload, Länge, Payload (`SimWorld`, Typtabelle, Client-Zustand).
 Schreiben ist atomar (temporäre Datei, `fsync`, vorherige Version als `.acsave.bak`, Umbenennen). Beim Laden greift
 bei beschädigter Datei automatisch das Backup. Autosaves rotieren über drei Slots. Das vollständige Format steht in
-[`data_model.md`](data_model.md), Abschnitt „Spielstandformat“.
+[`data_model.md`](data_model.md), Abschnitt „Spielstandformat“. Aktuelle Formatversion: 4 (`FORMAT_VERSION`); ältere Versionen
+werden nicht migriert, sondern mit `SaveError::Version` abgelehnt. Die Große Kampagne schreibt eigene Dateien `*.acstrat`
+(`ashen_strategy::save`, Header, CRC32, atomar, Backup; Verwaltung in `ashen_game::worldmap::store`), siehe
+[`strategy_layer.md`](strategy_layer.md) §16.
 
 ---
 
@@ -428,12 +437,56 @@ Hinweise:
 
 ---
 
-## 13. Erweiterungspunkte für kommende Phasen
+## 13. Zwei Spielebenen: Strategie und Echtzeit
 
-| Vorhaben | Anknüpfungspunkt | Phase |
+Die Große Kampagne besteht aus zwei getrennten Simulationen, die nur im Spiel (`ashen_game`) verbunden werden:
+
+| Ebene | Crate / Szene | Takt | Eingaben | Spielstand |
+|---|---|---|---|---|
+| Strategie (Weltkarte Eldraeth) | `ashen_strategy` / `Scene::WorldMap` (`worldmap/`) | Tagestakt (`tick_day`), Weltzeit läuft nur in der Weltkarten-Szene | `StrategyCommand` | `.acstrat` |
+| Echtzeit (Schlachten, Missionen, Gefecht) | `ashen_sim` / `Scene::Mission` (`mission.rs`) | 20 Hz | `PlayerCommand` | `.acsave` |
+
+Szenen in `ashen_game::game::Scene`: `Menu`, `Mission`, `Editor`, `WorldMap`.
+
+Schlachtübergang (`ashen_game::worldmap::battle`, UI in `battle_ui.rs`): Die Strategie legt Schlachten mit Beteiligung des
+Spielerreichs als `BattleRequest` ab (Betriebsart `BattleMode::PlayerBattlesRequested`). Das Spiel erzeugt daraus eine
+Echtzeitmission (`MissionDef::map`: Gelände nach Biom, Wetter, Tageszeit, Befestigungen, Heere nach Zuordnungstabelle
+strategische → Echtzeit-Einheiten; `MissionDef::free_economy` schaltet Nahrungsunterhalt und Bevölkerungslimit aus). Der Gegner wird
+vom Modul `ashen_sim::systems::tactics` geführt. Nach der Schlacht wird ein `BattleResult` (Überlebende je Regiment, Heldenschicksal,
+Schlachtdauer) in die Strategie zurückgemeldet (`apply_battle_result`); alternativ wird automatisch aufgelöst
+(`auto_resolve_pending`). Vor dem Start schreibt das Spiel einen Rückkehrpunkt (`saves/battle_return/`), damit eine laufende Schlacht
+nach einem Abbruch fortgesetzt werden kann ([`../design/grand_campaign_ui.md`](../design/grand_campaign_ui.md)).
+
+Die Echtzeit-Kampagne (`ashen_sim::campaign`, UI `ashen_game::campaign_ui`) ist davon unabhängig: Zeitalter und Missionen
+freischalten, Entscheidungen als Flags speichern, Heldenfortschritt je Profil.
+
+## 14. Editor, Szenarien, Herausforderungen
+
+* **Szenarioformat:** Ein Szenario ist eine `MissionDef` mit expliziter Karte, benannten Bereichen und Startpositionen
+  (`ashen_sim::scenario`); parametrische Karten erzeugt `ashen_sim::genmap` (Vorlagen Aschmark, Grasland, Flusstal, Hochland,
+  Aschland, Seenplatte).
+* **Karteneditor:** Szene `ashen_game::editor` (`doc.rs` Dokument mit Rückgängig/Wiederholen, `panels.rs` Oberfläche, `triggers.rs`
+  Trigger-Editor, `validate.rs` Prüfung); Testspiel startet die Karte als `MissionScene` und kehrt zum Editor zurück.
+* **Herausforderungen:** `ashen_sim::challenge` (datengetriebene Regelvarianten, Wertung, lokale Bestenliste); Oberfläche und
+  Gefecht-Einrichtung in `ashen_game::play_modes`.
+* Details: [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md).
+
+## 15. Balance und Messung
+
+* `ashen_sim::balance` (skriptgesteuerter Testspieler, Konter-Matrix) mit `ashen_tools rts-balance`; Tests `tests/balance.rs`.
+* `ashen_tools strategy-stats` (KI-Beobachterläufe der Strategieebene).
+* `ashen_sim::bench` (reproduzierbare Last), Beispiel `sim_bench`, Rauchtest `tests/bench_smoke.rs`, Spiel-Benchmark `--bench`
+  ([`performance.md`](performance.md)).
+
+---
+
+## 16. Erweiterungspunkte
+
+| Vorhaben | Anknüpfungspunkt | Status |
 |---|---|---|
-| Weltkarte als zweite Ebene | Neue Szene neben `Scene::Menu`/`Scene::Mission` in `ashen_game::game`; Simulation der Weltkarte als eigenes Modul in `ashen_sim` | 3 |
-| Mehrspieler/Replays | `PlayerCommand`-Strom aufzeichnen/senden, `state_hash` zum Desync-Abgleich | 14 |
-| Karteneditor | Datenmodell `TileMap`/`MissionDef` ist serialisierbar; Editor-Szene fehlt (Menüeintrag ist deaktiviert) | 14 |
-| Weitere Plattformen | Siehe Abschnitt 11 | 15 |
+| Mehrspieler/Replays | `PlayerCommand`-Strom aufzeichnen/senden, `state_hash` zum Desync-Abgleich | **nicht umgesetzt** (Phase 14) |
+| Mod-Manager | Ladereihenfolge per `load_order` in `mod.ron` ist vorhanden; Oberfläche fehlt | **nicht umgesetzt** (Phase 14) |
+| Weitere Plattformen | Siehe Abschnitt 11 | offen (Phase 15) |
 | Eigene Sprites/Animationen | PNG-Override-Konvention, Animationsclips (`AnimationSet`) | laufend, siehe `asset_production_plan.md` |
+| glTF-Import, Bake-Cache | `art3d/` und `bake/` | geplant, siehe [`../art/3d_pixel_pipeline.md`](../art/3d_pixel_pipeline.md) §7 |
+| Audio-Dateien | Manifest `assets/audio/manifest.ron`, `audio-scan --import` | Dateien stehen aus |
