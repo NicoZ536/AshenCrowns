@@ -287,7 +287,7 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
         ui_art::tip(resp, art, &format!("Jahr 897 n. F. · Tag {}", env.day), &format!("{} · Wetter: {} · Spielzeit {:02}:{:02}", day_part(env), env.weather.label(), mins / 60, mins % 60));
 
         // Rechts: Welle, Tempo, Menü.
-        let right = UiBuilder::new().max_rect(Rect::from_min_max(Pos2::new(center.x + 140.0, rect.min.y), Pos2::new(rect.max.x - 10.0, rect.max.y))).layout(egui::Layout::right_to_left(egui::Align::Center));
+        let right = UiBuilder::new().max_rect(Rect::from_min_max(Pos2::new(center.x + half + 24.0, rect.min.y), Pos2::new(rect.max.x - 10.0, rect.max.y))).layout(egui::Layout::right_to_left(egui::Align::Center));
         ui.scope_builder(right, |ui| {
             let r = ui_art::button(ui, art, "Menü", Vec2::new(86.0, 34.0), true);
             ui_common::sfx(engine, ui, &r);
@@ -307,15 +307,24 @@ fn top_bar(scene: &mut MissionScene, ui: &mut egui::Ui, engine: &mut Engine, cx:
                 ui.add_space(14.0);
                 let t = scene.world.director.next_wave_in.max(0.0);
                 let urgent = t < 30.0;
-                let (r, _) = ui.allocate_exact_size(Vec2::new(150.0, TOP_H - 8.0), Sense::hover());
+                // Schmale Fenster: Anzeige schrumpft, statt die Datumsplakette zu überdecken.
+                let avail = ui.available_width();
+                let compact = avail < 130.0;
+                let w = if compact { avail.max(64.0) } else { avail.min(150.0) };
+                let (r, _) = ui.allocate_exact_size(Vec2::new(w, TOP_H - 8.0), Sense::hover());
                 let p = ui.painter();
                 if urgent {
                     let a = 0.6 + 0.4 * (ui.input(|i| i.time) as f32 * 6.0).sin();
                     art.glow(p, r.expand2(Vec2::new(10.0, 4.0)), Color32::from_rgb((110.0 * a) as u8, (30.0 * a) as u8, 4));
                 }
                 let col = if urgent { theme::EMBER_HOT } else { theme::PARCHMENT };
-                shadow_text(p, r.center() + Vec2::new(0.0, -8.0), Align2::CENTER_CENTER, "Nächste Welle", theme::caps_font(11.5), theme::PARCHMENT_DIM);
-                shadow_text(p, r.center() + Vec2::new(0.0, 9.0), Align2::CENTER_CENTER, &format!("{}:{:02}", t as u32 / 60, t as u32 % 60), theme::heading_font(18.0), col);
+                let clock = format!("{}:{:02}", t as u32 / 60, t as u32 % 60);
+                if compact {
+                    shadow_text(p, r.center(), Align2::CENTER_CENTER, &clock, theme::heading_font(18.0), col);
+                } else {
+                    shadow_text(p, r.center() + Vec2::new(0.0, -8.0), Align2::CENTER_CENTER, "Nächste Welle", theme::caps_font(11.5), theme::PARCHMENT_DIM);
+                    shadow_text(p, r.center() + Vec2::new(0.0, 9.0), Align2::CENTER_CENTER, &clock, theme::heading_font(18.0), col);
+                }
                 let resp = ui.interact(r, Id::unique("wave"), Sense::hover());
                 ui_art::tip(resp, art, "Hohlen-Welle", "Zeit bis zum nächsten Angriff aus dem Nordosten.");
             }

@@ -789,7 +789,7 @@ impl WorldView {
                     }
                 }
                 // Statussymbol über stillstehenden Betrieben und unruhigen Häusern.
-                if b.owner == PLAYER && (def.employs() || def.housing.is_some()) {
+                if b.owner == PLAYER && !world.mission_def.free_economy && (def.employs() || def.housing.is_some()) {
                     let icon = match b.status {
                         ProdStatus::MissingInput => Some("icon_status_input"),
                         ProdStatus::NoWorkers => Some("icon_status_workers"),
