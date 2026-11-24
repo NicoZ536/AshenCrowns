@@ -442,7 +442,8 @@ assets/audio/
 - **Varianten:** zweistellig ab `01`, lückenlos (`worker_select_01`, `_02`, …). Die Liste enthält jede Variante einzeln mit eigenem Prompt
   bzw. Text. Zusätzliche Takes **nicht** als weitere Varianten nummerieren; die beste Variante pro Eintrag wählen.
 - **Mehrteilige Zeilen** (Erzähler/Dialog `_01`, `_02`, …) werden vom Spiel in Nummernreihenfolge hintereinander abgespielt (Sequenz).
-  Jede Datei endet mit höchstens 300 ms Stille.
+  Jede Datei endet mit höchstens 300 ms Stille. **Tipp für natürlichen Sprachfluss:** die komplette Zeile (alle Teilstücke
+  zusammen) in einem Take erzeugen und anschließend an den Teilgrenzen schneiden, statt jedes Teilstück einzeln zu generieren.
 
 ## Lautheitsziele (ITU-R BS.1770, True Peak überall ≤ −1 dBTP)
 
