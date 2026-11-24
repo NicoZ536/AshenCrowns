@@ -289,7 +289,7 @@ Wald (Abholzung → Zorn der Wurzelmutter → Erwachen → Krieg des Dornenbunde
 ## 13. Chronik
 
 `Chronicle` (`entries`): fortlaufende ID, Datum, `ChronicleKind` (28 Kategorien), Akteure, Provinz, `magnitude` 0–100,
-`causes`, `numbers`, `tags`, Vorlage, **fertiger Erzähltext** (Jahr, Monat, Akteure; 2–5 Vorlagen je Typ, Variante
+`causes`, `numbers`, `tags`, Vorlage, **fertiger Erzähltext** (Jahr, Monat, Akteure; mindestens 6 Varianten je Vorlage (Test `every_template_has_at_least_six_distinct_variants`), Variante
 deterministisch aus der ID), Sichtbarkeit (`Public`/`Secret`). `year(y, min)` liefert Jahres-/Herrscher-/Zeitalterchronik
 (≥ 25/50/75), `narrative(min)` Fließtext, `chain(id)` die Kausalkette. Geheime Taten (Mord) erscheinen als Wirkung, der
 Urheber bleibt `Secret`. Die Bedeutsamkeit wird durch Folgeereignisse nachträglich aufgewertet (+5 je Folge, max. +30).
@@ -381,3 +381,21 @@ Kausalkette Dürre → Unruhe, Intrigenformeln und -folgen, Hausaktionen/Rebelli
 Ereignisdaten/Mod-Overlay/Optionswirkung, Schlachtübergabe (`BattleRequest`/`BattleResult`), Auto-Resolve, Heerbewegung
 und Belagerung, Religion, Magie/Hohlungspfad, Neutrale/Bosse, Endgame/Siege, Spielmodi, Spielerbefehle, Chronik,
 Einheitenkatalog gegen `units.ron`.
+
+## 19. Balancemessung der Siegbedingungen
+
+Reproduzierbar mit `cargo run --release -p ashen_tools -- strategy-stats --seeds 12 --years 200` (Seeds 1–12, reine KI-Läufe ohne
+Spielerreich, Schwierigkeit Lord; derselbe Lauf als Test `observer_victories_are_rare_and_late`). Die Läufe enden beim ersten Sieg.
+
+| Stand | Läufe mit KI-Sieg (12 Seeds, 200 Jahre) | Früheste Entscheidung | Siege nach Art |
+|---|---|---|---|
+| Vorher (Krone 60 %, Handel 50 % / 100 000 Gold / 120 Monate) | 9 von 12 (75 %) | Jahr 21 nach Spielbeginn | Krone von Eldraeth 7, Handelsherrschaft 2 |
+| Nachher | 2 von 12 (17 %) | Jahr 80 | Krone von Eldraeth 1, Glaubenssieg 1 |
+
+Änderungen (`endgame.rs`, Konstanten `CROWN_SHARE`, `CROWN_HOLD_MONTHS`, `TRADE_*`, `AI_VICTORY_MIN_YEARS`):
+
+* **Krone von Eldraeth**: 70 % der Provinzen (vorher 60 %) und Hochkönigstitel müssen **144 Monate (12 Jahre)** gehalten werden (neuer Zähler `crown_hold`, bricht bei Unterschreitung ab). Der Fortschrittsbalken zeigt Anteil und Haltedauer.
+* **Handelsherrschaft**: Handelsanteil 60 % (vorher 50 %), Schatz 250 000 (vorher 100 000), **180 Monate** gehalten (vorher 120).
+* **Reifezeit der KI**: KI-Reiche können frühestens nach `AI_VICTORY_MIN_YEARS` = 80 Jahren siegen; für das Spielerreich gilt die Sperre nicht.
+
+Die Schwellen sind die einzigen Stellschrauben; Test und Werkzeug schlagen bei mehr als einem Drittel KI-Siegen oder einem Sieg vor Jahr 80 an.

@@ -8,6 +8,17 @@ use crate::types::*;
 use crate::world::{StrategyEvent, StrategyWorld};
 use serde::{Deserialize, Serialize};
 
+/// Anteil der Provinzen (direkt oder über Vasallen) für die Krone von Eldraeth.
+pub const CROWN_SHARE: f32 = 0.7;
+/// Monate, die Anteil und Hochkönigstitel gehalten werden müssen.
+pub const CROWN_HOLD_MONTHS: u32 = 144;
+/// Handelsanteil, Schatz und Haltedauer (Monate) der Handelsherrschaft.
+pub const TRADE_SHARE: f32 = 0.6;
+pub const TRADE_GOLD: f32 = 250_000.0;
+pub const TRADE_HOLD_MONTHS: u32 = 180;
+/// Frühestes Jahr (seit Spielbeginn), in dem ein KI-Reich einen Sieg erringen kann.
+pub const AI_VICTORY_MIN_YEARS: u32 = 80;
+
 /// Die Siegziele der Spezifikation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum VictoryKind {
@@ -274,7 +285,8 @@ impl StrategyWorld {
         let rl = &self.realms[r as usize];
         let mut out = Vec::new();
         let share = self.province_share(r);
-        out.push(VictoryProgress { kind: VictoryKind::CrownOfEldraeth, progress: (share / 0.6).min(1.0), detail: format!("{:.0} % der Provinzen, Rang {}", share * 100.0, rl.rank.name()), achieved: share >= 0.6 && rl.rank == Rank::HighKing });
+        let crown_months = self.crown_hold.get(&r).copied().unwrap_or(0);
+        out.push(VictoryProgress { kind: VictoryKind::CrownOfEldraeth, progress: ((share / CROWN_SHARE).min(1.0) * 0.7 + (crown_months as f32 / CROWN_HOLD_MONTHS as f32).min(1.0) * 0.3).min(1.0), detail: format!("{:.0} % der Provinzen (Ziel {:.0} %), Rang {}, {} von {} Monaten gehalten", share * 100.0, CROWN_SHARE * 100.0, rl.rank.name(), crown_months, CROWN_HOLD_MONTHS), achieved: crown_months >= CROWN_HOLD_MONTHS });
         let king_down = self.boss("boss_hollow_king").is_some_and(|b| b.state == BossState::Defeated && b.defeated_by.is_some_and(|d| d == r || self.same_lord(d, r) || self.has_treaty(TreatyKind::Alliance, d, r) || self.endgame.league_of_last_flame.contains(&d) && self.endgame.league_of_last_flame.contains(&r)));
         let solmere_shrine_gone = self.prov_by_key("solmere").is_some_and(|p| self.provinces[p as usize].shrine == 0 && self.provinces[p as usize].owner.is_some_and(|o| !is_antagonist(self.realms[o as usize].kind)));
         out.push(VictoryProgress { kind: VictoryKind::HollowKingFalls, progress: (king_down as u8 as f32 + solmere_shrine_gone as u8 as f32) / 2.0, detail: format!("Hohler König besiegt: {king_down}, Hohlschrein von Solmere zerstört: {solmere_shrine_gone}"), achieved: king_down && solmere_shrine_gone });
@@ -283,7 +295,7 @@ impl StrategyWorld {
         out.push(VictoryProgress { kind: VictoryKind::SealOfTheVeil, progress: ((self.endgame.gods_shrines as f32 / 5.0) * 0.5 + grades * 0.3 + if self.endgame.seal_cast == Some(r) { 0.2 } else { 0.0 }).min(1.0), detail: format!("{} von 5 Schreinen, Schleierdruck {:.0}", self.endgame.gods_shrines, self.endgame.veil_pressure), achieved: seal });
         let ts = self.trade_share(r);
         let months = self.trade_hold.get(&r).copied().unwrap_or(0);
-        out.push(VictoryProgress { kind: VictoryKind::TradeDominion, progress: ((ts / 0.5).min(1.0) * 0.4 + (rl.gold / 100_000.0).clamp(0.0, 1.0) * 0.3 + (months as f32 / 120.0).min(1.0) * 0.3).min(1.0), detail: format!("Handelsanteil {:.0} %, Schatz {:.0}, {} Monate gehalten", ts * 100.0, rl.gold, months), achieved: months >= 120 });
+        out.push(VictoryProgress { kind: VictoryKind::TradeDominion, progress: ((ts / TRADE_SHARE).min(1.0) * 0.4 + (rl.gold / TRADE_GOLD).clamp(0.0, 1.0) * 0.3 + (months as f32 / TRADE_HOLD_MONTHS as f32).min(1.0) * 0.3).min(1.0), detail: format!("Handelsanteil {:.0} % (Ziel {:.0} %), Schatz {:.0} (Ziel {:.0}), {} von {} Monaten gehalten", ts * 100.0, TRADE_SHARE * 100.0, rl.gold, TRADE_GOLD, months, TRADE_HOLD_MONTHS), achieved: months >= TRADE_HOLD_MONTHS });
         let fs = self.faith_share(rl.religion);
         let sites = self.holds_all_holy_sites(r, rl.religion);
         out.push(VictoryProgress { kind: VictoryKind::FaithVictory, progress: (fs / 0.65).min(1.0) * if sites { 1.0 } else { 0.7 }, detail: format!("{:.0} % der Provinzen, heilige Stätten kontrolliert: {sites}", fs * 100.0), achieved: fs >= 0.65 && sites });
@@ -319,9 +331,16 @@ impl StrategyWorld {
         // Handelsjahre zählen
         let ids: Vec<RealmId> = self.realms.iter().filter(|r| r.alive && !is_antagonist(r.kind)).map(|r| r.id).collect();
         for &r in &ids {
-            let ok = self.trade_share(r) >= 0.5 && self.realms[r as usize].gold >= 100_000.0;
+            let ok = self.trade_share(r) >= TRADE_SHARE && self.realms[r as usize].gold >= TRADE_GOLD;
             let e = self.trade_hold.entry(r).or_insert(0);
             if ok {
+                *e += 1;
+            } else {
+                *e = 0;
+            }
+            let crown = self.province_share(r) >= CROWN_SHARE && self.realms[r as usize].rank == Rank::HighKing;
+            let e = self.crown_hold.entry(r).or_insert(0);
+            if crown {
                 *e += 1;
             } else {
                 *e = 0;
@@ -342,9 +361,11 @@ impl StrategyWorld {
             if self.options.rules.challenge.is_some() && Some(r) != self.player {
                 continue;
             }
+            // Die KI kann erst nach dem Frühzeitalter gewinnen: Reiche müssen reifen, bevor Eldraeth entschieden wird.
+            let too_early = Some(r) != self.player && self.day < AI_VICTORY_MIN_YEARS * DAYS_PER_YEAR;
             let prog = self.victory_progress(r);
             for p in prog {
-                if p.achieved && rules.contains(&p.kind) {
+                if p.achieved && rules.contains(&p.kind) && !too_early {
                     self.victory = Some(VictoryRecord { realm: r, kind: p.kind, day: self.day });
                     let e = Entry::new(ChronicleKind::Victory, "victory", 100).realm(r).var("a", self.rname(r)).var("c", p.kind.name().to_string()).tag("victory");
                     self.chron(e);

@@ -1168,6 +1168,44 @@ impl GameData {
         self.resolve_errors = errors;
     }
 
+    /// Findet Tastenkürzel-Konflikte: ungültige Zeichen, doppelte Kürzel innerhalb der Ausbildungsliste eines Gebäudes
+    /// (zusätzlich zu den festen Tasten R = Sammelpunkt, L = Lager, C = Stadt) und doppelte Baukürzel je Fraktion.
+    pub fn hotkey_conflicts(&self) -> Vec<String> {
+        const RESERVED_TRAIN: [(char, &str); 3] = [('R', "Sammelpunkt"), ('L', "Lagerfenster"), ('C', "Stadtfenster")];
+        let mut out = Vec::new();
+        let valid = |c: char| c.is_ascii_alphabetic();
+        for u in &self.units {
+            if let Some(c) = u.hotkey.filter(|c| !valid(*c)) {
+                out.push(format!("Einheit {}: Kürzel '{c}' ist kein Buchstabe A–Z", u.id));
+            }
+        }
+        for b in &self.buildings {
+            if let Some(c) = b.hotkey.filter(|c| !valid(*c)) {
+                out.push(format!("Gebäude {}: Kürzel '{c}' ist kein Buchstabe A–Z", b.id));
+            }
+            let mut seen: Vec<(char, &str)> = Vec::new();
+            for t in &b.trains {
+                let Some(u) = self.unit_index.get(t).map(|i| &self.units[i.0 as usize]) else { continue };
+                let Some(c) = u.hotkey.map(|c| c.to_ascii_uppercase()) else { continue };
+                if let Some((_, other)) = seen.iter().find(|(k, o)| *k == c && *o != u.id) {
+                    out.push(format!("Gebäude {}: Ausbildungskürzel '{c}' doppelt ({} und {other})", b.id, u.id));
+                } else if let Some((_, what)) = RESERVED_TRAIN.iter().find(|(k, _)| *k == c) {
+                    out.push(format!("Gebäude {}: Ausbildungskürzel '{c}' von {} ist belegt ({what})", b.id, u.id));
+                }
+                seen.push((c, u.id.as_str()));
+            }
+        }
+        let mut seen: Vec<(Faction, char, &str)> = Vec::new();
+        for b in self.buildings.iter().filter(|b| b.buildable) {
+            let Some(c) = b.hotkey.map(|c| c.to_ascii_uppercase()) else { continue };
+            if let Some((_, _, other)) = seen.iter().find(|(f, k, _)| *f == b.faction && *k == c) {
+                out.push(format!("Baukürzel '{c}' doppelt: {} und {other}", b.id));
+            }
+            seen.push((b.faction, c, b.id.as_str()));
+        }
+        out
+    }
+
     /// Prüft Querverweise (Trainingslisten, Fähigkeiten, Beschwörungen).
     pub fn validate(&self) -> Result<(), DataError> {
         if let Some(e) = self.resolve_errors.first() {

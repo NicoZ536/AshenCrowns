@@ -70,39 +70,28 @@ fn collect_condition(c: &Condition, r: &mut Refs) {
     }
 }
 
+/// Sammelt Verweise einer Aktion, auch aus den Folgeaktionen von Entscheidungs-Optionen.
+fn collect_action(a: &Action, r: &mut Refs) {
+    match a {
+        Action::AddObjective(o) => r.objectives_added.push(o.clone()),
+        Action::CompleteObjective(o) => r.objectives_completed.push(o.clone()),
+        Action::Victory => r.victory = true,
+        Action::Defeat => r.defeat = true,
+        Action::SpawnUnits { unit, area, .. } => {
+            r.units.push(unit.clone());
+            r.areas.push(area.clone());
+        }
+        Action::MoveTag { area, .. } => r.areas.push(area.clone()),
+        Action::Decision(d) => d.options.iter().flat_map(|o| &o.actions).for_each(|a| collect_action(a, r)),
+        _ => {}
+    }
+}
+
 fn collect(doc: &EditDoc) -> Refs {
     let mut r = Refs::default();
     for t in &doc.def.triggers {
         collect_condition(&t.condition, &mut r);
-        for a in &t.actions {
-            match a {
-                Action::AddObjective(o) => r.objectives_added.push(o.clone()),
-                Action::CompleteObjective(o) => r.objectives_completed.push(o.clone()),
-                Action::Victory => r.victory = true,
-                Action::Defeat => r.defeat = true,
-                Action::SpawnUnits { unit, area, .. } => {
-                    r.units.push(unit.clone());
-                    r.areas.push(area.clone());
-                }
-                Action::MoveTag { area, .. } => r.areas.push(area.clone()),
-                Action::Decision(d) => {
-                    for o in &d.options {
-                        for a in &o.actions {
-                            match a {
-                                Action::SpawnUnits { unit, area, .. } => {
-                                    r.units.push(unit.clone());
-                                    r.areas.push(area.clone());
-                                }
-                                Action::Victory => r.victory = true,
-                                Action::Defeat => r.defeat = true,
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
+        t.actions.iter().for_each(|a| collect_action(a, &mut r));
     }
     r
 }
@@ -291,6 +280,17 @@ mod tests {
     use ashen_sim::map::Terrain;
     use ashen_sim::mission::Action;
     use std::path::PathBuf;
+
+    #[test]
+    fn collect_action_follows_decision_options_recursively() {
+        use ashen_sim::mission::{DecisionDef, DecisionOption};
+        let inner = Action::Decision(DecisionDef { id: "b".into(), speaker: String::new(), title: String::new(), text: String::new(), voice: None, options: vec![DecisionOption { flag: "x".into(), label: "x".into(), detail: String::new(), requires: vec![], actions: vec![Action::AddObjective("neu".into()), Action::Victory] }] });
+        let outer = Action::Decision(DecisionDef { id: "a".into(), speaker: String::new(), title: String::new(), text: String::new(), voice: None, options: vec![DecisionOption { flag: "y".into(), label: "y".into(), detail: String::new(), requires: vec![], actions: vec![inner, Action::Defeat] }] });
+        let mut r = Refs::default();
+        collect_action(&outer, &mut r);
+        assert_eq!(r.objectives_added, vec!["neu".to_string()]);
+        assert!(r.victory && r.defeat);
+    }
 
     fn data() -> GameData {
         GameData::load_dir(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/data")).expect("data")

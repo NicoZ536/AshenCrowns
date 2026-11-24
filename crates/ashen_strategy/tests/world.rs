@@ -1101,15 +1101,19 @@ fn endgame_escalation_and_victories() {
         }
     }
     assert_eq!(VictoryKind::ALL.len(), 8);
-    // Krone von Eldraeth: 60 % und Hochkönig
+    // Krone von Eldraeth: 70 % und Hochkönig, zwölf Jahre gehalten; KI-Siege erst nach dem Frühzeitalter
     let mut w = observer(1314);
     w.realms[crown as usize].rank = Rank::HighKing;
-    let n = (w.provinces.len() as f32 * 0.62) as usize;
+    let n = (w.provinces.len() as f32 * 0.75) as usize;
     let list: Vec<ProvId> = w.provinces.iter().filter(|p| p.owner != Some(crown)).map(|p| p.id).take(n).collect();
     for p in list {
         w.provinces[p as usize].owner = Some(crown);
     }
     w.rebuild_caches();
+    w.crown_hold.insert(crown, ashen_strategy::endgame::CROWN_HOLD_MONTHS - 1);
+    w.advance_days(31);
+    assert!(w.victory.is_none(), "KI gewinnt nicht im ersten Jahr");
+    w.day = ashen_strategy::endgame::AI_VICTORY_MIN_YEARS * DAYS_PER_YEAR;
     w.advance_days(31);
     let v = w.victory.expect("Sieg");
     assert_eq!(v.kind, VictoryKind::CrownOfEldraeth);
@@ -1337,4 +1341,19 @@ fn unit_catalog_matches_game_data() {
     }
     // Zuordnung der Kanon-Fraktions-IDs
     assert!(catalog::UNITS.iter().any(|u| u.faction == "ashen_legion"));
+}
+
+/// Balance der Siegbedingungen im reinen KI-Lauf (12 Seeds, 200 Jahre): höchstens ein Drittel der Läufe endet mit einem
+/// Sieg der KI, und kein Sieg fällt vor Jahr 80. Reproduzierbar mit `cargo run --release -p ashen_tools -- strategy-stats`.
+#[test]
+fn observer_victories_are_rare_and_late() {
+    let threads: Vec<_> = (1..=12u64).map(|s| std::thread::Builder::new().stack_size(64 << 20).spawn(move || ashen_strategy::observe::observe(s, 200)).unwrap()).collect();
+    let runs: Vec<_> = threads.into_iter().map(|t| t.join().unwrap()).collect();
+    for r in &runs {
+        println!("Seed {}: {:?} ({} Jahre, {} Reiche)", r.seed, r.victory, r.years, r.realms_alive);
+    }
+    let s = ashen_strategy::observe::summarize(&runs);
+    println!("Siege {}/{} früheste {:?} {:?}", s.victories, s.runs, s.earliest, s.by_kind);
+    assert!(s.victories * 3 <= s.runs, "Zu viele KI-Siege: {} von {}", s.victories, s.runs);
+    assert!(s.earliest.is_none_or(|e| e >= 80), "KI-Sieg vor Jahr 80: nach {:?} Jahren", s.earliest);
 }

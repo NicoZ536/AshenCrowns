@@ -142,7 +142,7 @@ fn main() {
                 };
                 match scene.as_str() {
                     "editor" => auto.editor = true,
-                    "scenarios" | "challenges" => auto.menu_page = Some(scene.clone()),
+                    "scenarios" | "challenges" | "new-game" | "load" | "settings" | "mods" | "credits" | "grand-campaign" => auto.menu_page = Some(scene.clone()),
                     "campaign" | "campaign-slots" | "campaign-briefing" | "campaign-ending" => {
                         auto.menu_page = Some("campaign".into());
                         auto.campaign_stage = Some(scene.trim_start_matches("campaign").trim_start_matches('-').to_string());

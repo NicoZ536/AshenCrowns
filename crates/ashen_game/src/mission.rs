@@ -49,6 +49,13 @@ pub enum SceneAction {
     Quit,
 }
 
+/// Kampagnenzugehörigkeit einer Mission: Profilplatz und Basisdefinition (ohne angewandte Varianten).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CampaignLink {
+    pub slot: usize,
+    pub def: MissionDef,
+}
+
 #[derive(Serialize, Deserialize, Default)]
 struct ClientState {
     camera: (f32, f32),
@@ -57,6 +64,9 @@ struct ClientState {
     /// Verknüpfung mit dem Rückkehrpunkt der Weltkarte, wenn die Schlacht aus der Grand Campaign stammt.
     #[serde(default)]
     battle: Option<crate::worldmap::battle::BattleLink>,
+    /// Kampagnenplatz und Basismission, damit „Weiter“ und der Fortschritt nach dem Laden funktionieren.
+    #[serde(default)]
+    campaign: Option<CampaignLink>,
 }
 
 pub struct MissionScene {
@@ -98,6 +108,8 @@ pub struct MissionScene {
     pub line_start: Option<IVec2>,
     /// Verknüpfung mit der Weltkarte (nur bei Schlachten der Grand Campaign).
     pub battle: Option<crate::worldmap::battle::BattleLink>,
+    /// Kampagnenzugehörigkeit (Platz und Basismission); gesetzt, solange `campaign` gilt.
+    pub campaign_link: Option<CampaignLink>,
     /// Heldenfenster (Taste H) und der Held, auf den es sich bezieht.
     pub show_hero: bool,
     pub hero_focus: Option<UnitId>,
@@ -154,6 +166,7 @@ impl MissionScene {
             build_cat: BuildCategory::Housing,
             line_start: None,
             battle: None,
+            campaign_link: None,
             show_hero: false,
             hero_focus: None,
             last_view: None,
@@ -171,6 +184,8 @@ impl MissionScene {
             scene.camera.target_lines = cs.lines.clamp(220.0, 480.0);
             scene.speed = cs.speed.clamp(0.0, 3.0);
             scene.battle = cs.battle;
+            scene.campaign = cs.campaign.is_some();
+            scene.campaign_link = cs.campaign;
         }
         scene.status = Some(format!("Geladen: {}", path.file_stem().map(|s| s.to_string_lossy()).unwrap_or_default()));
         Ok(scene)
@@ -182,6 +197,7 @@ impl MissionScene {
             lines: self.camera.target_lines,
             speed: self.speed,
             battle: self.battle.clone(),
+            campaign: self.campaign_link.clone(),
         })
         .unwrap_or_default()
     }
@@ -984,15 +1000,24 @@ pub fn letter_key(c: char) -> Option<KeyCode> {
         'E' => KeyCode::KeyE,
         'F' => KeyCode::KeyF,
         'G' => KeyCode::KeyG,
+        'H' => KeyCode::KeyH,
+        'I' => KeyCode::KeyI,
+        'J' => KeyCode::KeyJ,
         'K' => KeyCode::KeyK,
+        'L' => KeyCode::KeyL,
         'M' => KeyCode::KeyM,
+        'N' => KeyCode::KeyN,
+        'O' => KeyCode::KeyO,
         'P' => KeyCode::KeyP,
         'Q' => KeyCode::KeyQ,
+        'R' => KeyCode::KeyR,
         'S' => KeyCode::KeyS,
         'T' => KeyCode::KeyT,
+        'U' => KeyCode::KeyU,
         'V' => KeyCode::KeyV,
         'W' => KeyCode::KeyW,
         'X' => KeyCode::KeyX,
+        'Y' => KeyCode::KeyY,
         'Z' => KeyCode::KeyZ,
         _ => return None,
     })
@@ -1011,5 +1036,41 @@ mod tests {
             assert!(line.windows(2).all(|w| (w[0] - w[1]).abs().max_element() == 1), "lückenlos: {line:?}");
         }
         assert_eq!(MissionScene::wall_line(IVec2::new(0, 0), IVec2::new(4, 4)).len(), 5, "Diagonale braucht nur eine Kachel je Schritt");
+    }
+
+    #[test]
+    fn letter_key_covers_all_letters() {
+        for c in 'A'..='Z' {
+            assert!(letter_key(c).is_some(), "{c}");
+            assert_eq!(letter_key(c), letter_key(c.to_ascii_lowercase()));
+        }
+        assert!(letter_key('1').is_none());
+    }
+
+    #[test]
+    fn all_data_hotkeys_are_mapped_and_conflict_free() {
+        let data = GameData::load_dir(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/data")).expect("data");
+        assert_eq!(data.hotkey_conflicts(), Vec::<String>::new());
+        for u in &data.units {
+            if let Some(c) = u.hotkey {
+                assert!(letter_key(c).is_some(), "Einheit {}: Kürzel {c}", u.id);
+            }
+        }
+        for b in &data.buildings {
+            if let Some(c) = b.hotkey {
+                assert!(letter_key(c).is_some(), "Gebäude {}: Kürzel {c}", b.id);
+            }
+        }
+    }
+
+    #[test]
+    fn client_state_keeps_campaign_link() {
+        let cs = ClientState { campaign: Some(CampaignLink { slot: 2, def: MissionDef { id: "k3".into(), ..Default::default() } }), ..Default::default() };
+        let back: ClientState = ron::from_str(&ron::to_string(&cs).unwrap()).unwrap();
+        let link = back.campaign.expect("Kampagnenlink");
+        assert_eq!((link.slot, link.def.id.as_str()), (2, "k3"));
+        // Alte Spielstände ohne Feld bleiben ladbar.
+        let old: ClientState = ron::from_str("(camera:(1.0,2.0),lines:300.0,speed:1.0)").unwrap();
+        assert!(old.campaign.is_none() && old.battle.is_none());
     }
 }

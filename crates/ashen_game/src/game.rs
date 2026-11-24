@@ -6,7 +6,7 @@ use crate::editor::{EditorAction, EditorInit, EditorScene};
 use crate::hud::{self, HudCtx};
 use crate::menu::{MenuAction, MenuScene, Page};
 use crate::play_modes::{self, ChallengeReport};
-use crate::mission::{MissionScene, SceneAction};
+use crate::mission::{CampaignLink, MissionScene, SceneAction};
 use crate::settings::UserSettings;
 use crate::ui_art::UiArt;
 use crate::worldmap::battle::{self, BattleLink};
@@ -37,11 +37,7 @@ struct LastRun {
 }
 
 /// Laufende Kampagnenmission: Profil und Missionsdefinition (ohne angewandte Varianten).
-#[derive(Clone)]
-struct CampaignRun {
-    slot: usize,
-    def: MissionDef,
-}
+type CampaignRun = CampaignLink;
 
 /// Laufende Herausforderung samt Auswertungsstand.
 struct ActiveChallenge {
@@ -168,6 +164,7 @@ impl AshenGame {
         let mut scene = MissionScene::new(&content.data, mission.clone(), settings.clone(), Self::max_particles(engine))?;
         scene.no_save = challenge.as_ref().is_some_and(|c| c.1);
         scene.campaign = self.campaign_run.is_some();
+        scene.campaign_link = self.campaign_run.clone();
         engine.audio.set_preferred_music(mission.music.clone());
         self.last_run = Some(LastRun { mission, settings, challenge: challenge.clone() });
         self.challenge = challenge.map(|(def, iron_man)| ActiveChallenge { def, iron_man, reported: false });
@@ -202,7 +199,8 @@ impl AshenGame {
     fn enter_mission(&mut self, engine: &mut Engine, mut scene: MissionScene) {
         self.battle = None;
         self.challenge = None;
-        self.campaign_run = None;
+        // Geladene Kampagnenmission: Zugehörigkeit aus dem Spielstand wiederherstellen.
+        self.campaign_run = scene.campaign_link.clone();
         if let Some(link) = scene.battle.clone() {
             match store::load_return_point(&link.return_point) {
                 Ok(sw) => {
@@ -569,6 +567,12 @@ impl AshenGame {
             "scenarios" => Page::Scenarios,
             "challenges" => Page::Challenges,
             "campaign" => Page::Campaign,
+            "new-game" => Page::NewGame,
+            "load" => Page::Load,
+            "settings" => Page::Settings,
+            "mods" => Page::Mods,
+            "credits" => Page::Credits,
+            "grand-campaign" => Page::GrandCampaign,
             _ => Page::Skirmish,
         };
         if page == "campaign"

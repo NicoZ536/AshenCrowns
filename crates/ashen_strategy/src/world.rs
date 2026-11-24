@@ -250,6 +250,9 @@ pub struct StrategyWorld {
     pub veil_break_years: u32,
     /// Monate, die ein Reich die Handelsherrschaft hält.
     pub trade_hold: BTreeMap<RealmId, u32>,
+    /// Monate, die ein Reich die Voraussetzungen der Krone von Eldraeth erfüllt.
+    #[serde(default)]
+    pub crown_hold: BTreeMap<RealmId, u32>,
     #[serde(skip, default = "default_data")]
     pub data: Arc<StrategyData>,
     #[serde(skip)]
