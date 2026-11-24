@@ -111,7 +111,7 @@ impl DocPrompts {
                 let cells: Vec<&str> = t.split('|').map(str::trim).collect();
                 // Tabellenzeile: Ziel-Datei steht in einer der ersten Zellen (Spalte „#“ davor möglich).
                 let key_cells = cells.iter().skip(1).take(3);
-                let is_id_row = cells.get(1).is_some_and(|c| c.starts_with("ID / Ziel-Dateien"));
+                let is_id_row = cells.get(1).is_some_and(|c| c.starts_with("ID / Ziel-Datei"));
                 if is_id_row {
                     for span in code_spans(line) {
                         if let Some(p) = path_of(span) {
