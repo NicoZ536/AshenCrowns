@@ -8,7 +8,7 @@ produzierten Dateien geliefert werden. Grundlage ist der **tatsächliche Code**:
 [`../canon.md`](../canon.md) verbindlich festgelegt.
 
 **Aktueller Stand:** Im Repository liegen **keine Audiodateien**. Die Ordner enthalten nur `.gitkeep`;
-`assets/audio/audio_report.md` meldet *0 Dateien gefunden, 529 erwartete Muster, 529 fehlend* (entspricht **1087 erwarteten Dateien**,
+`assets/audio/audio_report.md` meldet *0 Dateien gefunden, 506 erwartete Muster, 506 fehlend* (entspricht **1041 erwarteten Dateien**,
 vollständige Produktionsliste: [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md)). Das System ist
 vollständig implementiert und getestet und läuft ohne Dateien stumm und fehlerfrei.
 
