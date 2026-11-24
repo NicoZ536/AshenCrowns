@@ -38,7 +38,9 @@ impl ArtLibrary {
         icons::build(&mut b);
         goods_icons::build(&mut b);
         military_icons::build(&mut b);
+        let t_2d = start.elapsed();
         let metas = art3d::bake_all(gpu, &mut b)?;
+        let t_bake = start.elapsed();
         let mut overrides = 0;
         if let Some(dir) = assets_dir {
             let sprites = dir.join("sprites");
@@ -64,7 +66,15 @@ impl ArtLibrary {
             let sets = (0..DIRS).map(|d| lib.make_anim_set(id, &anims, d)).collect();
             lib.anims.insert(id.to_string(), sets);
         }
-        log::info!("Atlas {}×{} mit {count} Sprites ({overrides} Overrides) in {:.0} ms erzeugt", lib.atlas.size.0, lib.atlas.size.1, start.elapsed().as_secs_f32() * 1000.0);
+        let (aw, ah) = lib.atlas.size;
+        log::info!(
+            "Atlas {aw}×{ah} mit {count} Sprites ({overrides} Overrides) in {:.0} ms erzeugt (2D-Kunst {:.0} ms, 3D-Bake {:.0} ms, Packen/Animationen {:.0} ms); Atlas-Speicher {:.1} MiB (Albedo+Normalen)",
+            start.elapsed().as_secs_f32() * 1000.0,
+            t_2d.as_secs_f32() * 1000.0,
+            (t_bake - t_2d).as_secs_f32() * 1000.0,
+            (start.elapsed() - t_bake).as_secs_f32() * 1000.0,
+            (aw as f32 * ah as f32 * 8.0) / (1024.0 * 1024.0)
+        );
         Ok(lib)
     }
 

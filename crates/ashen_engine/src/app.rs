@@ -97,9 +97,29 @@ pub trait Game {
     fn on_exit(&mut self, _engine: &mut Engine) {}
 }
 
-fn run_frame<G: Game>(engine: &mut Engine, game: &mut G, dt: f32, output: &wgpu::TextureView) -> wgpu::CommandEncoder {
+/// CPU-Zeiten (Millisekunden) der Frame-Abschnitte; wird nur vom Benchmark ausgewertet.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct FrameSample {
+    /// `Game::update`: feste Simulationsschritte, Kamera, Eingabe, Ansichts-Update.
+    pub update: f64,
+    /// egui-Lauf (`Game::ui`).
+    pub ui: f64,
+    /// `Game::render`: Ansicht aufbauen (Sprites, Lichter, Partikel, Atmosphäre).
+    pub view: f64,
+    /// Renderer-Aufbereitung und Befehlsaufzeichnung (CPU) inklusive egui-Malen.
+    pub submit: f64,
+    /// Einreichen und Warten auf die GPU (nur im Benchmark gemessen).
+    pub gpu_wait: f64,
+}
+
+/// Mittlere GPU-Zeit je Render-Pass über alle gemessenen Frames (Millisekunden).
+pub type PassTimes = Vec<(&'static str, f64)>;
+
+fn run_frame<G: Game>(engine: &mut Engine, game: &mut G, dt: f32, output: &wgpu::TextureView, sample: Option<&mut FrameSample>) -> wgpu::CommandEncoder {
+    let t0 = std::time::Instant::now();
     engine.renderer.hot_reload(&engine.gpu, dt);
     game.update(engine, dt);
+    let t1 = std::time::Instant::now();
     let window = engine.window.clone();
     let raw = engine.ui.take_input(window.as_deref(), engine.size, engine.scale_factor);
     let ctx = engine.ui.ctx.clone();
@@ -107,8 +127,10 @@ fn run_frame<G: Game>(engine: &mut Engine, game: &mut G, dt: f32, output: &wgpu:
     engine.input.ui_wants_pointer = ctx.is_pointer_over_egui() || ctx.egui_wants_pointer_input();
     engine.input.ui_wants_keyboard = ctx.egui_wants_keyboard_input();
     let platform = full.platform_output.clone();
+    let t2 = std::time::Instant::now();
     engine.frame.clear();
     game.render(engine);
+    let t3 = std::time::Instant::now();
     let mut encoder = engine.gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("frame") });
     let size = engine.size;
     engine.renderer.render(&engine.gpu, &mut encoder, &mut engine.frame, output, size, dt, engine.fow_enabled, engine.fow_size);
@@ -116,6 +138,13 @@ fn run_frame<G: Game>(engine: &mut Engine, game: &mut G, dt: f32, output: &wgpu:
     engine.ui.handle_output(window.as_deref(), platform);
     engine.audio.update(dt);
     engine.input.end_frame();
+    if let Some(sm) = sample {
+        let ms = |a: std::time::Instant, b: std::time::Instant| b.duration_since(a).as_secs_f64() * 1000.0;
+        sm.update = ms(t0, t1);
+        sm.ui = ms(t1, t2);
+        sm.view = ms(t2, t3);
+        sm.submit = ms(t3, std::time::Instant::now());
+    }
     encoder
 }
 
@@ -204,7 +233,7 @@ impl<G: Game> App<G> {
             }
         };
         let view = texture.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let encoder = run_frame(engine, &mut self.game, dt, &view);
+        let encoder = run_frame(engine, &mut self.game, dt, &view, None);
         engine.gpu.queue.submit(Some(encoder.finish()));
         if let Some(w) = &engine.window {
             w.pre_present_notify();
@@ -325,9 +354,8 @@ pub fn run<G: Game>(config: AppConfig, game: G) -> Result<(), String> {
     }
 }
 
-/// Rendert ohne Fenster eine Anzahl Frames und speichert den letzten als PNG.
-/// Dient Sichtprüfungen, automatisierten Screenshots und CI.
-pub fn run_headless<G: Game>(config: AppConfig, mut game: G, frames: u32, dt: f32, out: &std::path::Path) -> Result<(), String> {
+/// Erzeugt Engine und Zieltextur ohne Fenster (gemeinsam für Screenshots und Benchmark).
+fn headless_engine(config: &AppConfig) -> Result<(Engine, wgpu::Texture, wgpu::TextureView), String> {
     let gpu = GpuContext::headless().map_err(|e| e.to_string())?;
     let format = wgpu::TextureFormat::Rgba8Unorm;
     let size = (config.width, config.height);
@@ -335,7 +363,7 @@ pub fn run_headless<G: Game>(config: AppConfig, mut game: G, frames: u32, dt: f3
     let ui = EguiLayer::new(&gpu, format, None);
     let assets_dir = config.assets_dir.clone().or_else(crate::assets::find_assets_dir);
     let audio = AudioSystem::new(assets_dir.as_ref().map(|a| a.join("audio")).as_deref(), false);
-    let mut engine = Engine {
+    let engine = Engine {
         gpu,
         renderer,
         audio,
@@ -365,10 +393,121 @@ pub fn run_headless<G: Game>(config: AppConfig, mut game: G, frames: u32, dt: f3
         view_formats: &[],
     });
     let view = target.create_view(&wgpu::TextureViewDescriptor::default());
+    Ok((engine, target, view))
+}
+
+/// Ergebnis von [`run_bench`]: CPU-Zeiten je Frame-Abschnitt und Last der letzten Frames.
+#[derive(Clone, Debug)]
+pub struct BenchReport {
+    pub init_ms: f64,
+    pub samples: Vec<FrameSample>,
+    /// Mittlere GPU-Zeit je Pass (leer ohne Zeitstempel-Unterstützung).
+    pub pass_times: PassTimes,
+    pub stats: crate::render::RenderStats,
+    pub adapter: String,
+    pub software_gpu: bool,
+    /// Spitzen-Arbeitsspeicher des Prozesses in MiB (Linux: VmHWM; sonst `None`).
+    pub peak_rss_mib: Option<f64>,
+}
+
+impl BenchReport {
+    /// Mittelwert, p50, p95 und Maximum je Abschnitt als Text (Millisekunden) samt Last der letzten Frames.
+    pub fn summary(&self) -> String {
+        fn stat(v: &mut [f64]) -> (f64, f64, f64, f64) {
+            v.sort_by(|a, b| a.total_cmp(b));
+            let q = |p: f64| v.get(((v.len() as f64 - 1.0) * p).round() as usize).copied().unwrap_or(0.0);
+            (v.iter().sum::<f64>() / v.len().max(1) as f64, q(0.5), q(0.95), q(1.0))
+        }
+        let col = |f: fn(&FrameSample) -> f64| -> Vec<f64> { self.samples.iter().map(f).collect() };
+        let rows: [(&str, Vec<f64>); 6] = [
+            ("update (Sim-Ticks, Kamera, Eingabe)", col(|s| s.update)),
+            ("ui (egui-Lauf)", col(|s| s.ui)),
+            ("view (Ansicht aufbauen)", col(|s| s.view)),
+            ("submit (Renderer-CPU, Befehle)", col(|s| s.submit)),
+            ("CPU gesamt", col(|s| s.update + s.ui + s.view + s.submit)),
+            ("GPU-Wartezeit (Software-GPU: nicht repräsentativ)", col(|s| s.gpu_wait)),
+        ];
+        let mut out = format!(
+            "Adapter: {}{}\nStart (Init inkl. Atlas/Bake): {:.0} ms\nFrames: {}\nLast: {} Sprites (Boden {}, Schatten {}, Welt {}, Overlay {}), {} Lichter, {} Draw-Calls, intern {}x{} (Pixelskalierung {})\n",
+            self.adapter,
+            if self.software_gpu { "  [SOFTWARE-GPU: GPU-Zeiten nicht repräsentativ]" } else { "" },
+            self.init_ms,
+            self.samples.len(),
+            self.stats.sprites,
+            self.stats.groups[0],
+            self.stats.groups[1],
+            self.stats.groups[2],
+            self.stats.groups[3],
+            self.stats.lights,
+            self.stats.draw_calls,
+            self.stats.internal.0,
+            self.stats.internal.1,
+            self.stats.pixel_scale
+        );
+        if !self.pass_times.is_empty() {
+            let parts: Vec<String> = self.pass_times.iter().map(|(l, ms)| format!("{l} {ms:.2}")).collect();
+            out += &format!("GPU je Pass (ms, Mittel{}): {}\n", if self.software_gpu { ", Software-GPU: nur Verhältnisse" } else { "" }, parts.join(", "));
+        }
+        if let Some(mb) = self.peak_rss_mib {
+            out += &format!("Spitzen-Arbeitsspeicher (Prozess, inkl. Software-Vulkan-Puffer): {mb:.0} MiB\n");
+        }
+        out += "Abschnitt                                          mittel     p50     p95     max (ms)\n";
+        for (name, mut v) in rows {
+            let (m, p50, p95, max) = stat(&mut v);
+            out += &format!("{name:<48} {m:>8.3} {p50:>7.3} {p95:>7.3} {max:>7.3}\n");
+        }
+        out
+    }
+}
+
+/// Führt `warmup + frames` Frames ohne Fenster aus und misst die CPU-Zeiten je Abschnitt sowie die GPU-Wartezeit.
+/// Die ersten `warmup` Frames fließen nicht in das Ergebnis ein. Auf Software-Rastern (llvmpipe) ist `gpu_wait` nicht
+/// repräsentativ für echte GPUs.
+pub fn run_bench<G: Game>(config: AppConfig, mut game: G, warmup: u32, frames: u32, dt: f32) -> Result<BenchReport, String> {
+    let (mut engine, _target, view) = headless_engine(&config)?;
+    let info = engine.gpu.adapter.get_info();
+    let adapter = format!("{} ({:?}, {:?})", info.name, info.backend, info.device_type);
+    let software_gpu = info.device_type == wgpu::DeviceType::Cpu || info.name.to_lowercase().contains("llvmpipe");
+    let t0 = std::time::Instant::now();
+    game.init(&mut engine);
+    let init_ms = t0.elapsed().as_secs_f64() * 1000.0;
+    let mut samples = Vec::with_capacity(frames as usize);
+    let mut pass_sum: PassTimes = Vec::new();
+    for i in 0..warmup + frames {
+        let dt = engine.timer.tick_fixed(dt);
+        let mut sm = FrameSample::default();
+        let encoder = run_frame(&mut engine, &mut game, dt, &view, Some(&mut sm));
+        let t = std::time::Instant::now();
+        engine.gpu.queue.submit(Some(encoder.finish()));
+        engine.gpu.device.poll(wgpu::PollType::wait_indefinitely()).map_err(|e| e.to_string())?;
+        sm.gpu_wait = t.elapsed().as_secs_f64() * 1000.0;
+        if i >= warmup {
+            samples.push(sm);
+            if let Some(p) = engine.renderer.read_gpu_pass_times(&engine.gpu) {
+                for (label, ms) in p {
+                    match pass_sum.iter_mut().find(|(l, _)| *l == label) {
+                        Some(e) => e.1 += ms,
+                        None => pass_sum.push((label, ms)),
+                    }
+                }
+            }
+        }
+    }
+    let pass_times: PassTimes = pass_sum.into_iter().map(|(l, ms)| (l, ms / frames.max(1) as f64)).collect();
+    game.on_exit(&mut engine);
+    let peak_rss_mib = std::fs::read_to_string("/proc/self/status").ok().and_then(|t| t.lines().find(|l| l.starts_with("VmHWM:")).and_then(|l| l.split_whitespace().nth(1)?.parse::<f64>().ok())).map(|kb| kb / 1024.0);
+    Ok(BenchReport { init_ms, samples, pass_times, stats: engine.renderer.stats, adapter, software_gpu, peak_rss_mib })
+}
+
+/// Rendert ohne Fenster eine Anzahl Frames und speichert den letzten als PNG.
+/// Dient Sichtprüfungen, automatisierten Screenshots und CI.
+pub fn run_headless<G: Game>(config: AppConfig, mut game: G, frames: u32, dt: f32, out: &std::path::Path) -> Result<(), String> {
+    let (mut engine, target, view) = headless_engine(&config)?;
+    let size = engine.size;
     game.init(&mut engine);
     for i in 0..frames {
         let dt = engine.timer.tick_fixed(dt);
-        let mut encoder = run_frame(&mut engine, &mut game, dt, &view);
+        let mut encoder = run_frame(&mut engine, &mut game, dt, &view, None);
         if i + 1 == frames {
             let bytes_per_row = (size.0 * 4).div_ceil(256) * 256;
             let buf = engine.gpu.device.create_buffer(&wgpu::BufferDescriptor {

@@ -121,6 +121,17 @@ impl Mesh {
 
     /// Kegelstumpf/Zylinder entlang einer Achse von `a` nach `b`.
     pub fn frustum(&mut self, p: &Paint, a: Vec3, b: Vec3, ra: f32, rb: f32, seg: u32) {
+        self.frustum_caps(p, a, b, ra, rb, seg, true);
+    }
+
+    /// Kegelstumpf ohne Deckel (Röcke, Ärmel, Manschetten): von der offenen Seite sieht man in den Hohlkörper
+    /// statt auf eine flache Scheibe.
+    pub fn frustum_open(&mut self, p: &Paint, a: Vec3, b: Vec3, ra: f32, rb: f32, seg: u32) {
+        self.frustum_caps(p, a, b, ra, rb, seg, false);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn frustum_caps(&mut self, p: &Paint, a: Vec3, b: Vec3, ra: f32, rb: f32, seg: u32, caps: bool) {
         let axis = (b - a).normalize_or(Vec3::Y);
         let rot = Quat::from_rotation_arc(Vec3::Y, axis);
         let ring = |r: f32, base: Vec3, i: u32| {
@@ -143,9 +154,11 @@ impl Mesh {
                 self.tri(p, a0, a1, b, n0, n1, (n0 + n1) * 0.5);
             }
             // Deckel.
-            self.tri_flat(p, a, a1, a0);
-            if rb > 1e-4 {
-                self.tri_flat(p, b, b0, b1);
+            if caps {
+                self.tri_flat(p, a, a1, a0);
+                if rb > 1e-4 {
+                    self.tri_flat(p, b, b0, b1);
+                }
             }
         }
     }

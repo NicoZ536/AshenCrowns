@@ -88,6 +88,12 @@ pub enum DecorKind {
     Crops,
     Reeds,
     Lantern,
+    /// Kieselhäufchen (rein kosmetisch).
+    Pebbles,
+    /// Glimmende Ascheglut (rein kosmetisch).
+    Embers,
+    /// Pfütze auf Erde (rein kosmetisch).
+    Puddle,
 }
 
 impl DecorKind {

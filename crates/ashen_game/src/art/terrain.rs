@@ -59,6 +59,16 @@ pub fn edge_name(t: Terrain, side: u8) -> String {
     format!("edge_{}_{}", name(t), side)
 }
 
+/// Ursprung des k-ten Mikrodetails (Kiesel, Rippel, Riss, Büschel) einer Kachelvariante, im Inneren des Diamanten.
+fn feat(seed: u32, k: i32) -> (i32, i32) {
+    (8 + (rand2(k, 1, seed ^ 0xFE) * 15.0) as i32, 4 + (rand2(k, 2, seed ^ 0xFE) * 7.0) as i32)
+}
+
+/// Schaumsaum entlang der Uferkante, die `edge_name(t, side)` in eine Wasserkachel zeichnet.
+pub fn foam_name(t: Terrain, side: u8) -> String {
+    format!("foam_{}_{}", name(t), side)
+}
+
 /// Farbe eines Bodenpixels (Weltkoordinaten-unabhängig, mit Variantensamen).
 fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
     let fx = x as f32;
@@ -82,17 +92,50 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
             } else if under {
                 tone -= 0.12;
             }
+            // Büschel: kleine Dreiergruppen mit hellen Spitzen, dazu dunkle Moosflecken.
+            for k in 0..3 {
+                let (ox, oy) = feat(seed, k);
+                let (dx, dy) = (x - ox, y - oy);
+                if k < 2 {
+                    if dy == 0 && (dx == 0 || dx == 2) || dy == -1 && dx == 1 {
+                        tone += 0.34;
+                        normal = Vec3::new(0.0, -0.6, 0.8);
+                    } else if dy == 1 && (0..3).contains(&dx) {
+                        tone -= 0.2;
+                    }
+                } else if dx * dx + dy * dy * 3 <= 12 {
+                    tone -= 0.16;
+                }
+            }
             if r > 0.995 && t == Terrain::Grass {
                 return (Rgba::hex(0x6a6a3a), normal, 0.0);
             }
         }
         Terrain::Dirt => {
             ramp = pal::dirt();
-            if r > 0.93 {
-                tone += 0.35; // Kiesel
+            if r > 0.97 {
+                tone += 0.3;
                 normal = Vec3::new(-0.3, -0.5, 0.8);
-            } else if r < 0.05 {
-                tone -= 0.3;
+            } else if r < 0.03 {
+                tone -= 0.25;
+            }
+            // Mikrodetails: Kiesel mit Schatten und Trockenrisse (Pfützen sind eigene Dekoration).
+            for k in 0..4 {
+                let (ox, oy) = feat(seed, k);
+                let (dx, dy) = (x - ox, y - oy);
+                match k {
+                    0 | 1 => {
+                        if dy == 0 && (dx == 0 || dx == 1) {
+                            tone += 0.4;
+                            normal = Vec3::new(-0.3, -0.5, 0.8);
+                        } else if dy == 1 && dx == 1 {
+                            tone -= 0.3;
+                        }
+                    }
+                    // Riss: gezackte Diagonale
+                    2 if (0..6).contains(&dx) && dy == (dx + 1) / 2 => tone -= 0.42,
+                    _ => {}
+                }
             }
         }
         Terrain::Road => {
@@ -120,7 +163,29 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
         }
         Terrain::Sand => {
             ramp = pal::sand();
-            tone += ((fx * 0.3 + fy * 0.9).sin() * 0.08) + (r - 0.5) * 0.15;
+            // Weiche Düne plus gebogene Rippelstriche, Kiesel und Feinkorn.
+            tone += ((fx * 0.17 + fy * 0.55 + (seed % 7) as f32).sin() * 0.07) + (r - 0.5) * 0.08;
+            for k in 0..5 {
+                let (ox, oy) = feat(seed, k);
+                let dx = x - ox;
+                if k < 3 {
+                    let len = 5 + (rand2(k, 3, seed) * 5.0) as i32;
+                    if (0..len).contains(&dx) {
+                        let cy = oy + ((dx as f32 * 0.5).sin() * 0.9).round() as i32;
+                        if y == cy {
+                            tone += 0.3;
+                            normal = Vec3::new(0.0, -0.55, 0.83);
+                        } else if y == cy + 1 {
+                            tone -= 0.2;
+                        }
+                    }
+                } else if y == oy && (dx == 0 || dx == 1) {
+                    tone += 0.35;
+                    normal = Vec3::new(-0.3, -0.5, 0.8);
+                } else if y == oy + 1 && dx == 1 {
+                    tone -= 0.28;
+                }
+            }
         }
         Terrain::Ash => {
             ramp = pal::ash();
@@ -128,21 +193,48 @@ fn texel(t: Terrain, x: i32, y: i32, seed: u32) -> (Rgba, Vec3, f32) {
                 glow = 0.6;
                 return (pal::EMBER, normal, glow);
             }
-            let vein = (fbm2(fx * 0.25, fy * 0.25, seed ^ 0x99, 3) - 0.5).abs() < 0.025;
+            let vein = (fbm2(fx * 0.25, fy * 0.25, seed ^ 0x99, 3) - 0.5).abs() < 0.02;
             if vein {
                 return (Rgba::hex(0x2a3a2e), normal, 0.0);
             }
+            // Aschedriften (helle Streifen), verkohlte Splitter, selten ein glimmender Riss.
+            tone += (r - 0.5) * 0.06;
+            for k in 0..5 {
+                let (ox, oy) = feat(seed, k);
+                let dx = x - ox;
+                if k < 2 {
+                    let len = 6 + (rand2(k, 3, seed) * 5.0) as i32;
+                    if (0..len).contains(&dx) {
+                        let cy = oy + ((dx as f32 * 0.4).sin() * 0.8).round() as i32;
+                        if y == cy {
+                            tone += 0.32;
+                        } else if y == cy + 1 {
+                            tone -= 0.18;
+                        }
+                    }
+                } else if k < 4 {
+                    if y == oy && (0..3).contains(&dx) {
+                        tone -= 0.4;
+                    } else if y == oy - 1 && dx == 1 {
+                        tone += 0.25;
+                    }
+                } else if (0..5).contains(&dx) && y == oy + (dx % 2) && seed % 4 == 1 {
+                    return (Rgba::hex(0x7a3418), normal, 0.35);
+                }
+            }
         }
         Terrain::Ford => {
-            ramp = pal::water_tex();
-            tone = 0.55 + (n - 0.5) * 0.3;
-            if r > 0.9 {
-                return (pal::rock().at(0.55), Vec3::new(-0.3, -0.5, 0.8), 0.0);
+            // Sandiger Grund mit Kieseln; der Wasser-Shader legt Tönung und Wellenlinien darüber.
+            ramp = pal::ford();
+            tone = 0.5 + (n - 0.5) * 0.25 + (r - 0.5) * 0.1;
+            if r > 0.955 {
+                return (pal::rock().at(0.5 + r * 0.1), Vec3::new(-0.3, -0.5, 0.8), 0.0);
             }
         }
         Terrain::Water | Terrain::DeepWater => {
+            // Glatte Fläche: Farbe und Bewegung kommen vollständig aus dem Wasser-Shader.
             ramp = pal::water_tex();
-            tone = 0.5 + (n - 0.5) * 0.4;
+            tone = 0.5;
         }
     }
     let _ = b;
@@ -182,6 +274,33 @@ fn paint_edge(t: Terrain, side: u8, seed: u32) -> Canvas {
                 if g > 0.0 {
                     c.glow(x, y, g);
                 }
+            }
+        }
+    }
+    c
+}
+
+/// Schaumsaum: ein schmaler Streifen direkt außerhalb der Uferkante von `paint_edge` (liegt auf der Wasserkachel).
+fn paint_foam_edge(side: u8, seed: u32) -> Canvas {
+    let mut c = Canvas::new(TW, TH);
+    let foam = Ramp::from_hex(&[0x6f8a86, 0x9bb4ae, 0xc9dad4]);
+    for y in 0..TH {
+        for x in 0..TW {
+            if !in_diamond(x, y) {
+                continue;
+            }
+            let d = edge_distance(x, y, side);
+            let jag = fbm2(x as f32 * 0.3, y as f32 * 0.6, seed ^ side as u32, 2) * 6.5 + 1.0;
+            let off = d - jag;
+            if !(0.0..=2.6).contains(&off) {
+                continue;
+            }
+            let r = rand2(x, y, seed ^ 0xF0A);
+            // Kern: durchgehende helle Linie; außen aufgelöste Schaumflecken.
+            if off < 1.0 {
+                c.pxn(x, y, foam.at(0.85 + r * 0.15), Vec3::Z);
+            } else if r > 0.55 {
+                c.pxn(x, y, foam.at(0.4 + r * 0.4), Vec3::Z);
             }
         }
     }
@@ -252,6 +371,7 @@ pub fn build(atlas: &mut AtlasBuilder) {
         if t.priority() >= Terrain::Sand.priority() || *t == Terrain::Ford {
             for side in 0..4u8 {
                 atlas.add(edge_name(*t, side), paint_edge(*t, side, 5000 + ti as u32 * 31), Vec2::new(16.0, 8.0));
+                atlas.add(foam_name(*t, side), paint_foam_edge(side, 5000 + ti as u32 * 31), Vec2::new(16.0, 8.0));
             }
         }
     }

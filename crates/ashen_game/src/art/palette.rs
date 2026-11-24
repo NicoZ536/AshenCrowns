@@ -53,6 +53,9 @@ pub fn bone() -> Ramp {
 pub fn bark() -> Ramp {
     Ramp::from_hex(&[0x150f0b, 0x221811, 0x302218, 0x3f2e21])
 }
+pub fn ford() -> Ramp {
+    Ramp::from_hex(&[0x4a5048, 0x5f634f, 0x77765a, 0x8e8a66, 0xa49d74])
+}
 pub fn water_tex() -> Ramp {
     Ramp::from_hex(&[0x3c4448, 0x454f53, 0x50595e, 0x5c666b])
 }

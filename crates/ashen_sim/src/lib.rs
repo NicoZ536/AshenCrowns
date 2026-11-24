@@ -6,6 +6,7 @@
 
 pub mod arena;
 pub mod balance;
+pub mod bench;
 pub mod campaign;
 pub mod challenge;
 pub mod chronicle;

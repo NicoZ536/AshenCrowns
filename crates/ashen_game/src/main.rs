@@ -36,6 +36,8 @@ fn usage() -> &'static str {
   --profile <performance|balanced|quality>
   --no-audio                      Audioausgabe deaktivieren
   --screenshot <datei.png>        Ohne Fenster rendern und Bild speichern
+  --bench <szene>                 Leistungsmessung ohne Fenster (CPU-Zeit je Frame-Abschnitt, Instanzen, Lichter): mission, sandbox,
+                                  skirmish, battle, siege oder stress[:n] (n Einheiten je Seite, Standard 200); --frames n (Standard 300)
   --size <BxH>                    Bildgröße für Screenshots (Standard 1600x900)
   --frames <n>                    Gerenderte Frames vor dem Screenshot (Standard 90)
   --scene <menu|mission|skirmish|sandbox|editor|scenarios|challenges|skirmish-setup|campaign|campaign-slots|campaign-briefing|campaign-ending|worldmap|battle|siege>
@@ -77,7 +79,23 @@ fn usage() -> &'static str {
 
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info,wgpu_core=warn,wgpu_hal=warn,naga=warn")).init();
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    // `--bench <szene>`: Leistungsmessung ohne Fenster. Szenen wie bei `--scene`, dazu `stress[:n]` (n Einheiten je Seite).
+    let mut bench = false;
+    if let Some(p) = args.iter().position(|a| a == "--bench") {
+        let name = args.get(p + 1).cloned().unwrap_or_else(|| "mission".into());
+        let (scene, extra): (String, Vec<&str>) = match name.split_once(':').unwrap_or((name.as_str(), "")) {
+            ("stress", n) => {
+                showcase::set_stress_units(n.parse().unwrap_or(200));
+                ("sandbox".into(), vec!["--demo", "army", "--camera", "36,36", "--zoom", "300", "--no-ui"])
+            }
+            (s, _) => (s.to_string(), Vec::new()),
+        };
+        let mut repl = vec!["--scene".to_string(), scene];
+        repl.extend(extra.into_iter().map(str::to_string));
+        args.splice(p..(p + 2).min(args.len()), repl);
+        bench = true;
+    }
     let mut settings = settings::UserSettings::load();
     let mut config = AppConfig { title: "Ashen Crowns – The Age of the Fallen".into(), fullscreen: settings.fullscreen, vsync: settings.vsync, profile: settings.profile, ..Default::default() };
     let mut screenshot: Option<std::path::PathBuf> = None;
@@ -223,13 +241,21 @@ fn main() {
         auto.world = Some(world_auto);
     }
     let game = AshenGame::new(settings, auto);
-    let result = match screenshot {
-        Some(path) => {
-            config.width = size.0;
-            config.height = size.1;
-            ashen_engine::run_headless(config, game, frames, 1.0 / 60.0, &path).map(|_| println!("Screenshot gespeichert: {}", path.display()))
+    let result = if bench {
+        config.width = size.0;
+        config.height = size.1;
+        // Standard: 300 gemessene Frames nach 30 Warmup-Frames (`--frames` überschreibt die gemessene Anzahl).
+        let n = if frames == 90 { 300 } else { frames };
+        ashen_engine::run_bench(config, game, 30, n, 1.0 / 60.0).map(|r| println!("{}", r.summary()))
+    } else {
+        match screenshot {
+            Some(path) => {
+                config.width = size.0;
+                config.height = size.1;
+                ashen_engine::run_headless(config, game, frames, 1.0 / 60.0, &path).map(|_| println!("Screenshot gespeichert: {}", path.display()))
+            }
+            None => ashen_engine::run(config, game),
         }
-        None => ashen_engine::run(config, game),
     };
     if let Err(e) = result {
         eprintln!("Fehler: {e}");

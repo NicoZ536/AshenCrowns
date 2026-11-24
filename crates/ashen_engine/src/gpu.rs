@@ -24,6 +24,11 @@ impl GpuContext {
     /// Erstellt den Kontext. `surface` sorgt dafür, dass ein zur Fensteroberfläche
     /// kompatibler Adapter gewählt wird. Auf Apple Silicon wird Metal verwendet.
     pub fn new(instance: wgpu::Instance, surface: Option<&wgpu::Surface<'_>>) -> Result<GpuContext, GpuError> {
+        Self::with_timing(instance, surface, false)
+    }
+
+    /// Wie [`GpuContext::new`]; `want_timing` fordert GPU-Zeitstempelabfragen an (falls unterstützt).
+    pub fn with_timing(instance: wgpu::Instance, surface: Option<&wgpu::Surface<'_>>, want_timing: bool) -> Result<GpuContext, GpuError> {
         let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
             // Energieeffizient: integrierte GPU reicht für den Pixel-Art-Renderer und schont den Akku.
             power_preference: wgpu::PowerPreference::LowPower,
@@ -34,9 +39,11 @@ impl GpuContext {
         .map_err(|e| GpuError(format!("kein passender Grafikadapter: {e}")))?;
         let info = adapter.get_info();
         log::info!("Grafikadapter: {} ({:?}, {:?})", info.name, info.backend, info.device_type);
+        // GPU-Zeitstempel nur auf Wunsch (Benchmark, `ASHEN_GPU_TIMING=1`) und wenn der Adapter sie kennt.
+        let timing = (want_timing || std::env::var_os("ASHEN_GPU_TIMING").is_some()) && adapter.features().contains(wgpu::Features::TIMESTAMP_QUERY);
         let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("ashen-device"),
-            required_features: wgpu::Features::empty(),
+            required_features: if timing { wgpu::Features::TIMESTAMP_QUERY } else { wgpu::Features::empty() },
             required_limits: wgpu::Limits::downlevel_defaults().using_resolution(adapter.limits()),
             memory_hints: wgpu::MemoryHints::MemoryUsage,
             ..Default::default()
@@ -49,6 +56,6 @@ impl GpuContext {
     /// Kontext ohne Fenster (Screenshots, Tests).
     pub fn headless() -> Result<GpuContext, GpuError> {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle_from_env());
-        Self::new(instance, None)
+        Self::with_timing(instance, None, true)
     }
 }

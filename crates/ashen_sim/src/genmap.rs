@@ -5,7 +5,7 @@
 
 use crate::data::GameData;
 use crate::entity::NodeKind;
-use crate::map::{DecorKind, Terrain, TileMap};
+use crate::map::{Decor, DecorKind, Terrain, TileMap};
 use crate::mapgen::{dist_to_polyline, RIVER, ROAD};
 use crate::scenario::{DecorPlace, MapData, NodePlace};
 use crate::world::SimWorld;
@@ -95,6 +95,118 @@ fn dist_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f32 {
     let ab = b - a;
     let t = ((p - a).dot(ab) / ab.length_squared().max(1e-6)).clamp(0.0, 1.0);
     (p - (a + ab * t)).length()
+}
+
+/// Deterministischer Seed der Zusatzdekoration aus Größe und Gelände (unabhängig von Spielstand und Zufall).
+fn flavor_seed(map: &TileMap) -> u32 {
+    let mut h: u32 = 2166136261 ^ (map.width as u32).wrapping_mul(31) ^ (map.height as u32).wrapping_mul(1009);
+    for t in &map.terrain {
+        h = (h ^ t.code() as u32).wrapping_mul(16777619);
+    }
+    h
+}
+
+/// Streut rein kosmetische Bodenbewohner nach Biom aus: Kiesel, Felsbrocken, Büschel an Gras-Übergängen, Schilf am Ufer,
+/// Knochen und Ascheglut im Aschland. Die Platzierung hängt nur vom Gelände ab (deterministisch, idempotent: Kacheln mit
+/// vorhandener Dekoration bleiben unberührt) und verwendet ausschließlich nicht blockierende Arten; Wegfindung und
+/// Bauplätze bleiben unverändert. Dichte schwankt mit einem Flächenrauschen in Flecken, damit Gruppen statt Gleichverteilung entstehen.
+pub fn add_flavor_decor(map: &mut TileMap) {
+    let s = flavor_seed(map);
+    let (w, h) = (map.width, map.height);
+    let mut taken = vec![false; (w * h) as usize];
+    for d in &map.decor {
+        let t = TileMap::tile_of(d.pos);
+        if map.in_bounds(t) {
+            taken[map.idx(t)] = true;
+        }
+    }
+    let is_water = |t: Terrain| matches!(t, Terrain::Water | Terrain::DeepWater);
+    let mut out: Vec<Decor> = Vec::new();
+    for y in 0..h {
+        for x in 0..w {
+            let t = IVec2::new(x, y);
+            let i = map.idx(t);
+            if taken[i] || map.static_block[i] {
+                continue;
+            }
+            let terr = map.terrain[i];
+            let around = [IVec2::X, IVec2::NEG_X, IVec2::Y, IVec2::NEG_Y].map(|d| map.terrain_at(t + d));
+            let near_water = around.iter().any(|a| is_water(*a));
+            let near_dry = around.iter().any(|a| matches!(a, Terrain::Dirt | Terrain::Sand | Terrain::Ash | Terrain::Stone));
+            // Flecken: 0.35 .. 1.75-fache Dichte.
+            let patch = 0.35 + fbm2(x as f32 * 0.13 + 9.0, y as f32 * 0.13, s ^ 0xB10E, 3) * 1.4;
+            let r = rand2(x, y, s ^ 0xF1A0);
+            let kind = match terr {
+                Terrain::Sand => {
+                    if near_water && r < 0.34 {
+                        Some(DecorKind::Reeds)
+                    } else if r < 0.07 * patch {
+                        Some(DecorKind::Pebbles)
+                    } else if r < 0.07 * patch + 0.012 {
+                        Some(DecorKind::Rock)
+                    } else if r > 1.0 - 0.004 * patch {
+                        Some(DecorKind::Bones)
+                    } else {
+                        None
+                    }
+                }
+                Terrain::Dirt => {
+                    if r < 0.08 * patch {
+                        Some(DecorKind::Pebbles)
+                    } else if r < 0.08 * patch + 0.025 * patch {
+                        Some(DecorKind::Rock)
+                    } else if r > 0.93 - 0.03 * patch && r <= 0.93 {
+                        Some(DecorKind::Puddle)
+                    } else if r > 1.0 - 0.05 * patch {
+                        Some(DecorKind::GrassTuft)
+                    } else if near_water && r > 0.82 {
+                        Some(DecorKind::Reeds)
+                    } else {
+                        None
+                    }
+                }
+                Terrain::Ash => {
+                    if r < 0.05 * patch {
+                        Some(DecorKind::Embers)
+                    } else if r < 0.05 * patch + 0.014 * patch {
+                        Some(DecorKind::Bones)
+                    } else if r < 0.05 * patch + 0.014 * patch + 0.035 * patch {
+                        Some(DecorKind::Pebbles)
+                    } else if r > 1.0 - 0.02 * patch {
+                        Some(DecorKind::Rock)
+                    } else {
+                        None
+                    }
+                }
+                Terrain::Stone => {
+                    if r < 0.06 * patch {
+                        Some(DecorKind::Pebbles)
+                    } else {
+                        None
+                    }
+                }
+                Terrain::Grass | Terrain::DarkGrass => {
+                    if near_water && r < 0.22 {
+                        Some(DecorKind::Reeds)
+                    } else if near_dry && r < 0.2 {
+                        // Übergang Gras/Erde: Büschel und einzelne Kiesel am Rand.
+                        Some(if r < 0.17 { DecorKind::GrassTuft } else { DecorKind::Pebbles })
+                    } else if terr == Terrain::DarkGrass && r > 1.0 - 0.012 * patch {
+                        Some(DecorKind::Bush)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            };
+            if let Some(kind) = kind {
+                debug_assert!(!kind.blocks());
+                let jitter = Vec2::new(rand2(x, y, s ^ 0x31) - 0.5, rand2(x, y, s ^ 0x32) - 0.5) * 0.6;
+                out.push(Decor { kind, pos: TileMap::center_of(t) + jitter, variant: (rand2(x, y, s ^ 0x33) * 8.0) as u8 });
+            }
+        }
+    }
+    map.decor.extend(out);
 }
 
 /// Erzeugt eine vollständige Karte für Größen von 24 bis 160, Seed und Vorlage.
@@ -399,6 +511,30 @@ mod tests {
                 let p = pf.find(&m, from, to, 60_000).unwrap_or_else(|| panic!("{preset:?} {w}x{h}: kein Weg"));
                 assert!((*p.last().unwrap() - to).length() < 1.5, "{preset:?} {w}x{h}: Ziel nicht erreicht");
             }
+        }
+    }
+
+    #[test]
+    fn flavor_decor_is_deterministic_idempotent_and_never_blocks() {
+        for preset in GenPreset::ALL {
+            let g = generate_preset(72, 72, 99, preset);
+            let mut a = g.map.to_tilemap().unwrap();
+            let blocked: Vec<bool> = a.static_block.clone();
+            let before = a.decor.len();
+            add_flavor_decor(&mut a);
+            let added = a.decor.len() - before;
+            assert!(added > 20, "{preset:?}: kaum Zusatzdekoration ({added})");
+            assert_eq!(a.static_block, blocked, "{preset:?}: Dekoration darf nichts blockieren");
+            assert!(a.decor[before..].iter().all(|d| !d.kind.blocks()), "{preset:?}: blockierende Art");
+            // Gleiche Karte, gleiches Ergebnis.
+            let mut b = g.map.to_tilemap().unwrap();
+            add_flavor_decor(&mut b);
+            assert_eq!(a.decor.len(), b.decor.len());
+            assert!(a.decor.iter().zip(&b.decor).all(|(x, y)| x.kind == y.kind && x.pos == y.pos && x.variant == y.variant));
+            // Zweiter Durchlauf fügt nichts mehr hinzu.
+            let n = a.decor.len();
+            add_flavor_decor(&mut a);
+            assert_eq!(a.decor.len(), n, "{preset:?}: nicht idempotent");
         }
     }
 }

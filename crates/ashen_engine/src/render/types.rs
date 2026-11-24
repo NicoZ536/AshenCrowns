@@ -105,6 +105,13 @@ impl SpriteInstance {
         self
     }
 
+    /// Wassertiefe an den vier Kachelecken (oben, rechts, links, unten; je 0..15) als 16-Bit-Wert gepackt.
+    /// Der Shader liest sie bilinear und erhält so weiche Tiefenverläufe über Kachelgrenzen hinweg.
+    pub fn water_corners(mut self, packed: u16) -> Self {
+        self.p1[3] = packed as f32;
+        self
+    }
+
     /// Ausschnitt von oben abschneiden (z. B. Baufortschritt): nur der untere Anteil `frac` bleibt sichtbar.
     pub fn crop_top(mut self, frac: f32) -> Self {
         let frac = frac.clamp(0.0, 1.0);
