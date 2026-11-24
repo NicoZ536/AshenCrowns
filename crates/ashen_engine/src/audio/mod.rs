@@ -442,4 +442,89 @@ mod tests {
         a.update(0.016);
         assert!(a.voice_busy());
     }
+
+    /// Backend, das alle Aufrufe in einer geteilten Liste mitschreibt.
+    #[derive(Default)]
+    struct Recorder {
+        log: std::rc::Rc<std::cell::RefCell<Vec<String>>>,
+        next: HandleId,
+        done: std::collections::HashSet<HandleId>,
+    }
+
+    impl AudioBackend for Recorder {
+        fn play_oneshot(&mut self, path: &Path, bus: Bus, _volume_db: f32, _pan: f32) -> Option<HandleId> {
+            self.next += 1;
+            self.log.borrow_mut().push(format!("oneshot {bus:?} {}", path.display()));
+            Some(self.next)
+        }
+        fn play_stream(&mut self, path: &Path, bus: Bus, looped: bool, _volume_db: f32, _fade_in: f32) -> Option<HandleId> {
+            self.next += 1;
+            self.log.borrow_mut().push(format!("stream {bus:?} {} loop={looped}", path.display()));
+            Some(self.next)
+        }
+        fn set_volume(&mut self, _id: HandleId, _volume_db: f32, _fade: f32) {}
+        fn stop(&mut self, id: HandleId, _fade: f32) {
+            self.done.insert(id);
+        }
+        /// One-Shots gelten als sofort beendet, Streams laufen weiter.
+        fn is_playing(&self, id: HandleId) -> bool {
+            !self.done.contains(&id) && self.log.borrow().get(id as usize - 1).is_some_and(|l| l.starts_with("stream"))
+        }
+        fn set_bus_volume(&mut self, _bus: Bus, _volume_db: f32) {}
+        fn name(&self) -> &'static str {
+            "recorder"
+        }
+    }
+
+    fn recorded(m: AudioManifest, files: &[(&str, &[&str])]) -> (AudioSystem, std::rc::Rc<std::cell::RefCell<Vec<String>>>) {
+        let mut r = ScanReport::default();
+        for (p, fs) in files {
+            r.resolved.insert((*p).into(), scanner::Resolved { owner: (*p).into(), files: fs.iter().map(PathBuf::from).collect() });
+        }
+        let rec = Recorder::default();
+        let log = rec.log.clone();
+        (AudioSystem::with_backend(Box::new(rec), m, r), log)
+    }
+
+    /// Musik besteht aus genau einer Datei je Track (kein Intro): Tracks loopen als Ganzes, Stings spielen einmal.
+    #[test]
+    fn single_file_music_loops_whole_track_and_stings_play_once() {
+        let m = AudioManifest {
+            version: 1,
+            music: vec![
+                MusicTrack { id: "main_menu".into(), intensity: Intensity::Menu, file: "music/main_menu".into(), intro: None, looped: true },
+                MusicTrack { id: "victory_sting".into(), intensity: Intensity::Sting, file: "music/victory_sting".into(), intro: None, looped: false },
+            ],
+            events: vec![],
+            ambience: vec![],
+        };
+        let (mut a, log) = recorded(m, &[("music/main_menu", &["main_menu.ogg"]), ("music/victory_sting", &["victory_sting.ogg"])]);
+        a.set_music_intensity(Intensity::Menu);
+        assert_eq!(a.current_track(), Some("main_menu"));
+        a.play_sting("victory_sting");
+        a.update(0.1);
+        let l = log.borrow();
+        assert!(l.contains(&"stream Music main_menu.ogg loop=true".to_string()), "{l:?}");
+        assert!(l.contains(&"stream Music victory_sting.ogg loop=false".to_string()), "{l:?}");
+        assert_eq!(l.iter().filter(|s| s.contains("main_menu.ogg")).count(), 1, "kein Intro-Wechsel: Track startet genau einmal");
+    }
+
+    /// Eine Datei je Erzähler-/Dialogzeile spielt im Modus Random wie Sequential vollständig und wiederholbar.
+    #[test]
+    fn single_file_spoken_line_plays_in_random_and_sequential_mode() {
+        for playback in [Playback::Random, Playback::Sequential] {
+            let m = AudioManifest {
+                version: 1,
+                music: vec![],
+                events: vec![SoundEvent { id: "narrator.x".into(), category: Category::Narration, files: vec!["voices/narrator/narrator_x_*".into()], volume_db: 2.0, cooldown_ms: 0, max_instances: 1, playback }],
+                ambience: vec![],
+            };
+            let (mut a, log) = recorded(m, &[("voices/narrator/narrator_x_*", &["narrator_x_01.ogg"])]);
+            assert!(a.play("narrator.x"), "{playback:?}");
+            assert!(a.voice_busy());
+            a.update(0.016);
+            assert_eq!(log.borrow().iter().filter(|s| s.as_str() == "oneshot Voice narrator_x_01.ogg").count(), 1, "{playback:?}: Datei genau einmal gestartet");
+            assert!(a.play("narrator.x"), "{playback:?}: Zeile ist wiederholbar");
+        }
+    }
 }

@@ -26,71 +26,71 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### worker_select (Event `voice.worker.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_select_01.ogg` | Jo, was gibt's zu tun? | freundlich-willig, mittlere Lautstärke |
+| `voices/units/worker_select_01.ogg` | [warmly] Jo, was gibt's zu tun? | freundlich-willig, mittlere Lautstärke |
 | `voices/units/worker_select_02.ogg` | [sighs] Noch 'ne Arbeit, was? | kurzer Seufzer, dann gutmütig |
-| `voices/units/worker_select_03.ogg` | Hab die Hände frei. Noch. | trocken, kleine Pause vor „Noch“ |
-| `voices/units/worker_select_04.ogg` | Ja, Wächterin? Ich hör zu. | respektvoll, leicht unterwürfig |
-| `voices/units/worker_select_05.ogg` | Rücken tut weh, aber ich bin da. | Ächzen in der Stimme, lächelnd |
+| `voices/units/worker_select_03.ogg` | [dryly] Hab die Hände frei. Noch. | trocken, kleine Pause vor „Noch“ |
+| `voices/units/worker_select_04.ogg` | [calmly] Ja, Wächterin? Ich hör zu. | respektvoll, leicht unterwürfig |
+| `voices/units/worker_select_05.ogg` | [groans] Rücken tut weh, aber ich bin da. | Ächzen in der Stimme, lächelnd |
 
 ### worker_move (Event `voice.worker.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_move_01.ogg` | Gut, bin unterwegs. | knapp, bodenständig |
-| `voices/units/worker_move_02.ogg` | Dann mal los. | leichtes Brummen, gemütlich |
-| `voices/units/worker_move_03.ogg` | Pass auf den Schlamm auf … geh ja schon. | zu sich selbst, halblaut |
-| `voices/units/worker_move_04.ogg` | Jo, ich kenn den Weg. | selbstsicher |
+| `voices/units/worker_move_01.ogg` | [dryly] Gut, bin unterwegs. | knapp, bodenständig |
+| `voices/units/worker_move_02.ogg` | [calmly] Dann mal los. | leichtes Brummen, gemütlich |
+| `voices/units/worker_move_03.ogg` | [quietly] Pass auf den Schlamm auf … [pause] geh ja schon. | zu sich selbst, halblaut |
+| `voices/units/worker_move_04.ogg` | [calmly] Jo, ich kenn den Weg. | selbstsicher |
 | `voices/units/worker_move_05.ogg` | [tired] Geh ja, geh ja. | müde, leicht genervt |
 
 ### worker_attack (Event `voice.worker.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_attack_01.ogg` | [shouting] Weg von unseren Häusern! | verzweifelt-wütend, laut |
-| `voices/units/worker_attack_02.ogg` | Ich hab 'ne Mistgabel und scheu mich nicht! | Mut zusammengekratzt, Stimme kippt leicht |
-| `voices/units/worker_attack_03.ogg` | [shouting] Für Brennhollow! | Dorfstolz, kräftig |
-| `voices/units/worker_attack_04.ogg` | Schon gut, schon gut – nimm das! | nervös, sich selbst Mut machend |
+| `voices/units/worker_attack_01.ogg` | [angry] [shouting] Weg von unseren Häusern! | verzweifelt-wütend, laut |
+| `voices/units/worker_attack_02.ogg` | [nervously] Ich hab 'ne Mistgabel und scheu mich nicht! | Mut zusammengekratzt, Stimme kippt leicht |
+| `voices/units/worker_attack_03.ogg` | [proudly] [shouting] Für Brennhollow! | Dorfstolz, kräftig |
+| `voices/units/worker_attack_04.ogg` | [nervously] Schon gut, schon gut – nimm das! | nervös, sich selbst Mut machend |
 
 ### worker_retreat (Event `voice.worker.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_retreat_01.ogg` | Dafür werd ich nicht bezahlt! Lauft! | panisch, gehetzt, mit Atem |
-| `voices/units/worker_retreat_02.ogg` | [shouting] Zurück ins Dorf! | laut, Angst |
-| `voices/units/worker_retreat_03.ogg` | Jeder für sich – ich mein, Rückzug! | hastige Selbstkorrektur, unfreiwillig komisch |
+| `voices/units/worker_retreat_01.ogg` | [panicked] Dafür werd ich nicht bezahlt! Lauft! | panisch, gehetzt, mit Atem |
+| `voices/units/worker_retreat_02.ogg` | [fearful] [shouting] Zurück ins Dorf! | laut, Angst |
+| `voices/units/worker_retreat_03.ogg` | [quickly] Jeder für sich – [pause] ich mein, Rückzug! | hastige Selbstkorrektur, unfreiwillig komisch |
 
 ### worker_hit (Event `voice.worker.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_hit_01.ogg` | [groans] Au! Verflucht – | Schmerz + Ärger, abgebrochen |
-| `voices/units/worker_hit_02.ogg` | [gasps] Argh, mein Arm! | erschrocken, scharf |
+| `voices/units/worker_hit_01.ogg` | [sorrowfully] [groans] Au! Verflucht – | Schmerz + Ärger, abgebrochen |
+| `voices/units/worker_hit_02.ogg` | [fearful] [gasps] Argh, mein Arm! | erschrocken, scharf |
 | `voices/units/worker_hit_03.ogg` | [grunts] Uff! | kurzer Stoßlaut, ≤ 0,6 s |
 
 ### worker_death (Event `voice.worker.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_death_01.ogg` | [gasps] Sag meiner Frau … das Dach … | schwach, verlöschend, letzte Sorge |
-| `voices/units/worker_death_02.ogg` | [groans] Ahh … so kalt … | leiser werdend |
+| `voices/units/worker_death_01.ogg` | [quietly] [gasps] Sag meiner Frau … das Dach … | schwach, verlöschend, letzte Sorge |
+| `voices/units/worker_death_02.ogg` | [quietly] [groans] Ahh … so kalt … | leiser werdend |
 | `voices/units/worker_death_03.ogg` | Nein … nicht so – [exhales] | abgebrochen, letzter Atem |
 
 ### worker_victory (Event `voice.worker.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_victory_01.ogg` | [laughs] Ha! Steh noch! | erleichtertes Lachen |
-| `voices/units/worker_victory_02.ogg` | Das lehrt sie, hier aufzukreuzen. | stolz, brummig |
-| `voices/units/worker_victory_03.ogg` | Wir haben's geschafft … wirklich geschafft! | ungläubige Freude |
+| `voices/units/worker_victory_01.ogg` | [relieved] [laughs] Ha! Steh noch! | erleichtertes Lachen |
+| `voices/units/worker_victory_02.ogg` | [proudly] Das lehrt sie, hier aufzukreuzen. | stolz, brummig |
+| `voices/units/worker_victory_03.ogg` | [proudly] Wir haben's geschafft … wirklich geschafft! | ungläubige Freude |
 
 ### worker_work (Event `voice.worker.work`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_work_01.ogg` | Zurück an die Arbeit. | ergeben, freundlich |
-| `voices/units/worker_work_02.ogg` | Hacken, schleppen, stapeln. | rhythmisch, halb gesungen |
-| `voices/units/worker_work_03.ogg` | Gutes Holz, das. | zufrieden, fachmännisch |
-| `voices/units/worker_work_04.ogg` | Das Feld pflügt sich nicht von allein. | Volksweisheit, trocken |
+| `voices/units/worker_work_01.ogg` | [warmly] Zurück an die Arbeit. | ergeben, freundlich |
+| `voices/units/worker_work_02.ogg` | [casually] Hacken, schleppen, stapeln. | rhythmisch, halb gesungen |
+| `voices/units/worker_work_03.ogg` | [cheerfully] Gutes Holz, das. | zufrieden, fachmännisch |
+| `voices/units/worker_work_04.ogg` | [dryly] Das Feld pflügt sich nicht von allein. | Volksweisheit, trocken |
 
 ### worker_build_done (Event `voice.worker.build_done`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/worker_build_done_01.ogg` | So. Gebaut für die Ewigkeit. Meistens. | stolz, dann trockene Einschränkung |
-| `voices/units/worker_build_done_02.ogg` | Arbeit erledigt, Wächterin! | laut genug als Meldung |
-| `voices/units/worker_build_done_03.ogg` | Fertig! Kommt, schaut's euch an! | freudig |
+| `voices/units/worker_build_done_01.ogg` | [proudly] So. Gebaut für die Ewigkeit. Meistens. | stolz, dann trockene Einschränkung |
+| `voices/units/worker_build_done_02.ogg` | [shouting] Arbeit erledigt, Wächterin! | laut genug als Meldung |
+| `voices/units/worker_build_done_03.ogg` | [cheerfully] Fertig! Kommt, schaut's euch an! | freudig |
 
 ---
 
@@ -102,57 +102,57 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### swordsman_select (Event `voice.swordsman.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/swordsman_select_01.ogg` | Schwert bereit. | zackig, knapp |
-| `voices/units/swordsman_select_02.ogg` | Miliz, zu Befehl. | soldatisch, Haltung annehmen |
-| `voices/units/swordsman_select_03.ogg` | Zeigt mir den Ärger. | entschlossen, leicht grinsend |
-| `voices/units/swordsman_select_04.ogg` | Schild oben. Was jetzt? | wach, aufmerksam |
-| `voices/units/swordsman_select_05.ogg` | Atme noch. Was ist der Befehl? | Galgenhumor |
+| `voices/units/swordsman_select_01.ogg` | [commanding] Schwert bereit. | zackig, knapp |
+| `voices/units/swordsman_select_02.ogg` | [calmly] Miliz, zu Befehl. | soldatisch, Haltung annehmen |
+| `voices/units/swordsman_select_03.ogg` | [amused] Zeigt mir den Ärger. | entschlossen, leicht grinsend |
+| `voices/units/swordsman_select_04.ogg` | [calmly] Schild oben. Was jetzt? | wach, aufmerksam |
+| `voices/units/swordsman_select_05.ogg` | [amused] Atme noch. Was ist der Befehl? | Galgenhumor |
 
 ### swordsman_move (Event `voice.swordsman.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/swordsman_move_01.ogg` | Rücken aus. | knapp |
-| `voices/units/swordsman_move_02.ogg` | Im Laufschritt! | energisch |
-| `voices/units/swordsman_move_03.ogg` | Direkt hinter Euch, Wächterin. | loyal |
-| `voices/units/swordsman_move_04.ogg` | Marschieren. | neutral, militärisch |
-| `voices/units/swordsman_move_05.ogg` | Dann eben durch die Asche. | leicht resigniert, entschlossen |
+| `voices/units/swordsman_move_01.ogg` | [dryly] Rücken aus. | knapp |
+| `voices/units/swordsman_move_02.ogg` | [firmly] Im Laufschritt! | energisch |
+| `voices/units/swordsman_move_03.ogg` | [calmly] Direkt hinter Euch, Wächterin. | loyal |
+| `voices/units/swordsman_move_04.ogg` | [commanding] Marschieren. | neutral, militärisch |
+| `voices/units/swordsman_move_05.ogg` | [firmly] Dann eben durch die Asche. | leicht resigniert, entschlossen |
 
 ### swordsman_attack (Event `voice.swordsman.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/swordsman_attack_01.ogg` | [shouting] Haut sie nieder! | Kampfschrei, voll |
-| `voices/units/swordsman_attack_02.ogg` | [shouting] Für die Glutkrone! | Schlachtruf, Stolz |
-| `voices/units/swordsman_attack_03.ogg` | Stahl, Jungs! Stahl! | anfeuernd |
-| `voices/units/swordsman_attack_04.ogg` | Zurück in eure Gräber! | wütend, verächtlich |
+| `voices/units/swordsman_attack_02.ogg` | [proudly] [shouting] Für die Glutkrone! | Schlachtruf, Stolz |
+| `voices/units/swordsman_attack_03.ogg` | [shouting] Stahl, Jungs! Stahl! | anfeuernd |
+| `voices/units/swordsman_attack_04.ogg` | [angry] Zurück in eure Gräber! | wütend, verächtlich |
 | `voices/units/swordsman_attack_05.ogg` | [grunts] Da, nimm das! | Anstrengung im Schlag |
 
 ### swordsman_retreat (Event `voice.swordsman.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/swordsman_retreat_01.ogg` | Rückzug! Rückzug! | laut, dringlich |
-| `voices/units/swordsman_retreat_02.ogg` | Sammeln am Bergfried! | befehlend, außer Atem |
-| `voices/units/swordsman_retreat_03.ogg` | Zurück, wir werden überrannt! | Angst, gehetzt |
+| `voices/units/swordsman_retreat_01.ogg` | [urgently] [shouting] Rückzug! Rückzug! | laut, dringlich |
+| `voices/units/swordsman_retreat_02.ogg` | [commanding] [panting] Sammeln am Bergfried! | befehlend, außer Atem |
+| `voices/units/swordsman_retreat_03.ogg` | [fearful] Zurück, wir werden überrannt! | Angst, gehetzt |
 
 ### swordsman_hit (Event `voice.swordsman.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/swordsman_hit_01.ogg` | [grunts] Argh! | kurzer Schmerzlaut |
-| `voices/units/swordsman_hit_02.ogg` | [groans] Ngh – nur ein Kratzer! | trotzig |
-| `voices/units/swordsman_hit_03.ogg` | [gasps] Verdammt! | scharf, überrascht |
+| `voices/units/swordsman_hit_01.ogg` | [sorrowfully] [grunts] Argh! | kurzer Schmerzlaut |
+| `voices/units/swordsman_hit_02.ogg` | [firmly] [groans] Ngh – nur ein Kratzer! | trotzig |
+| `voices/units/swordsman_hit_03.ogg` | [surprised] [gasps] Verdammt! | scharf, überrascht |
 
 ### swordsman_death (Event `voice.swordsman.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/swordsman_death_01.ogg` | [gasps] Für … die Krone … | letzter Atem |
-| `voices/units/swordsman_death_02.ogg` | Sagt dem Feldwebel … ich hab gehalten … | schwach, stolz |
-| `voices/units/swordsman_death_03.ogg` | [exhales] Das Feuer … geht aus … | verlöschend |
+| `voices/units/swordsman_death_02.ogg` | [proudly] [quietly] Sagt dem Feldwebel … [pause] ich hab gehalten … | schwach, stolz |
+| `voices/units/swordsman_death_03.ogg` | [quietly] [exhales] Das Feuer … geht aus … | verlöschend |
 
 ### swordsman_victory (Event `voice.swordsman.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/swordsman_victory_01.ogg` | [shouting] Ha! Sieg! | Jubel |
-| `voices/units/swordsman_victory_02.ogg` | Die stehen nicht wieder auf. | zufrieden, trocken |
-| `voices/units/swordsman_victory_03.ogg` | Die Krone steht! | stolz |
+| `voices/units/swordsman_victory_01.ogg` | [triumphantly] [shouting] Ha! Sieg! | Jubel |
+| `voices/units/swordsman_victory_02.ogg` | [dryly] Die stehen nicht wieder auf. | zufrieden, trocken |
+| `voices/units/swordsman_victory_03.ogg` | [proudly] Die Krone steht! | stolz |
 
 ---
 
@@ -164,33 +164,33 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### spearman_select (Event `voice.spearman.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_select_01.ogg` | Speer bereit. | ruhig, tief |
-| `voices/units/spearman_select_02.ogg` | Jo. Sprich. | wortkarg |
-| `voices/units/spearman_select_03.ogg` | Alte Knochen, scharfe Spitze. | trockener Humor |
-| `voices/units/spearman_select_04.ogg` | Linie hält. Was gibt's? | gelassen |
+| `voices/units/spearman_select_01.ogg` | [calmly] Speer bereit. | ruhig, tief |
+| `voices/units/spearman_select_02.ogg` | [calmly] Jo. Sprich. | wortkarg |
+| `voices/units/spearman_select_03.ogg` | [amused] Alte Knochen, scharfe Spitze. | trockener Humor |
+| `voices/units/spearman_select_04.ogg` | [calmly] Linie hält. Was gibt's? | gelassen |
 
 ### spearman_move (Event `voice.spearman.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_move_01.ogg` | In Bewegung. | neutral |
-| `voices/units/spearman_move_02.ogg` | Gleichmäßiger Schritt, Jungs. | an die Truppe gerichtet |
-| `voices/units/spearman_move_03.ogg` | Jo, wir gehen. | gelassen |
-| `voices/units/spearman_move_04.ogg` | Speere hoch. Marsch. | Kommandoton, nicht laut |
+| `voices/units/spearman_move_01.ogg` | [calmly] In Bewegung. | neutral |
+| `voices/units/spearman_move_02.ogg` | [calmly] Gleichmäßiger Schritt, Jungs. | an die Truppe gerichtet |
+| `voices/units/spearman_move_03.ogg` | [calmly] Jo, wir gehen. | gelassen |
+| `voices/units/spearman_move_04.ogg` | [commanding] [shouting] Speere hoch. Marsch. | Kommandoton, nicht laut |
 
 ### spearman_attack (Event `voice.spearman.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_attack_01.ogg` | [shouting] Halten und zustoßen! | Kommandoruf |
-| `voices/units/spearman_attack_02.ogg` | Speere nach vorn! | kräftig |
-| `voices/units/spearman_attack_03.ogg` | Na komm. Komm in die Spitze! | grimmig, provozierend |
-| `voices/units/spearman_attack_04.ogg` | Abstützen … jetzt – stoßt! | Timing: Pause, dann Ausbruch |
+| `voices/units/spearman_attack_01.ogg` | [commanding] [shouting] Halten und zustoßen! | Kommandoruf |
+| `voices/units/spearman_attack_02.ogg` | [firmly] Speere nach vorn! | kräftig |
+| `voices/units/spearman_attack_03.ogg` | [shouting] Na komm. Komm in die Spitze! | grimmig, provozierend |
+| `voices/units/spearman_attack_04.ogg` | [angry] Abstützen … jetzt – stoßt! | Timing: Pause, dann Ausbruch |
 
 ### spearman_retreat (Event `voice.spearman.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_retreat_01.ogg` | Zurück, langsam und ruhig! | kontrolliert |
-| `voices/units/spearman_retreat_02.ogg` | Rückzug! Speere zum Feind! | Kommandoton |
-| `voices/units/spearman_retreat_03.ogg` | Boden aufgeben, Jungs. Nicht rennen. | väterlich-bestimmt |
+| `voices/units/spearman_retreat_01.ogg` | [calmly] Zurück, langsam und ruhig! | kontrolliert |
+| `voices/units/spearman_retreat_02.ogg` | [commanding] Rückzug! Speere zum Feind! | Kommandoton |
+| `voices/units/spearman_retreat_03.ogg` | [firmly] Boden aufgeben, Jungs. Nicht rennen. | väterlich-bestimmt |
 
 ### spearman_hit (Event `voice.spearman.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -202,16 +202,16 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### spearman_death (Event `voice.spearman.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_death_01.ogg` | [exhales] Haltet … die Linie … | letzter Befehl |
-| `voices/units/spearman_death_02.ogg` | Endlich … Ruhe … | fast erleichtert |
-| `voices/units/spearman_death_03.ogg` | [groans] Nicht schlecht … für einen alten Mann … | leises Lächeln im Sterben |
+| `voices/units/spearman_death_01.ogg` | [commanding] [exhales] Haltet … die Linie … | letzter Befehl |
+| `voices/units/spearman_death_02.ogg` | [relieved] Endlich … Ruhe … | fast erleichtert |
+| `voices/units/spearman_death_03.ogg` | [quietly] [groans] Nicht schlecht … für einen alten Mann … | leises Lächeln im Sterben |
 
 ### spearman_victory (Event `voice.spearman.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/spearman_victory_01.ogg` | Linie gehalten. Gut. | knapp, zufrieden |
-| `voices/units/spearman_victory_02.ogg` | So macht man das, Jungs. | stolz-väterlich |
-| `voices/units/spearman_victory_03.ogg` | Begrabt sie. Diesmal richtig. | düster-trocken |
+| `voices/units/spearman_victory_01.ogg` | [dryly] Linie gehalten. Gut. | knapp, zufrieden |
+| `voices/units/spearman_victory_02.ogg` | [proudly] So macht man das, Jungs. | stolz-väterlich |
+| `voices/units/spearman_victory_03.ogg` | [menacingly] Begrabt sie. Diesmal richtig. | düster-trocken |
 
 ---
 
@@ -223,56 +223,56 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### archer_select (Event `voice.archer.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_select_01.ogg` | Bogen gespannt. | knapp, wach |
-| `voices/units/archer_select_02.ogg` | Augen aufs Feld. | konzentriert |
-| `voices/units/archer_select_03.ogg` | Worauf schieß ich? | keck |
-| `voices/units/archer_select_04.ogg` | Schützin bereit. | militärisch |
-| `voices/units/archer_select_05.ogg` | Freie Schussbahn. Wer ist zuerst dran? | selbstbewusst, leicht spöttisch |
+| `voices/units/archer_select_01.ogg` | [dryly] Bogen gespannt. | knapp, wach |
+| `voices/units/archer_select_02.ogg` | [calmly] Augen aufs Feld. | konzentriert |
+| `voices/units/archer_select_03.ogg` | [calmly] Worauf schieß ich? | keck |
+| `voices/units/archer_select_04.ogg` | [commanding] Schützin bereit. | militärisch |
+| `voices/units/archer_select_05.ogg` | [mockingly] Freie Schussbahn. Wer ist zuerst dran? | selbstbewusst, leicht spöttisch |
 
 ### archer_move (Event `voice.archer.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_move_01.ogg` | Beziehe Stellung. | sachlich |
-| `voices/units/archer_move_02.ogg` | [whispers] Schnell und leise. | geflüstert, verschwörerisch |
-| `voices/units/archer_move_03.ogg` | Such mir 'ne Anhöhe. | zielstrebig |
-| `voices/units/archer_move_04.ogg` | Bin dran. | flink |
+| `voices/units/archer_move_01.ogg` | [seriously] Beziehe Stellung. | sachlich |
+| `voices/units/archer_move_02.ogg` | [softly] [whispers] Schnell und leise. | geflüstert, verschwörerisch |
+| `voices/units/archer_move_03.ogg` | [calmly] Such mir 'ne Anhöhe. | zielstrebig |
+| `voices/units/archer_move_04.ogg` | [calmly] Bin dran. | flink |
 
 ### archer_attack (Event `voice.archer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_attack_01.ogg` | Los! | scharfer Ruf |
-| `voices/units/archer_attack_02.ogg` | Pfeile ab! | kräftig |
+| `voices/units/archer_attack_01.ogg` | [shouting] Los! | scharfer Ruf |
+| `voices/units/archer_attack_02.ogg` | [firmly] Pfeile ab! | kräftig |
 | `voices/units/archer_attack_03.ogg` | [shouting] Spickt sie mit Federn! | Kampfeslust |
-| `voices/units/archer_attack_04.ogg` | Hab dich! | triumphierend |
-| `voices/units/archer_attack_05.ogg` | Ziel … und los! | ruhige Atempause vor dem Schuss |
+| `voices/units/archer_attack_04.ogg` | [triumphantly] Hab dich! | triumphierend |
+| `voices/units/archer_attack_05.ogg` | [calmly] Ziel … und los! | ruhige Atempause vor dem Schuss |
 
 ### archer_retreat (Event `voice.archer.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_retreat_01.ogg` | Ziehe mich zurück! | gehetzt |
-| `voices/units/archer_retreat_02.ogg` | Zu nah! Rückzug! | alarmiert |
-| `voices/units/archer_retreat_03.ogg` | Kann nicht schießen, was auf mir hockt – zurück! | Panik mit Restwitz |
+| `voices/units/archer_retreat_01.ogg` | [urgently] Ziehe mich zurück! | gehetzt |
+| `voices/units/archer_retreat_02.ogg` | [urgently] Zu nah! Rückzug! | alarmiert |
+| `voices/units/archer_retreat_03.ogg` | [panicked] Kann nicht schießen, was auf mir hockt – zurück! | Panik mit Restwitz |
 
 ### archer_hit (Event `voice.archer.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_hit_01.ogg` | [gasps] Ah! | kurzer Schreck |
-| `voices/units/archer_hit_02.ogg` | [grunts] Die haben mich erwischt! | empört, Schmerz |
-| `voices/units/archer_hit_03.ogg` | [groans] Ngh – schieß trotzdem! | trotzig |
+| `voices/units/archer_hit_01.ogg` | [fearful] [gasps] Ah! | kurzer Schreck |
+| `voices/units/archer_hit_02.ogg` | [angry] [grunts] Die haben mich erwischt! | empört, Schmerz |
+| `voices/units/archer_hit_03.ogg` | [firmly] [groans] Ngh – schieß trotzdem! | trotzig |
 
 ### archer_death (Event `voice.archer.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_death_01.ogg` | [gasps] Ich … hab verfehlt … | ungläubig, leise |
-| `voices/units/archer_death_02.ogg` | Ah … es wird dunkel … | verlöschend |
-| `voices/units/archer_death_03.ogg` | [exhales] Sagt ihnen … ich hab den Letzten … erwischt … | schwacher Stolz |
+| `voices/units/archer_death_01.ogg` | [quietly] [gasps] Ich … hab verfehlt … | ungläubig, leise |
+| `voices/units/archer_death_02.ogg` | [quietly] Ah … es wird dunkel … | verlöschend |
+| `voices/units/archer_death_03.ogg` | [proudly] [exhales] Sagt ihnen … ich hab den Letzten … erwischt … | schwacher Stolz |
 
 ### archer_victory (Event `voice.archer.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/archer_victory_01.ogg` | Nicht einer kam durch! | jubelnd |
-| `voices/units/archer_victory_02.ogg` | [laughs] Saubere Schüsse, jeder einzelne. | stolzes Lachen |
-| `voices/units/archer_victory_03.ogg` | Zählt meine Pfeile. Dann zählt ihre Toten. | kühl, selbstbewusst |
+| `voices/units/archer_victory_01.ogg` | [triumphantly] Nicht einer kam durch! | jubelnd |
+| `voices/units/archer_victory_02.ogg` | [proudly] [laughs] Saubere Schüsse, jeder einzelne. | stolzes Lachen |
+| `voices/units/archer_victory_03.ogg` | [coldly] Zählt meine Pfeile. Dann zählt ihre Toten. | kühl, selbstbewusst |
 
 ---
 
@@ -284,56 +284,56 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 ### knight_select (Event `voice.knight.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_select_01.ogg` | Euer Befehl? | edel, aufrecht |
-| `voices/units/knight_select_02.ogg` | Stahl und Sattel, bereit. | stolz |
-| `voices/units/knight_select_03.ogg` | Die Lanze der Krone wartet. | feierlich |
-| `voices/units/knight_select_04.ogg` | Sprecht, und ich reite. | formell |
-| `voices/units/knight_select_05.ogg` | Bei der Flamme, ich bin bereit. | gläubig, fest |
+| `voices/units/knight_select_01.ogg` | [calmly] Euer Befehl? | edel, aufrecht |
+| `voices/units/knight_select_02.ogg` | [proudly] Stahl und Sattel, bereit. | stolz |
+| `voices/units/knight_select_03.ogg` | [solemn] Die Lanze der Krone wartet. | feierlich |
+| `voices/units/knight_select_04.ogg` | [calmly] Sprecht, und ich reite. | formell |
+| `voices/units/knight_select_05.ogg` | [firmly] Bei der Flamme, ich bin bereit. | gläubig, fest |
 
 ### knight_move (Event `voice.knight.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_move_01.ogg` | Reite aus. | knapp, sicher |
-| `voices/units/knight_move_02.ogg` | Vorwärts! | kraftvoll |
-| `voices/units/knight_move_03.ogg` | Sporen in die Flanke. | Reiterjargon, zackig |
-| `voices/units/knight_move_04.ogg` | Wie Ihr befehlt. | höflich-formell |
-| `voices/units/knight_move_05.ogg` | Die Straße gehört uns. | selbstbewusst |
+| `voices/units/knight_move_01.ogg` | [dryly] Reite aus. | knapp, sicher |
+| `voices/units/knight_move_02.ogg` | [firmly] Vorwärts! | kraftvoll |
+| `voices/units/knight_move_03.ogg` | [commanding] Sporen in die Flanke. | Reiterjargon, zackig |
+| `voices/units/knight_move_04.ogg` | [calmly] Wie Ihr befehlt. | höflich-formell |
+| `voices/units/knight_move_05.ogg` | [calmly] Die Straße gehört uns. | selbstbewusst |
 
 ### knight_attack (Event `voice.knight.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/knight_attack_01.ogg` | [shouting] Angriff! | maximaler Schlachtruf |
-| `voices/units/knight_attack_02.ogg` | [shouting] Für Valemark und die Flamme! | pathetisch, voll |
-| `voices/units/knight_attack_03.ogg` | Reitet sie nieder! | befehlend |
-| `voices/units/knight_attack_04.ogg` | Lanzen … jetzt! | Spannung, dann Ausbruch |
+| `voices/units/knight_attack_02.ogg` | [dramatically] [shouting] Für Valemark und die Flamme! | pathetisch, voll |
+| `voices/units/knight_attack_03.ogg` | [commanding] Reitet sie nieder! | befehlend |
+| `voices/units/knight_attack_04.ogg` | [angry] Lanzen … jetzt! | Spannung, dann Ausbruch |
 
 ### knight_retreat (Event `voice.knight.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_retreat_01.ogg` | Kehrt! Rückzug! | Kommando, laut |
-| `voices/units/knight_retreat_02.ogg` | Zurück zu den Linien! | dringlich |
-| `voices/units/knight_retreat_03.ogg` | Ein taktischer Rückzug. Reitet! | Würde wahrend, leicht verlegen |
+| `voices/units/knight_retreat_01.ogg` | [commanding] [shouting] Kehrt! Rückzug! | Kommando, laut |
+| `voices/units/knight_retreat_02.ogg` | [urgently] Zurück zu den Linien! | dringlich |
+| `voices/units/knight_retreat_03.ogg` | [nervously] Ein taktischer Rückzug. Reitet! | Würde wahrend, leicht verlegen |
 
 ### knight_hit (Event `voice.knight.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_hit_01.ogg` | [grunts] Ha – nur gestreift! | verächtlich |
-| `voices/units/knight_hit_02.ogg` | [groans] Meine Rüstung hält! | gepresst, trotzig |
-| `voices/units/knight_hit_03.ogg` | [gasps] Ngh! Unverschämt! | empört |
+| `voices/units/knight_hit_01.ogg` | [mockingly] [grunts] Ha – nur gestreift! | verächtlich |
+| `voices/units/knight_hit_02.ogg` | [firmly] [groans] Meine Rüstung hält! | gepresst, trotzig |
+| `voices/units/knight_hit_03.ogg` | [angry] [gasps] Ngh! Unverschämt! | empört |
 
 ### knight_death (Event `voice.knight.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_death_01.ogg` | [gasps] Mein Eid … erfüllt … | würdevoll sterbend |
-| `voices/units/knight_death_02.ogg` | Vergib mir … Flamme … | leises Gebet |
-| `voices/units/knight_death_03.ogg` | [exhales] Sagt meinem Haus … ich wich nicht … | letzte Kraft |
+| `voices/units/knight_death_01.ogg` | [solemn] [gasps] Mein Eid … erfüllt … | würdevoll sterbend |
+| `voices/units/knight_death_02.ogg` | [quietly] Vergib mir … Flamme … | leises Gebet |
+| `voices/units/knight_death_03.ogg` | [exhales] Sagt meinem Haus … [pause] ich wich nicht … | letzte Kraft |
 
 ### knight_victory (Event `voice.knight.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/knight_victory_01.ogg` | [shouting] Ruhm der Glutkrone! | triumphal |
-| `voices/units/knight_victory_02.ogg` | Das Feld gehört uns! | stolz |
-| `voices/units/knight_victory_03.ogg` | Ein würdiger Ansturm. Gut gekämpft. | ritterlich, anerkennend |
+| `voices/units/knight_victory_01.ogg` | [triumphantly] [shouting] Ruhm der Glutkrone! | triumphal |
+| `voices/units/knight_victory_02.ogg` | [proudly] Das Feld gehört uns! | stolz |
+| `voices/units/knight_victory_03.ogg` | [proudly] Ein würdiger Ansturm. Gut gekämpft. | ritterlich, anerkennend |
 
 ---
 
@@ -347,10 +347,10 @@ röchelnd, verwaschen. Basisaufnahme trocken; danach **Hohle-Kette** (Leitfaden 
 ### hollow_thrall_attack (Event `voice.hollow_thrall.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_thrall_attack_01.ogg` | [groans] Hnnngh … warm … | gierig, kehlig |
+| `voices/units/hollow_thrall_attack_01.ogg` | [greedily] [groans] Hnnngh … warm … | gierig, kehlig |
 | `voices/units/hollow_thrall_attack_02.ogg` | [rasping] Gib … es … zurück … | klagend-aggressiv |
 | `voices/units/hollow_thrall_attack_03.ogg` | [hisses] Hhhaaah! | wortloser Angriffslaut, Luftstoß |
-| `voices/units/hollow_thrall_attack_04.ogg` | … Heim … meins … | gemurmelt, besitzergreifend |
+| `voices/units/hollow_thrall_attack_04.ogg` | [shouting] … Heim … meins … | gemurmelt, besitzergreifend |
 
 *SFX-Alternativprompt (Layer, 1,0 s, Influence 0,5):* „emaciated undead villager lunging, dry raspy throat hiss and weak
 groan, breathy, close, no reverb“.
@@ -358,17 +358,17 @@ groan, breathy, close, no reverb“.
 ### hollow_thrall_hit (Event `voice.hollow_thrall.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_thrall_hit_01.ogg` | [groans] Uhhh – | dumpf, gleichgültig |
-| `voices/units/hollow_thrall_hit_02.ogg` | [gasps] Hhkk – | trockenes Keuchen, abgebrochen |
-| `voices/units/hollow_thrall_hit_03.ogg` | … tut … noch weh … | verloren, fast menschlich |
+| `voices/units/hollow_thrall_hit_01.ogg` | [coldly] [groans] Uhhh – | dumpf, gleichgültig |
+| `voices/units/hollow_thrall_hit_02.ogg` | [dryly] [gasps] Hhkk – | trockenes Keuchen, abgebrochen |
+| `voices/units/hollow_thrall_hit_03.ogg` | [grunts] … tut … noch weh … | verloren, fast menschlich |
 
 *SFX-Alternativprompt (0,6 s, Influence 0,5):* „undead creature hit, short dry choked grunt, rattling breath, close“.
 
 ### hollow_thrall_death (Event `voice.hollow_thrall.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_thrall_death_01.ogg` | [sighs] … endlich … still … | erlöst, verhauchend |
-| `voices/units/hollow_thrall_death_02.ogg` | [exhales] … Mutter … | leises, trauriges Erinnern |
+| `voices/units/hollow_thrall_death_01.ogg` | [relieved] [sighs] … endlich … still … | erlöst, verhauchend |
+| `voices/units/hollow_thrall_death_02.ogg` | [sad] [exhales] … Mutter … | leises, trauriges Erinnern |
 | `voices/units/hollow_thrall_death_03.ogg` | [rattling breath] Hhhhaaahhh … | langes Todesröcheln, 1,5–2 s |
 
 *SFX-Alternativprompt (1,8 s, Influence 0,45):* „undead villager collapsing, long rattling death exhale fading into silence, dry, close“.
@@ -383,10 +383,10 @@ groan, breathy, close, no reverb“.
 ### hollow_archer_attack (Event `voice.hollow_archer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_archer_attack_01.ogg` | [whispers] Ich ssseh dich. | kalt, zischend |
-| `voices/units/hollow_archer_attack_02.ogg` | [whispers] Noch einer … | zählend, gierig |
+| `voices/units/hollow_archer_attack_01.ogg` | [coldly] [whispers] Ich ssseh dich. | kalt, zischend |
+| `voices/units/hollow_archer_attack_02.ogg` | [greedily] [whispers] Noch einer … | zählend, gierig |
 | `voices/units/hollow_archer_attack_03.ogg` | [hisses] Tsssk! | wortlos, Zischlaut beim Schuss |
-| `voices/units/hollow_archer_attack_04.ogg` | [whispers] Markier das Herz. | präzise, eisig |
+| `voices/units/hollow_archer_attack_04.ogg` | [coldly] [whispers] Markier das Herz. | präzise, eisig |
 
 *SFX-Alternativprompt (0,8 s, Influence 0,5):* „skeleton archer hissing whisper with bone clicking, dry, airy, close“.
 
@@ -394,8 +394,8 @@ groan, breathy, close, no reverb“.
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/hollow_archer_hit_01.ogg` | [hisses] Kkhh! | Knack-Zischen |
-| `voices/units/hollow_archer_hit_02.ogg` | Ssss! | scharfes, kurzes Zischen |
-| `voices/units/hollow_archer_hit_03.ogg` | [whispers] … gesprungen … | tonlos, fast verwundert |
+| `voices/units/hollow_archer_hit_02.ogg` | [hissing] Ssss! | scharfes, kurzes Zischen |
+| `voices/units/hollow_archer_hit_03.ogg` | [coldly] [whispers] … gesprungen … | tonlos, fast verwundert |
 
 *SFX-Alternativprompt (0,5 s, Influence 0,55):* „bone cracking with short hiss of air, dry skeletal creature hit“.
 
@@ -403,8 +403,8 @@ groan, breathy, close, no reverb“.
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/hollow_archer_death_01.ogg` | [whispers] … zerfalle … | verwehend |
-| `voices/units/hollow_archer_death_02.ogg` | [exhales] Hhhaaa … | letzter, trockener Hauch |
-| `voices/units/hollow_archer_death_03.ogg` | [whispers] … das Zählen … hört auf … | erleichtert, tonlos |
+| `voices/units/hollow_archer_death_02.ogg` | [dryly] [exhales] Hhhaaa … | letzter, trockener Hauch |
+| `voices/units/hollow_archer_death_03.ogg` | [relieved] [whispers] … das Zählen … hört auf … | erleichtert, tonlos |
 
 *SFX-Alternativprompt (1,5 s, Influence 0,45):* „skeleton collapsing into a pile of bones with a fading dry whisper exhale“.
 
@@ -422,7 +422,7 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | `voices/units/grave_brute_attack_01.ogg` | [shouting] Zerquetschen! | brüllend, ein Wort |
 | `voices/units/grave_brute_attack_02.ogg` | [groans] Hhhrrraaagh! | wortloser Brüller, 1,2 s |
 | `voices/units/grave_brute_attack_03.ogg` | [shouting] Runter! | kurz, wuchtig |
-| `voices/units/grave_brute_attack_04.ogg` | [growls] Zerschmettern … die Kleinen … | langsam, genüsslich |
+| `voices/units/grave_brute_attack_04.ogg` | [greedily] [growls] Zerschmettern … die Kleinen … | langsam, genüsslich |
 
 *SFX-Layer-Prompt (1,2 s, Influence 0,55):* „massive undead giant roar, wet guttural bellow, deep and heavy, close, no reverb“.
 
@@ -430,8 +430,8 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/grave_brute_hit_01.ogg` | [groans] Hhhrrmph! | dumpfes Grunzen |
-| `voices/units/grave_brute_hit_02.ogg` | [roars] Rrraah! | wütend, kurz |
-| `voices/units/grave_brute_hit_03.ogg` | [groans] … tut weh … | träge, überrascht |
+| `voices/units/grave_brute_hit_02.ogg` | [angry] [roars] Rrraah! | wütend, kurz |
+| `voices/units/grave_brute_hit_03.ogg` | [surprised] [groans] … tut weh … | träge, überrascht |
 
 *SFX-Layer-Prompt (0,7 s, Influence 0,55):* „huge creature pained grunt, low wet growl, short“.
 
@@ -439,7 +439,7 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/grave_brute_death_01.ogg` | [groans] Hhhuuurrrgh … | langes, absinkendes Stöhnen, 2 s |
-| `voices/units/grave_brute_death_02.ogg` | [exhales] … Erde … kalt … | müde, fast kindlich |
+| `voices/units/grave_brute_death_02.ogg` | [tired] [exhales] … Erde … kalt … | müde, fast kindlich |
 | `voices/units/grave_brute_death_03.ogg` | [roars] Rrrraaaaagh … | Brüllen, das in Röcheln zerfällt |
 
 *SFX-Layer-Prompt (2,5 s, Influence 0,45):* „giant undead creature death groan fading into a heavy collapsing thud, deep“.
@@ -455,57 +455,57 @@ Manifest: +1 dB, Cooldown 300 ms.
 ### hero_isolde_select (Event `voice.hero_isolde.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_select_01.ogg` | Raventhorn. Sprecht. | knapp, Autorität, **Referenzdatei** |
-| `voices/heroes/hero_isolde_select_02.ogg` | Die Aschmark steht noch. Ich auch. | ruhig-stolz |
-| `voices/heroes/hero_isolde_select_03.ogg` | Ja? Macht schnell, die Toten warten nicht. | leicht ungeduldig |
-| `voices/heroes/hero_isolde_select_04.ogg` | Wächterin hier. | sachlich |
-| `voices/heroes/hero_isolde_select_05.ogg` | [sarcastic] Was jetzt? Noch ein Feuer zu löschen? | trocken-ironisch, nicht genervt |
+| `voices/heroes/hero_isolde_select_01.ogg` | [dryly] Raventhorn. Sprecht. | knapp, Autorität, **Referenzdatei** |
+| `voices/heroes/hero_isolde_select_02.ogg` | [proudly] Die Aschmark steht noch. Ich auch. | ruhig-stolz |
+| `voices/heroes/hero_isolde_select_03.ogg` | [impatiently] Ja? Macht schnell, die Toten warten nicht. | leicht ungeduldig |
+| `voices/heroes/hero_isolde_select_04.ogg` | [seriously] Wächterin hier. | sachlich |
+| `voices/heroes/hero_isolde_select_05.ogg` | [impatiently] [sarcastic] Was jetzt? Noch ein Feuer zu löschen? | trocken-ironisch, nicht genervt |
 
 ### hero_isolde_move (Event `voice.hero_isolde.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_move_01.ogg` | Unterwegs. | knapp |
-| `voices/heroes/hero_isolde_move_02.ogg` | Ich kenne diese Wege. | sicher, ein Hauch Wehmut |
-| `voices/heroes/hero_isolde_move_03.ogg` | Dann durch die Asche. | entschlossen |
-| `voices/heroes/hero_isolde_move_04.ogg` | Bin unterwegs. Versucht, das Dorf nicht zu verlieren, solange ich weg bin. | trockener Humor |
-| `voices/heroes/hero_isolde_move_05.ogg` | Wenn's brennt, geh ich. | lakonisch |
+| `voices/heroes/hero_isolde_move_01.ogg` | [dryly] Unterwegs. | knapp |
+| `voices/heroes/hero_isolde_move_02.ogg` | [calmly] Ich kenne diese Wege. | sicher, ein Hauch Wehmut |
+| `voices/heroes/hero_isolde_move_03.ogg` | [firmly] Dann durch die Asche. | entschlossen |
+| `voices/heroes/hero_isolde_move_04.ogg` | [amused] Bin unterwegs. Versucht, das Dorf nicht zu verlieren, solange ich weg bin. | trockener Humor |
+| `voices/heroes/hero_isolde_move_05.ogg` | [dryly] Wenn's brennt, geh ich. | lakonisch |
 
 ### hero_isolde_attack (Event `voice.hero_isolde.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_isolde_attack_01.ogg` | [shouting] Für die Aschmark! | voller Schlachtruf |
-| `voices/heroes/hero_isolde_attack_02.ogg` | Zurück ins Dunkel mit euch! | kalte Wut |
-| `voices/heroes/hero_isolde_attack_03.ogg` | Stahl und Glut! | Kampfformel, kraftvoll |
-| `voices/heroes/hero_isolde_attack_04.ogg` | Mal sehen, ob ihr blutet. | gefährlich ruhig |
-| `voices/heroes/hero_isolde_attack_05.ogg` | [shouting] Brennt sie nieder! | Befehl an Truppe |
+| `voices/heroes/hero_isolde_attack_02.ogg` | [angry] Zurück ins Dunkel mit euch! | kalte Wut |
+| `voices/heroes/hero_isolde_attack_03.ogg` | [firmly] Stahl und Glut! | Kampfformel, kraftvoll |
+| `voices/heroes/hero_isolde_attack_04.ogg` | [menacingly] Mal sehen, ob ihr blutet. | gefährlich ruhig |
+| `voices/heroes/hero_isolde_attack_05.ogg` | [commanding] [shouting] Brennt sie nieder! | Befehl an Truppe |
 
 ### hero_isolde_retreat (Event `voice.hero_isolde.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_retreat_01.ogg` | Rückzug. Das ist keine Bitte. | scharf, kontrolliert |
-| `voices/heroes/hero_isolde_retreat_02.ogg` | Wir ziehen ab. Morgen kämpfen wir wieder. | bitter-vernünftig |
-| `voices/heroes/hero_isolde_retreat_03.ogg` | [exhales] Nicht hier. Nicht heute. Zurück! | außer Atem, entschlossen |
+| `voices/heroes/hero_isolde_retreat_01.ogg` | [calmly] Rückzug. Das ist keine Bitte. | scharf, kontrolliert |
+| `voices/heroes/hero_isolde_retreat_02.ogg` | [bitterly] Wir ziehen ab. Morgen kämpfen wir wieder. | bitter-vernünftig |
+| `voices/heroes/hero_isolde_retreat_03.ogg` | [firmly] [exhales] Nicht hier. Nicht heute. Zurück! | außer Atem, entschlossen |
 
 ### hero_isolde_hit (Event `voice.hero_isolde.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_hit_01.ogg` | [grunts] Ngh! Ist das alles? | trotzig |
+| `voices/heroes/hero_isolde_hit_01.ogg` | [firmly] [grunts] Ngh! Ist das alles? | trotzig |
 | `voices/heroes/hero_isolde_hit_02.ogg` | [groans] Hah … ich hatte schon schlimmeres Fieber. | Anspielung Aschenfieber, gepresst |
-| `voices/heroes/hero_isolde_hit_03.ogg` | [gasps] Argh! | reiner Schmerzlaut, kurz |
+| `voices/heroes/hero_isolde_hit_03.ogg` | [sorrowfully] [gasps] Argh! | reiner Schmerzlaut, kurz |
 
 ### hero_isolde_death (Event `voice.hero_isolde.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_death_01.ogg` | [gasps] Haltet … die Feuer … am Brennen … | letzter Auftrag, schwach |
-| `voices/heroes/hero_isolde_death_02.ogg` | Vater … ich hab gehalten … so lang ich konnte … | verletzlich, leise |
-| `voices/heroes/hero_isolde_death_03.ogg` | [exhales] Nicht … jetzt … verdammt … | Wut gegen das Sterben |
+| `voices/heroes/hero_isolde_death_01.ogg` | [quietly] [gasps] Haltet … die Feuer … am Brennen … | letzter Auftrag, schwach |
+| `voices/heroes/hero_isolde_death_02.ogg` | [quietly] Vater … ich hab gehalten … [pause] so lang ich konnte … | verletzlich, leise |
+| `voices/heroes/hero_isolde_death_03.ogg` | [angry] [exhales] Nicht … jetzt … verdammt … | Wut gegen das Sterben |
 
 ### hero_isolde_victory (Event `voice.hero_isolde.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_victory_01.ogg` | Die Mark hält. Heute. | erschöpft, Pause vor „Heute“ |
+| `voices/heroes/hero_isolde_victory_01.ogg` | [tired] Die Mark hält. Heute. | erschöpft, Pause vor „Heute“ |
 | `voices/heroes/hero_isolde_victory_02.ogg` | [exhales] Na ja. Hätte schlimmer laufen können. | Understatement |
-| `voices/heroes/hero_isolde_victory_03.ogg` | Zählt zuerst die Lebenden. Dann die Toten. | ernst, Verantwortung |
+| `voices/heroes/hero_isolde_victory_03.ogg` | [seriously] Zählt zuerst die Lebenden. Dann die Toten. | ernst, Verantwortung |
 
 ### hero_isolde_ability (Event `voice.hero_isolde.ability`)
 Hinweis: Das Manifest kennt **ein** Ability-Event. Die Varianten decken die drei Fähigkeiten ab (je 2). Bei späterer Aufteilung
@@ -514,32 +514,32 @@ in `ember_cleave`/`rallying_banner`/`ashen_ward` können die Dateien entsprechen
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_isolde_ability_01.ogg` | [shouting] Kostet die Glut! | Glutspalter (`ember_cleave`), Schlagschrei |
-| `voices/heroes/hero_isolde_ability_02.ogg` | Spalten und brennen! | Glutspalter, mit Hiebanstrengung |
+| `voices/heroes/hero_isolde_ability_02.ogg` | [commanding] Spalten und brennen! | Glutspalter, mit Hiebanstrengung |
 | `voices/heroes/hero_isolde_ability_03.ogg` | [shouting] Zu mir! Hebt das Banner! | Sammelbanner (`rallying_banner`), mitreißend |
-| `voices/heroes/hero_isolde_ability_04.ogg` | Steht zu mir. Die Mark sieht zu! | Sammelbanner, Moralruf |
-| `voices/heroes/hero_isolde_ability_05.ogg` | Asche, schirme mich. | Aschenschild (`ashen_ward`), konzentriert, halblaut |
-| `voices/heroes/hero_isolde_ability_06.ogg` | Hinter mich. Sofort. | Aschenschild, schützend-befehlend |
+| `voices/heroes/hero_isolde_ability_04.ogg` | [commanding] Steht zu mir. Die Mark sieht zu! | Sammelbanner, Moralruf |
+| `voices/heroes/hero_isolde_ability_05.ogg` | [quietly] Asche, schirme mich. | Aschenschild (`ashen_ward`), konzentriert, halblaut |
+| `voices/heroes/hero_isolde_ability_06.ogg` | [commanding] Hinter mich. Sofort. | Aschenschild, schützend-befehlend |
 
 ### hero_isolde_greet (Event `voice.hero_isolde.greet`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_greet_01.ogg` | Isolde Raventhorn, Wächterin der Aschmark. An die Arbeit. | Vorstellung, sachlich-warm |
-| `voices/heroes/hero_isolde_greet_02.ogg` | Brennhollow atmet noch. Gut. Dabei soll's bleiben. | ruhig, entschlossen |
-| `voices/heroes/hero_isolde_greet_03.ogg` | [sarcastic] Ihr habt gerufen, ich bin da. Versucht diesmal, einen Plan zu haben. | trocken, augenzwinkernd |
+| `voices/heroes/hero_isolde_greet_01.ogg` | [warmly] Isolde Raventhorn, Wächterin der Aschmark. An die Arbeit. | Vorstellung, sachlich-warm |
+| `voices/heroes/hero_isolde_greet_02.ogg` | [firmly] Brennhollow atmet noch. Gut. Dabei soll's bleiben. | ruhig, entschlossen |
+| `voices/heroes/hero_isolde_greet_03.ogg` | [amused] [sarcastic] Ihr habt gerufen, ich bin da. Versucht diesmal, einen Plan zu haben. | trocken, augenzwinkernd |
 
 ### hero_isolde_levelup (Event `voice.hero_isolde.levelup`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_isolde_levelup_01.ogg` | Stärker. Gut. Die Ruinen werden nicht freundlicher. | nüchtern zufrieden |
-| `voices/heroes/hero_isolde_levelup_02.ogg` | [exhales] Die Glut brennt heller. | spürbar, fast ehrfürchtig |
-| `voices/heroes/hero_isolde_levelup_03.ogg` | Älter, klüger, mehr Narben. Das Übliche. | trockener Humor |
+| `voices/heroes/hero_isolde_levelup_01.ogg` | [seriously] Stärker. Gut. Die Ruinen werden nicht freundlicher. | nüchtern zufrieden |
+| `voices/heroes/hero_isolde_levelup_02.ogg` | [solemn] [exhales] Die Glut brennt heller. | spürbar, fast ehrfürchtig |
+| `voices/heroes/hero_isolde_levelup_03.ogg` | [amused] Älter, klüger, mehr Narben. Das Übliche. | trockener Humor |
 
 ### hero_isolde_lowhp (Event `voice.hero_isolde.lowhp`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_isolde_lowhp_01.ogg` | [groans] Ich bin verletzt … schwer. | ehrlich, gepresst |
-| `voices/heroes/hero_isolde_lowhp_02.ogg` | [gasps] Brauche einen Heiler. Oder ein Wunder. | Humor trotz Schmerz |
-| `voices/heroes/hero_isolde_lowhp_03.ogg` | [exhales] Viel mehr halte ich nicht aus. | erschöpft, Warnung an Spieler |
+| `voices/heroes/hero_isolde_lowhp_02.ogg` | [sorrowfully] [gasps] Brauche einen Heiler. Oder ein Wunder. | Humor trotz Schmerz |
+| `voices/heroes/hero_isolde_lowhp_03.ogg` | [tired] [exhales] Viel mehr halte ich nicht aus. | erschöpft, Warnung an Spieler |
 
 ---
 
@@ -552,22 +552,22 @@ Nachbearbeitung: Hohle-Kette + Vogt-Ergänzung (Chorus-Schicht, kalter Kathedral
 ### boss_pale_reeve_attack (Event `voice.boss_pale_reeve.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/boss_pale_reeve_attack_01.ogg` | Euer Zehnt ist fällig. | kalt, beiläufig |
-| `voices/units/boss_pale_reeve_attack_02.ogg` | Zahlt, was Ihr schuldet! | scharf, lauter |
-| `voices/units/boss_pale_reeve_attack_03.ogg` | Jede Seele wird gezählt. | pedantisch, zischend |
-| `voices/units/boss_pale_reeve_attack_04.ogg` | Ab ins Register mit Euch. | süffisant |
+| `voices/units/boss_pale_reeve_attack_01.ogg` | [coldly] Euer Zehnt ist fällig. | kalt, beiläufig |
+| `voices/units/boss_pale_reeve_attack_02.ogg` | [shouting] Zahlt, was Ihr schuldet! | scharf, lauter |
+| `voices/units/boss_pale_reeve_attack_03.ogg` | [hissing] Jede Seele wird gezählt. | pedantisch, zischend |
+| `voices/units/boss_pale_reeve_attack_04.ogg` | [shouting] Ab ins Register mit Euch. | süffisant |
 
 ### boss_pale_reeve_ability (Event `voice.boss_pale_reeve.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/boss_pale_reeve_ability_01.ogg` | Ich fordere die Schuld Eures Atems ein. | Seelenentzug (`reeve_soul_drain`), langsam, genüsslich |
-| `voices/units/boss_pale_reeve_ability_02.ogg` | [whispers] Erhebt euch, Säumige. Erhebt euch und dient. | Beschwörung (`hollow_summon`), geflüstert-befehlend |
-| `voices/units/boss_pale_reeve_ability_03.ogg` | Eure Seele ist verwirkt. | Urteil, eisig |
+| `voices/units/boss_pale_reeve_ability_01.ogg` | [greedily] [slowly] Ich fordere die Schuld Eures Atems ein. | Seelenentzug (`reeve_soul_drain`), langsam, genüsslich |
+| `voices/units/boss_pale_reeve_ability_02.ogg` | [commanding] [whispers] Erhebt euch, Säumige. Erhebt euch und dient. | Beschwörung (`hollow_summon`), geflüstert-befehlend |
+| `voices/units/boss_pale_reeve_ability_03.ogg` | [coldly] Eure Seele ist verwirkt. | Urteil, eisig |
 
 ### boss_pale_reeve_hit (Event `voice.boss_pale_reeve.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/boss_pale_reeve_hit_01.ogg` | [hisses] Unverschämtheit! | empörtes Zischen |
+| `voices/units/boss_pale_reeve_hit_01.ogg` | [angry] [hisses] Unverschämtheit! | empörtes Zischen |
 | `voices/units/boss_pale_reeve_hit_02.ogg` | [shrieks] Ihr wagt es, den Vogt zu schlagen? | schrill, kippende Stimme |
 | `voices/units/boss_pale_reeve_hit_03.ogg` | [groans] Das wird … vermerkt. | gekränkt-pedantisch |
 
@@ -575,16 +575,16 @@ Nachbearbeitung: Hohle-Kette + Vogt-Ergänzung (Chorus-Schicht, kalter Kathedral
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/boss_pale_reeve_death_01.ogg` | [shrieks] Nein – das Register … nicht ausgeglichen … | Entsetzen, zerfallend, 2–3 s |
-| `voices/units/boss_pale_reeve_death_02.ogg` | [rattling breath] Das Tief … schickt … einen anderen … | Drohung im Sterben |
-| `voices/units/boss_pale_reeve_death_03.ogg` | [exhales] … vollständig … bezahlt … | fast erlöst, verhauchend |
+| `voices/units/boss_pale_reeve_death_02.ogg` | [menacingly] [rattling breath] Das Tief … schickt … einen anderen … | Drohung im Sterben |
+| `voices/units/boss_pale_reeve_death_03.ogg` | [relieved] [exhales] … vollständig … bezahlt … | fast erlöst, verhauchend |
 
 ### boss_pale_reeve_taunt (Event `voice.boss_pale_reeve.taunt`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/boss_pale_reeve_taunt_01.ogg` | Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. | verlesend wie aus einem Register |
-| `voices/units/boss_pale_reeve_taunt_02.ogg` | Hört Ihr die Glocke, Wächterin? Sie läutet für Euer Konto. | leise, genüsslich |
-| `voices/units/boss_pale_reeve_taunt_03.ogg` | Das Hohle Tief ist geduldig. Ich bin es nicht. | kalt, Pause in der Mitte |
-| `voices/units/boss_pale_reeve_taunt_04.ogg` | [laughs] Lauft nur. Die Toten treiben immer ein. | trockenes, hohles Lachen |
+| `voices/units/boss_pale_reeve_taunt_01.ogg` | [mockingly] Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. | verlesend wie aus einem Register |
+| `voices/units/boss_pale_reeve_taunt_02.ogg` | [greedily] [quietly] Hört Ihr die Glocke, Wächterin? Sie läutet für Euer Konto. | leise, genüsslich |
+| `voices/units/boss_pale_reeve_taunt_03.ogg` | [coldly] Das Hohle Tief ist geduldig. Ich bin es nicht. | kalt, Pause in der Mitte |
+| `voices/units/boss_pale_reeve_taunt_04.ogg` | [eerily] [laughs] Lauft nur. Die Toten treiben immer ein. | trockenes, hohles Lachen |
 
 ---
 
@@ -597,145 +597,145 @@ Zeilen für select/move/attack; für die Produktion auf 4–5 Varianten erweiter
 ### 11.1 Glutkrone – Flammenpriesterin (Priester) · Vorschlag `ember_priest` · Stimme `AC_ember_crown_priest`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/ember_priest_select_01.ogg` | Die Flamme ist mit euch. | warm, segnend |
-| `voices/units/ember_priest_select_02.ogg` | Wer braucht Heilung? | fürsorglich |
-| `voices/units/ember_priest_select_03.ogg` | Sprich, Kind des Herdes. | feierlich |
-| `voices/units/ember_priest_move_01.ogg` | Ich gehe, wo Licht gebraucht wird. | ruhig |
-| `voices/units/ember_priest_move_02.ogg` | Geht voran. Ich folge den Verwundeten. | pragmatisch |
-| `voices/units/ember_priest_move_03.ogg` | Die Flamme lenkt meine Schritte. | gläubig |
-| `voices/units/ember_priest_attack_01.ogg` | [shouting] Brenne, Unreines! | heiliger Zorn |
-| `voices/units/ember_priest_attack_02.ogg` | Zurück ins Tief! | bannend |
-| `voices/units/ember_priest_attack_03.ogg` | Das Licht hole dich! | Gebetsformel als Waffe |
+| `voices/units/ember_priest_select_01.ogg` | [warmly] Die Flamme ist mit euch. | warm, segnend |
+| `voices/units/ember_priest_select_02.ogg` | [calmly] Wer braucht Heilung? | fürsorglich |
+| `voices/units/ember_priest_select_03.ogg` | [solemn] Sprich, Kind des Herdes. | feierlich |
+| `voices/units/ember_priest_move_01.ogg` | [calmly] Ich gehe, wo Licht gebraucht wird. | ruhig |
+| `voices/units/ember_priest_move_02.ogg` | [calmly] Geht voran. Ich folge den Verwundeten. | pragmatisch |
+| `voices/units/ember_priest_move_03.ogg` | [calmly] Die Flamme lenkt meine Schritte. | gläubig |
+| `voices/units/ember_priest_attack_01.ogg` | [angry] [shouting] Brenne, Unreines! | heiliger Zorn |
+| `voices/units/ember_priest_attack_02.ogg` | [shouting] Zurück ins Tief! | bannend |
+| `voices/units/ember_priest_attack_03.ogg` | [shouting] Das Licht hole dich! | Gebetsformel als Waffe |
 
 ### 11.2 Skarn-Clans – Ahnenruferin (Magier/Priester) · Vorschlag `skarn_skald` · Stimme `AC_skarn_clans_skald`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/skarn_skald_select_01.ogg` | Die Ahnen hören zu. | tief, raunend |
-| `voices/units/skarn_skald_select_02.ogg` | Welche Saga schreiben wir heute? | rhythmisch |
-| `voices/units/skarn_skald_select_03.ogg` | Ich trage die Lieder der Toten. | feierlich |
-| `voices/units/skarn_skald_move_01.ogg` | Wohin die Trommeln führen. | gemessen |
-| `voices/units/skarn_skald_move_02.ogg` | Meine Füße kennen die alten Pfade. | ruhig |
-| `voices/units/skarn_skald_move_03.ogg` | Weiter, unter dem Auge des Berges. | sagenhaft |
+| `voices/units/skarn_skald_select_01.ogg` | [softly] Die Ahnen hören zu. | tief, raunend |
+| `voices/units/skarn_skald_select_02.ogg` | [calmly] Welche Saga schreiben wir heute? | rhythmisch |
+| `voices/units/skarn_skald_select_03.ogg` | [solemn] Ich trage die Lieder der Toten. | feierlich |
+| `voices/units/skarn_skald_move_01.ogg` | [calmly] Wohin die Trommeln führen. | gemessen |
+| `voices/units/skarn_skald_move_02.ogg` | [calmly] Meine Füße kennen die alten Pfade. | ruhig |
+| `voices/units/skarn_skald_move_03.ogg` | [calmly] Weiter, unter dem Auge des Berges. | sagenhaft |
 | `voices/units/skarn_skald_attack_01.ogg` | [shouting] Väter, leiht uns Frost! | Beschwörungsruf |
-| `voices/units/skarn_skald_attack_02.ogg` | Hört den Zorn der Ahnen! | kraftvoll |
-| `voices/units/skarn_skald_attack_03.ogg` | Dein Name stirbt mit dir! | Fluch |
+| `voices/units/skarn_skald_attack_02.ogg` | [firmly] Hört den Zorn der Ahnen! | kraftvoll |
+| `voices/units/skarn_skald_attack_03.ogg` | [shouting] Dein Name stirbt mit dir! | Fluch |
 
 ### 11.3 Skarn-Clans – Clan-Reiterei (Kavallerie) · Vorschlag `skarn_rider` · Stimme `AC_skarn_clans_warrior` (jüngere Variante)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/skarn_rider_select_01.ogg` | Aufgesessen und hungrig. | kernig |
-| `voices/units/skarn_rider_select_02.ogg` | Der Schnee bremst uns nicht. | stolz |
-| `voices/units/skarn_rider_select_03.ogg` | Sag das Wort, Fürst. | ungeduldig |
-| `voices/units/skarn_rider_move_01.ogg` | Scharfer Ritt! | laut |
-| `voices/units/skarn_rider_move_02.ogg` | Über den Kamm! | energisch |
-| `voices/units/skarn_rider_move_03.ogg` | Hufe und Eisen, los! | Burr betonen |
+| `voices/units/skarn_rider_select_01.ogg` | [calmly] Aufgesessen und hungrig. | kernig |
+| `voices/units/skarn_rider_select_02.ogg` | [proudly] Der Schnee bremst uns nicht. | stolz |
+| `voices/units/skarn_rider_select_03.ogg` | [impatiently] Sag das Wort, Fürst. | ungeduldig |
+| `voices/units/skarn_rider_move_01.ogg` | [shouting] Scharfer Ritt! | laut |
+| `voices/units/skarn_rider_move_02.ogg` | [firmly] Über den Kamm! | energisch |
+| `voices/units/skarn_rider_move_03.ogg` | [calmly] Hufe und Eisen, los! | Burr betonen |
 | `voices/units/skarn_rider_attack_01.ogg` | [shouting] Skarnheim! | Clanruf |
-| `voices/units/skarn_rider_attack_02.ogg` | Zertrampelt sie! | wild |
-| `voices/units/skarn_rider_attack_03.ogg` | Für die Knochen meiner Väter! | Ahnenschwur |
+| `voices/units/skarn_rider_attack_02.ogg` | [shouting] Zertrampelt sie! | wild |
+| `voices/units/skarn_rider_attack_03.ogg` | [shouting] Für die Knochen meiner Väter! | Ahnenschwur |
 
 ### 11.4 Dornenbund – Druide (Magier) · Vorschlag `thorn_druid` · Stimme `AC_thorn_covenant_druid`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/thorn_druid_select_01.ogg` | Die Wurzeln hören zu. | leise, alt |
-| `voices/units/thorn_druid_select_02.ogg` | Sprich sanft. | mahnend |
-| `voices/units/thorn_druid_select_03.ogg` | Der Grüne Kreis antwortet. | würdevoll |
-| `voices/units/thorn_druid_move_01.ogg` | Wo das Moos dicht wächst. | ruhig |
-| `voices/units/thorn_druid_move_02.ogg` | Leise, durch die Farne. | gedämpft |
-| `voices/units/thorn_druid_move_03.ogg` | Der Wald macht Platz. | wissend |
+| `voices/units/thorn_druid_select_01.ogg` | [quietly] Die Wurzeln hören zu. | leise, alt |
+| `voices/units/thorn_druid_select_02.ogg` | [calmly] Sprich sanft. | mahnend |
+| `voices/units/thorn_druid_select_03.ogg` | [solemn] Der Grüne Kreis antwortet. | würdevoll |
+| `voices/units/thorn_druid_move_01.ogg` | [calmly] Wo das Moos dicht wächst. | ruhig |
+| `voices/units/thorn_druid_move_02.ogg` | [quietly] Leise, durch die Farne. | gedämpft |
+| `voices/units/thorn_druid_move_03.ogg` | [calmly] Der Wald macht Platz. | wissend |
 | `voices/units/thorn_druid_attack_01.ogg` | [shouting] Dornen, bindet sie! | Zauberruf |
-| `voices/units/thorn_druid_attack_02.ogg` | Kehr zurück in die Erde! | streng |
-| `voices/units/thorn_druid_attack_03.ogg` | Die Wildnis erinnert sich an dich! | drohend |
+| `voices/units/thorn_druid_attack_02.ogg` | [shouting] Kehr zurück in die Erde! | streng |
+| `voices/units/thorn_druid_attack_03.ogg` | [shouting] Die Wildnis erinnert sich an dich! | drohend |
 
 ### 11.5 Dornenbund – Veyl-Pirscherin (Assassine) · Vorschlag `veyl_stalker` · Stimme `AC_thorn_covenant_veyl_scout`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/veyl_stalker_select_01.ogg` | [whispers] Ich war nie hier. | geflüstert |
-| `voices/units/veyl_stalker_select_02.ogg` | Augen wie Mondlicht. | rätselhaft |
-| `voices/units/veyl_stalker_select_03.ogg` | Wer schläft heute Nacht? | gefährlich sanft |
-| `voices/units/veyl_stalker_move_01.ogg` | [whispers] Durch die Schatten. | luftig |
-| `voices/units/veyl_stalker_move_02.ogg` | Wie die Motte zum Licht. | Veyl-Motiv |
-| `voices/units/veyl_stalker_move_03.ogg` | Ungesehen. | tonlos |
-| `voices/units/veyl_stalker_attack_01.ogg` | [whispers] Still jetzt. | intim, tödlich |
-| `voices/units/veyl_stalker_attack_02.ogg` | Ein Schnitt. Genug. | kalt |
-| `voices/units/veyl_stalker_attack_03.ogg` | Das Laub wird dich bedecken. | melancholisch |
+| `voices/units/veyl_stalker_select_02.ogg` | [calmly] Augen wie Mondlicht. | rätselhaft |
+| `voices/units/veyl_stalker_select_03.ogg` | [menacingly] Wer schläft heute Nacht? | gefährlich sanft |
+| `voices/units/veyl_stalker_move_01.ogg` | [softly] [whispers] Durch die Schatten. | luftig |
+| `voices/units/veyl_stalker_move_02.ogg` | [calmly] Wie die Motte zum Licht. | Veyl-Motiv |
+| `voices/units/veyl_stalker_move_03.ogg` | [coldly] Ungesehen. | tonlos |
+| `voices/units/veyl_stalker_attack_01.ogg` | [seductively] [whispers] Still jetzt. | intim, tödlich |
+| `voices/units/veyl_stalker_attack_02.ogg` | [coldly] Ein Schnitt. Genug. | kalt |
+| `voices/units/veyl_stalker_attack_03.ogg` | [shouting] Das Laub wird dich bedecken. | melancholisch |
 
 ### 11.6 Saelith-Pakt – Gezeitenpriesterin (Magier/Priester) · Vorschlag `saelith_tide_priestess` · Stimme `AC_saelith_compact_tide_priestess`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/saelith_tide_priestess_select_01.ogg` | Die Flut wendet sich. | ruhig fließend |
-| `voices/units/saelith_tide_priestess_select_02.ogg` | Frag, und das Meer antwortet vielleicht. | geheimnisvoll |
-| `voices/units/saelith_tide_priestess_select_03.ogg` | Salz und Silber, zu Diensten. | elegant |
-| `voices/units/saelith_tide_priestess_move_01.ogg` | Wie Wasser gehe ich. | weich |
-| `voices/units/saelith_tide_priestess_move_02.ogg` | Ich folge der Strömung. | gelassen |
-| `voices/units/saelith_tide_priestess_move_03.ogg` | Das Ufer ruft. | träumerisch |
+| `voices/units/saelith_tide_priestess_select_01.ogg` | [calmly] Die Flut wendet sich. | ruhig fließend |
+| `voices/units/saelith_tide_priestess_select_02.ogg` | [eerily] Frag, und das Meer antwortet vielleicht. | geheimnisvoll |
+| `voices/units/saelith_tide_priestess_select_03.ogg` | [calmly] Salz und Silber, zu Diensten. | elegant |
+| `voices/units/saelith_tide_priestess_move_01.ogg` | [gently] Wie Wasser gehe ich. | weich |
+| `voices/units/saelith_tide_priestess_move_02.ogg` | [calmly] Ich folge der Strömung. | gelassen |
+| `voices/units/saelith_tide_priestess_move_03.ogg` | [wistfully] Das Ufer ruft. | träumerisch |
 | `voices/units/saelith_tide_priestess_attack_01.ogg` | [shouting] Ertrinke! | plötzliche Härte |
-| `voices/units/saelith_tide_priestess_attack_02.ogg` | Das Meer nimmt, was ihm zusteht. | kühl |
-| `voices/units/saelith_tide_priestess_attack_03.ogg` | Brich wie eine Welle! | kraftvoll |
+| `voices/units/saelith_tide_priestess_attack_02.ogg` | [coldly] Das Meer nimmt, was ihm zusteht. | kühl |
+| `voices/units/saelith_tide_priestess_attack_03.ogg` | [firmly] Brich wie eine Welle! | kraftvoll |
 
 ### 11.7 Saelith-Pakt – Söldner-Lanzenreiter (Kavallerie) · Vorschlag `saelith_lancer` · Stimme `AC_saelith_compact_captain` (männliche Variante neu designen)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/saelith_lancer_select_01.ogg` | Voll bezahlt? Dann reite ich. | zynisch |
-| `voices/units/saelith_lancer_select_02.ogg` | Lanze und Münze, beide scharf. | geschäftsmäßig |
-| `voices/units/saelith_lancer_select_03.ogg` | Laut Vertrag hör ich zu. | gelangweilt |
-| `voices/units/saelith_lancer_move_01.ogg` | Unterwegs, zum vereinbarten Satz. | trocken |
-| `voices/units/saelith_lancer_move_02.ogg` | Pferde laufen nicht mit Versprechen. | spöttisch |
-| `voices/units/saelith_lancer_move_03.ogg` | Bin unterwegs. | neutral |
+| `voices/units/saelith_lancer_select_01.ogg` | [cynically] Voll bezahlt? Dann reite ich. | zynisch |
+| `voices/units/saelith_lancer_select_02.ogg` | [seriously] Lanze und Münze, beide scharf. | geschäftsmäßig |
+| `voices/units/saelith_lancer_select_03.ogg` | [calmly] Laut Vertrag hör ich zu. | gelangweilt |
+| `voices/units/saelith_lancer_move_01.ogg` | [dryly] Unterwegs, zum vereinbarten Satz. | trocken |
+| `voices/units/saelith_lancer_move_02.ogg` | [mockingly] Pferde laufen nicht mit Versprechen. | spöttisch |
+| `voices/units/saelith_lancer_move_03.ogg` | [calmly] Bin unterwegs. | neutral |
 | `voices/units/saelith_lancer_attack_01.ogg` | [shouting] Verdient euren Sold! | Ruf an Kameraden |
-| `voices/units/saelith_lancer_attack_02.ogg` | Angriff, für die Prämie! | grinsend |
-| `voices/units/saelith_lancer_attack_03.ogg` | Nichts Persönliches! | lässig-brutal |
+| `voices/units/saelith_lancer_attack_02.ogg` | [amused] Angriff, für die Prämie! | grinsend |
+| `voices/units/saelith_lancer_attack_03.ogg` | [shouting] Nichts Persönliches! | lässig-brutal |
 
 ### 11.8 Hohle – Kultist der Leeren Liturgie (Priester) · Vorschlag `hollow_cultist` · Stimme `AC_hollowed_cultist`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_cultist_select_01.ogg` | [whispers] Das Tief hört dich. | fiebrig |
-| `voices/units/hollow_cultist_select_02.ogg` | Leer und bereit. | ekstatisch-ruhig |
-| `voices/units/hollow_cultist_select_03.ogg` | Sprich das stille Wort. | liturgisch |
-| `voices/units/hollow_cultist_move_01.ogg` | Hinab, immer hinab. | singend |
-| `voices/units/hollow_cultist_move_02.ogg` | Der Schleier ist dünn hier. | entrückt |
-| `voices/units/hollow_cultist_move_03.ogg` | Ich folge der Stille. | tonlos |
+| `voices/units/hollow_cultist_select_01.ogg` | [fervently] [whispers] Das Tief hört dich. | fiebrig |
+| `voices/units/hollow_cultist_select_02.ogg` | [calmly] Leer und bereit. | ekstatisch-ruhig |
+| `voices/units/hollow_cultist_select_03.ogg` | [calmly] Sprich das stille Wort. | liturgisch |
+| `voices/units/hollow_cultist_move_01.ogg` | [calmly] Hinab, immer hinab. | singend |
+| `voices/units/hollow_cultist_move_02.ogg` | [eerily] Der Schleier ist dünn hier. | entrückt |
+| `voices/units/hollow_cultist_move_03.ogg` | [coldly] Ich folge der Stille. | tonlos |
 | `voices/units/hollow_cultist_attack_01.ogg` | [shouting] Werde geleert! | schrille Ekstase |
-| `voices/units/hollow_cultist_attack_02.ogg` | Deine Flamme erlischt! | hasserfüllt |
-| `voices/units/hollow_cultist_attack_03.ogg` | Nur die Stille bleibt! | Litanei |
+| `voices/units/hollow_cultist_attack_02.ogg` | [shouting] Deine Flamme erlischt! | hasserfüllt |
+| `voices/units/hollow_cultist_attack_03.ogg` | [shouting] Nur die Stille bleibt! | Litanei |
 
 ### 11.9 Hohle – Wiedergänger-Magierin (Magier) · Vorschlag `hollow_revenant_mage` · Stimme `AC_hollowed_revenant_mage`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_revenant_mage_select_01.ogg` | Ich erinnere mich an das Licht. | wehmütig-kalt |
-| `voices/units/hollow_revenant_mage_select_02.ogg` | Was willst du auflösen? | elegant, bedrohlich |
-| `voices/units/hollow_revenant_mage_select_03.ogg` | Aureths letzte Hofmagierin. | stolz |
-| `voices/units/hollow_revenant_mage_move_01.ogg` | Ich treibe. | gehaucht |
-| `voices/units/hollow_revenant_mage_move_02.ogg` | Wie Rauch durch Ruinen. | langsam |
-| `voices/units/hollow_revenant_mage_move_03.ogg` | Die Toten machen kein Geräusch. | flüsternd |
-| `voices/units/hollow_revenant_mage_attack_01.ogg` | [whispers] Aufgelöst. | eisig |
-| `voices/units/hollow_revenant_mage_attack_02.ogg` | Verdorre! | Zauberwort, scharf |
-| `voices/units/hollow_revenant_mage_attack_03.ogg` | Dein Licht ist geliehen. | verächtlich |
+| `voices/units/hollow_revenant_mage_select_01.ogg` | [coldly] Ich erinnere mich an das Licht. | wehmütig-kalt |
+| `voices/units/hollow_revenant_mage_select_02.ogg` | [menacingly] Was willst du auflösen? | elegant, bedrohlich |
+| `voices/units/hollow_revenant_mage_select_03.ogg` | [proudly] Aureths letzte Hofmagierin. | stolz |
+| `voices/units/hollow_revenant_mage_move_01.ogg` | [calmly] Ich treibe. | gehaucht |
+| `voices/units/hollow_revenant_mage_move_02.ogg` | [slowly] Wie Rauch durch Ruinen. | langsam |
+| `voices/units/hollow_revenant_mage_move_03.ogg` | [whispers] Die Toten machen kein Geräusch. | flüsternd |
+| `voices/units/hollow_revenant_mage_attack_01.ogg` | [coldly] [whispers] Aufgelöst. | eisig |
+| `voices/units/hollow_revenant_mage_attack_02.ogg` | [shouting] Verdorre! | Zauberwort, scharf |
+| `voices/units/hollow_revenant_mage_attack_03.ogg` | [mockingly] Dein Licht ist geliehen. | verächtlich |
 
 ### 11.10 Aschenlegion – Aschenreiter (Kavallerie) · Vorschlag `legion_ash_rider` · Stimme `AC_ashen_legion_legionnaire` (mit Helm-Signatur)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/legion_ash_rider_select_01.ogg` | Wir reiten für die Sonne. | monoton-feierlich |
-| `voices/units/legion_ash_rider_select_02.ogg` | Befehligt die Legion. | kalt |
-| `voices/units/legion_ash_rider_select_03.ogg` | Unsere Rösser ermüden nicht. | mechanisch |
-| `voices/units/legion_ash_rider_move_01.ogg` | Die Legion rückt vor. | gleichförmig |
-| `voices/units/legion_ash_rider_move_02.ogg` | Durch Feuer und Asche. | hohl |
-| `voices/units/legion_ash_rider_move_03.ogg` | Wie befohlen wurde. | archaisch |
+| `voices/units/legion_ash_rider_select_01.ogg` | [solemn] Wir reiten für die Sonne. | monoton-feierlich |
+| `voices/units/legion_ash_rider_select_02.ogg` | [coldly] Befehligt die Legion. | kalt |
+| `voices/units/legion_ash_rider_select_03.ogg` | [flatly] Unsere Rösser ermüden nicht. | mechanisch |
+| `voices/units/legion_ash_rider_move_01.ogg` | [calmly] Die Legion rückt vor. | gleichförmig |
+| `voices/units/legion_ash_rider_move_02.ogg` | [eerily] Durch Feuer und Asche. | hohl |
+| `voices/units/legion_ash_rider_move_03.ogg` | [solemn] Wie befohlen wurde. | archaisch |
 | `voices/units/legion_ash_rider_attack_01.ogg` | [shouting] Für den Hohlen König! | dröhnend |
-| `voices/units/legion_ash_rider_attack_02.ogg` | Kniet oder brennt! | gebieterisch |
-| `voices/units/legion_ash_rider_attack_03.ogg` | Wir weichen nicht! | Eid-Formel |
+| `voices/units/legion_ash_rider_attack_02.ogg` | [shouting] Kniet oder brennt! | gebieterisch |
+| `voices/units/legion_ash_rider_attack_03.ogg` | [shouting] Wir weichen nicht! | Eid-Formel |
 
 ### 11.11 Aschenlegion – Legions-Herold (Priester der Sonnenhäresie) · Vorschlag `legion_herald` · Stimme `AC_ashen_legion_herald`
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/legion_herald_select_01.ogg` | Der Sonnenkönig kehrt zurück! | fanatisch |
-| `voices/units/legion_herald_select_02.ogg` | Hört die Verkündung! | ausrufend |
-| `voices/units/legion_herald_select_03.ogg` | Herrlichkeit in seinem Licht. | entrückt |
-| `voices/units/legion_herald_move_01.ogg` | Ich trage sein Wort. | getragen |
-| `voices/units/legion_herald_move_02.ogg` | Zu jedem Tor die Botschaft. | ausrufend |
-| `voices/units/legion_herald_move_03.ogg` | Die Herolde gehen voran. | feierlich |
+| `voices/units/legion_herald_select_01.ogg` | [fervently] Der Sonnenkönig kehrt zurück! | fanatisch |
+| `voices/units/legion_herald_select_02.ogg` | [shouting] Hört die Verkündung! | ausrufend |
+| `voices/units/legion_herald_select_03.ogg` | [eerily] Herrlichkeit in seinem Licht. | entrückt |
+| `voices/units/legion_herald_move_01.ogg` | [solemn] Ich trage sein Wort. | getragen |
+| `voices/units/legion_herald_move_02.ogg` | [shouting] Zu jedem Tor die Botschaft. | ausrufend |
+| `voices/units/legion_herald_move_03.ogg` | [solemn] Die Herolde gehen voran. | feierlich |
 | `voices/units/legion_herald_attack_01.ogg` | [shouting] Ketzer, brennt! | schrill |
-| `voices/units/legion_herald_attack_02.ogg` | Schmelzt in seinem Licht! | ekstatisch |
-| `voices/units/legion_herald_attack_03.ogg` | Die Asche wird zu Gold! | fanatisch-jubelnd |
+| `voices/units/legion_herald_attack_02.ogg` | [shouting] Schmelzt in seinem Licht! | ekstatisch |
+| `voices/units/legion_herald_attack_03.ogg` | [triumphantly] Die Asche wird zu Gold! | fanatisch-jubelnd |
 
 ---
 
@@ -751,54 +751,54 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### crossbowman_select (Event `voice.crossbowman.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_select_01.ogg` | Armbrust bereit. | knapp, sachlich |
-| `voices/units/crossbowman_select_02.ogg` | Bolzen liegt in der Rinne. | trocken, leise |
-| `voices/units/crossbowman_select_03.ogg` | Jawohl. Ruhige Hände. | ruhig-selbstsicher |
-| `voices/units/crossbowman_select_04.ogg` | Sagt's, und ich schieß einen durch. | leicht grimmig |
+| `voices/units/crossbowman_select_01.ogg` | [seriously] Armbrust bereit. | knapp, sachlich |
+| `voices/units/crossbowman_select_02.ogg` | [dryly] [quietly] Bolzen liegt in der Rinne. | trocken, leise |
+| `voices/units/crossbowman_select_03.ogg` | [calmly] Jawohl. Ruhige Hände. | ruhig-selbstsicher |
+| `voices/units/crossbowman_select_04.ogg` | [calmly] Sagt's, und ich schieß einen durch. | leicht grimmig |
 
 ### crossbowman_move (Event `voice.crossbowman.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_move_01.ogg` | Rücke vor. | knapp |
-| `voices/units/crossbowman_move_02.ogg` | Haltet die Linie, ich komme nach. | ruhig |
-| `voices/units/crossbowman_move_03.ogg` | Spanne im Gehen. | beiläufig, mit Metallklicken |
-| `voices/units/crossbowman_move_04.ogg` | Bin unterwegs. | neutral |
+| `voices/units/crossbowman_move_01.ogg` | [dryly] Rücke vor. | knapp |
+| `voices/units/crossbowman_move_02.ogg` | [calmly] Haltet die Linie, ich komme nach. | ruhig |
+| `voices/units/crossbowman_move_03.ogg` | [calmly] Spanne im Gehen. | beiläufig, mit Metallklicken |
+| `voices/units/crossbowman_move_04.ogg` | [calmly] Bin unterwegs. | neutral |
 
 ### crossbowman_attack (Event `voice.crossbowman.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_attack_01.ogg` | Schuss! | scharf, laut |
-| `voices/units/crossbowman_attack_02.ogg` | Der hier durchschlägt Panzer! | grimmig |
-| `voices/units/crossbowman_attack_03.ogg` | Runter mit dir! | hart |
-| `voices/units/crossbowman_attack_04.ogg` | Spannen … und Schuss! | rhythmisch, zweiteilig |
+| `voices/units/crossbowman_attack_01.ogg` | [shouting] Schuss! | scharf, laut |
+| `voices/units/crossbowman_attack_02.ogg` | [shouting] Der hier durchschlägt Panzer! | grimmig |
+| `voices/units/crossbowman_attack_03.ogg` | [firmly] Runter mit dir! | hart |
+| `voices/units/crossbowman_attack_04.ogg` | [shouting] Spannen … und Schuss! | rhythmisch, zweiteilig |
 
 ### crossbowman_retreat (Event `voice.crossbowman.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_retreat_01.ogg` | Zurück, ich lade nach! | gehetzt |
-| `voices/units/crossbowman_retreat_02.ogg` | Zu nah! Deckt mich! | angespannt |
-| `voices/units/crossbowman_retreat_03.ogg` | Zurück in die Linie! | laut |
+| `voices/units/crossbowman_retreat_01.ogg` | [urgently] Zurück, ich lade nach! | gehetzt |
+| `voices/units/crossbowman_retreat_02.ogg` | [worried] Zu nah! Deckt mich! | angespannt |
+| `voices/units/crossbowman_retreat_03.ogg` | [shouting] Zurück in die Linie! | laut |
 
 ### crossbowman_hit (Event `voice.crossbowman.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_hit_01.ogg` | [grunts] Mein Arm! | Schmerz, kurz |
-| `voices/units/crossbowman_hit_02.ogg` | [gasps] Getroffen! | überrascht |
-| `voices/units/crossbowman_hit_03.ogg` | Nicht die Sehne, verflucht! | ärgerlich |
+| `voices/units/crossbowman_hit_01.ogg` | [sorrowfully] [grunts] Mein Arm! | Schmerz, kurz |
+| `voices/units/crossbowman_hit_02.ogg` | [surprised] [gasps] Getroffen! | überrascht |
+| `voices/units/crossbowman_hit_03.ogg` | [grunts] Nicht die Sehne, verflucht! | ärgerlich |
 
 ### crossbowman_death (Event `voice.crossbowman.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_death_01.ogg` | [exhales] Kalt … so kalt … | verhauchend |
+| `voices/units/crossbowman_death_01.ogg` | [quietly] [exhales] Kalt … so kalt … | verhauchend |
 | `voices/units/crossbowman_death_02.ogg` | [gasps] Nachladen … jemand … | Pflichtgefühl bis zuletzt |
-| `voices/units/crossbowman_death_03.ogg` | [groans] Ich hab … nichts verfehlt … | stolz-müde |
+| `voices/units/crossbowman_death_03.ogg` | [tired] [groans] Ich hab … nichts verfehlt … | stolz-müde |
 
 ### crossbowman_victory (Event `voice.crossbowman.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_victory_01.ogg` | Saubere Arbeit, alle. | zufrieden, ruhig |
-| `voices/units/crossbowman_victory_02.ogg` | Das war der letzte Bolzen für heute. | trocken |
-| `voices/units/crossbowman_victory_03.ogg` | Zählt die Bolzen, nicht die Toten. | müde-trocken |
+| `voices/units/crossbowman_victory_01.ogg` | [calmly] Saubere Arbeit, alle. | zufrieden, ruhig |
+| `voices/units/crossbowman_victory_02.ogg` | [dryly] Das war der letzte Bolzen für heute. | trocken |
+| `voices/units/crossbowman_victory_03.ogg` | [tired] Zählt die Bolzen, nicht die Toten. | müde-trocken |
 
 ### 12.2 Glutkrone – `halberdier` (Hellebardier)
 
@@ -808,54 +808,54 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### halberdier_select (Event `voice.halberdier.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_select_01.ogg` | Hellebarde hoch. | tief, knapp |
-| `voices/units/halberdier_select_02.ogg` | Zur Stelle und bereit. | steif, stolz |
-| `voices/units/halberdier_select_03.ogg` | Sollen sie nur zu Pferd kommen. | grimmig-amüsiert |
-| `voices/units/halberdier_select_04.ogg` | Befehle, Wächterin? | respektvoll |
+| `voices/units/halberdier_select_01.ogg` | [dryly] Hellebarde hoch. | tief, knapp |
+| `voices/units/halberdier_select_02.ogg` | [proudly] Zur Stelle und bereit. | steif, stolz |
+| `voices/units/halberdier_select_03.ogg` | [amused] Sollen sie nur zu Pferd kommen. | grimmig-amüsiert |
+| `voices/units/halberdier_select_04.ogg` | [calmly] Befehle, Wächterin? | respektvoll |
 
 ### halberdier_move (Event `voice.halberdier.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_move_01.ogg` | Marschiere. | knapp |
-| `voices/units/halberdier_move_02.ogg` | Gleichmäßiger Schritt, Stangen waagerecht. | kommandoartig |
-| `voices/units/halberdier_move_03.ogg` | Schwere Stiefel, ehrliche Straße. | brummig |
-| `voices/units/halberdier_move_04.ogg` | Rücken ab. | neutral |
+| `voices/units/halberdier_move_01.ogg` | [dryly] Marschiere. | knapp |
+| `voices/units/halberdier_move_02.ogg` | [commanding] Gleichmäßiger Schritt, Stangen waagerecht. | kommandoartig |
+| `voices/units/halberdier_move_03.ogg` | [gruffly] Schwere Stiefel, ehrliche Straße. | brummig |
+| `voices/units/halberdier_move_04.ogg` | [calmly] Rücken ab. | neutral |
 
 ### halberdier_attack (Event `voice.halberdier.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_attack_01.ogg` | Anlegen! Anlegen! | laut, kommandierend |
-| `voices/units/halberdier_attack_02.ogg` | Pferdebrecher! | Schlachtruf |
-| `voices/units/halberdier_attack_03.ogg` | Haken und zerren! | grimmig, Anstrengung |
-| `voices/units/halberdier_attack_04.ogg` | Für die Krone! | kräftig |
+| `voices/units/halberdier_attack_01.ogg` | [commanding] [shouting] Anlegen! Anlegen! | laut, kommandierend |
+| `voices/units/halberdier_attack_02.ogg` | [shouting] Pferdebrecher! | Schlachtruf |
+| `voices/units/halberdier_attack_03.ogg` | [shouting] Haken und zerren! | grimmig, Anstrengung |
+| `voices/units/halberdier_attack_04.ogg` | [firmly] Für die Krone! | kräftig |
 
 ### halberdier_retreat (Event `voice.halberdier.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_retreat_01.ogg` | Zurück, zurück! | laut |
-| `voices/units/halberdier_retreat_02.ogg` | Linie neu bilden! | befehlend |
-| `voices/units/halberdier_retreat_03.ogg` | Zurück, verflucht! | gepresst |
+| `voices/units/halberdier_retreat_01.ogg` | [shouting] Zurück, zurück! | laut |
+| `voices/units/halberdier_retreat_02.ogg` | [commanding] Linie neu bilden! | befehlend |
+| `voices/units/halberdier_retreat_03.ogg` | [urgently] Zurück, verflucht! | gepresst |
 
 ### halberdier_hit (Event `voice.halberdier.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_hit_01.ogg` | [grunts] Rüstung hält. | trotzig |
-| `voices/units/halberdier_hit_02.ogg` | [groans] Das gibt einen Bluterguss. | trocken |
+| `voices/units/halberdier_hit_01.ogg` | [firmly] [grunts] Rüstung hält. | trotzig |
+| `voices/units/halberdier_hit_02.ogg` | [dryly] [groans] Das gibt einen Bluterguss. | trocken |
 | `voices/units/halberdier_hit_03.ogg` | [hisses] Ah! | kurz |
 
 ### halberdier_death (Event `voice.halberdier.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_death_01.ogg` | [exhales] Haltet die Linie … | verhauchend |
-| `voices/units/halberdier_death_02.ogg` | [groans] Vergebt mir, Hauptmann. | schwer |
-| `voices/units/halberdier_death_03.ogg` | [gasps] Nicht … einen Schritt … | gebrochen-stur |
+| `voices/units/halberdier_death_01.ogg` | [quietly] [exhales] Haltet die Linie … | verhauchend |
+| `voices/units/halberdier_death_02.ogg` | [seriously] [groans] Vergebt mir, Hauptmann. | schwer |
+| `voices/units/halberdier_death_03.ogg` | [sad] [gasps] Nicht … einen Schritt … | gebrochen-stur |
 
 ### halberdier_victory (Event `voice.halberdier.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/halberdier_victory_01.ogg` | Kein Huf kam an uns vorbei. | zufrieden |
-| `voices/units/halberdier_victory_02.ogg` | Stangen runter. Gut gemacht. | ruhig |
-| `voices/units/halberdier_victory_03.ogg` | Die Linie hielt. | stolz |
+| `voices/units/halberdier_victory_01.ogg` | [cheerfully] Kein Huf kam an uns vorbei. | zufrieden |
+| `voices/units/halberdier_victory_02.ogg` | [calmly] Stangen runter. Gut gemacht. | ruhig |
+| `voices/units/halberdier_victory_03.ogg` | [proudly] Die Linie hielt. | stolz |
 
 ### 12.3 Glutkrone – `shieldbearer` (Schildträger)
 
@@ -865,61 +865,61 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### shieldbearer_select (Event `voice.shieldbearer.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_select_01.ogg` | Schild hoch. | tief, ruhig |
-| `voices/units/shieldbearer_select_02.ogg` | Ich bin Eure Mauer. | stoisch |
-| `voices/units/shieldbearer_select_03.ogg` | Hinter mich. | ruhig-bestimmt |
-| `voices/units/shieldbearer_select_04.ogg` | Bereit. | einsilbig |
+| `voices/units/shieldbearer_select_01.ogg` | [calmly] Schild hoch. | tief, ruhig |
+| `voices/units/shieldbearer_select_02.ogg` | [calmly] Ich bin Eure Mauer. | stoisch |
+| `voices/units/shieldbearer_select_03.ogg` | [firmly] Hinter mich. | ruhig-bestimmt |
+| `voices/units/shieldbearer_select_04.ogg` | [calmly] Bereit. | einsilbig |
 
 ### shieldbearer_move (Event `voice.shieldbearer.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_move_01.ogg` | Rücke vor, Schilde verhakt. | gleichmäßig |
-| `voices/units/shieldbearer_move_02.ogg` | Langsam und stetig. | brummend |
-| `voices/units/shieldbearer_move_03.ogg` | Nach vorn. | knapp |
-| `voices/units/shieldbearer_move_04.ogg` | Marschiere. | neutral |
+| `voices/units/shieldbearer_move_01.ogg` | [calmly] Rücke vor, Schilde verhakt. | gleichmäßig |
+| `voices/units/shieldbearer_move_02.ogg` | [calmly] Langsam und stetig. | brummend |
+| `voices/units/shieldbearer_move_03.ogg` | [dryly] Nach vorn. | knapp |
+| `voices/units/shieldbearer_move_04.ogg` | [calmly] Marschiere. | neutral |
 
 ### shieldbearer_attack (Event `voice.shieldbearer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_attack_01.ogg` | Schildwall! | laut, kommandierend |
-| `voices/units/shieldbearer_attack_02.ogg` | Drücken! | Anstrengung |
-| `voices/units/shieldbearer_attack_03.ogg` | Nicht an mir vorbei! | hart |
-| `voices/units/shieldbearer_attack_04.ogg` | Halten und zuschlagen! | rhythmisch |
+| `voices/units/shieldbearer_attack_01.ogg` | [commanding] [shouting] Schildwall! | laut, kommandierend |
+| `voices/units/shieldbearer_attack_02.ogg` | [shouting] Drücken! | Anstrengung |
+| `voices/units/shieldbearer_attack_03.ogg` | [firmly] Nicht an mir vorbei! | hart |
+| `voices/units/shieldbearer_attack_04.ogg` | [shouting] Halten und zuschlagen! | rhythmisch |
 
 ### shieldbearer_retreat (Event `voice.shieldbearer.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_retreat_01.ogg` | Schilde zurück, zurück! | laut |
-| `voices/units/shieldbearer_retreat_02.ogg` | Allein halte ich nicht! | gepresst |
-| `voices/units/shieldbearer_retreat_03.ogg` | Zurück hinter die Mauer! | dringlich |
+| `voices/units/shieldbearer_retreat_01.ogg` | [shouting] Schilde zurück, zurück! | laut |
+| `voices/units/shieldbearer_retreat_02.ogg` | [urgently] Allein halte ich nicht! | gepresst |
+| `voices/units/shieldbearer_retreat_03.ogg` | [urgently] Zurück hinter die Mauer! | dringlich |
 
 ### shieldbearer_hit (Event `voice.shieldbearer.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_hit_01.ogg` | [grunts] Der Schild hat's abgefangen. | trocken |
-| `voices/units/shieldbearer_hit_02.ogg` | [groans] Ein schwerer. | brummig |
+| `voices/units/shieldbearer_hit_01.ogg` | [dryly] [grunts] Der Schild hat's abgefangen. | trocken |
+| `voices/units/shieldbearer_hit_02.ogg` | [gruffly] [groans] Ein schwerer. | brummig |
 | `voices/units/shieldbearer_hit_03.ogg` | [grunts] Steh noch. | stur |
 
 ### shieldbearer_death (Event `voice.shieldbearer.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_death_01.ogg` | [exhales] Die Mauer … fällt … | schwer, langsam |
+| `voices/units/shieldbearer_death_01.ogg` | [seriously] [exhales] Die Mauer … fällt … | schwer, langsam |
 | `voices/units/shieldbearer_death_02.ogg` | [groans] Hinter … mir … | beschützend |
-| `voices/units/shieldbearer_death_03.ogg` | [sighs] Ruhe … | erlöst |
+| `voices/units/shieldbearer_death_03.ogg` | [relieved] [sighs] Ruhe … | erlöst |
 
 ### shieldbearer_victory (Event `voice.shieldbearer.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_victory_01.ogg` | Die Mauer steht noch. | ruhig-stolz |
-| `voices/units/shieldbearer_victory_02.ogg` | Kein Kratzer. Na gut, ein paar. | trocken-humorvoll |
-| `voices/units/shieldbearer_victory_03.ogg` | Schilde runter. | erleichtert |
+| `voices/units/shieldbearer_victory_01.ogg` | [proudly] Die Mauer steht noch. | ruhig-stolz |
+| `voices/units/shieldbearer_victory_02.ogg` | [amused] Kein Kratzer. Na gut, ein paar. | trocken-humorvoll |
+| `voices/units/shieldbearer_victory_03.ogg` | [relieved] Schilde runter. | erleichtert |
 
 ### shieldbearer_ability (Event `voice.shieldbearer.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/shieldbearer_ability_01.ogg` | Schildwall! Aufschließen! | laut, befehlend |
-| `voices/units/shieldbearer_ability_02.ogg` | Schilde verhaken! | kurz, scharf |
-| `voices/units/shieldbearer_ability_03.ogg` | Bildet die Mauer! | kräftig |
+| `voices/units/shieldbearer_ability_01.ogg` | [commanding] [shouting] Schildwall! Aufschließen! | laut, befehlend |
+| `voices/units/shieldbearer_ability_02.ogg` | [commanding] Schilde verhaken! | kurz, scharf |
+| `voices/units/shieldbearer_ability_03.ogg` | [firmly] Bildet die Mauer! | kräftig |
 
 ### 12.4 Glutkrone – `scout_rider` (Spähreiter)
 
@@ -929,54 +929,54 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### scout_rider_select (Event `voice.scout_rider.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_select_01.ogg` | Bereit zum Ritt! | schnell, munter |
-| `voices/units/scout_rider_select_02.ogg` | Was soll ich auskundschaften? | neugierig |
-| `voices/units/scout_rider_select_03.ogg` | Gutes Pferd, gute Augen. | zufrieden |
-| `voices/units/scout_rider_select_04.ogg` | Zeigt mir den Weg. | eifrig |
+| `voices/units/scout_rider_select_01.ogg` | [cheerfully] [quickly] Bereit zum Ritt! | schnell, munter |
+| `voices/units/scout_rider_select_02.ogg` | [greedily] Was soll ich auskundschaften? | neugierig |
+| `voices/units/scout_rider_select_03.ogg` | [cheerfully] Gutes Pferd, gute Augen. | zufrieden |
+| `voices/units/scout_rider_select_04.ogg` | [calmly] Zeigt mir den Weg. | eifrig |
 
 ### scout_rider_move (Event `voice.scout_rider.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_move_01.ogg` | Los wie der Wind! | freudig |
-| `voices/units/scout_rider_move_02.ogg` | Dem Staub voraus! | schnell |
-| `voices/units/scout_rider_move_03.ogg` | Ich bin vor dem Abendessen zurück. | leichthin |
-| `voices/units/scout_rider_move_04.ogg` | Hü! | Zuruf, kurz |
+| `voices/units/scout_rider_move_01.ogg` | [cheerfully] Los wie der Wind! | freudig |
+| `voices/units/scout_rider_move_02.ogg` | [quickly] Dem Staub voraus! | schnell |
+| `voices/units/scout_rider_move_03.ogg` | [calmly] Ich bin vor dem Abendessen zurück. | leichthin |
+| `voices/units/scout_rider_move_04.ogg` | [commanding] Hü! | Zuruf, kurz |
 
 ### scout_rider_attack (Event `voice.scout_rider.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_attack_01.ogg` | Hü! Reitet sie nieder! | laut |
-| `voices/units/scout_rider_attack_02.ogg` | Schnell und sauber! | scharf |
-| `voices/units/scout_rider_attack_03.ogg` | Für Brennhollow! | Schlachtruf |
-| `voices/units/scout_rider_attack_04.ogg` | Na kommt schon! | herausfordernd |
+| `voices/units/scout_rider_attack_01.ogg` | [shouting] Hü! Reitet sie nieder! | laut |
+| `voices/units/scout_rider_attack_02.ogg` | [shouting] Schnell und sauber! | scharf |
+| `voices/units/scout_rider_attack_03.ogg` | [shouting] Für Brennhollow! | Schlachtruf |
+| `voices/units/scout_rider_attack_04.ogg` | [shouting] Na kommt schon! | herausfordernd |
 
 ### scout_rider_retreat (Event `voice.scout_rider.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_retreat_01.ogg` | Zu viele! Reiten! | panisch |
-| `voices/units/scout_rider_retreat_02.ogg` | Rückzug, Rückzug! | gehetzt |
-| `voices/units/scout_rider_retreat_03.ogg` | Schneller, Mädchen, schneller! | zum Pferd |
+| `voices/units/scout_rider_retreat_01.ogg` | [panicked] Zu viele! Reiten! | panisch |
+| `voices/units/scout_rider_retreat_02.ogg` | [urgently] Rückzug, Rückzug! | gehetzt |
+| `voices/units/scout_rider_retreat_03.ogg` | [urgently] Schneller, Mädchen, schneller! | zum Pferd |
 
 ### scout_rider_hit (Event `voice.scout_rider.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/scout_rider_hit_01.ogg` | [gasps] Ah, meine Seite! | scharf |
 | `voices/units/scout_rider_hit_02.ogg` | [grunts] Gestreift. | überspielt |
-| `voices/units/scout_rider_hit_03.ogg` | [hisses] Halt durch, Mädchen! | besorgt |
+| `voices/units/scout_rider_hit_03.ogg` | [worried] [hisses] Halt durch, Mädchen! | besorgt |
 
 ### scout_rider_death (Event `voice.scout_rider.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_death_01.ogg` | [gasps] Sagt ihnen … was ich sah … | verhauchend |
-| `voices/units/scout_rider_death_02.ogg` | [exhales] Reitet weiter … | leise |
-| `voices/units/scout_rider_death_03.ogg` | [sighs] Der Wind … ist kalt … | erlöst |
+| `voices/units/scout_rider_death_01.ogg` | [quietly] [gasps] Sagt ihnen … was ich sah … | verhauchend |
+| `voices/units/scout_rider_death_02.ogg` | [quietly] [exhales] Reitet weiter … | leise |
+| `voices/units/scout_rider_death_03.ogg` | [relieved] [sighs] Der Wind … ist kalt … | erlöst |
 
 ### scout_rider_victory (Event `voice.scout_rider.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_victory_01.ogg` | Ich sagte doch, ich bin schnell! | lachend |
-| `voices/units/scout_rider_victory_02.ogg` | Der Weg ist frei. | zufrieden |
-| `voices/units/scout_rider_victory_03.ogg` | Zurück mit Neuigkeiten, wie versprochen. | munter |
+| `voices/units/scout_rider_victory_01.ogg` | [laughs] Ich sagte doch, ich bin schnell! | lachend |
+| `voices/units/scout_rider_victory_02.ogg` | [cheerfully] Der Weg ist frei. | zufrieden |
+| `voices/units/scout_rider_victory_03.ogg` | [cheerfully] Zurück mit Neuigkeiten, wie versprochen. | munter |
 
 ### 12.5 Glutkrone – `horse_archer` (Berittener Bogenschütze)
 
@@ -986,33 +986,33 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### horse_archer_select (Event `voice.horse_archer.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_select_01.ogg` | Bogen gespannt, Pferd gefüttert. | selbstsicher |
-| `voices/units/horse_archer_select_02.ogg` | Macht es zum bewegten Ziel. | spöttisch |
-| `voices/units/horse_archer_select_03.ogg` | Ihr habt meinen Bogen. | ruhig |
-| `voices/units/horse_archer_select_04.ogg` | Wohin, Wächterin? | locker |
+| `voices/units/horse_archer_select_01.ogg` | [calmly] Bogen gespannt, Pferd gefüttert. | selbstsicher |
+| `voices/units/horse_archer_select_02.ogg` | [mockingly] Macht es zum bewegten Ziel. | spöttisch |
+| `voices/units/horse_archer_select_03.ogg` | [calmly] Ihr habt meinen Bogen. | ruhig |
+| `voices/units/horse_archer_select_04.ogg` | [calmly] Wohin, Wächterin? | locker |
 
 ### horse_archer_move (Event `voice.horse_archer.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_move_01.ogg` | Reite weit aus. | kurz |
-| `voices/units/horse_archer_move_02.ogg` | Fangt mich, wenn ihr könnt. | neckend |
-| `voices/units/horse_archer_move_03.ogg` | Flanke, dann Feuer. | knapp |
-| `voices/units/horse_archer_move_04.ogg` | Hü! | Zuruf |
+| `voices/units/horse_archer_move_01.ogg` | [calmly] Reite weit aus. | kurz |
+| `voices/units/horse_archer_move_02.ogg` | [calmly] Fangt mich, wenn ihr könnt. | neckend |
+| `voices/units/horse_archer_move_03.ogg` | [dryly] Flanke, dann Feuer. | knapp |
+| `voices/units/horse_archer_move_04.ogg` | [commanding] Hü! | Zuruf |
 
 ### horse_archer_attack (Event `voice.horse_archer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_attack_01.ogg` | Pfeile los! | laut |
-| `voices/units/horse_archer_attack_02.ogg` | Schießen und reiten! | rhythmisch |
-| `voices/units/horse_archer_attack_03.ogg` | Zu langsam! | spöttisch |
-| `voices/units/horse_archer_attack_04.ogg` | Lasst es auf sie regnen! | Schlachtruf |
+| `voices/units/horse_archer_attack_01.ogg` | [shouting] Pfeile los! | laut |
+| `voices/units/horse_archer_attack_02.ogg` | [shouting] Schießen und reiten! | rhythmisch |
+| `voices/units/horse_archer_attack_03.ogg` | [mockingly] Zu langsam! | spöttisch |
+| `voices/units/horse_archer_attack_04.ogg` | [shouting] Lasst es auf sie regnen! | Schlachtruf |
 
 ### horse_archer_retreat (Event `voice.horse_archer.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_retreat_01.ogg` | Absetzen! Raus hier! | gehetzt |
-| `voices/units/horse_archer_retreat_02.ogg` | Sie sind zu nah! | angespannt |
-| `voices/units/horse_archer_retreat_03.ogg` | Rückzug, schießt beim Reiten! | dringlich |
+| `voices/units/horse_archer_retreat_01.ogg` | [urgently] Absetzen! Raus hier! | gehetzt |
+| `voices/units/horse_archer_retreat_02.ogg` | [worried] Sie sind zu nah! | angespannt |
+| `voices/units/horse_archer_retreat_03.ogg` | [urgently] Rückzug, schießt beim Reiten! | dringlich |
 
 ### horse_archer_hit (Event `voice.horse_archer.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1024,16 +1024,16 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### horse_archer_death (Event `voice.horse_archer.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_death_01.ogg` | [exhales] Letzter … Pfeil … | verhauchend |
-| `voices/units/horse_archer_death_02.ogg` | [gasps] Der Wind hat mich geholt … | poetisch-leise |
-| `voices/units/horse_archer_death_03.ogg` | [sighs] Reitet ohne mich weiter … | ruhig |
+| `voices/units/horse_archer_death_01.ogg` | [quietly] [exhales] Letzter … Pfeil … | verhauchend |
+| `voices/units/horse_archer_death_02.ogg` | [quietly] [gasps] Der Wind hat mich geholt … | poetisch-leise |
+| `voices/units/horse_archer_death_03.ogg` | [calmly] [sighs] Reitet ohne mich weiter … | ruhig |
 
 ### horse_archer_victory (Event `voice.horse_archer.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_victory_01.ogg` | Sie kamen nie nah heran. | zufrieden |
-| `voices/units/horse_archer_victory_02.ogg` | Köcher leicht, Herz leichter. | gelöst |
-| `voices/units/horse_archer_victory_03.ogg` | Wieder eine Jagd vorbei. | ruhig |
+| `voices/units/horse_archer_victory_01.ogg` | [cheerfully] Sie kamen nie nah heran. | zufrieden |
+| `voices/units/horse_archer_victory_02.ogg` | [proudly] Köcher leicht, Herz leichter. | gelöst |
+| `voices/units/horse_archer_victory_03.ogg` | [calmly] Wieder eine Jagd vorbei. | ruhig |
 
 ### 12.6 Glutkrone – `battle_mage` (Kampfmagier, Feuerschule)
 
@@ -1043,33 +1043,33 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### battle_mage_select (Event `voice.battle_mage.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_select_01.ogg` | Die Flamme antwortet. | ruhig, tief |
-| `voices/units/battle_mage_select_02.ogg` | Glut und Wille. | knapp |
-| `voices/units/battle_mage_select_03.ogg` | Nennt das Ziel. | konzentriert |
-| `voices/units/battle_mage_select_04.ogg` | Ich bin bereit zu brennen. | leise-intensiv |
+| `voices/units/battle_mage_select_01.ogg` | [calmly] Die Flamme antwortet. | ruhig, tief |
+| `voices/units/battle_mage_select_02.ogg` | [dryly] Glut und Wille. | knapp |
+| `voices/units/battle_mage_select_03.ogg` | [calmly] Nennt das Ziel. | konzentriert |
+| `voices/units/battle_mage_select_04.ogg` | [quietly] Ich bin bereit zu brennen. | leise-intensiv |
 
 ### battle_mage_move (Event `voice.battle_mage.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_move_01.ogg` | Ich gehe im Licht. | gelassen |
-| `voices/units/battle_mage_move_02.ogg` | Haltet Abstand zu meinem Saum. | trocken-warnend |
-| `voices/units/battle_mage_move_03.ogg` | Wie die Flamme will. | ruhig |
-| `voices/units/battle_mage_move_04.ogg` | Bewegung. | knapp |
+| `voices/units/battle_mage_move_01.ogg` | [calmly] Ich gehe im Licht. | gelassen |
+| `voices/units/battle_mage_move_02.ogg` | [dryly] Haltet Abstand zu meinem Saum. | trocken-warnend |
+| `voices/units/battle_mage_move_03.ogg` | [calmly] Wie die Flamme will. | ruhig |
+| `voices/units/battle_mage_move_04.ogg` | [dryly] Bewegung. | knapp |
 
 ### battle_mage_attack (Event `voice.battle_mage.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_attack_01.ogg` | Brennt! | scharf, laut |
-| `voices/units/battle_mage_attack_02.ogg` | Asche zu Asche! | grimmig |
-| `voices/units/battle_mage_attack_03.ogg` | Bei der Ewigen Flamme! | hymnisch |
-| `voices/units/battle_mage_attack_04.ogg` | Entfacht! | knapp, Zauberruf |
+| `voices/units/battle_mage_attack_01.ogg` | [shouting] Brennt! | scharf, laut |
+| `voices/units/battle_mage_attack_02.ogg` | [shouting] Asche zu Asche! | grimmig |
+| `voices/units/battle_mage_attack_03.ogg` | [solemn] Bei der Ewigen Flamme! | hymnisch |
+| `voices/units/battle_mage_attack_04.ogg` | [dryly] Entfacht! | knapp, Zauberruf |
 
 ### battle_mage_retreat (Event `voice.battle_mage.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_retreat_01.ogg` | Deckt mich, ich bin erschöpft! | dringlich |
-| `voices/units/battle_mage_retreat_02.ogg` | Zu nah, zu nah! | panisch |
-| `voices/units/battle_mage_retreat_03.ogg` | Zurück zur Linie! | gehetzt |
+| `voices/units/battle_mage_retreat_01.ogg` | [urgently] Deckt mich, ich bin erschöpft! | dringlich |
+| `voices/units/battle_mage_retreat_02.ogg` | [panicked] Zu nah, zu nah! | panisch |
+| `voices/units/battle_mage_retreat_03.ogg` | [urgently] Zurück zur Linie! | gehetzt |
 
 ### battle_mage_hit (Event `voice.battle_mage.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1081,23 +1081,23 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### battle_mage_death (Event `voice.battle_mage.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_death_01.ogg` | [exhales] Die Flamme … erlischt … | verhauchend |
-| `voices/units/battle_mage_death_02.ogg` | [gasps] Lasst es … nicht umsonst sein … | leise |
-| `voices/units/battle_mage_death_03.ogg` | [sighs] Asche … endlich. | erlöst |
+| `voices/units/battle_mage_death_01.ogg` | [quietly] [exhales] Die Flamme … erlischt … | verhauchend |
+| `voices/units/battle_mage_death_02.ogg` | [quietly] [gasps] Lasst es … nicht umsonst sein … | leise |
+| `voices/units/battle_mage_death_03.ogg` | [relieved] [sighs] Asche … endlich. | erlöst |
 
 ### battle_mage_victory (Event `voice.battle_mage.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_victory_01.ogg` | Die Glut ist still. | zufrieden-ruhig |
-| `voices/units/battle_mage_victory_02.ogg` | Lasst das Feuer ruhen. | leise |
-| `voices/units/battle_mage_victory_03.ogg` | Das Licht hat gesiegt. | feierlich |
+| `voices/units/battle_mage_victory_01.ogg` | [calmly] Die Glut ist still. | zufrieden-ruhig |
+| `voices/units/battle_mage_victory_02.ogg` | [quietly] Lasst das Feuer ruhen. | leise |
+| `voices/units/battle_mage_victory_03.ogg` | [solemn] Das Licht hat gesiegt. | feierlich |
 
 ### battle_mage_ability (Event `voice.battle_mage.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_ability_01.ogg` | Feuer, antworte mir! | laut, Zauberruf |
-| `voices/units/battle_mage_ability_02.ogg` | Funken, erhebt euch! | scharf |
-| `voices/units/battle_mage_ability_03.ogg` | Flamme, nimm sie! | hart |
+| `voices/units/battle_mage_ability_01.ogg` | [shouting] Feuer, antworte mir! | laut, Zauberruf |
+| `voices/units/battle_mage_ability_02.ogg` | [commanding] Funken, erhebt euch! | scharf |
+| `voices/units/battle_mage_ability_03.ogg` | [firmly] Flamme, nimm sie! | hart |
 
 ### 12.7 Glutkrone – `priest` (Priester der Flamme)
 
@@ -1107,61 +1107,61 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### priest_select (Event `voice.priest.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_select_01.ogg` | Die Flamme sei mit Euch. | warm, sanft |
-| `voices/units/priest_select_02.ogg` | Wie kann ich dienen? | freundlich |
-| `voices/units/priest_select_03.ogg` | Ich bin hier, Kind. | tröstend |
-| `voices/units/priest_select_04.ogg` | Lasst das Licht uns leiten. | ruhig |
+| `voices/units/priest_select_01.ogg` | [gently] Die Flamme sei mit Euch. | warm, sanft |
+| `voices/units/priest_select_02.ogg` | [warmly] Wie kann ich dienen? | freundlich |
+| `voices/units/priest_select_03.ogg` | [calmly] Ich bin hier, Kind. | tröstend |
+| `voices/units/priest_select_04.ogg` | [calmly] Lasst das Licht uns leiten. | ruhig |
 
 ### priest_move (Event `voice.priest.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_move_01.ogg` | Wir gehen im Licht. | gelassen |
-| `voices/units/priest_move_02.ogg` | Geht voran, ich folge. | ruhig |
-| `voices/units/priest_move_03.ogg` | Gebt auf die Verwundeten acht. | sorgend |
-| `voices/units/priest_move_04.ogg` | Ja, ja, ich gehe. | leicht gehetzt |
+| `voices/units/priest_move_01.ogg` | [calmly] Wir gehen im Licht. | gelassen |
+| `voices/units/priest_move_02.ogg` | [calmly] Geht voran, ich folge. | ruhig |
+| `voices/units/priest_move_03.ogg` | [calmly] Gebt auf die Verwundeten acht. | sorgend |
+| `voices/units/priest_move_04.ogg` | [urgently] Ja, ja, ich gehe. | leicht gehetzt |
 
 ### priest_attack (Event `voice.priest.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_attack_01.ogg` | Zurück, Geschöpfe der Dunkelheit! | mutig, zitternd |
-| `voices/units/priest_attack_02.ogg` | Flamme, beschütze uns! | laut |
-| `voices/units/priest_attack_03.ogg` | Im Namen der Ewigen Flamme! | hymnisch |
-| `voices/units/priest_attack_04.ogg` | Weg von ihnen! | entschlossen |
+| `voices/units/priest_attack_01.ogg` | [shouting] Zurück, Geschöpfe der Dunkelheit! | mutig, zitternd |
+| `voices/units/priest_attack_02.ogg` | [shouting] Flamme, beschütze uns! | laut |
+| `voices/units/priest_attack_03.ogg` | [solemn] Im Namen der Ewigen Flamme! | hymnisch |
+| `voices/units/priest_attack_04.ogg` | [firmly] Weg von ihnen! | entschlossen |
 
 ### priest_retreat (Event `voice.priest.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_retreat_01.ogg` | Ich kann nicht! Ich kann nicht! | panisch |
-| `voices/units/priest_retreat_02.ogg` | Beschützt die Heiler! | dringlich |
-| `voices/units/priest_retreat_03.ogg` | Flamme, vergib mir! | verzweifelt |
+| `voices/units/priest_retreat_01.ogg` | [panicked] Ich kann nicht! Ich kann nicht! | panisch |
+| `voices/units/priest_retreat_02.ogg` | [urgently] Beschützt die Heiler! | dringlich |
+| `voices/units/priest_retreat_03.ogg` | [sad] Flamme, vergib mir! | verzweifelt |
 
 ### priest_hit (Event `voice.priest.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_hit_01.ogg` | [gasps] Oh! Gnade! | erschrocken |
+| `voices/units/priest_hit_01.ogg` | [fearful] [gasps] Oh! Gnade! | erschrocken |
 | `voices/units/priest_hit_02.ogg` | [groans] Es ist nur Schmerz. | tapfer |
 | `voices/units/priest_hit_03.ogg` | [hisses] Vergib ihnen … | gepresst |
 
 ### priest_death (Event `voice.priest.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_death_01.ogg` | [exhales] In die Flamme … gehe ich … | friedlich |
-| `voices/units/priest_death_02.ogg` | [gasps] Wer … wird … sie pflegen … | besorgt |
-| `voices/units/priest_death_03.ogg` | [sighs] Licht … nimm mich. | erlöst |
+| `voices/units/priest_death_01.ogg` | [gently] [exhales] In die Flamme … gehe ich … | friedlich |
+| `voices/units/priest_death_02.ogg` | [worried] [gasps] Wer … wird … sie pflegen … | besorgt |
+| `voices/units/priest_death_03.ogg` | [relieved] [sighs] Licht … nimm mich. | erlöst |
 
 ### priest_victory (Event `voice.priest.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_victory_01.ogg` | Lob der Flamme. Versorgt die Verwundeten. | erleichtert |
-| `voices/units/priest_victory_02.ogg` | Wir leben. Dank dem Licht. | gerührt |
-| `voices/units/priest_victory_03.ogg` | Friede den Gefallenen. | feierlich |
+| `voices/units/priest_victory_01.ogg` | [relieved] Lob der Flamme. Versorgt die Verwundeten. | erleichtert |
+| `voices/units/priest_victory_02.ogg` | [moved] Wir leben. Dank dem Licht. | gerührt |
+| `voices/units/priest_victory_03.ogg` | [solemn] Friede den Gefallenen. | feierlich |
 
 ### priest_ability (Event `voice.priest.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/priest_ability_01.ogg` | Werdet geheilt! | warm, kräftig |
-| `voices/units/priest_ability_02.ogg` | Flamme, richte sie auf! | hymnisch |
-| `voices/units/priest_ability_03.ogg` | Erhebt euch und seid gesegnet! | strahlend |
+| `voices/units/priest_ability_01.ogg` | [firmly] Werdet geheilt! | warm, kräftig |
+| `voices/units/priest_ability_02.ogg` | [solemn] Flamme, richte sie auf! | hymnisch |
+| `voices/units/priest_ability_03.ogg` | [commanding] Erhebt euch und seid gesegnet! | strahlend |
 
 ### 12.8 Glutkrone – `battering_ram` (Rammbock, Bedienmannschaft)
 
@@ -1171,33 +1171,33 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### battering_ram_select (Event `voice.battering_ram.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battering_ram_select_01.ogg` | Ramme bereit! | Chor, Zuruf |
-| `voices/units/battering_ram_select_02.ogg` | Jawohl, das Tor hält nicht. | grimmig, rau |
-| `voices/units/battering_ram_select_03.ogg` | Legt Euch ins Zeug! | Anfeuerung |
-| `voices/units/battering_ram_select_04.ogg` | Hau ruck, Jungs! | rhythmisch |
+| `voices/units/battering_ram_select_01.ogg` | [commanding] Ramme bereit! | Chor, Zuruf |
+| `voices/units/battering_ram_select_02.ogg` | [gruffly] Jawohl, das Tor hält nicht. | grimmig, rau |
+| `voices/units/battering_ram_select_03.ogg` | [calmly] Legt Euch ins Zeug! | Anfeuerung |
+| `voices/units/battering_ram_select_04.ogg` | [calmly] Hau ruck, Jungs! | rhythmisch |
 
 ### battering_ram_move (Event `voice.battering_ram.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battering_ram_move_01.ogg` | Schieben, schieben! | Anstrengung, im Takt |
-| `voices/units/battering_ram_move_02.ogg` | Achtet auf die Räder! | hektisch |
-| `voices/units/battering_ram_move_03.ogg` | Langsam … langsam … | gepresst |
-| `voices/units/battering_ram_move_04.ogg` | Rollt sie vor! | Zuruf |
+| `voices/units/battering_ram_move_01.ogg` | [calmly] Schieben, schieben! | Anstrengung, im Takt |
+| `voices/units/battering_ram_move_02.ogg` | [urgently] Achtet auf die Räder! | hektisch |
+| `voices/units/battering_ram_move_03.ogg` | [calmly] Langsam … langsam … | gepresst |
+| `voices/units/battering_ram_move_04.ogg` | [commanding] Rollt sie vor! | Zuruf |
 
 ### battering_ram_attack (Event `voice.battering_ram.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battering_ram_attack_01.ogg` | Schwingen! Schwingen! | laut, im Takt |
-| `voices/units/battering_ram_attack_02.ogg` | Reißt es nieder! | wild |
-| `voices/units/battering_ram_attack_03.ogg` | Alle zusammen – jetzt! | Chor |
-| `voices/units/battering_ram_attack_04.ogg` | Zerschmettert das Tor! | Schlachtruf |
+| `voices/units/battering_ram_attack_01.ogg` | [shouting] Schwingen! Schwingen! | laut, im Takt |
+| `voices/units/battering_ram_attack_02.ogg` | [shouting] Reißt es nieder! | wild |
+| `voices/units/battering_ram_attack_03.ogg` | [shouting] Alle zusammen – jetzt! | Chor |
+| `voices/units/battering_ram_attack_04.ogg` | [shouting] Zerschmettert das Tor! | Schlachtruf |
 
 ### battering_ram_death (Event `voice.battering_ram.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battering_ram_death_01.ogg` | [shouting] Sie bricht auseinander! | panisch, Chor |
-| `voices/units/battering_ram_death_02.ogg` | [groans] Der Rammbock … ist verloren … | gebrochen |
-| `voices/units/battering_ram_death_03.ogg` | [shouting] Lauft, Jungs, lauft! | Chor, hektisch |
+| `voices/units/battering_ram_death_01.ogg` | [panicked] [shouting] Sie bricht auseinander! | panisch, Chor |
+| `voices/units/battering_ram_death_02.ogg` | [sad] [groans] Der Rammbock … ist verloren … | gebrochen |
+| `voices/units/battering_ram_death_03.ogg` | [urgently] [shouting] Lauft, Jungs, lauft! | Chor, hektisch |
 
 ### 12.9 Glutkrone – `catapult` (Katapult, Bedienmannschaft)
 
@@ -1207,33 +1207,33 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### catapult_select (Event `voice.catapult.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/catapult_select_01.ogg` | Geschütz ist geladen. | nüchtern |
-| `voices/units/catapult_select_02.ogg` | Gebt uns ein Ziel. | knapp |
-| `voices/units/catapult_select_03.ogg` | Spannt sie zurück! | Zuruf |
-| `voices/units/catapult_select_04.ogg` | Reichweite und Richtung, Herr? | fachlich |
+| `voices/units/catapult_select_01.ogg` | [seriously] Geschütz ist geladen. | nüchtern |
+| `voices/units/catapult_select_02.ogg` | [dryly] Gebt uns ein Ziel. | knapp |
+| `voices/units/catapult_select_03.ogg` | [commanding] Spannt sie zurück! | Zuruf |
+| `voices/units/catapult_select_04.ogg` | [calmly] Reichweite und Richtung, Herr? | fachlich |
 
 ### catapult_move (Event `voice.catapult.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/catapult_move_01.ogg` | Zieht sie, zieht sie! | Anstrengung |
-| `voices/units/catapult_move_02.ogg` | Vorsicht mit dem Arm! | besorgt |
-| `voices/units/catapult_move_03.ogg` | Achtet auf die Spurrillen! | hektisch |
-| `voices/units/catapult_move_04.ogg` | Langsam, langsam! | gepresst |
+| `voices/units/catapult_move_01.ogg` | [calmly] Zieht sie, zieht sie! | Anstrengung |
+| `voices/units/catapult_move_02.ogg` | [worried] Vorsicht mit dem Arm! | besorgt |
+| `voices/units/catapult_move_03.ogg` | [urgently] Achtet auf die Spurrillen! | hektisch |
+| `voices/units/catapult_move_04.ogg` | [calmly] Langsam, langsam! | gepresst |
 
 ### catapult_attack (Event `voice.catapult.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/catapult_attack_01.ogg` | Los! | laut, Kommando |
-| `voices/units/catapult_attack_02.ogg` | Feuer! | scharf |
-| `voices/units/catapult_attack_03.ogg` | Zurücktreten – los! | Warnruf |
-| `voices/units/catapult_attack_04.ogg` | Fort damit! | Triumph |
+| `voices/units/catapult_attack_01.ogg` | [commanding] [shouting] Los! | laut, Kommando |
+| `voices/units/catapult_attack_02.ogg` | [shouting] Feuer! | scharf |
+| `voices/units/catapult_attack_03.ogg` | [shouting] Zurücktreten – los! | Warnruf |
+| `voices/units/catapult_attack_04.ogg` | [triumphantly] Fort damit! | Triumph |
 
 ### catapult_death (Event `voice.catapult.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/catapult_death_01.ogg` | [shouting] Sie ist hin – der Arm ist gebrochen! | entsetzt |
-| `voices/units/catapult_death_02.ogg` | [groans] Jahre an Arbeit … | gebrochen |
-| `voices/units/catapult_death_03.ogg` | [shouting] Weg hier! | panisch |
+| `voices/units/catapult_death_01.ogg` | [fearful] [shouting] Sie ist hin – [pause] der Arm ist gebrochen! | entsetzt |
+| `voices/units/catapult_death_02.ogg` | [sad] [groans] Jahre an Arbeit … | gebrochen |
+| `voices/units/catapult_death_03.ogg` | [panicked] [shouting] Weg hier! | panisch |
 
 
 ---
@@ -1250,85 +1250,85 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 ### hero_hal_venn_select (Event `voice.hero_hal_venn.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_select_01.ogg` | Ja, Wächterin? | warm |
-| `voices/heroes/hero_hal_venn_select_02.ogg` | Die Flamme ist mit uns. | ruhig |
-| `voices/heroes/hero_hal_venn_select_03.ogg` | Meine Hände gehören Euch. | sanft |
-| `voices/heroes/hero_hal_venn_select_04.ogg` | Ach, alte Knochen, bereit wie immer. | selbstironisch |
-| `voices/heroes/hero_hal_venn_select_05.ogg` | Was braucht Brennhollow von mir? | sorgend |
+| `voices/heroes/hero_hal_venn_select_01.ogg` | [warmly] Ja, Wächterin? | warm |
+| `voices/heroes/hero_hal_venn_select_02.ogg` | [calmly] Die Flamme ist mit uns. | ruhig |
+| `voices/heroes/hero_hal_venn_select_03.ogg` | [gently] Meine Hände gehören Euch. | sanft |
+| `voices/heroes/hero_hal_venn_select_04.ogg` | [cynically] Ach, alte Knochen, bereit wie immer. | selbstironisch |
+| `voices/heroes/hero_hal_venn_select_05.ogg` | [calmly] Was braucht Brennhollow von mir? | sorgend |
 
 ### hero_hal_venn_move (Event `voice.hero_hal_venn.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_move_01.ogg` | Geht voran, ich folge. | ruhig |
-| `voices/heroes/hero_hal_venn_move_02.ogg` | Langsam, meine Knie erinnern sich an Aureth. | trocken |
-| `voices/heroes/hero_hal_venn_move_03.ogg` | Dorthin, wo die Not am größten ist. | ernst |
-| `voices/heroes/hero_hal_venn_move_04.ogg` | Ich gehe, ich gehe. | gemütlich |
-| `voices/heroes/hero_hal_venn_move_05.ogg` | Dann vorwärts. | neutral |
+| `voices/heroes/hero_hal_venn_move_01.ogg` | [calmly] Geht voran, ich folge. | ruhig |
+| `voices/heroes/hero_hal_venn_move_02.ogg` | [dryly] Langsam, meine Knie erinnern sich an Aureth. | trocken |
+| `voices/heroes/hero_hal_venn_move_03.ogg` | [seriously] Dorthin, wo die Not am größten ist. | ernst |
+| `voices/heroes/hero_hal_venn_move_04.ogg` | [calmly] Ich gehe, ich gehe. | gemütlich |
+| `voices/heroes/hero_hal_venn_move_05.ogg` | [calmly] Dann vorwärts. | neutral |
 
 ### hero_hal_venn_attack (Event `voice.hero_hal_venn.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_attack_01.ogg` | Im Namen der Flamme! | kräftig |
-| `voices/heroes/hero_hal_venn_attack_02.ogg` | Fort mit euch, Schatten! | laut |
-| `voices/heroes/hero_hal_venn_attack_03.ogg` | Genug! Zurück! | scharf |
-| `voices/heroes/hero_hal_venn_attack_04.ogg` | Licht, triff sicher! | hymnisch |
-| `voices/heroes/hero_hal_venn_attack_05.ogg` | Ich dulde kein weiteres verlorenes Dorf! | entschlossen |
+| `voices/heroes/hero_hal_venn_attack_01.ogg` | [firmly] Im Namen der Flamme! | kräftig |
+| `voices/heroes/hero_hal_venn_attack_02.ogg` | [shouting] Fort mit euch, Schatten! | laut |
+| `voices/heroes/hero_hal_venn_attack_03.ogg` | [shouting] Genug! Zurück! | scharf |
+| `voices/heroes/hero_hal_venn_attack_04.ogg` | [solemn] Licht, triff sicher! | hymnisch |
+| `voices/heroes/hero_hal_venn_attack_05.ogg` | [firmly] Ich dulde kein weiteres verlorenes Dorf! | entschlossen |
 
 ### hero_hal_venn_retreat (Event `voice.hero_hal_venn.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_retreat_01.ogg` | Zurück, zurück! | dringlich |
-| `voices/heroes/hero_hal_venn_retreat_02.ogg` | Sammelt die Verwundeten! | sorgend-laut |
-| `voices/heroes/hero_hal_venn_retreat_03.ogg` | Wir leben, um wieder zu kämpfen! | angespannt |
+| `voices/heroes/hero_hal_venn_retreat_01.ogg` | [urgently] Zurück, zurück! | dringlich |
+| `voices/heroes/hero_hal_venn_retreat_02.ogg` | [shouting] Sammelt die Verwundeten! | sorgend-laut |
+| `voices/heroes/hero_hal_venn_retreat_03.ogg` | [worried] Wir leben, um wieder zu kämpfen! | angespannt |
 
 ### hero_hal_venn_hit (Event `voice.hero_hal_venn.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_hit_01.ogg` | [grunts] Hm. Das hat gebrannt. | trocken |
-| `voices/heroes/hero_hal_venn_hit_02.ogg` | [gasps] Flamme, halte mich! | erschrocken |
-| `voices/heroes/hero_hal_venn_hit_03.ogg` | [groans] Alt, nicht tot! | trotzig |
+| `voices/heroes/hero_hal_venn_hit_01.ogg` | [dryly] [grunts] Hm. Das hat gebrannt. | trocken |
+| `voices/heroes/hero_hal_venn_hit_02.ogg` | [fearful] [gasps] Flamme, halte mich! | erschrocken |
+| `voices/heroes/hero_hal_venn_hit_03.ogg` | [firmly] [groans] Alt, nicht tot! | trotzig |
 
 ### hero_hal_venn_death (Event `voice.hero_hal_venn.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_death_01.ogg` | [exhales] Wächterin … die Flamme … behüte Euch … | verhauchend, warm |
-| `voices/heroes/hero_hal_venn_death_02.ogg` | [gasps] Sagt Brennhollow … ich habe es versucht … | leise |
-| `voices/heroes/hero_hal_venn_death_03.ogg` | [sighs] Ins Licht … | erlöst |
+| `voices/heroes/hero_hal_venn_death_01.ogg` | [warmly] [exhales] Wächterin … die Flamme … behüte Euch … | verhauchend, warm |
+| `voices/heroes/hero_hal_venn_death_02.ogg` | [quietly] [gasps] Sagt Brennhollow … ich habe es versucht … | leise |
+| `voices/heroes/hero_hal_venn_death_03.ogg` | [relieved] [sighs] Ins Licht … | erlöst |
 
 ### hero_hal_venn_victory (Event `voice.hero_hal_venn.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_victory_01.ogg` | Die Flamme hat gesiegt. | erleichtert |
-| `voices/heroes/hero_hal_venn_victory_02.ogg` | Gelobt sei die Flamme, wir leben. | gerührt |
-| `voices/heroes/hero_hal_venn_victory_03.ogg` | Lasst uns die Verwundeten versorgen. | ruhig |
+| `voices/heroes/hero_hal_venn_victory_01.ogg` | [relieved] Die Flamme hat gesiegt. | erleichtert |
+| `voices/heroes/hero_hal_venn_victory_02.ogg` | [moved] Gelobt sei die Flamme, wir leben. | gerührt |
+| `voices/heroes/hero_hal_venn_victory_03.ogg` | [calmly] Lasst uns die Verwundeten versorgen. | ruhig |
 
 ### hero_hal_venn_ability (Event `voice.hero_hal_venn.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_ability_01.ogg` | Flamme, heile sie! | warm, laut |
-| `voices/heroes/hero_hal_venn_ability_02.ogg` | Brennt rein! | scharf |
-| `voices/heroes/hero_hal_venn_ability_03.ogg` | Glaube sei unser Feuer! | hymnisch |
+| `voices/heroes/hero_hal_venn_ability_01.ogg` | [warmly] [shouting] Flamme, heile sie! | warm, laut |
+| `voices/heroes/hero_hal_venn_ability_02.ogg` | [commanding] Brennt rein! | scharf |
+| `voices/heroes/hero_hal_venn_ability_03.ogg` | [solemn] Glaube sei unser Feuer! | hymnisch |
 
 ### hero_hal_venn_greet (Event `voice.hero_hal_venn.greet`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_greet_01.ogg` | Wächterin. Schön, Euch aufrecht zu sehen. | warm |
-| `voices/heroes/hero_hal_venn_greet_02.ogg` | Die Siedlung braucht Euch, und ich auch. | ernst-freundlich |
-| `voices/heroes/hero_hal_venn_greet_03.ogg` | Ich habe die Lampe am Brennen gehalten. | sanft |
+| `voices/heroes/hero_hal_venn_greet_01.ogg` | [warmly] Wächterin. Schön, Euch aufrecht zu sehen. | warm |
+| `voices/heroes/hero_hal_venn_greet_02.ogg` | [warmly] Die Siedlung braucht Euch, und ich auch. | ernst-freundlich |
+| `voices/heroes/hero_hal_venn_greet_03.ogg` | [gently] Ich habe die Lampe am Brennen gehalten. | sanft |
 
 ### hero_hal_venn_levelup (Event `voice.hero_hal_venn.levelup`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_levelup_01.ogg` | Die Flamme brennt heller in mir. | überrascht, froh |
-| `voices/heroes/hero_hal_venn_levelup_02.ogg` | Stärker. Und das macht demütig. | bescheiden |
-| `voices/heroes/hero_hal_venn_levelup_03.ogg` | Die Gnade wächst. | leise |
+| `voices/heroes/hero_hal_venn_levelup_01.ogg` | [surprised] [quickly] Die Flamme brennt heller in mir. | überrascht, froh |
+| `voices/heroes/hero_hal_venn_levelup_02.ogg` | [calmly] Stärker. Und das macht demütig. | bescheiden |
+| `voices/heroes/hero_hal_venn_levelup_03.ogg` | [quietly] Die Gnade wächst. | leise |
 
 ### hero_hal_venn_lowhp (Event `voice.hero_hal_venn.lowhp`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_hal_venn_lowhp_01.ogg` | Ich muss … mich selbst versorgen … | angestrengt |
-| `voices/heroes/hero_hal_venn_lowhp_02.ogg` | Noch nicht, Flamme, noch nicht. | gepresst |
-| `voices/heroes/hero_hal_venn_lowhp_03.ogg` | Ich blute. Natürlich. | trocken-schwach |
+| `voices/heroes/hero_hal_venn_lowhp_01.ogg` | [calmly] Ich muss … mich selbst versorgen … | angestrengt |
+| `voices/heroes/hero_hal_venn_lowhp_02.ogg` | [calmly] Noch nicht, Flamme, noch nicht. | gepresst |
+| `voices/heroes/hero_hal_venn_lowhp_03.ogg` | [dryly] [quietly] Ich blute. Natürlich. | trocken-schwach |
 
 ### 13.2 Held – `hero_torvald` (Torvald Eisenhand, Clanfürst von Skarnheim)
 
@@ -1338,85 +1338,85 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 ### hero_torvald_select (Event `voice.hero_torvald.select`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_select_01.ogg` | Torvald Eisenhand hört zu. | tief, kräftig |
-| `voices/heroes/hero_torvald_select_02.ogg` | Sprecht, und macht's kurz. | ungeduldig |
-| `voices/heroes/hero_torvald_select_03.ogg` | Die Ahnen sehen zu. | ernst |
-| `voices/heroes/hero_torvald_select_04.ogg` | Ha! Ein Kampf, hoffe ich? | gut gelaunt |
-| `voices/heroes/hero_torvald_select_05.ogg` | Skarnheim steht an Eurer Seite. | ehrlich |
+| `voices/heroes/hero_torvald_select_01.ogg` | [firmly] Torvald Eisenhand hört zu. | tief, kräftig |
+| `voices/heroes/hero_torvald_select_02.ogg` | [impatiently] Sprecht, und macht's kurz. | ungeduldig |
+| `voices/heroes/hero_torvald_select_03.ogg` | [seriously] Die Ahnen sehen zu. | ernst |
+| `voices/heroes/hero_torvald_select_04.ogg` | [calmly] Ha! Ein Kampf, hoffe ich? | gut gelaunt |
+| `voices/heroes/hero_torvald_select_05.ogg` | [calmly] Skarnheim steht an Eurer Seite. | ehrlich |
 
 ### hero_torvald_move (Event `voice.hero_torvald.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_move_01.ogg` | Der Weg ist lang, die Axt ist leicht! | grob-fröhlich |
-| `voices/heroes/hero_torvald_move_02.ogg` | Vorwärts, vorwärts! | laut |
-| `voices/heroes/hero_torvald_move_03.ogg` | Meine Füße kennen den Berg, nicht diesen Matsch. | brummig |
-| `voices/heroes/hero_torvald_move_04.ogg` | Führt an, Wächterin! | herzlich |
-| `voices/heroes/hero_torvald_move_05.ogg` | Dann zur nächsten Kehle. | trocken |
+| `voices/heroes/hero_torvald_move_01.ogg` | [calmly] Der Weg ist lang, die Axt ist leicht! | grob-fröhlich |
+| `voices/heroes/hero_torvald_move_02.ogg` | [shouting] Vorwärts, vorwärts! | laut |
+| `voices/heroes/hero_torvald_move_03.ogg` | [gruffly] Meine Füße kennen den Berg, nicht diesen Matsch. | brummig |
+| `voices/heroes/hero_torvald_move_04.ogg` | [warmly] Führt an, Wächterin! | herzlich |
+| `voices/heroes/hero_torvald_move_05.ogg` | [dryly] Dann zur nächsten Kehle. | trocken |
 
 ### hero_torvald_attack (Event `voice.hero_torvald.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_attack_01.ogg` | Für die Clans! | Schlachtruf, laut |
-| `voices/heroes/hero_torvald_attack_02.ogg` | Zerschmettert sie! | wild |
-| `voices/heroes/hero_torvald_attack_03.ogg` | Ahnen, seht mir zu! | kehlig |
-| `voices/heroes/hero_torvald_attack_04.ogg` | Steht und sterbt! | hart |
-| `voices/heroes/hero_torvald_attack_05.ogg` | Hahh! Kommt ans Eisen! | brüllend |
+| `voices/heroes/hero_torvald_attack_01.ogg` | [shouting] Für die Clans! | Schlachtruf, laut |
+| `voices/heroes/hero_torvald_attack_02.ogg` | [shouting] Zerschmettert sie! | wild |
+| `voices/heroes/hero_torvald_attack_03.ogg` | [gruffly] Ahnen, seht mir zu! | kehlig |
+| `voices/heroes/hero_torvald_attack_04.ogg` | [firmly] Steht und sterbt! | hart |
+| `voices/heroes/hero_torvald_attack_05.ogg` | [shouting] Hahh! Kommt ans Eisen! | brüllend |
 
 ### hero_torvald_retreat (Event `voice.hero_torvald.retreat`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_retreat_01.ogg` | Ein Clanmann weicht vor niemandem … heute. | knurrend |
-| `voices/heroes/hero_torvald_retreat_02.ogg` | Zurück zu den Schilden! | laut |
-| `voices/heroes/hero_torvald_retreat_03.ogg` | Zurück, beim Bart meines Vaters! | fluchend |
+| `voices/heroes/hero_torvald_retreat_01.ogg` | [growls] Ein Clanmann weicht vor niemandem … heute. | knurrend |
+| `voices/heroes/hero_torvald_retreat_02.ogg` | [shouting] Zurück zu den Schilden! | laut |
+| `voices/heroes/hero_torvald_retreat_03.ogg` | [urgently] Zurück, beim Bart meines Vaters! | fluchend |
 
 ### hero_torvald_hit (Event `voice.hero_torvald.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_hit_01.ogg` | [grunts] Ist das alles? | höhnisch |
-| `voices/heroes/hero_torvald_hit_02.ogg` | [roars] Der hat Blut gezogen! | wütend |
+| `voices/heroes/hero_torvald_hit_01.ogg` | [mockingly] [grunts] Ist das alles? | höhnisch |
+| `voices/heroes/hero_torvald_hit_02.ogg` | [angry] [roars] Der hat Blut gezogen! | wütend |
 | `voices/heroes/hero_torvald_hit_03.ogg` | [groans] Hrnn! | dumpf |
 
 ### hero_torvald_death (Event `voice.hero_torvald.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_death_01.ogg` | [exhales] Skarnheim … erinnere dich … | verhauchend |
-| `voices/heroes/hero_torvald_death_02.ogg` | [gasps] Vater … ich komme … | friedlich-leise |
-| `voices/heroes/hero_torvald_death_03.ogg` | [roars weakly] Der … Berg … ruft … | gebrochen, rau |
+| `voices/heroes/hero_torvald_death_01.ogg` | [quietly] [exhales] Skarnheim … erinnere dich … | verhauchend |
+| `voices/heroes/hero_torvald_death_02.ogg` | [gently] [gasps] Vater … ich komme … | friedlich-leise |
+| `voices/heroes/hero_torvald_death_03.ogg` | [sad] [roars weakly] Der … Berg … ruft … | gebrochen, rau |
 
 ### hero_torvald_victory (Event `voice.hero_torvald.victory`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_victory_01.ogg` | Ha! Darauf trinken wir! | dröhnend |
-| `voices/heroes/hero_torvald_victory_02.ogg` | Die Ahnen sind zufrieden. | zufrieden |
-| `voices/heroes/hero_torvald_victory_03.ogg` | Keiner kann sagen, die Clans beugten sich. | stolz |
+| `voices/heroes/hero_torvald_victory_01.ogg` | [shouting] Ha! Darauf trinken wir! | dröhnend |
+| `voices/heroes/hero_torvald_victory_02.ogg` | [cheerfully] Die Ahnen sind zufrieden. | zufrieden |
+| `voices/heroes/hero_torvald_victory_03.ogg` | [proudly] Keiner kann sagen, die Clans beugten sich. | stolz |
 
 ### hero_torvald_ability (Event `voice.hero_torvald.ability`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_ability_01.ogg` | Hört mich, Berge! | laut, Ruf |
-| `voices/heroes/hero_torvald_ability_02.ogg` | Ahnen, leiht mir Eisen! | kehlig |
-| `voices/heroes/hero_torvald_ability_03.ogg` | Brecht! | kurz, hart |
+| `voices/heroes/hero_torvald_ability_01.ogg` | [shouting] Hört mich, Berge! | laut, Ruf |
+| `voices/heroes/hero_torvald_ability_02.ogg` | [gruffly] Ahnen, leiht mir Eisen! | kehlig |
+| `voices/heroes/hero_torvald_ability_03.ogg` | [firmly] Brecht! | kurz, hart |
 
 ### hero_torvald_greet (Event `voice.hero_torvald.greet`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_greet_01.ogg` | Wächterin Isolde! Euer Bier ist dünn, Eure Sache gut. | herzlich-grob |
-| `voices/heroes/hero_torvald_greet_02.ogg` | Skarnheim schickt Eisen, und mich. | stolz |
-| `voices/heroes/hero_torvald_greet_03.ogg` | Richtet mich auf den Feind. | ungeduldig |
+| `voices/heroes/hero_torvald_greet_01.ogg` | [warmly] Wächterin Isolde! Euer Bier ist dünn, Eure Sache gut. | herzlich-grob |
+| `voices/heroes/hero_torvald_greet_02.ogg` | [proudly] Skarnheim schickt Eisen, und mich. | stolz |
+| `voices/heroes/hero_torvald_greet_03.ogg` | [impatiently] Richtet mich auf den Feind. | ungeduldig |
 
 ### hero_torvald_levelup (Event `voice.hero_torvald.levelup`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_levelup_01.ogg` | Die Kraft der Ahnen wächst in mir! | dröhnend |
-| `voices/heroes/hero_torvald_levelup_02.ogg` | Schwerere Fäuste, leichteres Herz! | lachend |
-| `voices/heroes/hero_torvald_levelup_03.ogg` | Mehr Eisen im Blut! | froh |
+| `voices/heroes/hero_torvald_levelup_01.ogg` | [shouting] Die Kraft der Ahnen wächst in mir! | dröhnend |
+| `voices/heroes/hero_torvald_levelup_02.ogg` | [laughs] Schwerere Fäuste, leichteres Herz! | lachend |
+| `voices/heroes/hero_torvald_levelup_03.ogg` | [cheerfully] Mehr Eisen im Blut! | froh |
 
 ### hero_torvald_lowhp (Event `voice.hero_torvald.lowhp`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/heroes/hero_torvald_lowhp_01.ogg` | Ich hatte Schlimmeres – glaube ich. | keuchend-trotzig |
-| `voices/heroes/hero_torvald_lowhp_02.ogg` | Noch … nicht … Ahnen! | gepresst |
-| `voices/heroes/hero_torvald_lowhp_03.ogg` | Mein Blut verlässt mich … | schwach |
+| `voices/heroes/hero_torvald_lowhp_01.ogg` | [firmly] [panting] Ich hatte Schlimmeres – glaube ich. | keuchend-trotzig |
+| `voices/heroes/hero_torvald_lowhp_02.ogg` | [calmly] Noch … nicht … Ahnen! | gepresst |
+| `voices/heroes/hero_torvald_lowhp_03.ogg` | [quietly] Mein Blut verlässt mich … | schwach |
 
 
 ---
@@ -1433,23 +1433,23 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 ### hollow_digger_attack (Event `voice.hollow_digger.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_digger_attack_01.ogg` | [rasping] Mein … mein … | gierig, kehlig |
+| `voices/units/hollow_digger_attack_01.ogg` | [greedily] [rasping] Mein … mein … | gierig, kehlig |
 | `voices/units/hollow_digger_attack_02.ogg` | [groans] Nicht die … Schaufel … | klagend |
 | `voices/units/hollow_digger_attack_03.ogg` | [hisses] Hhhaah! | wortlos |
-| `voices/units/hollow_digger_attack_04.ogg` | … Schicht … nicht vorbei … | gemurmelt |
+| `voices/units/hollow_digger_attack_04.ogg` | [shouting] … Schicht … nicht vorbei … | gemurmelt |
 
 ### hollow_digger_hit (Event `voice.hollow_digger.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_digger_hit_01.ogg` | [groans] Uhh – zurück an die Arbeit … | gleichgültig |
-| `voices/units/hollow_digger_hit_02.ogg` | [gasps] Hhkk – | trockenes Keuchen |
-| `voices/units/hollow_digger_hit_03.ogg` | … Staub … in den … Augen … | verloren |
+| `voices/units/hollow_digger_hit_01.ogg` | [coldly] [groans] Uhh – zurück an die Arbeit … | gleichgültig |
+| `voices/units/hollow_digger_hit_02.ogg` | [dryly] [gasps] Hhkk – | trockenes Keuchen |
+| `voices/units/hollow_digger_hit_03.ogg` | [grunts] … Staub … in den … Augen … | verloren |
 
 ### hollow_digger_death (Event `voice.hollow_digger.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/hollow_digger_death_01.ogg` | [sighs] … Schicht … vorbei … | erlöst |
-| `voices/units/hollow_digger_death_02.ogg` | [exhales] … tiefer … tiefer … | verhauchend |
+| `voices/units/hollow_digger_death_01.ogg` | [relieved] [sighs] … Schicht … vorbei … | erlöst |
+| `voices/units/hollow_digger_death_02.ogg` | [quietly] [exhales] … tiefer … tiefer … | verhauchend |
 | `voices/units/hollow_digger_death_03.ogg` | [rattling breath] Hhhaaahh … | langes Röcheln |
 
 ### 14.2 Hohle – `ghoul` (Ghul)
@@ -1461,15 +1461,15 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/ghoul_attack_01.ogg` | [screeches] Hhheeeee! | hohes Kreischen |
-| `voices/units/ghoul_attack_02.ogg` | [snarls] Hunger … Hunger … | gierig, schmatzend |
+| `voices/units/ghoul_attack_02.ogg` | [greedily] [snarls] Hunger … Hunger … | gierig, schmatzend |
 | `voices/units/ghoul_attack_03.ogg` | [hisses] Frisch … frisch … | lüstern |
 | `voices/units/ghoul_attack_04.ogg` | [wet growl] Grrrhhh! | tiefes, nasses Knurren |
 
 ### ghoul_hit (Event `voice.ghoul.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/ghoul_hit_01.ogg` | [yelps] Hkkh! | kurzer Aufschrei |
-| `voices/units/ghoul_hit_02.ogg` | [snarls] Hrrrk! | wütend |
+| `voices/units/ghoul_hit_01.ogg` | [shouting] [yelps] Hkkh! | kurzer Aufschrei |
+| `voices/units/ghoul_hit_02.ogg` | [angry] [snarls] Hrrrk! | wütend |
 | `voices/units/ghoul_hit_03.ogg` | [whines] Hnnn … | kläglich |
 
 ### ghoul_death (Event `voice.ghoul.death`)
@@ -1487,10 +1487,10 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 ### ash_witch_attack (Event `voice.ash_witch.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/ash_witch_attack_01.ogg` | [whispers] Brennt für mich. | kalt, flüsternd |
+| `voices/units/ash_witch_attack_01.ogg` | [coldly] [whispers] Brennt für mich. | kalt, flüsternd |
 | `voices/units/ash_witch_attack_02.ogg` | [hisses] Asche und Knochen. | scharf |
-| `voices/units/ash_witch_attack_03.ogg` | [whispers] Du warst einmal warm. | spöttisch |
-| `voices/units/ash_witch_attack_04.ogg` | [cold laugh] Kommt näher. | leise-lockend |
+| `voices/units/ash_witch_attack_03.ogg` | [mockingly] [whispers] Du warst einmal warm. | spöttisch |
+| `voices/units/ash_witch_attack_04.ogg` | [quietly] [cold laugh] Kommt näher. | leise-lockend |
 
 ### ash_witch_hit (Event `voice.ash_witch.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1502,8 +1502,8 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 ### ash_witch_death (Event `voice.ash_witch.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/ash_witch_death_01.ogg` | [exhales] Das Tief … ist geduldig … | verhauchend |
-| `voices/units/ash_witch_death_02.ogg` | [whispers] Erhebt euch … ohne mich … | leise |
+| `voices/units/ash_witch_death_01.ogg` | [quietly] [exhales] Das Tief … ist geduldig … | verhauchend |
+| `voices/units/ash_witch_death_02.ogg` | [quietly] [whispers] Erhebt euch … ohne mich … | leise |
 | `voices/units/ash_witch_death_03.ogg` | [rattling breath] Staub zu Staub … | Röcheln |
 
 ### ash_witch_ability (Event `voice.ash_witch.ability`)
@@ -1511,7 +1511,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 |---|---|---|
 | `voices/units/ash_witch_ability_01.ogg` | [whispers] Erhebt euch, meine Kinder. | beschwörend, tief |
 | `voices/units/ash_witch_ability_02.ogg` | [commanding] Hoch aus der Asche! | befehlend |
-| `voices/units/ash_witch_ability_03.ogg` | [chants] Knochen zu Knochen, Fleisch zu Fleisch. | Singsang, rituell |
+| `voices/units/ash_witch_ability_03.ogg` | [solemn] [chants] Knochen zu Knochen, Fleisch zu Fleisch. | Singsang, rituell |
 
 ### 14.4 Hohle – `bat_swarm` (Fledermausschwarm)
 
