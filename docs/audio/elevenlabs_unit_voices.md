@@ -29,7 +29,7 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 | `voices/units/worker_select_01.ogg` | [warmly] Jo, was gibt's zu tun? | freundlich-willig, mittlere Lautstärke |
 | `voices/units/worker_select_02.ogg` | [sighs] Noch 'ne Arbeit, was? | kurzer Seufzer, dann gutmütig |
 | `voices/units/worker_select_03.ogg` | [dryly] Hab die Hände frei. Noch. | trocken, kleine Pause vor „Noch“ |
-| `voices/units/worker_select_04.ogg` | [calmly] Ja, Wächterin? Ich hör zu. | respektvoll, leicht unterwürfig |
+| `voices/units/worker_select_04.ogg` | [respectfully] Ja, Wächterin? Ich hör zu. | respektvoll, leicht unterwürfig |
 | `voices/units/worker_select_05.ogg` | [groans] Rücken tut weh, aber ich bin da. | Ächzen in der Stimme, lächelnd |
 
 ### worker_move (Event `voice.worker.move`)
@@ -553,7 +553,7 @@ Integration (nicht vom Nutzer): Hohle-Kette + Vogt-Ergänzung (Chorus-Schicht, k
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/boss_pale_reeve_attack_01.ogg` | [coldly] Euer Zehnt ist fällig. | kalt, beiläufig |
-| `voices/units/boss_pale_reeve_attack_02.ogg` | [shouting] Zahlt, was Ihr schuldet! | scharf, lauter |
+| `voices/units/boss_pale_reeve_attack_02.ogg` | [sharply] Zahlt, was Ihr schuldet! | scharf, lauter |
 | `voices/units/boss_pale_reeve_attack_03.ogg` | [hissing] Jede Seele wird gezählt. | pedantisch, zischend |
 | `voices/units/boss_pale_reeve_attack_04.ogg` | [shouting] Ab ins Register mit Euch. | süffisant |
 
@@ -708,7 +708,7 @@ Zeilen für select/move/attack; für die Produktion auf 4–5 Varianten erweiter
 | `voices/units/hollow_revenant_mage_move_02.ogg` | [slowly] Wie Rauch durch Ruinen. | langsam |
 | `voices/units/hollow_revenant_mage_move_03.ogg` | [whispers] Die Toten machen kein Geräusch. | flüsternd |
 | `voices/units/hollow_revenant_mage_attack_01.ogg` | [coldly] [whispers] Aufgelöst. | eisig |
-| `voices/units/hollow_revenant_mage_attack_02.ogg` | [shouting] Verdorre! | Zauberwort, scharf |
+| `voices/units/hollow_revenant_mage_attack_02.ogg` | [sharply] Verdorre! | Zauberwort, scharf |
 | `voices/units/hollow_revenant_mage_attack_03.ogg` | [mockingly] Dein Licht ist geliehen. | verächtlich |
 
 ### 11.10 Aschenlegion – Aschenreiter (Kavallerie) · Vorschlag `legion_ash_rider` · Stimme `AC_ashen_legion_legionnaire` (mit Helm-Signatur)
@@ -767,7 +767,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### crossbowman_attack (Event `voice.crossbowman.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/crossbowman_attack_01.ogg` | [shouting] Schuss! | scharf, laut |
+| `voices/units/crossbowman_attack_01.ogg` | [sharply] [shouting] Schuss! | scharf, laut |
 | `voices/units/crossbowman_attack_02.ogg` | [shouting] Der hier durchschlägt Panzer! | grimmig |
 | `voices/units/crossbowman_attack_03.ogg` | [firmly] Runter mit dir! | hart |
 | `voices/units/crossbowman_attack_04.ogg` | [shouting] Spannen … und Schuss! | rhythmisch, zweiteilig |
@@ -811,7 +811,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | `voices/units/halberdier_select_01.ogg` | [dryly] Hellebarde hoch. | tief, knapp |
 | `voices/units/halberdier_select_02.ogg` | [proudly] Zur Stelle und bereit. | steif, stolz |
 | `voices/units/halberdier_select_03.ogg` | [amused] Sollen sie nur zu Pferd kommen. | grimmig-amüsiert |
-| `voices/units/halberdier_select_04.ogg` | [calmly] Befehle, Wächterin? | respektvoll |
+| `voices/units/halberdier_select_04.ogg` | [respectfully] Befehle, Wächterin? | respektvoll |
 
 ### halberdier_move (Event `voice.halberdier.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -918,7 +918,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/shieldbearer_ability_01.ogg` | [commanding] [shouting] Schildwall! Aufschließen! | laut, befehlend |
-| `voices/units/shieldbearer_ability_02.ogg` | [commanding] Schilde verhaken! | kurz, scharf |
+| `voices/units/shieldbearer_ability_02.ogg` | [sharply] Schilde verhaken! | kurz, scharf |
 | `voices/units/shieldbearer_ability_03.ogg` | [firmly] Bildet die Mauer! | kräftig |
 
 ### 12.4 Glutkrone – `scout_rider` (Spähreiter)
@@ -932,7 +932,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | `voices/units/scout_rider_select_01.ogg` | [cheerfully] [quickly] Bereit zum Ritt! | schnell, munter |
 | `voices/units/scout_rider_select_02.ogg` | [greedily] Was soll ich auskundschaften? | neugierig |
 | `voices/units/scout_rider_select_03.ogg` | [cheerfully] Gutes Pferd, gute Augen. | zufrieden |
-| `voices/units/scout_rider_select_04.ogg` | [calmly] Zeigt mir den Weg. | eifrig |
+| `voices/units/scout_rider_select_04.ogg` | [eagerly] Zeigt mir den Weg. | eifrig |
 
 ### scout_rider_move (Event `voice.scout_rider.move`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -946,7 +946,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/scout_rider_attack_01.ogg` | [shouting] Hü! Reitet sie nieder! | laut |
-| `voices/units/scout_rider_attack_02.ogg` | [shouting] Schnell und sauber! | scharf |
+| `voices/units/scout_rider_attack_02.ogg` | [sharply] Schnell und sauber! | scharf |
 | `voices/units/scout_rider_attack_03.ogg` | [shouting] Für Brennhollow! | Schlachtruf |
 | `voices/units/scout_rider_attack_04.ogg` | [shouting] Na kommt schon! | herausfordernd |
 
@@ -960,7 +960,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### scout_rider_hit (Event `voice.scout_rider.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/scout_rider_hit_01.ogg` | [gasps] Ah, meine Seite! | scharf |
+| `voices/units/scout_rider_hit_01.ogg` | [sharply] [gasps] Ah, meine Seite! | scharf |
 | `voices/units/scout_rider_hit_02.ogg` | [grunts] Gestreift. | überspielt |
 | `voices/units/scout_rider_hit_03.ogg` | [worried] [hisses] Halt durch, Mädchen! | besorgt |
 
@@ -1017,7 +1017,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### horse_archer_hit (Event `voice.horse_archer.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/horse_archer_hit_01.ogg` | [gasps] Ein Pfeil im Mantel! | scharf |
+| `voices/units/horse_archer_hit_01.ogg` | [sharply] [gasps] Ein Pfeil im Mantel! | scharf |
 | `voices/units/horse_archer_hit_02.ogg` | [grunts] Nicht schlecht. | überspielt |
 | `voices/units/horse_archer_hit_03.ogg` | [hisses] Ruhig, Mädchen! | zum Pferd |
 
@@ -1032,7 +1032,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/horse_archer_victory_01.ogg` | [cheerfully] Sie kamen nie nah heran. | zufrieden |
-| `voices/units/horse_archer_victory_02.ogg` | [proudly] Köcher leicht, Herz leichter. | gelöst |
+| `voices/units/horse_archer_victory_02.ogg` | [relieved] Köcher leicht, Herz leichter. | gelöst |
 | `voices/units/horse_archer_victory_03.ogg` | [calmly] Wieder eine Jagd vorbei. | ruhig |
 
 ### 12.6 Glutkrone – `battle_mage` (Kampfmagier, Feuerschule)
@@ -1059,7 +1059,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### battle_mage_attack (Event `voice.battle_mage.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_attack_01.ogg` | [shouting] Brennt! | scharf, laut |
+| `voices/units/battle_mage_attack_01.ogg` | [sharply] [shouting] Brennt! | scharf, laut |
 | `voices/units/battle_mage_attack_02.ogg` | [shouting] Asche zu Asche! | grimmig |
 | `voices/units/battle_mage_attack_03.ogg` | [solemn] Bei der Ewigen Flamme! | hymnisch |
 | `voices/units/battle_mage_attack_04.ogg` | [dryly] Entfacht! | knapp, Zauberruf |
@@ -1074,7 +1074,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 ### battle_mage_hit (Event `voice.battle_mage.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
-| `voices/units/battle_mage_hit_01.ogg` | [gasps] Meine Konzentration! | scharf |
+| `voices/units/battle_mage_hit_01.ogg` | [sharply] [gasps] Meine Konzentration! | scharf |
 | `voices/units/battle_mage_hit_02.ogg` | [hisses] Das brennt … in die falsche Richtung. | bissig |
 | `voices/units/battle_mage_hit_03.ogg` | [grunts] Ruhig bleiben. | zu sich selbst |
 
@@ -1096,7 +1096,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/battle_mage_ability_01.ogg` | [shouting] Feuer, antworte mir! | laut, Zauberruf |
-| `voices/units/battle_mage_ability_02.ogg` | [commanding] Funken, erhebt euch! | scharf |
+| `voices/units/battle_mage_ability_02.ogg` | [sharply] Funken, erhebt euch! | scharf |
 | `voices/units/battle_mage_ability_03.ogg` | [firmly] Flamme, nimm sie! | hart |
 
 ### 12.7 Glutkrone – `priest` (Priester der Flamme)
@@ -1224,7 +1224,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/catapult_attack_01.ogg` | [commanding] [shouting] Los! | laut, Kommando |
-| `voices/units/catapult_attack_02.ogg` | [shouting] Feuer! | scharf |
+| `voices/units/catapult_attack_02.ogg` | [sharply] Feuer! | scharf |
 | `voices/units/catapult_attack_03.ogg` | [shouting] Zurücktreten – los! | Warnruf |
 | `voices/units/catapult_attack_04.ogg` | [triumphantly] Fort damit! | Triumph |
 
@@ -1270,7 +1270,7 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 |---|---|---|
 | `voices/heroes/hero_hal_venn_attack_01.ogg` | [firmly] Im Namen der Flamme! | kräftig |
 | `voices/heroes/hero_hal_venn_attack_02.ogg` | [shouting] Fort mit euch, Schatten! | laut |
-| `voices/heroes/hero_hal_venn_attack_03.ogg` | [shouting] Genug! Zurück! | scharf |
+| `voices/heroes/hero_hal_venn_attack_03.ogg` | [sharply] Genug! Zurück! | scharf |
 | `voices/heroes/hero_hal_venn_attack_04.ogg` | [solemn] Licht, triff sicher! | hymnisch |
 | `voices/heroes/hero_hal_venn_attack_05.ogg` | [firmly] Ich dulde kein weiteres verlorenes Dorf! | entschlossen |
 
@@ -1306,7 +1306,7 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/heroes/hero_hal_venn_ability_01.ogg` | [warmly] [shouting] Flamme, heile sie! | warm, laut |
-| `voices/heroes/hero_hal_venn_ability_02.ogg` | [commanding] Brennt rein! | scharf |
+| `voices/heroes/hero_hal_venn_ability_02.ogg` | [sharply] Brennt rein! | scharf |
 | `voices/heroes/hero_hal_venn_ability_03.ogg` | [solemn] Glaube sei unser Feuer! | hymnisch |
 
 ### hero_hal_venn_greet (Event `voice.hero_hal_venn.greet`)
@@ -1488,7 +1488,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 | Ziel-Datei | Sprechtext (DE) | Regie |
 |---|---|---|
 | `voices/units/ash_witch_attack_01.ogg` | [coldly] [whispers] Brennt für mich. | kalt, flüsternd |
-| `voices/units/ash_witch_attack_02.ogg` | [hisses] Asche und Knochen. | scharf |
+| `voices/units/ash_witch_attack_02.ogg` | [sharply] [hisses] Asche und Knochen. | scharf |
 | `voices/units/ash_witch_attack_03.ogg` | [mockingly] [whispers] Du warst einmal warm. | spöttisch |
 | `voices/units/ash_witch_attack_04.ogg` | [quietly] [cold laugh] Kommt näher. | leise-lockend |
 

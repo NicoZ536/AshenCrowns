@@ -29,7 +29,7 @@ Angriffswellen der Hohlen, findet den Schrein und zerstört ihn.
 
 ## 1.1 Erzähler (`narrator`)
 
-**Stimme:** `AC_narrator` · **Modell:** Eleven v3, Stability-Modus *Natural* (Robust, falls die Stimme zwischen Generierungen zu stark schwankt), Speed 0,95 · **Integration (nicht vom Nutzer):** Lautheit, Schnitt, Format · Manifest: +2 dB.
+**Stimme:** `AC_narrator` · **Modell:** Eleven v3, Stability-Modus *Natural* (Robust, falls die Stimme zwischen Generierungen zu stark schwankt), Speed 0,95 · Manifest: +2 dB.
 **Regie allgemein:** getragen, ehrfürchtig, leise Trauer; nie Trailer-Pathos. Eine Zeile = eine Generierung.
 
 ### narrator_m01_opening (Event `narrator.m01_opening`)
@@ -67,7 +67,7 @@ hat keine Spieltext-Entsprechung; er bleibt Teil der Datei und wird nach der Lie
 
 ## 1.2 Bruder Hal Venn (`char_hal_venn`)
 
-**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 · **Integration (nicht vom Nutzer):** Lautheit, Schnitt, Format · Manifest: +1 dB.
+**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 · Manifest: +1 dB.
 **Regie allgemein:** väterlicher Mentor, warm, geerdet; in Gefahr klar, nie panisch. Spricht Isolde mit Vornamen an (vertrautes „du“ im DE).
 
 ### char_hal_venn_m01_intro (Event `char_hal_venn.m01_intro`)
@@ -175,7 +175,7 @@ an einem Gebirgspass vor den Gräbern seiner Ahnen. **Entscheidung:** Blutschwur
 | # | Ziel-Datei | Sprecher | Sprechtext (DE) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/char_torvald_a03_ancestor_pass_01.ogg` | Torvald | [thoughtfully] [shouting] Die Wächterin des Südens erklimmt also meinen Berg. Du bist kleiner, als die Lieder sagen. | dröhnend, prüfend, Berghall |
-| 2 | `voices/characters/hero_isolde_a03_ancestor_pass_01.ogg` | Isolde | [fearful] Lieder übertreiben. Eure machen Euch angeblich größer und weiser. | trocken, furchtlos |
+| 2 | `voices/characters/hero_isolde_a03_ancestor_pass_01.ogg` | Isolde | [firmly] Lieder übertreiben. Eure machen Euch angeblich größer und weiser. | trocken, furchtlos |
 | 3 | `voices/characters/char_torvald_a03_ancestor_pass_02.ogg` | Torvald | [sad] [laughs] Ha! Sie beißt! Gut. Die Toten kamen vor drei Nächten über den Hochpass. Wir haben vierzig der Unseren begraben. Vierzig. | dröhnendes Lachen, das in Trauer kippt |
 | 4 | `voices/characters/hero_isolde_a03_ancestor_pass_02.ogg` | Isolde | [seriously] Dann wollen wir dasselbe. Die Hohlen fort und unsere Toten in Frieden. | ernst, Respekt |
 | 5 | `voices/characters/char_torvald_a03_ancestor_pass_03.ogg` | Torvald | [solemn] Wollen ist billig. Der Ahnenpfad verlangt mehr. Südländer zahlen in Gold. Sippe zahlt in Blut. Was bist du? | schwer, rituell |
@@ -506,7 +506,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
-| 1 | `voices/characters/hero_isolde_m06_anschlag_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [calmly] Dort oben! Die Reiter voran – [pause] holt sie ein, bevor sie die Gassen erreichen! | scharf |
+| 1 | `voices/characters/hero_isolde_m06_anschlag_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [sharply] Dort oben! Die Reiter voran – [pause] holt sie ein, bevor sie die Gassen erreichen! | scharf |
 
 ### `m06_kassian_a`
 *Kontext:* Entscheidung: Der König wird gewarnt.
@@ -570,7 +570,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/char_torvald_m09_schwur_a_01.ogg` | Torvald Eisenhand (`AC_char_torvald`) | [amused] [shouting] Die Wächterin des Südens erklimmt also meinen Berg. Du bist kleiner, als die Lieder sagen. | dröhnend, amüsiert |
-| 2 | `voices/characters/hero_isolde_m09_schwur_b_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [fearful] Lieder übertreiben. Eure machen Euch angeblich größer und weiser. | trocken, furchtlos |
+| 2 | `voices/characters/hero_isolde_m09_schwur_b_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [firmly] Lieder übertreiben. Eure machen Euch angeblich größer und weiser. | trocken, furchtlos |
 | 3 | `voices/characters/char_torvald_m09_schwur_c_01.ogg` | Torvald Eisenhand (`AC_char_torvald`) | [coldly] [laughs] Ha! Sie beißt! Gut. Die Toten kamen vor drei Nächten über den hohen Pass. Wir haben vierzig der Unseren begraben. Vierzig. | grimmig, kurz auflachend, dann dunkel |
 | 4 | `voices/characters/hero_isolde_m09_schwur_d_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [seriously] Dann wollen wir dasselbe. Die Hohlen fort und unsere Toten in Frieden. | ernst, respektvoll |
 | 5 | `voices/characters/char_torvald_m09_schwur_e_01.ogg` | Torvald Eisenhand (`AC_char_torvald`) | [thoughtfully] Wollen ist billig. Der Ahnenpfad verlangt mehr. Südländer zahlen in Gold, Sippe zahlt in Blut. Was bist du? | scharf, prüfend |
@@ -848,7 +848,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/narrator/narrator_m17_hof_a_01.ogg` | Erzähler (`AC_narrator`) | [solemn] Im Flammendom waren sie alle versammelt: die Herzöge, die Flammenwahrer, die Räte. Und in der Mitte der Sarg des Königs, leer – [pause] der Leichnam lag noch im Nebenraum, damit niemand ihn küsste. | feierlich, kalt |
-| 2 | `voices/characters/char_mireille_m17_hof_b_01.ogg` | Herzogin Mireille Corvane (`AC_char_mireille`) | [calmly] Wächterin. Man sagt, Ihr wisst, wer es war. Sagt es – [pause] oder lasst uns dem Mörder zuprosten, so lange er bei uns sitzt. | scharf, souverän |
+| 2 | `voices/characters/char_mireille_m17_hof_b_01.ogg` | Herzogin Mireille Corvane (`AC_char_mireille`) | [sharply] Wächterin. Man sagt, Ihr wisst, wer es war. Sagt es – [pause] oder lasst uns dem Mörder zuprosten, so lange er bei uns sitzt. | scharf, souverän |
 | 3 | `voices/characters/char_hal_venn_m17_hof_c_01.ogg` | Bruder Hal Venn (`AC_char_hal_venn`) | [warmly] Du darfst nur einen Namen nennen, Isolde. Es ist die Aufgabe einer Wächterin, zu entscheiden – [pause] und den Preis zu tragen. | ernst, väterlich |
 
 ### `m17_urteil_a`
@@ -881,7 +881,7 @@ Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen
 | # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|---|---|
 | 1 | `voices/characters/hero_isolde_m17_urteil_d_a_01.ogg` | Isolde Raventhorn (`AC_hero_isolde`) | [calmly] Ich kenne die ganze Wahrheit: Gift im Wein, ein falscher Brief aus Nordmark, das Siegel der Häresie – [pause] und einer, der sie alle vermittelte. Seht auf die, die von Verwirrung leben. | ruhig, zwingend |
-| 2 | `voices/characters/char_mireille_m17_urteil_d_b_01.ogg` | Herzogin Mireille Corvane (`AC_char_mireille`) | [calmly] Ihr habt mehr Mut, als ich Euch zutraute. Und mehr Beweise, als mir lieb ist. | widerwillig respektvoll |
+| 2 | `voices/characters/char_mireille_m17_urteil_d_b_01.ogg` | Herzogin Mireille Corvane (`AC_char_mireille`) | [respectfully] Ihr habt mehr Mut, als ich Euch zutraute. Und mehr Beweise, als mir lieb ist. | widerwillig respektvoll |
 
 ## Mission 19 – Die Furt von Kaldris (`m19`)
 
