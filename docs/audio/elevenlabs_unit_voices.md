@@ -739,11 +739,11 @@ Zeilen für select/move/attack; für die Produktion auf 4–5 Varianten erweiter
 
 ## 12. Echtzeit-Militär – Glutkrone (neue Einheiten)
 
-Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts stehen im Manifest (Events `voice.<id>.<situation>`); die Stimmprofile `D1.6`–`D1.14` sind im Figurenleitfaden neu anzulegen (gleiche Pflege wie D1.1–D1.5). **Sprechtempo und Haltung** je Einheit siehe Kopfzeile; Loudness wie Glutkrone allgemein (−16 LUFS). `priest` ersetzt den Vorschlag `ember_priest` aus Abschnitt 11.1.
+Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts stehen im Manifest (Events `voice.<id>.<situation>`); die Stimmprofile stehen im Figurenleitfaden, Teil G (G1–G12). **Sprechtempo und Haltung** je Einheit siehe Kopfzeile; Loudness wie Glutkrone allgemein (−16 LUFS). `priest` ersetzt den Vorschlag `ember_priest` aus Abschnitt 11.1.
 
 ### 12.1 Glutkrone – `crossbowman` (Armbrustschütze)
 
-**Stimme:** `AC_unit_crossbowman (Profil D1.6)` · **Modell:** Eleven v3, *Natural* · Speed 1,0
+**Stimme:** `AC_unit_crossbowman (Profil G1)` · **Modell:** Eleven v3, *Natural* · Speed 1,0
 **Haltung:** nüchterner Söldnerveteran aus den Grenzgarnisonen, kurze, trockene Sätze, spricht über Reichweite und Treffer wie über Handwerk.
 
 ### crossbowman_select (Event `voice.crossbowman.select`)
@@ -800,7 +800,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.2 Glutkrone – `halberdier` (Hellebardier)
 
-**Stimme:** `AC_unit_halberdier (Profil D1.7)` · **Modell:** Eleven v3, *Natural* · Speed 0,95
+**Stimme:** `AC_unit_halberdier (Profil G2)` · **Modell:** Eleven v3, *Natural* · Speed 0,95
 **Haltung:** bärbeißiger Gardist mit tiefer Stimme, ein Pferdebrecher; liebt Formationen, mag keine Reiter.
 
 ### halberdier_select (Event `voice.halberdier.select`)
@@ -857,7 +857,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.3 Glutkrone – `shieldbearer` (Schildträger)
 
-**Stimme:** `AC_unit_shieldbearer (Profil D1.8)` · **Modell:** Eleven v3, *Natural* · Speed 0,92
+**Stimme:** `AC_unit_shieldbearer (Profil G3)` · **Modell:** Eleven v3, *Natural* · Speed 0,92
 **Haltung:** geduldiger, schwerer Bollwerkkämpfer; spricht wenig, sehr tief, mit stoischer Ruhe.
 
 ### shieldbearer_select (Event `voice.shieldbearer.select`)
@@ -921,7 +921,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.4 Glutkrone – `scout_rider` (Spähreiter)
 
-**Stimme:** `AC_unit_scout_rider (Profil D1.9)` · **Modell:** Eleven v3, *Creative* · Speed 1,08
+**Stimme:** `AC_unit_scout_rider (Profil G4)` · **Modell:** Eleven v3, *Creative* · Speed 1,08
 **Haltung:** junger, flinker Grenzreiter, wach und etwas übermütig; spricht schnell, lacht gern.
 
 ### scout_rider_select (Event `voice.scout_rider.select`)
@@ -978,7 +978,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.5 Glutkrone – `horse_archer` (Berittener Bogenschütze)
 
-**Stimme:** `AC_unit_horse_archer (Profil D1.10)` · **Modell:** Eleven v3, *Creative* · Speed 1,05
+**Stimme:** `AC_unit_horse_archer (Profil G5)` · **Modell:** Eleven v3, *Creative* · Speed 1,05
 **Haltung:** geschmeidige Steppen-Söldnerin, selbstsicher, ein wenig spöttisch; schießt, bevor andere zielen.
 
 ### horse_archer_select (Event `voice.horse_archer.select`)
@@ -1035,7 +1035,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.6 Glutkrone – `battle_mage` (Kampfmagier, Feuerschule)
 
-**Stimme:** `AC_unit_battle_mage (Profil D1.11)` · **Modell:** Eleven v3, *Creative* · Speed 1,0
+**Stimme:** `AC_unit_battle_mage (Profil G6)` · **Modell:** Eleven v3, *Creative* · Speed 1,0
 **Haltung:** disziplinierter Feuermagier der Flammenakademie von Kaldris; höflich, gespannt, mit unterdrückter Hitze in der Stimme.
 
 ### battle_mage_select (Event `voice.battle_mage.select`)
@@ -1099,7 +1099,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.7 Glutkrone – `priest` (Priester der Flamme)
 
-**Stimme:** `AC_unit_priest (Profil D1.12)` · **Modell:** Eleven v3, *Natural* · Speed 0,96
+**Stimme:** `AC_unit_priest (Profil G7)` · **Modell:** Eleven v3, *Natural* · Speed 0,96
 **Haltung:** sanfter, warmer Flammenpriester der Dorfkapelle; zitiert Liturgie, hat im Kampf Angst, aber hilft trotzdem.
 
 ### priest_select (Event `voice.priest.select`)
@@ -1163,7 +1163,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.8 Glutkrone – `battering_ram` (Rammbock, Bedienmannschaft)
 
-**Stimme:** `AC_unit_ram_crew (Profil D1.13)` · **Modell:** Eleven v3, *Creative* (Mehrstimmen-Chor, 3–4 Männer) · Speed 1,0
+**Stimme:** `AC_unit_ram_crew (Profil G8)` · **Modell:** Eleven v3, *Creative* (Mehrstimmen-Chor, 3–4 Männer) · Speed 1,0
 **Haltung:** Gruppe schwitzender Pioniere; rufen im Takt, Stoßrufe, Hau-Ruck. Mehrere Sprecher überlagert, dumpfe Anstrengung.
 
 ### battering_ram_select (Event `voice.battering_ram.select`)
@@ -1199,7 +1199,7 @@ Ergänzung zu `docs/design/rts_military.md`. Alle Einheiten dieses Abschnitts st
 
 ### 12.9 Glutkrone – `catapult` (Katapult, Bedienmannschaft)
 
-**Stimme:** `AC_unit_catapult_crew (Profil D1.14)` · **Modell:** Eleven v3, *Creative* (2–3 Sprecher) · Speed 1,0
+**Stimme:** `AC_unit_catapult_crew (Profil G9)` · **Modell:** Eleven v3, *Creative* (2–3 Sprecher) · Speed 1,0
 **Haltung:** erfahrene Geschützmeister, nüchterne Zurufe in Kommandoform, Winden und Seile hörbar.
 
 ### catapult_select (Event `voice.catapult.select`)
@@ -1425,7 +1425,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 
 ### 14.1 Hohle – `hollow_digger` (Grabgräber)
 
-**Stimme:** `AC_unit_hollow_digger (Profil D5.3)` · **Modell:** Eleven v3, *Creative* · Speed 0,9
+**Stimme:** `AC_unit_hollow_digger (Profil G10)` · **Modell:** Eleven v3, *Creative* · Speed 0,9
 **Haltung:** arbeitsamer Wiedergänger, der im Tod weiter schürft; murmelt Fetzen von Werkzeugen und Schichten. Wie `hollow_thrall`: Hohle-Kette, Pitch −2.
 
 ### hollow_digger_attack (Event `voice.hollow_digger.attack`)
@@ -1452,7 +1452,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 
 ### 14.2 Hohle – `ghoul` (Ghul)
 
-**Stimme:** `AC_unit_ghoul (Profil D5.4)` · **Modell:** Eleven v3, *Creative* + SFX-Layer · Speed 1,1
+**Stimme:** `AC_unit_ghoul (Profil G11)` · **Modell:** Eleven v3, *Creative* + SFX-Layer · Speed 1,1
 **Haltung:** ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter. Basis: Voice Changer oder SFX-Prompt, danach Hohle-Kette.
 
 ### ghoul_attack (Event `voice.ghoul.attack`)
@@ -1479,7 +1479,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 
 ### 14.3 Hohle – `ash_witch` (Aschhexe)
 
-**Stimme:** `AC_unit_ash_witch (Profil D5.5)` · **Modell:** Eleven v3, *Creative* mit `[whispers]` · Speed 0,92
+**Stimme:** `AC_unit_ash_witch (Profil G12)` · **Modell:** Eleven v3, *Creative* mit `[whispers]` · Speed 0,92
 **Haltung:** flüsternde Nekromantin, kalt-berechnend, spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall-Anteil.
 
 ### ash_witch_attack (Event `voice.ash_witch.attack`)

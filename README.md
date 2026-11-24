@@ -39,6 +39,7 @@ cargo run --release -- --help           # Optionen (Profil, Vollbild, Screenshot
 cargo test --workspace                  # Tests
 cargo run -p ashen_tools -- validate-data --mod mods/example_mod
 cargo run -p ashen_tools -- audio-scan  # Audiodateien prüfen und zuordnen
+cargo run -p ashen_tools -- audio-list  # alle erwarteten Audiodateien auflisten (--format csv, --out)
 ```
 
 Screenshot ohne Fenster (z. B. für Dokumentation oder CI):
@@ -76,7 +77,7 @@ cargo run --release -- --screenshot hero.png --scene mission --demo hero --ui he
 - [Weltbibel](docs/lore/world_bible.md) · [Glossar](docs/lore/glossary.md)
 - [Architektur](docs/tech/architecture.md) · [Module](docs/tech/modules.md) · [Datenmodell](docs/tech/data_model.md) · [Projektstruktur](docs/tech/project_structure.md) · [Roadmap](docs/tech/roadmap.md) · [Modding](docs/tech/modding.md)
 - [Grafik & Shader](docs/art/graphics_and_shaders.md) · [3D→Pixel-Pipeline](docs/art/3d_pixel_pipeline.md) · [Asset-Produktionsplan](docs/art/asset_production_plan.md)
-- Audio: [ElevenLabs-Leitfaden](docs/audio/elevenlabs_production_guide.md), [Figuren](docs/audio/elevenlabs_characters.md), [Einheiten](docs/audio/elevenlabs_unit_voices.md), [Dialoge](docs/audio/elevenlabs_dialogues.md), [Soundeffekte](docs/audio/elevenlabs_sound_effects.md), [Ambience](docs/audio/elevenlabs_ambient_audio.md), [Suno-Musik](docs/audio/suno_master_production.md), [Audio-Integration](docs/audio/audio_integration.md)
+- Audio: [ElevenLabs-Leitfaden](docs/audio/elevenlabs_production_guide.md), [Figuren](docs/audio/elevenlabs_characters.md), [Einheiten](docs/audio/elevenlabs_unit_voices.md), [Dialoge](docs/audio/elevenlabs_dialogues.md), [Soundeffekte](docs/audio/elevenlabs_sound_effects.md), [Ambience](docs/audio/elevenlabs_ambient_audio.md), [Suno-Musik](docs/audio/suno_master_production.md), [Audio-Integration](docs/audio/audio_integration.md), [Audio-Produktionsliste (alle Dateien, Prompts, Einstellungen)](docs/audio/PRODUCTION_CHECKLIST.md)
 
 ## Bekannte Einschränkungen
 

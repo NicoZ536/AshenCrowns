@@ -8,7 +8,8 @@ produzierten Dateien geliefert werden. Grundlage ist der **tatsächliche Code**:
 [`../canon.md`](../canon.md) verbindlich festgelegt.
 
 **Aktueller Stand:** Im Repository liegen **keine Audiodateien**. Die Ordner enthalten nur `.gitkeep`;
-`assets/audio/audio_report.md` meldet *0 Dateien gefunden, 124 erwartete Muster, 124 fehlend*. Das System ist
+`assets/audio/audio_report.md` meldet *0 Dateien gefunden, 529 erwartete Muster, 529 fehlend* (entspricht **1087 erwarteten Dateien**,
+vollständige Produktionsliste: [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md)). Das System ist
 vollständig implementiert und getestet und läuft ohne Dateien stumm und fehlerfrei.
 
 ---
@@ -149,10 +150,11 @@ läuft über die Warteschlange, nicht über zählbare One-Shot-Handles).
 
 | Bereich | Anzahl |
 |---|---|
-| Musikspuren | 8 (Menü, Aufbau ruhig, Aufbau angespannt, Gefecht klein, Gefecht groß, Boss Fahler Vogt, Siegfanfare, Niederlagenfanfare) |
-| Events | 105: 62 `Voice` (51 Einheiten, 11 Helden), 4 `Narration`, 6 `Dialogue`, 33 `Sfx` |
+| Musikspuren | 34 (davon 23 mit Intro; Kern-Spuren, Weltkarte, Kampagne, Bosse, Fraktionen, Endspiel) |
+| Events | 466: 157 `Voice`, 52 `Narration`, 187 `Dialogue`, 51 `Sfx`, 19 `Ui` |
 | Ambience | 6 (`ambience_day`, `_night`, `_rain`, `_ash_wind`, `_village`, `_ruins`) |
-| Erwartete Dateimuster | 124 (13 Musik inkl. 5 Intros, 105 Event-Muster, 6 Ambience) |
+| Erwartete Dateimuster | 529 (34 Musik + 23 Intros, 466 Event-Muster, 6 Ambience) |
+| Erwartete Dateien | 1087 (Varianten einzeln gezählt; `ashen_tools audio-list`, Abschnitt 5) |
 
 ---
 
@@ -204,11 +206,24 @@ cargo run -p ashen_tools -- audio-scan [--assets <dir>] [--apply-renames] [--con
 |---|---|
 | (ohne Option) | Nur scannen und Bericht schreiben |
 | `--assets <dir>` | Asset-Verzeichnis (sonst automatisch gesucht: `ASHEN_ASSETS` oder Projektordner) |
+| `--import <dir>` | Lieferordner (beliebig strukturiert, auch flach) **vorab** einsortieren: jede Audiodatei, deren (normalisierter) Name zu einer erwarteten Datei passt, wird in den richtigen Ordner unter `assets/audio/` **kopiert**; bestehende Dateien werden nie überschrieben, Originale bleiben liegen |
 | `--apply-renames` | Ungültige Dateinamen laut Vorschlag **umbenennen** – nur, wenn die Zieldatei noch nicht existiert (sonst Meldung „übersprungen (Ziel existiert)“) |
 | `--convert` | Dateien mit Format aus `CONVERTIBLE` mit `ffmpeg` nach `.ogg` konvertieren (`-c:a libvorbis -q:a 6 -ar 48000`), neben der Originaldatei. Existiert die `.ogg` schon, wird nicht überschrieben. `ffmpeg` muss installiert sein. |
 | `--report <datei.md>` | Berichtsdatei (Standard `assets/audio/audio_report.md`) |
 
-Ablauf des Werkzeugs: scannen → (optional) konvertieren → (optional) umbenennen → bei Änderungen erneut scannen →
+**Liste aller erwarteten Dateien (`audio-list`):**
+
+```text
+cargo run -p ashen_tools -- audio-list [--assets <dir>] [--format md|csv] [--out <datei>]
+```
+
+Erzeugt aus dem Manifest die vollständige, deterministisch sortierte Liste (Ordner, exakter Dateiname inkl. Variantennummer, Kategorie,
+Event-/Track-ID, Dauer-/Loop-/Sequenzhinweis). Die Variantenzahl pro Muster `_*` steht nicht im Manifest, sondern ergibt sich aus den
+Prompt-Dokumenten (jede Zeile mit Ziel-Datei dort ist ein Prompt); fehlt für ein Muster ein Prompt, endet der Befehl mit Fehler. Daraus entsteht
+[`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) (`python3 docs/audio/gen_production_checklist.py`); der Test
+`cargo test -p ashen_tools` prüft, dass jede erwartete Datei dort steht.
+
+Ablauf des Werkzeugs: (optional importieren) → scannen → (optional) konvertieren → (optional) umbenennen → bei Änderungen erneut scannen →
 Bericht als Markdown schreiben → Zusammenfassung ausgeben, z. B.:
 
 ```text
