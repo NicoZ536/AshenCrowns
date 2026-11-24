@@ -212,20 +212,98 @@ Grundlage: `assets/audio/manifest.ron` (Events `sfx.*`), Regeln in `docs/audio/e
 **Nachbearbeitung:** Hochpass 60 Hz; deutlich, aber kurz.
 
 ### Echtzeit-Wirtschaft und Befestigungen (im Manifest seit Phase 6/7)
-Dateien noch nicht produziert; Events sind im Manifest eingetragen und werden vom Spiel ausgelöst (`audio_bridge.rs`).
-Auslöser und Manifestwerte; Prompts siehe Katalog 6.1/6.5 (gleiche Dateinamen) bzw. unten.
+Events sind im Manifest eingetragen und werden vom Spiel ausgelöst (`audio_bridge.rs`). Je Event 3 Varianten mit eigenem Prompt
+(Regeln wie oben). Die Bereichszeilen im Katalog 6.1/6.5 sind nur Überblick; **verbindlich sind die Zeilen dieses Abschnitts**.
 
-| Event | Ziel-Datei(en) | Auslöser | Manifest | EN-Prompt (Vorschlag) | Dauer |
-|---|---|---|---|---|---|
-| `sfx.smithy_hammer` | `sfx/buildings/smithy_hammer_01…03.ogg` | Produktionszyklus Schmiede, Rüstkammer, Schmelzhütte | −4 dB, 3 Inst., 250 ms | blacksmith hammering on anvil, two ringing strikes, hiss of quenching, close, dry | 1,5 s |
-| `sfx.sawmill_saw` | `sfx/buildings/sawmill_saw_01…03.ogg` | Zyklus Sägewerk, Holzfällerlager | −6 dB, 3 Inst., 300 ms | hand saw cutting through a log, rhythmic rasp, wood chips falling, close, dry | 2,0 s |
-| `sfx.mill_grind` | `sfx/buildings/mill_grind_01…03.ogg` | Zyklus Mühle, Bäckerei, Brauerei | −8 dB, 2 Inst., 400 ms | millstone grinding grain, wooden creak, soft rumble, close, dry | 2,5 s |
-| `sfx.market_trade` | `sfx/buildings/market_trade_01…03.ogg` | Handel am Markt | −3 dB, 2 Inst., 120 ms | coins counted into a leather purse, soft metallic jingle, wooden counter, close, dry | 1,0 s |
-| `sfx.gate_open` / `sfx.gate_close` | `sfx/buildings/gate_open_01…03.ogg`, `gate_close_01…03.ogg` | Tor umgeschaltet | −2 dB, 2 Inst., 200 ms | siehe Katalog 6.5 | 3,5 s / 2,5 s |
-| `sfx.upgrade_complete` | `sfx/buildings/upgrade_complete_01…03.ogg` | Haus aufgestiegen, Burg-Ausbau fertig | −2 dB, 2 Inst. | siehe Katalog 6.5 | 2,0 s |
-| `sfx.chapel_bell` | `sfx/buildings/chapel_bell_01…03.ogg` | Unruhe in der Bevölkerung | −3 dB, 1 Inst., 3000 ms | siehe Katalog 6.5 | 5,0 s |
-| `sfx.wall_hit` | `sfx/combat/wall_hit_01…03.ogg` | Treffer auf Mauer, Tor oder Mauerturm | −2 dB, 4 Inst., 100 ms | weapon striking a thick stone wall, dull heavy thud with grit, close, dry | 0,8 s |
-| `sfx.wall_collapse` | `sfx/combat/wall_collapse_01…03.ogg` | Mauer, Tor oder Mauerturm zerstört | 0 dB, 2 Inst., 300 ms | siehe Katalog 6.1 | 5,0 s |
+### smithy_hammer (Event `sfx.smithy_hammer`) – Produktionszyklus Schmiede, Rüstkammer, Schmelzhütte · −4 dB, 3 Instanzen, Cooldown 250 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/smithy_hammer_01.ogg` | blacksmith hammering on anvil, two ringing strikes, hiss of quenching, close, dry | 1,5 s | 0,55 | zwei Schläge, Abschrecken |
+| `sfx/buildings/smithy_hammer_02.ogg` | heavy hammer striking hot iron on an anvil, single deep clang with a short ring and sparks, close, dry | 1,2 s | 0,55 | ein schwerer Schlag |
+| `sfx/buildings/smithy_hammer_03.ogg` | smith tapping and shaping a blade on an anvil, three quick light taps then one strong blow, close, dry | 1,6 s | 0,55 | Klopfen, dann Schlag |
+
+**Nachbearbeitung:** Hochpass 80 Hz; Ausklang des Amboss-Klingens auf max. 0,6 s; Zyklus-Sound, daher unaufdringlich (Peak ≤ −6 dBFS).
+
+### sawmill_saw (Event `sfx.sawmill_saw`) – Zyklus Sägewerk, Holzfällerlager · −6 dB, 3 Instanzen, Cooldown 300 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/sawmill_saw_01.ogg` | hand saw cutting through a log, rhythmic rasp, wood chips falling, close, dry | 2,0 s | 0,55 | gleichmäßiger Zug |
+| `sfx/buildings/sawmill_saw_02.ogg` | two-man crosscut saw biting into thick timber, slow steady rasping strokes, sawdust hissing, close, dry | 2,2 s | 0,55 | langsamer, tiefer |
+| `sfx/buildings/sawmill_saw_03.ogg` | wood saw working through a plank, quick short strokes with a final snap as the board drops, close, dry | 1,8 s | 0,5 | kurz, Brett fällt |
+
+**Nachbearbeitung:** Hochpass 100 Hz; Mitten glätten, damit sich Wiederholungen nicht ermüdend anhören; keine Stimmen.
+
+### mill_grind (Event `sfx.mill_grind`) – Zyklus Mühle, Bäckerei, Brauerei · −8 dB, 2 Instanzen, Cooldown 400 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/mill_grind_01.ogg` | millstone grinding grain, wooden creak, soft rumble, close, dry | 2,5 s | 0,55 | Mahlstein, Knarren |
+| `sfx/buildings/mill_grind_02.ogg` | heavy stone wheel turning slowly with a deep rumble and fine grain trickling, close, dry | 2,5 s | 0,5 | tiefes Rumpeln, Rieseln |
+| `sfx/buildings/mill_grind_03.ogg` | wooden gears and axle creaking under load with a faint stone scrape, rhythmic, close, dry | 2,5 s | 0,5 | Holzgetriebe |
+
+**Nachbearbeitung:** Hochpass 60 Hz; sehr leise mischen (−8 dB im Manifest); Start und Ende ohne Fade-in-Klick schneiden.
+
+### market_trade (Event `sfx.market_trade`) – Handel am Markt · −3 dB, 2 Instanzen, Cooldown 120 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/market_trade_01.ogg` | coins counted into a leather purse, soft metallic jingle, wooden counter, close, dry | 1,0 s | 0,6 | Münzen zählen |
+| `sfx/buildings/market_trade_02.ogg` | handful of coins dropped on a wooden table, bright clinking scatter and a soft thud, close, dry | 1,0 s | 0,6 | Münzen fallen |
+| `sfx/buildings/market_trade_03.ogg` | merchant slapping a coin purse onto a counter, heavy chink then a quick coin slide, close, dry | 1,0 s | 0,55 | Beutel auf Tresen |
+
+**Nachbearbeitung:** Hochpass 150 Hz; hell und kurz; keine Stimmen (Markt-Gemurmel gehört in die Ambience).
+
+### gate_open (Event `sfx.gate_open`) – Tor geöffnet · −2 dB, 2 Instanzen, Cooldown 200 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/gate_open_01.ogg` | heavy wooden gate opening, chains and winch cranking, creak | 3,5 s | 0,55 | Kette und Winde |
+| `sfx/buildings/gate_open_02.ogg` | large oak castle gate swinging open on iron hinges, long groaning creak and a dull wooden thud at the end | 3,5 s | 0,55 | Angeln, dumpfer Anschlag |
+| `sfx/buildings/gate_open_03.ogg` | portcullis raised by a rattling chain, metal grinding upward then a clank as it locks, close, dry | 3,5 s | 0,5 | Fallgitter |
+
+**Nachbearbeitung:** Hochpass 50 Hz; Transiente am Ende (Anschlag) erhalten; ohne Hall.
+
+### gate_close (Event `sfx.gate_close`) – Tor geschlossen · −2 dB, 2 Instanzen, Cooldown 200 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/gate_close_01.ogg` | heavy wooden gate slamming shut, iron bar dropped into place | 2,5 s | 0,55 | Riegel fällt |
+| `sfx/buildings/gate_close_02.ogg` | large oak gate swinging shut with a loud boom and a short rattle of chains, close, dry | 2,5 s | 0,55 | lauter Knall |
+| `sfx/buildings/gate_close_03.ogg` | portcullis dropping fast, chain rattling then a heavy iron slam into the stone floor, close, dry | 2,2 s | 0,5 | Fallgitter stürzt |
+
+**Nachbearbeitung:** Hochpass 50 Hz; Transiente betonen (+2 dB), Ausklang max. 0,8 s.
+
+### upgrade_complete (Event `sfx.upgrade_complete`) – Haus aufgestiegen, Burg-Ausbau fertig · −2 dB, 2 Instanzen, Cooldown 0 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/upgrade_complete_01.ogg` | building upgraded, sturdy hammer blows, metal fittings clank, short horn | 2,0 s | 0,5 | Hammer + Horn |
+| `sfx/buildings/upgrade_complete_02.ogg` | construction finished, three solid hammer knocks on timber then a bright anvil ring, no music | 2,0 s | 0,5 | drei Schläge, Amboss |
+| `sfx/buildings/upgrade_complete_03.ogg` | stonework completed, heavy stone block set in place with a satisfying thud and a short rising brass swell | 2,2 s | 0,5 | Stein setzen, Blech-Schwell |
+
+**Nachbearbeitung:** Hochpass 60 Hz; kein melodisches Motiv (Generator-Musik verwerfen); Lautheit wie `build_complete`.
+
+### chapel_bell (Event `sfx.chapel_bell`) – Unruhe in der Bevölkerung · −3 dB, 1 Instanz, Cooldown 3000 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/buildings/chapel_bell_01.ogg` | small village chapel bell tolling three times, distant | 5,0 s | 0,55 | drei Schläge, fern |
+| `sfx/buildings/chapel_bell_02.ogg` | single cracked chapel bell ringing slowly with a long metallic decay, eerie, outdoors | 5,0 s | 0,55 | gesprungene Glocke |
+| `sfx/buildings/chapel_bell_03.ogg` | hand-rung small bell clanging unevenly in alarm, outdoors, slightly distant | 4,0 s | 0,5 | unruhiges Läuten |
+
+**Nachbearbeitung:** Hochpass 120 Hz; natürlicher Ausklang bis −40 dB, dann ausblenden; ohne Hall (Distanz kommt aus dem Prompt).
+
+### wall_hit (Event `sfx.wall_hit`) – Treffer auf Mauer, Tor oder Mauerturm · −2 dB, 4 Instanzen, Cooldown 100 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/wall_hit_01.ogg` | weapon striking a thick stone wall, dull heavy thud with grit, close, dry | 0,8 s | 0,6 | Stein, dumpf |
+| `sfx/combat/wall_hit_02.ogg` | axe chopping into a heavy wooden gate, deep woody thunk with splintering, close, dry | 0,8 s | 0,6 | Holztor, Splittern |
+| `sfx/combat/wall_hit_03.ogg` | iron sword clanging against a stone tower wall, short metallic strike and falling grit, close, dry | 0,7 s | 0,6 | Eisen auf Stein |
+
+**Nachbearbeitung:** Hochpass 50 Hz; kürzer und trockener als `building_hit`; Referenz Kampf-SFX `sword_hit_01`.
+
+### wall_collapse (Event `sfx.wall_collapse`) – Mauer, Tor oder Mauerturm zerstört · 0 dB, 2 Instanzen, Cooldown 300 ms
+| Ziel-Datei | EN-Prompt | Dauer | PI | Variationshinweis |
+|---|---|---|---|---|
+| `sfx/combat/wall_collapse_01.ogg` | section of castle wall collapsing, thunderous stone avalanche, long rumble | 5,0 s | 0,5 | Mauerstück bricht |
+| `sfx/combat/wall_collapse_02.ogg` | stone tower crumbling, huge crashing blocks and rolling rubble with a drawn-out dust-settling rumble | 5,0 s | 0,5 | Turm stürzt ein |
+| `sfx/combat/wall_collapse_03.ogg` | wooden gate and gatehouse breaking apart, massive timber crack then collapsing stones and debris | 4,5 s | 0,5 | Torhaus bricht |
+
+**Nachbearbeitung:** Hochpass 30 Hz; Tiefbass erhalten; langer natürlicher Ausklang; Limiter −1 dBTP beachten (hoher Pegel).
 
 ---
 

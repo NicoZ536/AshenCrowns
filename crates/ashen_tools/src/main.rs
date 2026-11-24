@@ -1,12 +1,14 @@
 //! ASHEN CROWNS – Entwicklerwerkzeuge.
 //!
 //! ```text
-//! cargo run -p ashen_tools -- audio-scan [--assets <dir>] [--apply-renames] [--convert] [--report <datei.md>]
+//! cargo run -p ashen_tools -- audio-scan [--assets <dir>] [--import <lieferordner>] [--apply-renames] [--convert] [--report <datei.md>]
+//! cargo run -p ashen_tools -- audio-list [--assets <dir>] [--format md|csv] [--out <datei>]
 //! cargo run -p ashen_tools -- validate-data [--assets <dir>] [--mod <mod-verzeichnis> ...]
 //! cargo run -p ashen_tools -- forge-scenarios [--assets <dir>]
 //! cargo run -p ashen_tools -- forge-campaign [--assets <dir>]
 //! ```
 
+mod audio_list;
 mod campaign_forge;
 mod campaign_missions;
 mod campaign_missions_b;
@@ -26,9 +28,14 @@ fn usage() -> &'static str {
 Befehle:
   audio-scan       Audiodateien scannen, dem Manifest zuordnen und prüfen
       --assets <dir>      Asset-Verzeichnis (Standard: automatisch gesucht)
+      --import <dir>      Lieferordner (beliebig strukturiert) vorab anhand der Dateinamen in assets/audio einsortieren (kopiert, überschreibt nie)
       --apply-renames     Ungültige Dateinamen gemäß Vorschlag umbenennen (nur eindeutige Fälle)
       --convert           Nicht abspielbare Formate (m4a, aiff, …) per ffmpeg nach .ogg konvertieren
       --report <datei>    Bericht als Markdown schreiben (Standard: assets/audio/audio_report.md)
+  audio-list       Alle erwarteten Audiodateien aus dem Manifest auflisten (exakte Namen, sortiert)
+      --assets <dir>
+      --format md|csv     Ausgabeformat (Standard: md)
+      --out <datei>       In Datei schreiben statt auf stdout
   validate-data    Spieldaten, Missionen und Mods laden und auf Konsistenz prüfen
       --assets <dir>
       --mod <dir>         Mod-Verzeichnis zusätzlich anwenden (mehrfach möglich)
@@ -42,8 +49,21 @@ fn assets_dir(arg: Option<PathBuf>) -> Result<PathBuf, String> {
     arg.or_else(ashen_engine::assets::find_assets_dir).ok_or_else(|| "Asset-Verzeichnis nicht gefunden (--assets angeben)".to_string())
 }
 
-fn audio_scan(assets: &Path, apply: bool, convert: bool, report_path: Option<PathBuf>) -> Result<bool, String> {
+fn audio_scan(assets: &Path, apply: bool, convert: bool, report_path: Option<PathBuf>, import: Option<PathBuf>) -> Result<bool, String> {
     let root = assets.join("audio");
+    if let Some(from) = import {
+        let r = audio_list::import_delivery(assets, &from)?;
+        for (src, dst) in &r.copied {
+            println!("importiert: {} → {}", src.display(), dst.display());
+        }
+        for p in &r.existing {
+            eprintln!("übersprungen (Ziel existiert): {}", p.display());
+        }
+        for p in &r.unmatched {
+            eprintln!("kein erwarteter Dateiname: {}", p.display());
+        }
+        println!("Import: {} kopiert, {} übersprungen, {} ohne passenden Namen.", r.copied.len(), r.existing.len(), r.unmatched.len());
+    }
     let manifest = AudioManifest::load(&root.join("manifest.ron"))?;
     let mut report = scanner::scan(&root, &manifest);
     let mut changed = false;
@@ -206,6 +226,9 @@ fn main() -> ExitCode {
     let mut convert = false;
     let mut report = None;
     let mut mods = Vec::new();
+    let mut list_format = audio_list::Format::Markdown;
+    let mut list_out = None;
+    let mut import_dir = None;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -218,6 +241,25 @@ fn main() -> ExitCode {
             "--report" => {
                 i += 1;
                 report = args.get(i).map(PathBuf::from);
+            }
+            "--import" => {
+                i += 1;
+                import_dir = args.get(i).map(PathBuf::from);
+            }
+            "--format" => {
+                i += 1;
+                list_format = match args.get(i).map(String::as_str) {
+                    Some("md") => audio_list::Format::Markdown,
+                    Some("csv") => audio_list::Format::Csv,
+                    _ => {
+                        eprintln!("--format erwartet md oder csv\n{}", usage());
+                        return ExitCode::from(2);
+                    }
+                };
+            }
+            "--out" => {
+                i += 1;
+                list_out = args.get(i).map(PathBuf::from);
             }
             "--mod" => {
                 i += 1;
@@ -240,7 +282,8 @@ fn main() -> ExitCode {
         }
     };
     let result = match cmd.as_str() {
-        "audio-scan" => audio_scan(&assets, apply, convert, report).map(|ok| if ok {  } else { eprintln!("Beschädigte Audiodateien gefunden.") }),
+        "audio-scan" => audio_scan(&assets, apply, convert, report, import_dir).map(|ok| if ok {  } else { eprintln!("Beschädigte Audiodateien gefunden.") }),
+        "audio-list" => audio_list::run(&assets, list_format, list_out.as_deref()),
         "validate-data" => validate_data(&assets, &mods),
         "forge-scenarios" => forge::forge(&assets).map(|files| {
             for f in files {

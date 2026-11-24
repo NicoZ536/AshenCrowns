@@ -25,6 +25,7 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 | `docs/audio/elevenlabs_dialogues.md` | Erzähler- und Dialogzeilen Mission 1 (Manifest) + Kampagnenszenen Zeitalter I–VII |
 | `docs/audio/elevenlabs_sound_effects.md` | alle SFX des Manifests je Variante + erweiterter Katalog |
 | `docs/audio/elevenlabs_ambient_audio.md` | alle Ambience-Loops des Manifests + Regionen-Ambiences |
+| `docs/audio/PRODUCTION_CHECKLIST.md` | Master-Produktionsliste: alle erwarteten Dateien (aus `ashen_tools audio-list`) mit vollständigen Prompts und Einstellungen, abhakbar |
 
 ---
 

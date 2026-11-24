@@ -817,3 +817,83 @@ beschreiben nur die Stimme.
 **Beispieltext:** „Ihr kommt auf trockenen Füßen zu meiner Tür. Wie rührend. Das Meer hat mir jedes meiner Kinder zurückgegeben.“
 
 **Modell & Einstellungen:** Eleven v3 *Creative* (`[whispers]`); zusätzlich dieselbe Zeile auf −5 Halbtöne als zweite Schicht. **Nachbearbeitung:** Chorus 12 %, Wasser-Hall (1,8 s), Tiefpass 8 kHz.
+
+---
+
+## Teil G – Stimmprofile der Echtzeit-Militäreinheiten
+
+Profile für die Einheiten aus `docs/audio/elevenlabs_unit_voices.md`, Abschnitte 12 und 14 (im Manifest als `voice.<einheit>.<situation>`).
+Format wie Teil D. Jede Stimme heißt `AC_unit_<id>`. Die Helden `hero_hal_venn` und `hero_torvald` verwenden die Profile B3 (`char_hal_venn`)
+und B4 (`char_torvald`); `bat_swarm` hat keine Stimme (reiner Sound-Effects-Entwurf).
+
+### G1 `AC_unit_crossbowman` – Armbrustschütze (Einheit `crossbowman`, Glutkrone)
+- Mann, Anfang 40, trockener, ruhiger Bariton, nüchterner Söldnerveteran aus den Grenzgarnisonen, knappe Sätze, spricht über Reichweite wie über Handwerk.
+- **Prompt:** "A seasoned crossbow mercenary in his early forties with a dry, level baritone and a plain northern English accent. Short, matter-of-fact sentences, sober and unhurried, speaking of range and aim like a craftsman talks about tools, with a faint grim humour. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Hold your breath, wait for the wind to drop, then squeeze. Anyone can shoot fast. I shoot once." – *DE:* „Atem anhalten, warten bis der Wind nachlässt, dann abdrücken. Schnell schießen kann jeder. Ich schieße einmal.“
+- **Einstellungen:** v3 *Natural*, Speed 1,0.
+
+### G2 `AC_unit_halberdier` – Hellebardier (Einheit `halberdier`, Glutkrone)
+- Mann, Mitte 40, tiefer, bärbeißiger Bass-Bariton, Gardist und Pferdebrecher; liebt Formationen, mag keine Reiter.
+- **Prompt:** "A gruff palace guard halberdier in his mid-forties with a deep, grumbling bass-baritone and a clipped, disciplined northern English accent. Slow, heavy and authoritative, barking short orders, with the stubborn pride of a man who has braced against many cavalry charges. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Planks down, points out, shoulders together. Let the horses come. They always stop eventually." – *DE:* „Schäfte auf den Boden, Spitzen raus, Schulter an Schulter. Lasst die Pferde kommen. Irgendwann bleiben sie immer stehen.“
+- **Einstellungen:** v3 *Natural*, Speed 0,95.
+
+### G3 `AC_unit_shieldbearer` – Schildträger (Einheit `shieldbearer`, Glutkrone)
+- Mann, ca. 38, sehr tiefer, ruhiger Bass; geduldiger, schwerer Bollwerkkämpfer, spricht wenig, stoisch.
+- **Prompt:** "A heavy shieldbearer in his late thirties with a very deep, calm bass voice, slow and stoic, speaking little and never raising his voice above a firm rumble. Plain, steady, patient northern English, the quiet confidence of a living wall. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Stand behind me. The shield is heavy, but I am heavier. Nothing passes here." – *DE:* „Steht hinter mir. Der Schild ist schwer, aber ich bin schwerer. Hier kommt nichts durch.“
+- **Einstellungen:** v3 *Natural*, Speed 0,92.
+
+### G4 `AC_unit_scout_rider` – Spähreiter (Einheit `scout_rider`, Glutkrone)
+- Mann, Anfang 20, heller, flinker Tenor, übermütig, lacht gern, spricht schnell.
+- **Prompt:** "A young border scout rider in his early twenties with a bright, quick tenor voice and a lively regional English accent. Fast, breathless, cheeky and cheerful, laughing easily, full of restless energy as if speaking from horseback. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Ridge is clear, road's quiet, and my horse is bored. Say the word and I'll be there before you finish asking." – *DE:* „Der Kamm ist frei, die Straße ruhig, und mein Pferd langweilt sich. Sagt es, und ich bin da, bevor Ihr zu Ende gefragt habt.“
+- **Einstellungen:** v3 *Creative*, Speed 1,08.
+
+### G5 `AC_unit_horse_archer` – Berittene Bogenschützin (Einheit `horse_archer`, Glutkrone)
+- Frau, Ende 20, geschmeidiger heller Alt, selbstsichere, leicht spöttische Steppen-Söldnerin.
+- **Prompt:** "A confident mounted archer, a woman in her late twenties with a smooth, light alto voice and a faintly foreign, lilting accent. Playful, teasing and self-assured, speaking quickly and lightly as if loosing arrows at a gallop. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "You walk, I ride, and still I shoot first. Do try to keep up." – *DE:* „Ihr geht, ich reite, und trotzdem schieße ich zuerst. Versucht mitzuhalten.“
+- **Einstellungen:** v3 *Creative*, Speed 1,05.
+
+### G6 `AC_unit_battle_mage` – Kampfmagier (Feuerschule) (Einheit `battle_mage`, Glutkrone)
+- Mann, Anfang 30, höflicher, gespannter Tenor-Bariton, diszipliniert, unterdrückte Hitze in der Stimme (Flammenakademie von Kaldris).
+- **Prompt:** "A disciplined fire mage trained at an academy, a man in his early thirties with a polite, precise and slightly tense baritone-tenor and an educated English accent. Controlled and formal, but with suppressed heat under every sentence, as if each word could ignite. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Stand clear, if you would. I can control the flame. I simply prefer not to be asked how hard." – *DE:* „Geht bitte beiseite. Ich beherrsche die Flamme. Ich möchte nur nicht gefragt werden, wie sehr.“
+- **Einstellungen:** v3 *Creative*, Speed 1,0.
+
+### G7 `AC_unit_priest` – Priester der Flamme (Einheit `priest`, Glutkrone)
+- Mann, Ende 50, sanfter, warmer Bariton, Dorfkapellenpriester, zitiert Liturgie, ängstlich, hilft trotzdem.
+- **Prompt:** "A gentle village chapel priest in his late fifties with a soft, warm baritone and a kind rural English accent. Calm and reassuring, quoting liturgy in a half-sung murmur, with a tremor of fear underneath that he overcomes out of duty. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "The Flame does not ask us to be unafraid. Only to keep it lit. Come, let me see that wound." – *DE:* „Die Flamme verlangt nicht, dass wir keine Angst haben. Nur, dass wir sie am Brennen halten. Kommt, lasst mich die Wunde sehen.“
+- **Einstellungen:** v3 *Natural*, Speed 0,96.
+
+### G8 `AC_unit_ram_crew` – Rammbock-Mannschaft (Chor) (Einheit `battering_ram`, Glutkrone)
+- Gruppe von 3–4 Männern, schwitzende Pioniere, Hau-Ruck-Rufe im Takt, dumpfe Anstrengung; mehrere Takes überlagern.
+- **Prompt:** "A crew of four sweating siege engineers shouting in rhythm, rough male voices, heaving and grunting as they swing a heavy ram, shouted work chants and effort sounds, tight and dry. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Heave! And heave! And heave! Again, put your backs into it!" – *DE:* „Zieht! Und zieht! Und zieht! Nochmal, legt euch ins Zeug!“
+- **Einstellungen:** v3 *Creative*, Speed 1,0; je Zeile 3–4 Takes mit leicht verschobenem Einsatz überlagern (Chor), Mono-Summe.
+
+### G9 `AC_unit_catapult_crew` – Katapult-Mannschaft (Einheit `catapult`, Glutkrone)
+- 2–3 erfahrene Geschützmeister, nüchterne Zurufe in Kommandoform, Winden und Seile hörbar.
+- **Prompt:** "Two or three experienced siege gunners, rough and businesslike male voices calling short, clear commands over creaking ropes and a winch, calm professionals, never panicked. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Wind her back! Load! Steady... and release!" – *DE:* „Spannt sie zurück! Laden! Ruhig ... und los!“
+- **Einstellungen:** v3 *Creative*, Speed 1,0; 2–3 Sprecher getrennt generieren und abwechselnd verwenden.
+
+### G10 `AC_unit_hollow_digger` – Grabgräber (Hohle) (Einheit `hollow_digger`, Hohle)
+- Hohler Wiedergänger-Arbeiter, flach, heiser, murmelt Fetzen von Werkzeugen und Schichten; Hohle-Kette, Pitch −2.
+- **Prompt:** "A hollow, reanimated grave-digger with a flat, dusty, hoarse male voice, muttering fragments of tools and soil layers as if still at work, slow and monotonous, breathy and dry, mournful and unsettling. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Deeper… another hand's width… the earth is cold… always deeper." – *DE:* „Tiefer … noch eine Handbreit … die Erde ist kalt … immer tiefer.“
+- **Einstellungen:** v3 *Creative*, Speed 0,9; danach Hohle-Kette (Pitch −2).
+
+### G11 `AC_unit_ghoul` – Ghul (Hohle) (Einheit `ghoul`, Hohle)
+- Ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter.
+- **Prompt:** "A starving ghoul, a high, cracking, shrieking creature voice with wet smacking and snapping jaws, hoarse hissing and guttural gurgles, almost no words, feral and desperate. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Hungry… so hungry… [snarls] flesh… warm flesh…" – *DE:* „Hunger … so ein Hunger … Fleisch … warmes Fleisch …“
+- **Einstellungen:** v3 *Creative*, Speed 1,1; alternativ Voice Changer oder SFX-Prompt, danach Hohle-Kette; Zeilen sind überwiegend Laute.
+
+### G12 `AC_unit_ash_witch` – Aschhexe (Hohle) (Einheit `ash_witch`, Hohle)
+- Frau, undefinierbares Alter, flüsternde, kalt-berechnende Nekromantin; spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall.
+- **Prompt:** "A whispering necromancer, a woman of indeterminate age with a cold, soft, breathy alto voice, speaking calmly and precisely like a teacher to her pupils, with a chill of dry ash in every syllable and an ancient, hollow undertone. Close-mic studio-quality recording, no background noise."
+- **Beispieltext:** "Rise, my little ones. The ash remembers what the living forget." – *DE:* „Erhebt euch, meine Kleinen. Die Asche erinnert sich, was die Lebenden vergessen.“
+- **Einstellungen:** v3 *Creative* mit `[whispers]`, Speed 0,92; danach Hohle-Kette mit mehr Hall-Anteil.
