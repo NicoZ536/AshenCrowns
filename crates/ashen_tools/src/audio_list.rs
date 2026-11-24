@@ -178,14 +178,14 @@ pub fn build(manifest: &AudioManifest, prompts: &DocPrompts) -> Vec<Entry> {
         map.entry(e.rel.clone()).or_insert(e);
     };
     for m in &manifest.music {
-        let loop_hint = if m.looped { "Loop, nahtlos (Ende → Anfang)" } else { "einmalig, kein Loop" };
+        let loop_hint = if m.looped { "komplette Suno-Ausgabe, wird als Ganzes geloopt (Naht und Pegel: Integration)" } else { "komplette Suno-Ausgabe, einmalig, kein Loop" };
         put(Entry { rel: m.file.clone(), category: "music", id: m.id.clone(), hint: loop_hint.into(), has_prompt: prompts.contains(&m.file) });
         if let Some(i) = &m.intro {
-            put(Entry { rel: i.clone(), category: "music_intro", id: m.id.clone(), hint: "Intro, einmalig; endet taktgenau am Loop-Anfang".into(), has_prompt: prompts.contains(i) });
+            put(Entry { rel: i.clone(), category: "music_intro", id: m.id.clone(), hint: "Intro, einmalig (derzeit von keinem Manifest-Track genutzt)".into(), has_prompt: prompts.contains(i) });
         }
     }
     for a in &manifest.ambience {
-        let hint = join_hint(&["Loop, nahtlos".into(), prompts.duration(&a.file).map(|d| format!("Länge {d}")).unwrap_or_default()]);
+        let hint = join_hint(&["eine komplette Generierung, Loop-Option an".into(), prompts.duration(&a.file).map(|d| format!("Länge {d}")).unwrap_or_default()]);
         put(Entry { rel: a.file.clone(), category: "ambience", id: a.id.clone(), hint, has_prompt: prompts.contains(&a.file) });
     }
     for e in &manifest.events {
@@ -474,13 +474,13 @@ mod tests {
         let from = tmp.join("lieferung/unterordner");
         std::fs::create_dir_all(&from).unwrap();
         std::fs::write(from.join("Sword Hit 1.WAV"), b"RIFF\0\0\0\0WAVEdata").unwrap();
-        std::fs::write(from.join("main_menu_loop.m4a"), b"m4a").unwrap();
+        std::fs::write(from.join("main_menu.m4a"), b"m4a").unwrap();
         std::fs::write(from.join("irgendwas_01.ogg"), b"OggS\0\x02").unwrap();
         std::fs::write(from.join("notes.txt"), b"x").unwrap();
         let r = import_delivery(&assets, &tmp.join("lieferung")).unwrap();
         assert_eq!(r.copied.len(), 2, "{r:?}");
         assert!(assets.join("audio/sfx/combat/sword_hit_01.wav").exists());
-        assert!(assets.join("audio/music/main_menu_loop.m4a").exists());
+        assert!(assets.join("audio/music/main_menu.m4a").exists());
         assert_eq!(r.unmatched.len(), 1);
         // Zweiter Lauf überschreibt nichts.
         let r2 = import_delivery(&assets, &tmp.join("lieferung")).unwrap();
@@ -499,5 +499,89 @@ mod tests {
         let doc = std::fs::read_to_string(root.join("docs/audio/PRODUCTION_CHECKLIST.md")).expect("PRODUCTION_CHECKLIST.md fehlt");
         let missing: Vec<String> = list.iter().map(Entry::path).filter(|p| !doc.contains(&format!("`{p}`"))).collect();
         assert!(missing.is_empty(), "{} Datei(en) fehlen in der Checkliste, z. B. {:?}", missing.len(), &missing[..missing.len().min(10)]);
+    }
+
+    /// `[solemn]`, `[short pause]`: mindestens ein Audio-Tag (englisch, Kleinbuchstaben) im Text.
+    fn has_audio_tag(s: &str) -> bool {
+        let mut rest = s;
+        while let Some(i) = rest.find('[') {
+            let after = &rest[i + 1..];
+            let Some(j) = after.find(']') else { return false };
+            let tag = &after[..j];
+            if !tag.is_empty() && tag.len() <= 40 && tag.chars().all(|c| c.is_ascii_lowercase() || c == ' ' || c == '-') && tag.chars().any(|c| c.is_ascii_lowercase()) {
+                return true;
+            }
+            rest = &after[j + 1..];
+        }
+        false
+    }
+
+    #[test]
+    fn audio_tag_detection() {
+        assert!(has_audio_tag("[solemn] Jahr 897."));
+        assert!(has_audio_tag("Nein … [exhales]"));
+        assert!(has_audio_tag("[short pause] x"));
+        assert!(!has_audio_tag("Jahr 897 nach dem Fall."));
+        assert!(!has_audio_tag("[] leer"));
+        assert!(!has_audio_tag("[Option A] Großschreibung ist kein Tag"));
+        assert!(!has_audio_tag("offen [solemn"));
+    }
+
+    /// Jede Sprechzeile (Erzähler, Figuren, Bosse, Helden, Einheiten) steht in der Checkliste als einfügefertiger
+    /// ```text-Block, und dieser enthält mindestens ein Eleven-v3-Audio-Tag in eckigen Klammern.
+    #[test]
+    fn every_spoken_line_in_checklist_has_audio_tag() {
+        let root = repo_root();
+        let manifest = AudioManifest::load(&root.join("assets/audio/manifest.ron")).unwrap();
+        let prompts = DocPrompts::load(&root.join("docs/audio"));
+        let list = build(&manifest, &prompts);
+        let doc = std::fs::read_to_string(root.join("docs/audio/PRODUCTION_CHECKLIST.md")).expect("PRODUCTION_CHECKLIST.md fehlt");
+        let lines: Vec<&str> = doc.lines().collect();
+        let mut problems = Vec::new();
+        let mut checked = 0;
+        for e in list.iter().filter(|e| matches!(e.category, "voice" | "narration" | "dialogue") && !e.id.starts_with("voice.bat_swarm")) {
+            let needle = format!("`{}`", e.path());
+            let Some(i) = lines.iter().position(|l| l.starts_with("- [") && l.contains(&needle)) else {
+                problems.push(format!("{}: kein Eintrag", e.path()));
+                continue;
+            };
+            let Some(start) = lines.iter().skip(i + 1).take(3).position(|l| l.trim() == "```text").map(|p| i + 1 + p) else {
+                problems.push(format!("{}: kein ```text-Block", e.path()));
+                continue;
+            };
+            let body: Vec<&str> = lines.iter().skip(start + 1).take_while(|l| l.trim() != "```").copied().collect();
+            let text = body.join(" ");
+            checked += 1;
+            if text.trim().is_empty() {
+                problems.push(format!("{}: leerer Sprechtext", e.path()));
+            } else if !has_audio_tag(&text) {
+                problems.push(format!("{}: kein [Audio-Tag]", e.path()));
+            }
+        }
+        assert!(checked > 0, "keine Sprechzeilen geprüft");
+        assert!(problems.is_empty(), "{} Problem(e), z. B. {:?}", problems.len(), &problems[..problems.len().min(10)]);
+    }
+
+    /// Musik: pro Track genau eine Datei `music/<id>` (komplette Suno-Ausgabe), kein Intro; Erzähler-/Dialogzeilen: je Event eine Datei.
+    #[test]
+    fn music_and_spoken_lines_are_single_files() {
+        let root = repo_root();
+        let manifest = AudioManifest::load(&root.join("assets/audio/manifest.ron")).unwrap();
+        let prompts = DocPrompts::load(&root.join("docs/audio"));
+        let list = build(&manifest, &prompts);
+        assert_eq!(manifest.music.len(), 34);
+        for m in &manifest.music {
+            assert!(m.intro.is_none(), "{} hat ein Intro", m.id);
+            assert_eq!(m.file, format!("music/{}", m.id));
+        }
+        assert_eq!(list.iter().filter(|e| e.category == "music").count(), 34);
+        assert_eq!(list.iter().filter(|e| e.category == "music_intro").count(), 0);
+        let mut per_event: BTreeMap<&str, usize> = BTreeMap::new();
+        for e in list.iter().filter(|e| matches!(e.category, "narration" | "dialogue")) {
+            *per_event.entry(&e.id).or_default() += 1;
+        }
+        let multi: Vec<_> = per_event.iter().filter(|(_, n)| **n != 1).collect();
+        assert!(multi.is_empty(), "Erzähler-/Dialog-Events mit mehreren Dateien: {multi:?}");
+        assert!(manifest.events.iter().all(|e| e.playback == Playback::Random), "Sequential wird nicht mehr genutzt");
     }
 }

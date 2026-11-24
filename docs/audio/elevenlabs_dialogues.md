@@ -1,23 +1,22 @@
 # ASHEN CROWNS – Erzähler- und Dialogzeilen (ElevenLabs)
 
-Grundlage: `assets/audio/manifest.ron` (Events `narrator.*`, `char_hal_venn.*`), Stimmprofile in
+Grundlage: `assets/audio/manifest.ron` (Events `narrator.*`, `char_*.*`, `boss_*.*`, `hero_*.*`), Stimmprofile in
 `docs/audio/elevenlabs_characters.md`, Regeln in `docs/audio/elevenlabs_production_guide.md`.
 
 **Legende**
-- **Ziel-Datei** relativ zu `assets/audio/`, `.ogg` Vorbis q6, 48 kHz, mono, −16 LUFS integriert, −1 dBTP.
-- **Sprechtext (DE)** = Generierungstext; **gesprochen wird Deutsch** (alle Stimmen im Spiel sind deutsch). Eckige Klammern = Eleven-v3-Audio-Tags (bleiben englisch, werden nicht
-  gesprochen; nur bei v3-Zeilen; Erzähler mit Multilingual v2 **ohne** Tags). Untertitel = Sprechtext ohne Tags.
-- **Mission 1 (Teil 1):** Sprechtext = **exakt der Spieltext** aus `assets/data/missions/m01_last_settlement.ron` (Message mit `voice`). Bei Sequenz-Events ergeben die Dateien `_01`, `_02`, …
-  in Reihenfolge, durch Leerzeichen verbunden, wörtlich die Spielzeile; bei Zufallsvarianten sprechen alle Dateien dieselbe Zeile (verschiedene Takes). Das prüft `docs/audio/verify_spoken_text.py`.
+- **Ziel-Datei** relativ zu `assets/audio/`, `.ogg` Vorbis q6, 48 kHz, mono. Format und Lautheit sind Sache der Integration, nicht der Lieferung.
+- **Eine Zeile = eine Datei:** Jedes Event (Erzähler-, Dialog-, Figurenzeile) besteht aus **genau einer** Datei `<stem>_01.ogg` mit dem **vollständigen** Text in **einem** Take.
+  Keine Teilstücke, kein Schneiden, kein Zusammensetzen. (Frühere Mehrteiler `_01…_n` sind zu einer Datei zusammengeführt.)
+- **Sprechtext (DE, exakt wie im Spiel)** = einfügefertiger Generierungstext **inklusive Audio-Tags**. Alles in eckigen Klammern (`[solemn]`, `[pause]`) ist ein
+  Eleven-v3-Audio-Tag (englisch, wird nicht gesprochen). Ohne die Tags ist der Text wörtlich der Spieltext aus `assets/data/missions/*.ron` bzw. `assets/data/campaign/*.ron`
+  (Prüfung: `python3 docs/audio/verify_spoken_text.py`). Alle Stimmen, auch der Erzähler, laufen auf **Eleven v3** (Multilingual v2 versteht keine Tags).
+- **Audio-Tags:** 1–4 pro Zeile; Emotion/Ton am Anfang (`[solemn]`, `[whispers]`, `[angry]`, `[fearful]`, `[tired]`, `[commanding]`, `[shouting]`, `[laughs softly]`, `[sighs]` …), Takt im Satz
+  (`[pause]`, `[short pause]`, `[softly]`, `[slowly]`, `[rising tension]` …). Die Spalte **Regie** bleibt als Kurzhinweis zur Absicht stehen; maßgeblich ist der Text mit Tags.
+- **Abweichungen zwischen Ton und Spieltext** werden nach der Lieferung von uns behoben, indem die Spieltexte an den gesprochenen Ton angepasst werden. Nachbearbeiten oder Schneiden ist nicht nötig.
 - **Teil 2** (nicht im Manifest) ist ein Vorschlagstext in deutscher Sprechfassung; englische Referenztexte entfallen.
 - **Optionsmarker** wie **[Option A – …]** in Teil 2 sind Regie: vor der Generierung **entfernen** (sonst interpretiert v3 sie als Tag oder spricht sie).
-- **Abspielmodus** je Event:
-  - **Sequenz** – die Dateien `_01`, `_02`, … sind aufeinanderfolgende Segmente einer Szene und müssen in Reihenfolge abgespielt werden.
-  - **Zufallsvariante** – jede Datei ist eine eigenständige Alternative (Event kann mehrfach auftreten).
-  > **Hinweis an das Engine-Team:** Das Manifest beschreibt `_*` allgemein als „Varianten“. Für Events im Modus *Sequenz*
-  > muss die Engine die Dateien in Nummernreihenfolge abspielen (nicht zufällig). Die Mission-1-Segmente sind wörtliche
-  > Teilstücke der Spielzeilen und einzeln nicht immer grammatisch vollständig; die Reihenfolge ist daher zwingend (`playback: Sequential` im Manifest).
-- Segmentpausen: zwischen Sequenzsegmenten plant die Engine 0,4–0,8 s Pause; Dateien selbst enden mit max. 300 ms Stille.
+- **Abspielmodus:** Jede Zeile ist ein eigenes Event mit einer Datei; die Engine spielt sie einmal ab (Erzähler/Dialog über die Sprecherwarteschlange mit Musik-Ducking, Pausen zwischen aufeinanderfolgenden Zeilen ergeben sich aus der Warteschlange).
+  Eine Datei wird mit höchstens 300 ms Schwanzstille erwartet; ein Kürzen übernimmt die Integration.
 
 ---
 
@@ -30,116 +29,90 @@ Angriffswellen der Hohlen, findet den Schrein und zerstört ihn.
 
 ## 1.1 Erzähler (`narrator`)
 
-**Stimme:** `AC_narrator` · **Modell:** Multilingual v2 (Stability 0,60, Similarity 0,80, Style 0,15, Speaker Boost an,
-Speed 0,95) · **Nachbearbeitung:** Standardkette, keine Effekte · Manifest: +2 dB.
-**Regie allgemein:** getragen, ehrfürchtig, leise Trauer; nie Trailer-Pathos. Ein Segment = eine Generierung (in Studio als Absätze).
+**Stimme:** `AC_narrator` · **Modell:** Eleven v3, Stability-Modus *Natural* (Robust, falls die Stimme zwischen Generierungen zu stark schwankt), Speed 0,95 · **Nachbearbeitung:** Integration · Manifest: +2 dB.
+**Regie allgemein:** getragen, ehrfürchtig, leise Trauer; nie Trailer-Pathos. Eine Zeile = eine Generierung.
 
-### narrator_m01_opening (Event `narrator.m01_opening`) – Abspielmodus: **Sequenz**
+### narrator_m01_opening (Event `narrator.m01_opening`)
 *Kontext:* Missionsstart, Kamera fährt über verbrannte Felder der Aschmark auf Brennhollow zu. Musik `main_menu`→`build_calm`.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/narrator/narrator_m01_opening_01.ogg` | Jahr 897 nach dem Fall. | ruhig, gewichtig; Pause nach dem Satz (Sequenz: 0,4–0,8 s) |
-| `voices/narrator/narrator_m01_opening_02.ogg` | Am Rand der Aschmark hält Brennhollow noch stand – | Satz bleibt offen: Stimme am Ende nicht absenken, Gedankenstrich als Schwebe |
-| `voices/narrator/narrator_m01_opening_03.ogg` | dreißig Seelen, ein Bergfried, ein Feld. | Aufzählung mit kleinen Pausen; Wärme, Hoffnungsschimmer; Satzende fällt ab |
-| `voices/narrator/narrator_m01_opening_04.ogg` | Und jede Nacht kommt der Nebel näher. | düster werdend, langsamer Schlusssatz, letzte Phrase leiser |
+| `voices/narrator/narrator_m01_opening_01.ogg` | [solemn] Jahr 897 nach dem Fall. [pause] Am Rand der Aschmark hält Brennhollow noch stand – dreißig Seelen, ein Bergfried, ein Feld. [slowly] Und jede Nacht kommt der Nebel näher. | ruhig, gewichtig; Pause nach dem ersten Satz; Gedankenstrich als Schwebe, Aufzählung mit Wärme und Hoffnungsschimmer; Schlusssatz düster, langsam, letzte Phrase leiser |
 
-Sequenz-Segmente sind **Teilstücke einer** Spielzeile (Untertitel zeigt den vollen Satz); in der Reihenfolge `_01` bis `_04` aneinandergesetzt ergeben sie wörtlich den Spieltext. Segmente an Satzzeichen schneiden, Prosodie über die Segmentgrenze mitführen.
-
-### narrator_m01_night_falls (Event `narrator.m01_night_falls`) – Abspielmodus: **Zufallsvariante**
+### narrator_m01_night_falls (Event `narrator.m01_night_falls`)
 *Kontext:* Tag-Nacht-Wechsel; Ambience wechselt `ambience_day` → `ambience_night`. Kann in der Mission mehrfach auftreten.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/narrator/narrator_m01_night_falls_01.ogg` | Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern. | Take 1: warnend, gedämpft |
-| `voices/narrator/narrator_m01_night_falls_02.ogg` | Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern. | Take 2: still, angespannt, etwas schneller |
-| `voices/narrator/narrator_m01_night_falls_03.ogg` | Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern. | Take 3: unheilvoll, langsam, lange Pause nach „Aschhügel“ |
+| `voices/narrator/narrator_m01_night_falls_01.ogg` | [ominous] Die Sonne sank hinter die Aschhügel. [long pause] Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern. | still, angespannt, unheilvoll; lange Pause nach „Aschhügel“ |
 
-Alle drei Dateien sprechen **denselben** Spieltext (der Untertitel zeigt genau eine Fassung); sie unterscheiden sich nur in der Interpretation. Keine Textvarianten erfinden.
+Der Text ist immer derselbe; die früheren drei Takes (warnend/still/unheilvoll) sind zu **einer** Datei zusammengefallen. Keine Textvarianten erfinden.
 
-### narrator_m01_victory (Event `narrator.m01_victory`) – Abspielmodus: **Sequenz**
+### narrator_m01_victory (Event `narrator.m01_victory`)
 *Kontext:* Hohlschrein zerstört, Fahler Vogt besiegt. Musik `victory_sting`, danach ruhige Ambience. Folgt auf Hal Venns `m01_victory`.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/narrator/narrator_m01_victory_01.ogg` | So begann es: | ruhig, Erleichterung; Doppelpunkt als kurze Pause |
-| `voices/narrator/narrator_m01_victory_02.ogg` | nicht mit einer Krone, | Satz bleibt offen, leichtes Heben der Stimme |
-| `voices/narrator/narrator_m01_victory_03.ogg` | sondern mit einem Dorf, das sich weigerte zu sterben. | wachsende Wärme, würdevoll; Gewicht auf „weigerte zu sterben“, Satzende ausklingen lassen |
+| `voices/narrator/narrator_m01_victory_01.ogg` | [softly] So begann es: [pause] nicht mit einer Krone, [warmly] sondern mit einem Dorf, das sich weigerte zu sterben. | ruhig, Erleichterung; Doppelpunkt als kurze Pause, Satz bleibt offen; wachsende Wärme, würdevoll, Gewicht auf „weigerte zu sterben“, Ausklang |
 
-### narrator_m01_defeat (Event `narrator.m01_defeat`) – Abspielmodus: **Sequenz**
+### narrator_m01_defeat (Event `narrator.m01_defeat`)
 *Kontext:* Bergfried zerstört oder Isolde gefallen. Musik `defeat_sting`.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/narrator/narrator_m01_defeat_01.ogg` | Brennhollow ist gefallen. | schwer, langsam, tonlos |
-| `voices/narrator/narrator_m01_defeat_02.ogg` | Asche bedeckt die Mark. | Trauer, leiser werdend (Sätze 01+02 = `defeat_text` der Mission, siehe Hinweis) |
-| `voices/narrator/narrator_m01_defeat_03.ogg` | Doch die Chronik ist noch nicht zu Ende. Erhebt Euch, Wächterin, und versucht es erneut. | Wendung zur Ermutigung; Zusatzsegment ohne Spieltext-Entsprechung (Ergebnisbildschirm zeigt nur `defeat_text`) |
+| `voices/narrator/narrator_m01_defeat_01.ogg` | [somber] Brennhollow ist gefallen. [slowly] Asche bedeckt die Mark. [pause] [encouraging] Doch die Chronik ist noch nicht zu Ende. Erhebt Euch, Wächterin, und versucht es erneut. | schwer, langsam, tonlos, leiser werdend; nach der Pause Wendung zur Ermutigung |
 
-Hinweis: Die Sätze der Dateien `_01` und `_02` entsprechen wörtlich `defeat_text` der Mission (Ergebnisbildschirm); `_03` ist ein reiner Sprechzusatz.
+Hinweis: Die ersten beiden Sätze sind wörtlich `defeat_text` der Mission (Ergebnisbildschirm). Der Zusatz „Doch die Chronik ist noch nicht zu Ende. Erhebt Euch, Wächterin, und versucht es erneut.“
+hat keine Spieltext-Entsprechung; er bleibt Teil der Datei und wird nach der Lieferung im Spieltext nachgezogen (`verify_spoken_text.py` führt ihn als erklärten Zusatz).
 
 ## 1.2 Bruder Hal Venn (`char_hal_venn`)
 
-**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 (Tags sparsam) · alternativ Multilingual v2 ohne Tags
-(Stability 0,50, Similarity 0,78, Style 0,20) · **Nachbearbeitung:** Standardkette, Wärme · Manifest: +1 dB.
+**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 · **Nachbearbeitung:** Integration · Manifest: +1 dB.
 **Regie allgemein:** väterlicher Mentor, warm, geerdet; in Gefahr klar, nie panisch. Spricht Isolde mit Vornamen an (vertrautes „du“ im DE).
 
-### char_hal_venn_m01_intro (Event `char_hal_venn.m01_intro`) – Abspielmodus: **Sequenz**
+### char_hal_venn_m01_intro (Event `char_hal_venn.m01_intro`)
 *Kontext:* direkt nach `narrator_m01_opening`. Isolde trifft am Bergfried ein; Hal kommt ihr entgegen. Erste Aufgabe: zweites Gehöft und Holz (`obj_farm`).
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_intro_01.ogg` | Wächterin, die Speicher reichen nicht über den Winter. | sorgenvoll, nüchtern, direkt zur Heldin gesprochen |
-| `voices/characters/char_hal_venn_m01_intro_02.ogg` | Wir brauchen ein zweites Gehöft | tatkräftig, Tutorial-Hinweis klar betonen; Satz geht in _03 weiter |
-| `voices/characters/char_hal_venn_m01_intro_03.ogg` | und Holz aus dem Westwald – | Stimme bleibt oben (Satz offen), Gedankenstrich als kurze Pause |
-| `voices/characters/char_hal_venn_m01_intro_04.ogg` | bevor es dunkel wird. | eindringlich, leiser werdend, ein Hauch Angst |
+| `voices/characters/char_hal_venn_m01_intro_01.ogg` | [concerned] Wächterin, die Speicher reichen nicht über den Winter. [firmly] Wir brauchen ein zweites Gehöft und Holz aus dem Westwald – [urgently] bevor es dunkel wird. | sorgenvoll, nüchtern, direkt zur Heldin; Tutorial-Hinweis tatkräftig; Satz offen bis zum Schluss, eindringlich, leiser werdend, ein Hauch Angst |
 
-### char_hal_venn_m01_first_farm (Event `char_hal_venn.m01_first_farm`) – Abspielmodus: **Sequenz**
+### char_hal_venn_m01_first_farm (Event `char_hal_venn.m01_first_farm`)
 *Kontext:* zweites Gehöft (`farmstead` ×2) fertiggestellt; nächstes Ziel: Kaserne.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_first_farm_01.ogg` | Die Felder werden uns ernähren. | ehrliche Erleichterung, warm |
-| `voices/characters/char_hal_venn_m01_first_farm_02.ogg` | Doch Brot allein hält die Toten nicht auf. | Ton kippt von Wärme zu Ernst, Pause danach |
-| `voices/characters/char_hal_venn_m01_first_farm_03.ogg` | Errichtet eine Kaserne. | Tutorial-Hinweis (Kaserne), bestimmt, klar |
+| `voices/characters/char_hal_venn_m01_first_farm_01.ogg` | [warmly] Die Felder werden uns ernähren. [seriously] Doch Brot allein hält die Toten nicht auf. [firmly] Errichtet eine Kaserne. | ehrliche Erleichterung, Ton kippt von Wärme zu Ernst, Tutorial-Hinweis (Kaserne) bestimmt und klar |
 
-### char_hal_venn_m01_barracks (Event `char_hal_venn.m01_barracks`) – Abspielmodus: **Sequenz**
+### char_hal_venn_m01_barracks (Event `char_hal_venn.m01_barracks`)
 *Kontext:* Kaserne (`barracks`) fertiggestellt; Ausbildung von Schwertkämpfern, Speerträgern, Bogenschützen möglich.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_barracks_01.ogg` | [sighs] Die Kaserne steht. | bedrückt, kurzer Seufzer vor dem Satz |
-| `voices/characters/char_hal_venn_m01_barracks_02.ogg` | Bildet Speerträger und Bogenschützen aus – | Tutorial-Hinweis (Einheitentypen), bestimmt; Satz geht in _03 weiter |
-| `voices/characters/char_hal_venn_m01_barracks_03.ogg` | die Hohlen kennen keine Furcht, aber sie kennen Stahl. | grimmige Zuversicht, Gewicht auf „Stahl“ |
+| `voices/characters/char_hal_venn_m01_barracks_01.ogg` | [sighs] Die Kaserne steht. [firmly] Bildet Speerträger und Bogenschützen aus – [grimly] die Hohlen kennen keine Furcht, aber sie kennen Stahl. | bedrückt, kurzer Seufzer vor dem Satz; Tutorial-Hinweis bestimmt; grimmige Zuversicht, Gewicht auf „Stahl“ |
 
-### char_hal_venn_m01_wave_warning (Event `char_hal_venn.m01_wave_warning`) – Abspielmodus: **Zufallsvariante**
+### char_hal_venn_m01_wave_warning (Event `char_hal_venn.m01_wave_warning`)
 *Kontext:* erste Angriffswelle der Hohlen über die Brücke (Auslöser `wave_warning`, 215 s). Wird von `sfx/world/horn_alarm_*` begleitet.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_wave_warning_01.ogg` | [shouting] Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried! | Take 1: laut, dringlich, nicht hysterisch |
-| `voices/characters/char_hal_venn_m01_wave_warning_02.ogg` | Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried! | Take 2: erst lauschend leise („Horn?“), dann Befehl |
-| `voices/characters/char_hal_venn_m01_wave_warning_03.ogg` | Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried! | Take 3: gehetzt, kräftig, außer Atem |
-| `voices/characters/char_hal_venn_m01_wave_warning_04.ogg` | [shouting] Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried! | Take 4: angespannt, trockener Rest-Autorität, Schlusssatz Befehlston |
+| `voices/characters/char_hal_venn_m01_wave_warning_01.ogg` | [urgently] Hört Ihr das Horn? [shouting] Sie kommen über die Brücke! Alle Mann an den Bergfried! | erst lauschend, dringlich („Horn?“), dann laut und gehetzt; nicht hysterisch, Rest-Autorität, Schlusssatz Befehlston |
 
-Alle vier Dateien sprechen **denselben** Spieltext (der Untertitel zeigt genau eine Fassung); sie unterscheiden sich nur in Betonung und Tempo. Keine Textvarianten erfinden.
+Der Text ist immer derselbe; die früheren vier Takes sind zu **einer** Datei zusammengefallen. Keine Textvarianten erfinden.
 
-### char_hal_venn_m01_shrine_found (Event `char_hal_venn.m01_shrine_found`) – Abspielmodus: **Sequenz**
+### char_hal_venn_m01_shrine_found (Event `char_hal_venn.m01_shrine_found`)
 *Kontext:* Einheiten entdecken den Hohlschrein (`hollow_shrine`) mit Knochentürmen (`bone_spire`). Musik wechselt Richtung `build_tension`.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_shrine_found_01.ogg` | [whispers] Bei der Flamme … eine Aureth-Kapelle, und der Schleier darin ist offen. | Ehrfurcht, Furcht, leise; „…“ als Atempause |
-| `voices/characters/char_hal_venn_m01_shrine_found_02.ogg` | Zerstört den Schrein, Wächterin. | Missionsziel klar, entschlossen |
-| `voices/characters/char_hal_venn_m01_shrine_found_03.ogg` | Und hütet Euch vor dem, der ihn bewacht. | warnend, gedämpft, letzte Worte schwer |
+| `voices/characters/char_hal_venn_m01_shrine_found_01.ogg` | [whispers] Bei der Flamme … [pause] eine Aureth-Kapelle, und der Schleier darin ist offen. [firmly] Zerstört den Schrein, Wächterin. [quietly] Und hütet Euch vor dem, der ihn bewacht. | Ehrfurcht, Furcht, leise; „…“ als Atempause; Missionsziel klar, entschlossen; Schluss warnend, gedämpft, letzte Worte schwer |
 
-### char_hal_venn_m01_victory (Event `char_hal_venn.m01_victory`) – Abspielmodus: **Sequenz**
+### char_hal_venn_m01_victory (Event `char_hal_venn.m01_victory`)
 *Kontext:* Schrein zerstört, Vogt gefallen; vor `narrator_m01_victory`.
 
 | Ziel-Datei | Sprechtext (DE, exakt wie im Spiel) | Regie |
 |---|---|---|
-| `voices/characters/char_hal_venn_m01_victory_01.ogg` | [exhales] Der Riss ist verschlossen. | Erleichterung, fast Tränen |
-| `voices/characters/char_hal_venn_m01_victory_02.ogg` | Brennhollow wird diesen Winter überstehen – | warm, stolz; Satz geht in _03 weiter |
-| `voices/characters/char_hal_venn_m01_victory_03.ogg` | dank Euch, Wächterin. | ehrliche Dankbarkeit, ruhig, Ausblick auf Zeitalter II |
+| `voices/characters/char_hal_venn_m01_victory_01.ogg` | [exhales] Der Riss ist verschlossen. [warmly] Brennhollow wird diesen Winter überstehen – [softly] dank Euch, Wächterin. | Erleichterung, fast Tränen; warm, stolz; am Ende ehrliche Dankbarkeit, ruhig, Ausblick auf Zeitalter II |
 
 ---
 
