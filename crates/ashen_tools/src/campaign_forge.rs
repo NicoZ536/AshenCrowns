@@ -255,18 +255,57 @@ fn voice_profile(sp: Sp) -> String {
     format!("AC_{}", sp.id())
 }
 
-fn doc_block(s: &Script) -> String {
+/// Entfernt Eleven-v3-Audio-Tags (`[solemn]`, `[short pause]`) und normalisiert Leerraum.
+fn strip_audio_tags(s: &str) -> String {
+    let mut out = String::new();
+    let mut rest = s;
+    while let Some(i) = rest.find('[') {
+        let after = &rest[i + 1..];
+        match after.find(']') {
+            Some(j) if !after[..j].is_empty() && after[..j].chars().all(|c| c.is_ascii_lowercase() || c == ' ' || c == '-' || c == ',' || c == '\'') => {
+                out.push_str(&rest[..i]);
+                out.push(' ');
+                rest = &after[j + 1..];
+            }
+            _ => {
+                out.push_str(&rest[..=i]);
+                rest = after;
+            }
+        }
+    }
+    out.push_str(rest);
+    out.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Liest aus dem bestehenden Kampagnenblock die von Hand ergänzten Sprechtexte mit Audio-Tags (Dateiname → Text).
+/// Sie bleiben beim Neuerzeugen erhalten, solange sie ohne Tags dem Spieltext entsprechen.
+fn existing_tagged_texts(doc: &str) -> std::collections::HashMap<String, String> {
+    let mut map = std::collections::HashMap::new();
+    let (Some(b), Some(e)) = (doc.find(BEGIN_DOC), doc.find(END_DOC)) else { return map };
+    if e < b {
+        return map;
+    }
+    for line in doc[b..e].lines().filter(|l| l.starts_with("| ")) {
+        let cells: Vec<&str> = line.split('|').map(str::trim).collect();
+        if cells.len() >= 6 && cells[2].starts_with('`') && cells[2].ends_with(".ogg`") {
+            map.insert(cells[2].trim_matches('`').to_string(), cells[4].to_string());
+        }
+    }
+    map
+}
+
+fn doc_block(s: &Script, tagged: &std::collections::HashMap<String, String>) -> String {
     let mut out = String::new();
     out.push_str(BEGIN_DOC);
     out.push('\n');
     out.push_str("# Teil 3 – Echtzeit-Kampagne „Das Zeitalter der Gefallenen“ (Missionsdialoge, im Manifest)\n\n");
     out.push_str("Dieser Teil wird aus den Missionsdaten erzeugt (`cargo run -p ashen_tools -- forge-campaign`): Jede Zeile steht\n");
     out.push_str("identisch in der Mission (`assets/data/campaign/*.ron`), als Event im Manifest und hier. **Sprechtext = exakt der deutsche Spieltext**,\n");
-    out.push_str("ohne Anpassung zu generieren.\n\n");
+    out.push_str("Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen erhalten, solange der Text ohne Tags dem Spieltext entspricht (sonst steht der Spieltext ohne Tags da und muss neu getaggt werden).\n\n");
     out.push_str("**Konventionen**\n");
     out.push_str("- Event: `<sprecher-id>.<mission>_<szene>_<buchstabe>`; Datei: `voices/narrator/narrator_<mission>_<szene>_<buchstabe>_01.ogg` bzw. `voices/characters/<sprecher-id>_<mission>_<szene>_<buchstabe>_01.ogg`.\n");
     out.push_str("- Jede Zeile ein eigenes Event mit genau einer Datei (`_01`); die Reihenfolge der Zeilen steht in der Spalte **#**. Das Spiel spielt die Zeilen einer Szene nacheinander; die Pausen ergeben sich aus der Textlänge.\n");
-    out.push_str("- Stimme: Profil `AC_<sprecher-id>` aus `elevenlabs_characters.md` (Sprache **Deutsch**, Multilingual v2 für den Erzähler, Eleven v3 *Natural* für Figuren und Bosse; Tags nur sparsam und nicht im Spieltext). Akzentangaben der Profile gelten als leichte Färbung.\n");
+    out.push_str("- Stimme: Profil `AC_<sprecher-id>` aus `elevenlabs_characters.md` (Sprache **Deutsch**, alle Stimmen inklusive Erzähler mit Eleven v3, Stability-Modus *Natural*; jede Zeile enthält Eleven-v3-Audio-Tags in eckigen Klammern, die nicht gesprochen werden und nicht in den Spieltext gehören). Akzentangaben der Profile gelten als leichte Färbung.\n");
     out.push_str("- Zielformat und Loudness wie in Teil 1 (Ogg Vorbis q6, 48 kHz, mono, −16 LUFS, −1 dBTP). Manifest: Erzähler +2 dB, Figuren +1 dB.\n");
     out.push_str("- Neue Sprecher dieses Teils: `char_wendel`, `char_nel`, `boss_stone_oath`, `boss_reef_mistress` (Profile in `elevenlabs_characters.md`, Teil F).\n\n");
     let mut missions: Vec<&str> = Vec::new();
@@ -292,7 +331,10 @@ fn doc_block(s: &Script) -> String {
             out.push('\n');
             out.push_str("| # | Ziel-Datei | Sprecher (Stimme) | Sprechtext (DE, exakt wie im Spiel) | Regie |\n|---|---|---|---|---|\n");
             for (i, l) in s.lines.iter().filter(|l| l.mission == m && l.scene == sc).enumerate() {
-                out.push_str(&format!("| {} | `{}_01.ogg` | {} (`{}`) | {} | {} |\n", i + 1, l.file, l.sp.name(), voice_profile(l.sp), l.text.replace('|', "/"), l.regie));
+                let plain = l.text.replace('|', "/");
+                let key = format!("{}_01.ogg", l.file);
+                let spoken = tagged.get(&key).filter(|t| strip_audio_tags(t) == strip_audio_tags(&plain)).cloned().unwrap_or(plain);
+                out.push_str(&format!("| {} | `{}` | {} (`{}`) | {} | {} |\n", i + 1, key, l.sp.name(), voice_profile(l.sp), spoken, l.regie));
             }
             out.push('\n');
         }
@@ -356,7 +398,8 @@ pub fn forge_campaign(assets: &Path, repo: &Path) -> Result<Vec<std::path::PathB
 
     let doc_path = repo.join("docs/audio/elevenlabs_dialogues.md");
     let doc = std::fs::read_to_string(&doc_path).map_err(|e| format!("{}: {e}", doc_path.display()))?;
-    let doc = splice(&doc, BEGIN_DOC, END_DOC, &format!("{}\n---\n\n", doc_block(&script)), "## Anhang – Produktionshinweise Dialog")?;
+    let tagged = existing_tagged_texts(&doc);
+    let doc = splice(&doc, BEGIN_DOC, END_DOC, &format!("{}\n---\n\n", doc_block(&script, &tagged)), "## Anhang – Produktionshinweise Dialog")?;
     write_if_changed(&doc_path, &doc)?;
     println!("Kampagne: {} Missionen, {} Sprechzeilen", missions.len(), script.lines.len());
     Ok(out)
@@ -376,3 +419,29 @@ pub(crate) fn ending(id: &str, title: &str, text: &str, requires: &[&str], voice
 }
 
 pub(crate) type Plan = CampaignDef;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strips_audio_tags_and_normalizes_whitespace() {
+        assert_eq!(strip_audio_tags("[solemn] Jahr 897. [pause] Am Rand – [short pause] der Mark."), "Jahr 897. Am Rand – der Mark.");
+        assert_eq!(strip_audio_tags("Nein … nicht so – [exhales]"), "Nein … nicht so –");
+        assert_eq!(strip_audio_tags("Ohne Tags  bleibt gleich."), "Ohne Tags bleibt gleich.");
+        assert_eq!(strip_audio_tags("[Option A] bleibt Text, [offen"), "[Option A] bleibt Text, [offen");
+    }
+
+    #[test]
+    fn keeps_hand_written_tags_only_when_text_matches() {
+        let doc = format!("{BEGIN_DOC}\n| 1 | `voices/narrator/narrator_m02_x_a_01.ogg` | Erzähler (`AC_narrator`) | [solemn] Hallo Welt. | ruhig |\n| 2 | `voices/narrator/narrator_m02_x_b_01.ogg` | Erzähler (`AC_narrator`) | [solemn] Alter Text. | ruhig |\n{END_DOC}\n");
+        let map = existing_tagged_texts(&doc);
+        assert_eq!(map.len(), 2);
+        assert_eq!(map["voices/narrator/narrator_m02_x_a_01.ogg"], "[solemn] Hallo Welt.");
+        let plain = "Hallo Welt.";
+        let kept = map.get("voices/narrator/narrator_m02_x_a_01.ogg").filter(|t| strip_audio_tags(t) == strip_audio_tags(plain));
+        assert!(kept.is_some());
+        let changed = map.get("voices/narrator/narrator_m02_x_b_01.ogg").filter(|t| strip_audio_tags(t) == strip_audio_tags("Neuer Text."));
+        assert!(changed.is_none());
+    }
+}
