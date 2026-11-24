@@ -3,12 +3,12 @@
 Grundlage: `docs/canon.md`. Produktionsregeln, Glossar und Aussprache: `docs/audio/elevenlabs_production_guide.md`.
 
 **Aufbau jedes Profils:** ID · Rolle · Alter · Timbre · Akzent · Tempo · Emotion/Grundhaltung · **Voice-Design-Prompt** (englisch formuliert, da das Werkzeug englische Beschreibungen am besten versteht; **muss** die Angabe „speaks German with a natural, native accent“ enthalten; in das Feld *Voice Description*) · **Beispieltext** (deutsch, in das Feld *Text to preview*) · Modell &
-Einstellungs-Empfehlung · Nachbearbeitung · Do/Don't.
+Einstellungs-Empfehlung · Integration (nicht vom Nutzer) · Do/Don't.
 
 **Allgemeine Regeln**
 - Jede gespeicherte Stimme heißt `AC_<id>` (z. B. `AC_hero_isolde`, `AC_unit_knight`, `AC_ember_crown_priest`).
 - Prompts beschreiben Merkmale, **niemals reale Personen** oder bekannte Figuren.
-- Jeder Prompt endet mit einer Qualitätsangabe; bei Kreaturen wird die Textur ergänzt, Effekte kommen aber aus der Nachbearbeitung.
+- Jeder Prompt endet mit einer Qualitätsangabe; bei Kreaturen wird die Textur ergänzt, Effekte setzt aber die Integration.
 - Einstellungen sind Startwerte (siehe Leitfaden, Abschnitt 4); Modellnamen und Regler zum Produktionszeitpunkt in der UI prüfen.
 - Casting-Freigabe: Alle Stimmen einer Fraktion nebeneinander anhören – sie müssen **unterscheidbar** sein (Alter, Tonhöhe, Akzent).
 
@@ -37,13 +37,13 @@ Einstellungs-Empfehlung · Nachbearbeitung · Do/Don't.
 > recording, no background noise.
 
 **Beispieltext:**
-> „Die Aschmark verzeiht keine Fehler, und ich auch nicht. Baut die Palisade bis zum Einbruch der Nacht wieder auf, haltet
-> die Feuer am Brennen, und wenn irgendetwas aus diesen Ruinen kriecht … nun. Überlasst es mir. Dafür bezahlt man mich.
-> Theoretisch.“
+> „[calmly] Die Aschmark verzeiht keine Fehler, und ich auch nicht. Baut die Palisade bis zum Einbruch der Nacht wieder
+> auf, haltet die Feuer am Brennen, und wenn irgendetwas aus diesen Ruinen kriecht … [pause] nun. Überlasst es mir.
+> Dafür bezahlt man mich. [dryly] Theoretisch.“
 
 **Modell & Einstellungen:** Eleven v3, Stabilität *Natural* (Kampfrufe ggf. *Creative*), Speed 1.0. Tags sparsam:
 `[sarcastic]`, `[chuckles]`, `[exhales]`, `[shouting]`, `[groans]`.
-**Nachbearbeitung:** Standardkette Stimme; Hochpass 100 Hz; Präsenz +1,5 dB @ 3,5 kHz.
+**Integration (nicht vom Nutzer):** Standardkette Stimme; Hochpass 100 Hz; Präsenz +1,5 dB @ 3,5 kHz.
 **Referenzdatei** für alle Stimm-Lautheiten: `voices/heroes/hero_isolde_select_01.ogg`.
 
 ---
@@ -70,13 +70,12 @@ Einstellungs-Empfehlung · Nachbearbeitung · Do/Don't.
 > and weariness. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Mein Großvater hielt diese Krone gegen Hunger und Feuer. Mein Vater gegen die Hohlung. Und ich … mir wird gesagt, ich
-> müsse sie gegen meine eigenen Herzöge halten. Sagt mir, Wächterin: Kniet Ihr noch vor der Glutkrone – oder nur vor dem
-> Mann, der sie trägt?“
+> „[wearily] Mein Großvater hielt diese Krone gegen Hunger und Feuer. Mein Vater gegen die Hohlung. Und ich … [pause]
+> mir wird gesagt, ich müsse sie gegen meine eigenen Herzöge halten. Sagt mir, Wächterin: [solemn] Kniet Ihr noch vor
+> der Glutkrone – oder nur vor dem Mann, der sie trägt?“
 
-**Modell & Einstellungen:** Multilingual v2 für Monologe (Stability 0,50, Similarity 0,80, Style 0,20, Speed 0,93);
-Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]` sehr selten).
-**Nachbearbeitung:** Standardkette, Hochpass 70 Hz, im Dialog leichter Thronsaal-Hall (1,6 s, Mix 8 %) nur szenisch.
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Natural* (Speed 0,93); Tags `[tired]`, `[angry]`, `[coughs]` sparsam; Monologe `[slowly]`, `[pause]`.
+**Integration (nicht vom Nutzer):** Standardkette, Hochpass 70 Hz, im Dialog leichter Thronsaal-Hall (1,6 s, Mix 8 %) nur szenisch.
 
 ### B2 `char_mireille` – Herzogin Mireille Corvane von Nordmark
 
@@ -98,13 +97,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Loyalität ist ein hübsches Wort, Wächterin. Es kostet nichts, es auszusprechen, und alles, es zu halten. Der König
-> bietet Euch Dankbarkeit. Ich biete Euch Soldaten, Korn und eine Zukunft für Eure kleine Siedlung. Wählt rasch. Die
-> Hohlen warten nicht auf Höflichkeit.“
+> „[coldly] Loyalität ist ein hübsches Wort, Wächterin. Es kostet nichts, es auszusprechen, und alles, es zu halten. Der
+> König bietet Euch Dankbarkeit. Ich biete Euch Soldaten, Korn und eine Zukunft für Eure kleine Siedlung. Wählt rasch.
+> [commanding] Die Hohlen warten nicht auf Höflichkeit.“
 
-**Modell & Einstellungen:** Eleven v3 *Natural* (`[sarcastic]`, `[laughs softly]` selten); Monologe Multilingual v2
-(Stability 0,55, Similarity 0,80, Style 0,25).
-**Nachbearbeitung:** Standardkette, Hochpass 100 Hz, leichte Luft +1 dB @ 10 kHz.
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Natural* (`[sarcastic]`, `[laughs softly]` selten; Monologe mit `[pause]`).
+**Integration (nicht vom Nutzer):** Standardkette, Hochpass 100 Hz, leichte Luft +1 dB @ 10 kHz.
 
 ### B3 `char_hal_venn` – Bruder Hal Venn, Flammenpriester in Brennhollow (Mentor)
 
@@ -126,12 +124,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > firm without panic. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Dreißig Seelen, Isolde. Dreißig Seelen, ein kalter Herd und eine Kapelle ohne Dach. Kein großes Königreich. Aber die
-> Flamme hat mit weniger begonnen, und du auch. Entzünde das erste Feuer, und dann sehen wir, wer zu ihm heimkehrt.“
+> „[warmly] Dreißig Seelen, Isolde. Dreißig Seelen, ein kalter Herd und eine Kapelle ohne Dach. Kein großes Königreich.
+> [softly] Aber die Flamme hat mit weniger begonnen, und du auch. Entzünde das erste Feuer, und dann sehen wir, wer zu
+> ihm heimkehrt.“
 
-**Modell & Einstellungen:** Eleven v3 *Natural* für Mission-1-Zeilen (`[chuckles]`, `[sighs]` gezielt); alternativ Multilingual v2
-(Stability 0,50, Similarity 0,78, Style 0,20, Speed 0,97) für ruhige Passagen.
-**Nachbearbeitung:** Standardkette, Hochpass 70 Hz, Wärme (Sättigung ≤ 5 %).
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Natural*, Speed 0,97 (`[chuckles]`, `[sighs]` gezielt; ruhige Passagen mit `[softly]`, `[pause]`).
+**Integration (nicht vom Nutzer):** Standardkette, Hochpass 70 Hz, Wärme (Sättigung ≤ 5 %).
 
 ### B4 `char_torvald` – Torvald Eisenhand, Clanfürst Skarnheims
 
@@ -153,12 +151,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > laughter and sudden anger. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Meine Ahnen haben diesen Pass mit bloßen Händen gehauen und ihre Söhne unter seinen Steinen begraben. Ihr kommt mit
-> euren südlichen Bannern herauf und wollt Eisen? Dann trinkt ihr mit uns, blutet mit uns und schwört beim Ahnenpfad. Oder
-> geht heim.“
+> „[proudly] Meine Ahnen haben diesen Pass mit bloßen Händen gehauen und ihre Söhne unter seinen Steinen begraben. Ihr
+> kommt mit euren südlichen Bannern herauf und wollt Eisen? [firmly] Dann trinkt ihr mit uns, blutet mit uns und schwört
+> beim Ahnenpfad. [short pause] Oder geht heim.“
 
 **Modell & Einstellungen:** Eleven v3 *Natural* (`[laughs]`, `[shouting]`); Speed 0,95.
-**Nachbearbeitung:** Hochpass 60 Hz, leichte Tiefmitten-Fülle +1 dB @ 150 Hz, im Freien kurzer Berghall szenisch.
+**Integration (nicht vom Nutzer):** Hochpass 60 Hz, leichte Tiefmitten-Fülle +1 dB @ 150 Hz, im Freien kurzer Berghall szenisch.
 
 ### B5 `char_sylaen` – Sylaen der Veyl, Druidin des Dornenbundes
 
@@ -181,12 +179,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > noise.
 
 **Beispieltext:**
-> „Der Dornwald erinnert sich an jede Axt, Wächterin. Jede Wurzel, die du schneidest, ist ein Wort, das du nie
-> zurücknehmen kannst. Geh leise hier … die Wurzelmutter träumt, und ihre Träume sind grau geworden. Wenn sie so erwacht,
-> bleibt keinem von uns ein Wald.“
+> „[softly] Der Dornwald erinnert sich an jede Axt, Wächterin. Jede Wurzel, die du schneidest, ist ein Wort, das du nie
+> zurücknehmen kannst. [pause] Geh leise hier … [whispers] die Wurzelmutter träumt, und ihre Träume sind grau geworden.
+> Wenn sie so erwacht, bleibt keinem von uns ein Wald.“
 
 **Modell & Einstellungen:** Eleven v3 *Natural* (`[whispers]` nur bei Geheimnissen); Speed 0,92.
-**Nachbearbeitung:** Veyl-Signatur (Leitfaden 8.3): Luft +2 dB ab 10 kHz, kurzer heller Hall.
+**Integration (nicht vom Nutzer):** Veyl-Signatur (Leitfaden 8.3): Luft +2 dB ab 10 kHz, kurzer heller Hall.
 
 ### B6 `char_ophira` – Ophira Saelith-Varo, Händlerfürstin
 
@@ -208,12 +206,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > hospitable with an edge. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Jeder in Eldraeth betet zu irgendetwas, Wächterin. Eure Leute zu einer Flamme, die Clans zu ihren Toten. In Saelith
-> beten wir zur Flut, und die Flut ist ehrlich: Sie kommt immer zurück, um zu holen, was man ihr schuldet. Nun. Sprechen
-> wir über Eure Schulden?“
+> „[amused] Jeder in Eldraeth betet zu irgendetwas, Wächterin. Eure Leute zu einer Flamme, die Clans zu ihren Toten. In
+> Saelith beten wir zur Flut, und die Flut ist ehrlich: Sie kommt immer zurück, um zu holen, was man ihr schuldet. Nun.
+> [pause] Sprechen wir über Eure Schulden?“
 
 **Modell & Einstellungen:** Eleven v3 *Natural* (`[laughs softly]`, `[amused]`); Speed 0,97.
-**Nachbearbeitung:** Standardkette, Hochpass 90 Hz, Wärme leicht.
+**Integration (nicht vom Nutzer):** Standardkette, Hochpass 90 Hz, Wärme leicht.
 
 ### B7 `char_kassian` – Kassian Vale, Spionagemeister
 
@@ -235,11 +233,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > knows more than he says. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Ihr müsst nicht nach dem Messer suchen, Wächterin. Wollte ich Euch tot sehen, wärt Ihr vor drei Wochen bequem im Schlaf
-> gestorben. Nein … ich bin hier, weil jemand am Königshof die Hohlen füttert. Und ich wüsste gern, wer.“
+> „[calmly] Ihr müsst nicht nach dem Messer suchen, Wächterin. Wollte ich Euch tot sehen, wärt Ihr vor drei Wochen
+> bequem im Schlaf gestorben. [short pause] Nein … [quietly] ich bin hier, weil jemand am Königshof die Hohlen füttert.
+> Und ich wüsste gern, wer.“
 
 **Modell & Einstellungen:** Eleven v3 *Natural/Robust* (`[whispers]`, `[amused]`); Speed 0,96.
-**Nachbearbeitung:** Standardkette, Nahbesprechungseffekt erhalten (kein starker Hochpass, 70 Hz), sehr leichter Kompressor.
+**Integration (nicht vom Nutzer):** Standardkette, Nahbesprechungseffekt erhalten (kein starker Hochpass, 70 Hz), sehr leichter Kompressor.
 
 ### B8 `char_deep_voice` – Die Stimme aus dem Tief
 
@@ -247,7 +246,7 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 |---|---|
 | Rolle | Manifestation des Hohlen Tiefs, älter als die Götter |
 | Alter | zeitlos; weder männlich noch weiblich festgelegt |
-| Timbre | tief, ruhig, hohl, mit flüsterndem Luftanteil; wirkt wie viele Stimmen in einer (entsteht in der Nachbearbeitung) |
+| Timbre | tief, ruhig, hohl, mit flüsterndem Luftanteil; wirkt wie viele Stimmen in einer (entsteht in der Integration) |
 | Akzent | Deutsch, kein Regionalakzent; extrem deutliche, langsame Artikulation, als lerne es menschliche Sprache gerade |
 | Tempo | sehr langsam, lange Pausen, Silben gedehnt |
 | Emotion | geduldig, fast zärtlich, vollkommen gleichgültig gegenüber Leid – Versuchung statt Drohung |
@@ -262,13 +261,12 @@ Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]`
 > noise.
 
 **Beispieltext:**
-> „Du hast ein Feuer entzündet … und es Hoffnung genannt. Ich erinnere mich, als eure Götter Kinder waren, Kleine. Ich
-> erinnere mich, als sie verstummten. Jede Flamme erlischt. Jede Krone wird zu Asche. Komm herab … und ich zeige dir, was
-> unter dem Schleier liegt.“
+> „[whispers] Du hast ein Feuer entzündet … und es Hoffnung genannt. [slowly] Ich erinnere mich, als eure Götter Kinder
+> waren, Kleine. Ich erinnere mich, als sie verstummten. Jede Flamme erlischt. Jede Krone wird zu Asche. Komm herab …
+> [softly] und ich zeige dir, was unter dem Schleier liegt.“
 
-**Modell & Einstellungen:** Multilingual v2 (Stability 0,70, Similarity 0,85, Style 0,10, Speed 0,85) für Grundschicht;
-zusätzlicher Take mit Eleven v3 und `[whispers]` als Flüsterschicht.
-**Nachbearbeitung:** Drei-Schichten-Verfahren (Leitfaden 8.3). Niemals ohne Effekte verwenden.
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Robust*, Speed 0,85; Flüsterpassagen mit `[whispers]`. Geliefert wird **eine** trockene Datei je Zeile; Schichtung und Effekte setzt die Integration.
+**Integration (nicht vom Nutzer):** Drei-Schichten-Verfahren (Leitfaden 8.3). Niemals ohne Effekte verwenden.
 
 ### B9 `narrator` – Erzähler (Chronist)
 
@@ -291,13 +289,12 @@ zusätzlicher Take mit Eleven v3 und `[whispers]` als Flüsterschicht.
 > reverb.
 
 **Beispieltext:**
-> „Im achthundertsiebenundneunzigsten Jahr nach dem Fall war die Aschmark ein Land leerer Höfe und stummer Glocken. Von
-> all den Dörfern, die einst die Südstraße säumten, hielt nur noch eines seine Feuer am Brennen. Sein Name war
-> Brennhollow.“
+> „[solemn] Im achthundertsiebenundneunzigsten Jahr nach dem Fall war die Aschmark ein Land leerer Höfe und stummer
+> Glocken. [pause] Von all den Dörfern, die einst die Südstraße säumten, hielt nur noch eines seine Feuer am Brennen.
+> [slowly] Sein Name war Brennhollow.“
 
-**Modell & Einstellungen:** **Multilingual v2** (Stability 0,60, Similarity 0,80, Style 0,15, Speaker Boost an, Speed 0,95);
-für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
-**Nachbearbeitung:** nur Standardkette und minimale Wärme; kein Hall.
+**Modell & Einstellungen:** **Eleven v3**, Stability-Modus *Natural* (bei zu starker Schwankung zwischen Takes *Robust*), Speed 0,95; Tags `[solemn]`, `[pause]`, `[slowly]`, `[softly]`. Multilingual v2 wird nicht mehr genutzt (versteht keine Audio-Tags). Aussprache-Wörterbuch (Leitfaden, Abschnitt 6) anwenden.
+**Integration (nicht vom Nutzer):** nur Standardkette und minimale Wärme; kein Hall.
 
 ---
 
@@ -323,12 +320,12 @@ für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
 > with flashes of barely contained madness. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Ich war die Sonne Aureths. Könige knieten vor meinem Schatten. Ich öffnete den Schleier, um mein Volk vor dem Tod
-> selbst zu retten … und der Tod antwortete. Blick auf Solmere, kleine Wächterin, und sag mir noch einmal, deine Flamme
-> könne überstrahlen, was ich verloren habe.“
+> „[proudly] Ich war die Sonne Aureths. Könige knieten vor meinem Schatten. Ich öffnete den Schleier, um mein Volk vor
+> dem Tod selbst zu retten … und der Tod antwortete. [bitterly] Blick auf Solmere, kleine Wächterin, und sag mir noch
+> einmal, deine Flamme könne überstrahlen, was ich verloren habe.“
 
 **Modell & Einstellungen:** Eleven v3 *Natural/Robust* (`[laughs]` – ein hohles, kurzes Lachen; `[whispers]`); Speed 0,9.
-**Nachbearbeitung:** Leitfaden 8.3 (Deep-Voice-Layer auf Schlüsselwörtern, Thronsaal-Hall).
+**Integration (nicht vom Nutzer):** Leitfaden 8.3 (Deep-Voice-Layer auf Schlüsselwörtern, Thronsaal-Hall).
 
 ### C2 `boss_ashen_dragon` – Der Aschdrache Vyrmathax
 
@@ -350,12 +347,12 @@ für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
 > anger underneath. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Wieder klettert eine kleine Krone auf meinen Berg. Wie tapfer. Wie kurz. Ich sah Aureth von genau diesem Gipfel brennen
-> und fand es schön. Sprich schnell, Wächterin. Meine Geduld ist kürzer als das Leben deinesgleichen – und für dich weit
-> weniger wertvoll.“
+> „[mockingly] Wieder klettert eine kleine Krone auf meinen Berg. Wie tapfer. Wie kurz. [pause] Ich sah Aureth von genau
+> diesem Gipfel brennen und fand es schön. Sprich schnell, Wächterin. Meine Geduld ist kürzer als das Leben
+> deinesgleichen – und für dich weit weniger wertvoll.“
 
-**Modell & Einstellungen:** Multilingual v2 (Stability 0,65, Similarity 0,85, Style 0,10, Speed 0,85) oder v3 *Robust*.
-**Nachbearbeitung:** Leitfaden 8.3 (Pitch −5 bis −7, Growl-Layer aus SFX, Höhlenhall).
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Robust*, Speed 0,85.
+**Integration (nicht vom Nutzer):** Leitfaden 8.3 (Pitch −5 bis −7, Growl-Layer aus SFX, Höhlenhall).
 
 ### C3 `boss_root_mother` – Die Wurzelmutter
 
@@ -363,7 +360,7 @@ für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
 |---|---|
 | Rolle | Naturentität des Dornwalds, von der Hohlung angegriffen |
 | Alter | uralt |
-| Timbre | tiefe, warme Frauenstimme, knarzend wie altes Holz, mehrstimmig (Chor-Dopplung in der Nachbearbeitung) |
+| Timbre | tiefe, warme Frauenstimme, knarzend wie altes Holz, mehrstimmig (Chor-Dopplung durch die Integration) |
 | Akzent | Deutsch, kein Regionalakzent; Wörter wie langsam wachsend, sehr langgezogene Vokale |
 | Tempo | extrem langsam, lange Atembögen, Wortwiederholungen |
 | Emotion | mütterlich und verwundet; im korrumpierten Zustand fiebrig, verwirrt, besitzergreifend |
@@ -377,12 +374,12 @@ für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
 > microphone, no background noise.
 
 **Beispieltext:**
-> „Kinder … meine Kinder mit Äxten und Feuer. Ich nährte eure Väter. Ich barg eure Toten. Nun trinken graue Wurzeln von
-> mir, und ich kann nicht sagen, welche Hände die euren sind. Bleibt … bleibt bei mir. Lasst mich euch halten. Lasst die
-> Erde euch wärmen.“
+> „[sorrowfully] Kinder … meine Kinder mit Äxten und Feuer. Ich nährte eure Väter. Ich barg eure Toten. Nun trinken
+> graue Wurzeln von mir, und ich kann nicht sagen, welche Hände die euren sind. [pleading] Bleibt … bleibt bei mir.
+> Lasst mich euch halten. Lasst die Erde euch wärmen.“
 
-**Modell & Einstellungen:** Multilingual v2 (Stability 0,55, Similarity 0,80, Style 0,20, Speed 0,85); korrumpierte Zeilen v3 *Creative*.
-**Nachbearbeitung:** Chor-Dopplung, Holz-Knarz-Layer, warmer Waldhall (Leitfaden 8.3).
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Natural* (verderbte Zeilen *Creative*), Speed 0,85.
+**Integration (nicht vom Nutzer):** Chor-Dopplung, Holz-Knarz-Layer, warmer Waldhall (Leitfaden 8.3).
 
 ### C4 `boss_pale_reeve` – Der Fahle Vogt (Mini-Boss Mission 1)
 
@@ -404,11 +401,12 @@ für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
 > into a shriek. Studio-quality recording, close microphone, no background noise.
 
 **Beispieltext:**
-> „Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. Das Hohle Tief ist geduldig, doch das Register muss
-> ausgeglichen werden. Jeder Atemzug, den Ihr tut, ist geliehen, Wächterin. Ich bin gekommen, die Zinsen einzutreiben.“
+> „[coldly] Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. Das Hohle Tief ist geduldig, doch das Register
+> muss ausgeglichen werden. [menacingly] Jeder Atemzug, den Ihr tut, ist geliehen, Wächterin. Ich bin gekommen, die
+> Zinsen einzutreiben.“
 
 **Modell & Einstellungen:** Eleven v3 *Natural* (Taunts/Ability), *Creative* (hit/death mit `[shrieks]`, `[groans]`); Speed 0,95.
-**Nachbearbeitung:** Hohle-Signatur + Vogt-Ergänzung (Leitfaden 8.3); Ablage unter `voices/units/`.
+**Integration (nicht vom Nutzer):** Hohle-Signatur + Vogt-Ergänzung (Leitfaden 8.3); Ablage unter `voices/units/`.
 
 ---
 
@@ -430,8 +428,8 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
   with a natural, native accent and a broad rural, southern-leaning dialect coloring. Slow, plain, slightly tired but
   willing delivery, humble and practical, with a hint of grumbling humour. Close-mic studio-quality recording, no background
   noise."
-- **Beispieltext:** „Jo, ich hol das Holz. Wie gestern, wie morgen. Aber wenn die Toten heut Nacht wiederkommen, versteck
-  ich mich hinter dem Ritter, nicht vor ihm.“
+- **Beispieltext:** „[wearily] Jo, ich hol das Holz. Wie gestern, wie morgen. [sighs] Aber wenn die Toten heut Nacht wiederkommen,
+  versteck ich mich hinter dem Ritter, nicht vor ihm.“
 - **Einstellungen:** v3 *Natural*, Speed 0,98.
 
 #### D1.2 Soldat/Milizionär – `AC_unit_swordsman` (Einheit `swordsman`)
@@ -439,8 +437,8 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A young militia swordsman in his late twenties with a firm, slightly hoarse baritone voice. Speaks German
   with a natural, native accent and a working-class northern urban coloring. Brisk, determined, soldierly delivery with a
   touch of gallows humour, confident but not arrogant. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Schwert scharf, Schild verbeult, und der Feldwebel brüllt immer noch. Muss ein normaler Tag in der
-  Aschmark sein. Zeig mir was Totes, und ich mach's noch toter.“
+- **Beispieltext:** „[dryly] Schwert scharf, Schild verbeult, und der Feldwebel brüllt immer noch. Muss ein normaler Tag in der Aschmark
+  sein. [confidently] Zeig mir was Totes, und ich mach's noch toter.“
 - **Einstellungen:** v3 *Natural*, Kampfrufe *Creative*.
 
 #### D1.3 Veteran/Speerträger – `AC_unit_spearman` (Einheit `spearman`)
@@ -448,8 +446,8 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A grizzled veteran spearman in his mid-fifties with a deep, gravelly, calm bass-baritone voice. Speaks
   German with a natural, native accent and a rural, down-to-earth coloring. Laconic, steady and unshakeable, few words, each
   one weighty, a protective old soldier. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Haltet die Linie, Jungs. Füße fest, Speer nach vorn, lasst sie kommen. Ich hab bessere Männer begraben
-  als diese Dinger, und ich überlebe die auch.“
+- **Beispieltext:** „[commanding] Haltet die Linie, Jungs. Füße fest, Speer nach vorn, lasst sie kommen. [calmly] Ich hab bessere Männer
+  begraben als diese Dinger, und ich überlebe die auch.“
 - **Einstellungen:** v3 *Natural/Robust*, Speed 0,95.
 
 #### D1.4 Bogenschützin – `AC_unit_archer` (Einheit `archer`)
@@ -457,8 +455,8 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A sharp-eyed young woman archer in her early twenties with a bright, clear and focused voice. Speaks
   German with a natural, native accent and a light rural coloring. Quick, alert and cheeky delivery, precise and confident,
   a hunter's calm when aiming. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Wind von Osten, zwei Finger links. Ich treff eine Krähe auf hundert Schritt, bevor du fertig gezeigt
-  hast. Na los, gib mir was, das sich lohnt.“
+- **Beispieltext:** „[confidently] Wind von Osten, zwei Finger links. Ich treff eine Krähe auf hundert Schritt, bevor du fertig gezeigt
+  hast. [teasingly] Na los, gib mir was, das sich lohnt.“
 - **Einstellungen:** v3 *Natural*, Speed 1,03.
 
 #### D1.5 Ritter (schwere Kavallerie) – `AC_unit_knight` (Einheit `knight`)
@@ -466,26 +464,26 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A noble armoured knight in his early forties with a full, resonant and commanding baritone voice. Speaks
   German with a natural, native accent in refined, noble stage-standard pronunciation. Proud, chivalrous and formal delivery
   with a touch of grandeur, unwavering and honourable. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Bei der Ewigen Flamme und dem Eid meines Hauses: Kein Schatten überquert dieses Feld, solange ich im
-  Sattel sitze. Blast das Horn, und lasst die Toten lernen, was ein Ansturm Valemarks bedeutet.“
+- **Beispieltext:** „[solemn] Bei der Ewigen Flamme und dem Eid meines Hauses: Kein Schatten überquert dieses Feld, solange ich im Sattel
+  sitze. [commanding] Blast das Horn, und lasst die Toten lernen, was ein Ansturm Valemarks bedeutet.“
 - **Einstellungen:** v3 *Natural*, Speed 0,97.
-- **Nachbearbeitung:** dezente Helm-Nähe optional (Bandpass-Andeutung 120 Hz–9 kHz).
+- **Integration (nicht vom Nutzer):** dezente Helm-Nähe optional (Bandpass-Andeutung 120 Hz–9 kHz).
 
 #### D1.6 Flammenpriesterin (spätere Einheit) – `AC_ember_crown_priest`
 - Frau, Ende 30, warmer, tragender Mezzosopran, gebildetes Hochdeutsch, feierlich, mitfühlend, leicht singender Gebetston.
 - **Prompt:** "A devout priestess of a fire faith in her late thirties with a warm, carrying mezzo-soprano voice. Speaks
   German with a natural, native accent, educated standard German. Solemn and compassionate, with a gentle, almost chant-like
   cadence in blessings. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Steht im Licht und fürchtet euch nicht. Die Flamme hat dunklere Nächte gesehen und jede durchbrannt.
-  Hebt eure Schilde. Ich halte eure Herzen warm.“
+- **Beispieltext:** „[gently] Steht im Licht und fürchtet euch nicht. Die Flamme hat dunklere Nächte gesehen und jede durchbrannt.
+  [firmly] Hebt eure Schilde. Ich halte eure Herzen warm.“
 
 #### D1.7 Adliger General (Nebenfigur) – `AC_ember_crown_general`
 - Mann, Ende 50, schneidender, harter Bariton, militärisch-knapper Adel, ungeduldig, an Gehorsam gewöhnt.
 - **Prompt:** "A stern aristocratic general in his late fifties with a hard, cutting baritone voice, clipped upper-class
   military diction, speaks German with a natural, native accent, impatient and used to instant obedience. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Ich bin nicht drei Tage durch Asche und Regen geritten, um Ausreden zu hören. Reihen auf dem Kamm
-  bilden, Kavallerie an die linke Flanke, und wer zuerst bricht, steht mir persönlich Rede und Antwort.“
+- **Beispieltext:** „[angry] Ich bin nicht drei Tage durch Asche und Regen geritten, um Ausreden zu hören. [commanding] Reihen auf dem
+  Kamm bilden, Kavallerie an die linke Flanke, und wer zuerst bricht, steht mir persönlich Rede und Antwort.“
 
 ### D2 `skarn_clans` – Die Clans von Skarnheim
 
@@ -496,29 +494,29 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A towering northern clan warrior in his thirties with a deep, rough baritone voice. Speaks German with a
   natural, native accent, a strong northern coloring with a rolling r. Blunt, loud, proud delivery, short hard sentences,
   battle-hungry. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Meine Axt ist schwer und meine Geduld leicht. Zeig mir den Feind und tritt zurück, Südländer. Die Ahnen
-  sehen zu, und ich werde sie heute nicht beschämen.“
+- **Beispieltext:** „[gruffly] Meine Axt ist schwer und meine Geduld leicht. Zeig mir den Feind und tritt zurück, Südländer. [proudly] Die
+  Ahnen sehen zu, und ich werde sie heute nicht beschämen.“
 
 #### D2.2 Ahnenruferin / Skaldin (Priesterin/Magierin) – `AC_skarn_clans_skald`
 - **Prompt:** "An older northern woman in her fifties, a keeper of ancestral songs, with a low, resonant, slightly smoky
   voice. Speaks German with a natural, native accent, a northern coloring with a rolling r. Rhythmic, chant-like, solemn
   delivery, as if every sentence is part of an old saga. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Hört mich, Väter unter dem Berg. Hört mich, Mütter in den gefrorenen Hallen. Leiht unseren Armen Eisen
-  und unserem Blut Frost, denn die Toten sind gekommen, und die Lebenden müssen antworten.“
+- **Beispieltext:** „[solemn] Hört mich, Väter unter dem Berg. Hört mich, Mütter in den gefrorenen Hallen. [pause] Leiht unseren Armen
+  Eisen und unserem Blut Frost, denn die Toten sind gekommen, und die Lebenden müssen antworten.“
 
 #### D2.3 Schildmaid (Elite-Infanterie) – `AC_skarn_clans_shieldmaiden`
 - **Prompt:** "A fierce young shieldmaiden in her late twenties with a strong, husky mid-range voice and a northern
   coloring, speaks German with a natural, native accent. Confident, mocking and fearless, laughs in danger. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Schilde hoch, Kinn hoch, und wagt es nicht, vor mir zu fallen. Ich hab ein Fass Met gewettet, dass ich
-  mehr Schädel breche als ihr alle, und ich will es einstreichen.“
+- **Beispieltext:** „[shouting] Schilde hoch, Kinn hoch, und wagt es nicht, vor mir zu fallen. [laughs] Ich hab ein Fass Met gewettet,
+  dass ich mehr Schädel breche als ihr alle, und ich will es einstreichen.“
 
 #### D2.4 Schmied/Arbeiter – `AC_skarn_clans_smith`
 - **Prompt:** "A broad middle-aged northern blacksmith with a booming, warm bass voice. Speaks German with a natural,
   native accent and a thick northern coloring with a rolling r, cheerful, loud and gruff. Close-mic studio-quality
   recording, no background noise."
-- **Beispieltext:** „Eisen erinnert sich an jeden Hammerschlag, Freund. Gib mir Kohle, gib mir Erz und gib mir Ruhe, und ich
-  geb dir Klingen, die deine Enkel überdauern.“
+- **Beispieltext:** „[calmly] Eisen erinnert sich an jeden Hammerschlag, Freund. [warmly] Gib mir Kohle, gib mir Erz und gib mir Ruhe, und
+  ich geb dir Klingen, die deine Enkel überdauern.“
 
 ### D3 `thorn_covenant` – Der Dornenbund
 
@@ -530,22 +528,22 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "An elderly forest druid in his seventies with a soft, deep and earthy voice, speaks German with a natural,
   native accent and a gentle, singing lilt, slow and wise, warm but stern when the forest is threatened. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Jeder Same ist ein Versprechen und jede faule Wurzel ein gebrochenes. Der Grüne Kreis verlangt wenig
+- **Beispieltext:** „[gently] Jeder Same ist ein Versprechen und jede faule Wurzel ein gebrochenes. [pause] Der Grüne Kreis verlangt wenig
   von dir: Nimm nur, was nachwächst, und verbrenne nichts, was du nicht neu pflanzen kannst.“
 
 #### D3.2 Veyl-Späherin (Assassine/Plänkler) – `AC_thorn_covenant_veyl_scout`
 - **Prompt:** "A slender otherworldly young female forest scout with a light, airy, breathy voice, quick and whispery,
   speaks German with a natural, native accent, with a strange musical cadence and unusual stress on words, alert and
   elusive. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Sie sehen uns nie, sie hören nur das Laub. Drei hinter der Eiche, zwei am Bach, einer schläft schon für
-  immer. Soll ich zwei daraus machen?“
+- **Beispieltext:** „[whispers] Sie sehen uns nie, sie hören nur das Laub. Drei hinter der Eiche, zwei am Bach, einer schläft schon für
+  immer. [mischievously] Soll ich zwei daraus machen?“
 
 #### D3.3 Waldläufer (Bogenschütze) – `AC_thorn_covenant_ranger`
 - **Prompt:** "A lean human woodsman in his thirties with a calm, low and quiet voice, speaks German with a natural, native
   accent and a soft lilt, patient and observant, speaks as if not to scare game. Close-mic studio-quality recording, no
   background noise."
-- **Beispieltext:** „Leise jetzt. Der Wind hat gedreht, und das Wild steht still. Etwas in der Senke riecht nach Grabeserde.
-  Ich nehme den ersten Schuss. Du den zweiten, falls es einen gibt.“
+- **Beispieltext:** „[whispers] Leise jetzt. Der Wind hat gedreht, und das Wild steht still. Etwas in der Senke riecht nach Grabeserde.
+  [short pause] Ich nehme den ersten Schuss. Du den zweiten, falls es einen gibt.“
 
 ### D4 `saelith_compact` – Der Saelith-Pakt
 
@@ -557,73 +555,74 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A smooth, cheerful merchant in his forties with a warm, honeyed tenor voice. Speaks German with a natural
   accent and a light melodic Mediterranean lilt, fast-talking, persuasive and flattering, always smiling. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Seide von den östlichen Inseln, Gewürze, die einen König zum Weinen brächten, und für dich, mein
-  Freund, ein Preis so fair, dass selbst die Flut erröten würde. Natürlich Vorauskasse.“
+- **Beispieltext:** „[cheerfully] Seide von den östlichen Inseln, Gewürze, die einen König zum Weinen brächten, und für dich, mein Freund,
+  ein Preis so fair, dass selbst die Flut erröten würde. [slyly] Natürlich Vorauskasse.“
 
 #### D4.2 Söldnerhauptfrau (General/Kommandantin) – `AC_saelith_compact_captain`
 - **Prompt:** "A hardened mercenary captain in her late thirties with a low, smoky, confident alto voice, speaks German with
   a natural accent and a light Mediterranean lilt, cynical, dry and businesslike, commanding without raising her voice.
   Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Loyalität ist was für Priester und Hunde. Meine Kompanie kämpft für Münze, und zwar sehr gut. Zahlt
+- **Beispieltext:** „[coldly] Loyalität ist was für Priester und Hunde. Meine Kompanie kämpft für Münze, und zwar sehr gut. [dryly] Zahlt
   pünktlich, und wir sterben für Euch. Zahlt zu spät, und wir führen dieses Gespräch mit Eurem Feind.“
 
 #### D4.3 Gezeitenpriesterin (Magierin) – `AC_saelith_compact_tide_priestess`
 - **Prompt:** "A serene sea priestess in her thirties with a cool, flowing, slightly breathy soprano-mezzo voice, speaks
   German with a natural accent and a gentle Mediterranean lilt, rhythmic like waves, calm and mysterious. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Die Flut nimmt, und die Flut kehrt zurück. Was wir dem Meer opfern, erinnert das Meer. Tretet vom
+- **Beispieltext:** „[solemn] Die Flut nimmt, und die Flut kehrt zurück. Was wir dem Meer opfern, erinnert das Meer. [quietly] Tretet vom
   Wasser zurück, Kapitän. Heute ist das Meer hungrig.“
 
 #### D4.4 Matrose/Arbeiter – `AC_saelith_compact_sailor`
 - **Prompt:** "A boisterous young sailor in his twenties with a bright, loud, cheeky tenor voice. Speaks German with a
   natural accent, casual dockside slang and a light Mediterranean lilt, energetic and joking. Close-mic studio-quality
   recording, no background noise."
-- **Beispieltext:** „Taue holen, Kisten festzurren, und wenn die Kapitänin fragt, hab ich die ganze Zeit gearbeitet. Riechst
-  du das? Das ist Salz, Geld und das Problem von jemand anderem.“
+- **Beispieltext:** „[cheerfully] Taue holen, Kisten festzurren, und wenn die Kapitänin fragt, hab ich die ganze Zeit gearbeitet. [laughs
+  softly] Riechst du das? Das ist Salz, Geld und das Problem von jemand anderem.“
 
 ### D5 `hollowed` – Die Hohlen
 
 - **Sprachfarbe:** Die Hohlen waren Menschen. Einfache Einheiten sprechen **keine Sätze**, sondern Laute und **Wortfetzen aus
   ihrem früheren Leben** („… Heim …“, „… kalt …“, „… Mutter …“). Kultisten der Leeren Liturgie sprechen in liturgischer Litanei.
-- **Klangsignatur:** Hohle-Kette (Leitfaden 8.3). Basisaufnahmen trocken, Effekte immer in der Nachbearbeitung.
+- **Klangsignatur:** Hohle-Kette (Leitfaden 8.3). Basisaufnahmen trocken, Effekte setzt immer die Integration.
 - **Einheiten-Zuordnung:** `hollow_thrall` → D5.1, `hollow_archer` → D5.2, `grave_brute` → D5.3, Boss `boss_pale_reeve` → C4.
 
 #### D5.1 Hohlknecht – `AC_unit_hollow_thrall` (Einheit `hollow_thrall`)
 - **Prompt:** "A hollow, emaciated male voice of a reanimated villager, dry and breathy, with a weak rattling rasp in the
   throat, murmuring fragments of words as if half-remembering a past life. Slow, confused, mournful, unsettling. Murmurs
   German word fragments with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Heim … die Felder sind kalt … ich finde die Tür nicht … Mutter, das Feuer ist aus … so hungrig … so
-  kalt …“
-- **Einstellungen:** v3 *Creative*; alternativ Voice Changer mit eigener Performance; Pitch −2 in der Nachbearbeitung.
+- **Beispieltext:** „[whispers] [sorrowfully] Heim … die Felder sind kalt … ich finde die Tür nicht … [rasping] Mutter, das Feuer ist aus
+  … so hungrig … so kalt …“
+- **Einstellungen:** v3 *Creative*; Pitch −2 und Hohle-Kette setzt die Integration.
 
 #### D5.2 Knochenschütze – `AC_unit_hollow_archer` (Einheit `hollow_archer`)
 - **Prompt:** "A dry, whispering, skeletal voice with clicking, rattling consonants and almost no breath, thin and airy,
   hissing fragments of words, cold and precise. Hisses German word fragments with a natural, native pronunciation. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Ssseh dich … ssseh die Warmen … noch einer … markier das Herz … es hört nie auf zu zählen … noch einer
-  …“
-- **Einstellungen:** v3 *Creative* mit `[whispers]`; Nachbearbeitung: Hohle-Kette + hochfrequentes Knochenklacken (SFX-Layer, −18 dB).
+- **Beispieltext:** „[hissing] Ssseh dich … ssseh die Warmen … [whispers] noch einer … markier das Herz … es hört nie auf zu zählen … noch
+  einer …“
+- **Einstellungen:** v3 *Creative* mit `[whispers]`; Integration: Hohle-Kette + hochfrequentes Knochenklacken (SFX-Layer, −18 dB).
 
 #### D5.3 Grabkoloss – `AC_unit_grave_brute` (Einheit `grave_brute`)
 - **Prompt:** "A huge, deep, guttural creature voice of a bloated undead giant, slow heavy breathing, wet low rumbling
   groans, able to bellow single words with crushing force. Bellows single German words with a natural, native pronunciation.
   Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Hhhrrrgh … zerquetschen … zerquetschen … runter … bleib unten … hhhuuurrgh … ihr alle … in die Erde …“
-- **Einstellungen:** v3 *Creative*; zusätzlich SFX-Layer „massive undead giant groan“ (siehe Einheitendokument); Pitch −4 bis −6.
+- **Beispieltext:** „[growls] Hhhrrrgh … zerquetschen … zerquetschen … runter … bleib unten … [groans] hhhuuurrgh … ihr alle … in die Erde
+  …“
+- **Einstellungen:** v3 *Creative*; SFX-Layer „massive undead giant groan“ und Pitch −4 bis −6 setzt die Integration (nicht zu liefern).
 
 #### D5.4 Kultist der Leeren Liturgie (Priester, spätere Einheit) – `AC_hollowed_cultist`
 - **Prompt:** "A fanatical human cultist in his forties with a thin, intense, slightly trembling tenor voice, whispering and
   chanting in feverish liturgical rhythm, ecstatic and frightening. Speaks German with a natural, native accent. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Leere das Gefäß. Leere den Namen. Leere das Herz, und das Tief wird es füllen. Unter dem Schleier gibt
-  es keinen Hunger, keine Trauer, keine Flamme. Nur die Stille. Nur die Stille.“
+- **Beispieltext:** „[monotone] Leere das Gefäß. Leere den Namen. Leere das Herz, und das Tief wird es füllen. [whispers] Unter dem
+  Schleier gibt es keinen Hunger, keine Trauer, keine Flamme. Nur die Stille. Nur die Stille.“
 
 #### D5.5 Hohler Wiedergänger-Magier (spätere Einheit) – `AC_hollowed_revenant_mage`
 - **Prompt:** "An ancient undead sorceress with a hollow, echoing, breathy female voice, slow and elegant, cold and
   aristocratic, each word drawn out like smoke. Speaks German with a natural, native accent. Close-mic studio-quality
   recording, no background noise."
-- **Beispieltext:** „Einst war ich Hofmagierin Aureths. Ich kannte tausend Namen des Lichts. Nun kenne ich nur ein Wort der
-  Dunkelheit, und es genügt, dich aufzulösen.“
+- **Beispieltext:** „[wistfully] Einst war ich Hofmagierin Aureths. Ich kannte tausend Namen des Lichts. [coldly] Nun kenne ich nur ein
+  Wort der Dunkelheit, und es genügt, dich aufzulösen.“
 
 ### D6 `ashen_legion` – Die Aschenlegion
 
@@ -635,22 +634,23 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 - **Prompt:** "A cursed armoured soldier with a deep, flat, emotionless baritone voice, speaking in archaic military
   formality, slow and mechanical as if repeating an oath for centuries, slightly hoarse and dry. Speaks German with a
   natural, native accent. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Wir sind die Legion der Sonne. Wir marschieren seit achthundert Jahren. Wir ermüden nicht. Wir weichen
-  nicht. Wir erinnern uns nicht an die Gesichter unserer Kinder.“
+- **Beispieltext:** „[monotone] Wir sind die Legion der Sonne. Wir marschieren seit achthundert Jahren. Wir ermüden nicht. Wir weichen
+  nicht. [slowly] Wir erinnern uns nicht an die Gesichter unserer Kinder.“
 
 #### D6.2 Aschenritter-Kommandant (General) – `AC_ashen_legion_commander`
 - **Prompt:** "A towering cursed knight commander with a commanding, resonant, dark bass-baritone voice, archaic and noble,
   cold fury held in iron discipline, measured and imperious. Speaks German with a natural, native accent. Close-mic
   studio-quality recording, no background noise."
-- **Beispieltext:** „Kniet nieder, Erben von Usurpatoren. Der Hohle König hat nicht abgedankt. Jeder Acker zwischen Solmere
-  und dem Meer gehört ihm von Rechts wegen, und die Legion ist gekommen, ihn zurückzufordern, Feld um brennendes Feld.“
+- **Beispieltext:** „[commanding] Kniet nieder, Erben von Usurpatoren. Der Hohle König hat nicht abgedankt. [coldly] Jeder Acker zwischen
+  Solmere und dem Meer gehört ihm von Rechts wegen, und die Legion ist gekommen, ihn zurückzufordern, Feld um brennendes
+  Feld.“
 
 #### D6.3 Legions-Herold (Priester der Sonnenhäresie) – `AC_ashen_legion_herald`
 - **Prompt:** "A gaunt herald with a high, piercing, fervent tenor voice, archaic proclamatory style, fanatical devotion,
   like announcing the return of a god-king. Speaks German with a natural, native accent. Close-mic studio-quality recording,
   no background noise."
-- **Beispieltext:** „Frohlockt, denn der Sonnenkönig kehrt zurück! Die Asche wird zu Gold, die Toten erheben sich in
-  Herrlichkeit, und jede falsche Krone schmilzt in seinem Licht. Öffnet eure Tore und werdet verschont!“
+- **Beispieltext:** „[triumphantly] Frohlockt, denn der Sonnenkönig kehrt zurück! Die Asche wird zu Gold, die Toten erheben sich in
+  Herrlichkeit, und jede falsche Krone schmilzt in seinem Licht. [shouting] Öffnet eure Tore und werdet verschont!“
 
 ---
 
@@ -659,22 +659,22 @@ sind wiederverwendbare Stimmen für Einheiten und Nebenfiguren. Einheiten der Ve
 | Stimme (Library-Name) | ID/Einheit | Fraktion | Modell primär | Alter/Geschlecht | Akzent |
 |---|---|---|---|---|---|
 | `AC_hero_isolde` | `hero_isolde` | ember_crown | v3 | 34 / w | neutral, leicht norddeutsch |
-| `AC_char_king_aldric` | `char_king_aldric` | ember_crown | v2/v3 | ~68 / m | gehobenes Hochdeutsch, königlich |
+| `AC_char_king_aldric` | `char_king_aldric` | ember_crown | v3 | ~68 / m | gehobenes Hochdeutsch, königlich |
 | `AC_char_mireille` | `char_mireille` | ember_crown | v3 | ~42 / w | scharfes Hochdeutsch |
-| `AC_char_hal_venn` | `char_hal_venn` | ember_crown | v3/v2 | ~62 / m | ländlich gefärbt (nord) |
+| `AC_char_hal_venn` | `char_hal_venn` | ember_crown | v3 | ~62 / m | ländlich gefärbt (nord) |
 | `AC_char_torvald` | `char_torvald` | skarn_clans | v3 | ~55 / m | nordisch, rollendes R |
 | `AC_char_sylaen` | `char_sylaen` | thorn_covenant | v3 | alterslos / w | sanfter, singender Lilt |
 | `AC_char_ophira` | `char_ophira` | saelith_compact | v3 | ~45 / w | leichter Mittelmeer-Lilt (Deutsch) |
 | `AC_char_kassian` | `char_kassian` | – | v3 | ~40 / m | unverortbar, neutral |
-| `AC_char_deep_voice` | `char_deep_voice` | hollowed | v2 + v3 | zeitlos / neutral | keiner |
-| `AC_narrator` | `narrator` | – | v2 | ~65 / m | neutral, gebildet (Hochdeutsch) |
+| `AC_char_deep_voice` | `char_deep_voice` | hollowed | v3 | zeitlos / neutral | keiner |
+| `AC_narrator` | `narrator` | – | v3 | ~65 / m | neutral, gebildet (Hochdeutsch) |
 | `AC_boss_hollow_king` | `boss_hollow_king` | ashen_legion/hollowed | v3 | untot / m | archaisch königlich |
-| `AC_boss_ashen_dragon` | `boss_ashen_dragon` | – | v2/v3 | uralt / m | archaisch |
-| `AC_boss_root_mother` | `boss_root_mother` | thorn_covenant (korrumpiert) | v2/v3 | uralt / w | keiner |
+| `AC_boss_ashen_dragon` | `boss_ashen_dragon` | – | v3 | uralt / m | archaisch |
+| `AC_boss_root_mother` | `boss_root_mother` | thorn_covenant (korrumpiert) | v3 | uralt / w | keiner |
 | `AC_boss_pale_reeve` | `boss_pale_reeve` | hollowed | v3 | untot / m | bürokratisch, Kanzleisprache |
 | `AC_char_wendel` | `char_wendel` | – (Graue Kompanie) | v3 | ~55 / m | rau, leicht norddeutsch gefärbt |
 | `AC_char_nel` | `char_nel` | – | v3 | ~8 / w | neutral, leise |
-| `AC_boss_stone_oath` | `boss_stone_oath` | – (Skarnheim, verdreht) | v2/v3 | zeitlos / m | archaisch |
+| `AC_boss_stone_oath` | `boss_stone_oath` | – (Skarnheim, verdreht) | v3 | zeitlos / m | archaisch |
 | `AC_boss_reef_mistress` | `boss_reef_mistress` | hollowed (Saelith) | v3 | zeitlos / w | mediterran, unter Wasser |
 | `AC_unit_worker` | `worker` | ember_crown | v3 | ~45 / m | ländlich, süddeutsch gefärbt |
 | `AC_unit_swordsman` | `swordsman` | ember_crown | v3 | ~28 / m | norddeutsch-städtisch |
@@ -715,9 +715,10 @@ beschreiben nur die Stimme und enthalten jeweils die Angabe zur deutschen Sprach
 > rough, down-to-earth, northern-leaning colloquial German. Studio-quality recording, close microphone, no background
 > noise.
 
-**Beispieltext:** „Ich habe Befehle befolgt, die mit Gold kamen. Das ist kein Freispruch, ich weiß. Aber ich kenne jeden Pfad bis Kaldris.“
+**Beispieltext:** „[tired] Ich habe Befehle befolgt, die mit Gold kamen. Das ist kein Freispruch, ich weiß. [pause] Aber ich kenne jeden
+  Pfad bis Kaldris.“
 
-**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,95. **Nachbearbeitung:** Standardkette, leichte Wärme (200 Hz), kein Effekt.
+**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,95. **Integration (nicht vom Nutzer):** Standardkette, leichte Wärme (200 Hz), kein Effekt.
 
 ### F2 `char_nel` – Nel (Waise aus Harrowmere, hört das Tiefe)
 
@@ -737,9 +738,9 @@ beschreiben nur die Stimme und enthalten jeweils die Angabe zur deutschen Sprach
 > speaking slowly and evenly without rising question tones. Speaks German with a natural, native accent, plain child's
 > diction. Studio-quality recording, close microphone, no background noise.
 
-**Beispieltext:** „Der Mann im Moor hat gesagt, ich soll dir ausrichten: Es war nett, dich kennenzulernen.“
+**Beispieltext:** „[softly] Der Mann im Moor hat gesagt, ich soll dir ausrichten: [pause] Es war nett, dich kennenzulernen.“
 
-**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,92; Stability hoch. **Nachbearbeitung:** Standardkette, bei Szenen mit der Stimme aus dem Tief ein leichter Hall-Schweif (0,6 s).
+**Modell & Einstellungen:** Eleven v3 *Natural*; Speed 0,92; Stability hoch. **Integration (nicht vom Nutzer):** Standardkette, bei Szenen mit der Stimme aus dem Tief ein leichter Hall-Schweif (0,6 s).
 
 ### F3 `boss_stone_oath` – Gharun, der Steinerne Eid (Wächter von Oruuns Schrein)
 
@@ -751,7 +752,7 @@ beschreiben nur die Stimme und enthalten jeweils die Angabe zur deutschen Sprach
 | Akzent | Deutsch, kein Regionalakzent; archaisch, wenige Silben je Atemzug |
 | Tempo | sehr langsam, gewichtige Pausen |
 | Emotion | unerbittlich, pflichttreu bis zur Selbstvergessenheit; kein Hass |
-| Do | langgezogene Vokale, Stein-Resonanz (Nachbearbeitung) |
+| Do | langgezogene Vokale, Stein-Resonanz (Integration) |
 | Don't | Schreien, Geflüster |
 
 **Voice-Design-Prompt:**
@@ -759,9 +760,9 @@ beschreiben nur die Stimme und enthalten jeweils die Angabe zur deutschen Sprach
 > dutiful without hatred. Sounds as if spoken inside a stone hall. Speaks German with a natural, native pronunciation,
 > archaic and heavy. Studio-quality recording, no background noise.
 
-**Beispieltext:** „Wer wagt es, den Eid zu stören? Ich wurde gebunden, zu bewahren – und ich bewahre.“
+**Beispieltext:** „[commanding] Wer wagt es, den Eid zu stören? [slowly] Ich wurde gebunden, zu bewahren – und ich bewahre.“
 
-**Modell & Einstellungen:** Eleven v2 (stabiler) oder v3 *Robust*; Speed 0,85. **Nachbearbeitung:** Pitch −3 Halbtöne, Hall 2,8 s (Steinhalle), Tiefpass 6 kHz, leichter Kompressor.
+**Modell & Einstellungen:** Eleven v3, Stability-Modus *Robust*, Speed 0,85. **Integration (nicht vom Nutzer):** Pitch −3 Halbtöne, Hall 2,8 s (Steinhalle), Tiefpass 6 kHz, leichter Kompressor.
 
 ### F4 `boss_reef_mistress` – Isarre Mol, Herrin des Schwarzen Riffs
 
@@ -781,9 +782,10 @@ beschreiben nur die Stimme und enthalten jeweils die Angabe zur deutschen Sprach
 > voice that follows a beat behind like waves washing back. Speaks German with a natural accent and a trace of a
 > Mediterranean lilt. Flowing, motherly and menacing. Studio-quality recording, no background noise.
 
-**Beispieltext:** „Ihr kommt auf trockenen Füßen zu meiner Tür. Wie rührend. Das Meer hat mir jedes meiner Kinder zurückgegeben.“
+**Beispieltext:** „[mockingly] Ihr kommt auf trockenen Füßen zu meiner Tür. Wie rührend. [coldly] Das Meer hat mir jedes meiner Kinder
+  zurückgegeben.“
 
-**Modell & Einstellungen:** Eleven v3 *Creative* (`[whispers]`); zusätzlich dieselbe Zeile auf −5 Halbtöne als zweite Schicht. **Nachbearbeitung:** Chorus 12 %, Wasser-Hall (1,8 s), Tiefpass 8 kHz.
+**Modell & Einstellungen:** Eleven v3 *Creative* (`[whispers]`). Geliefert wird nur die trockene Hauptstimme; die tiefere Zweitschicht erzeugt die Integration aus derselben Datei. **Integration (nicht vom Nutzer):** Chorus 12 %, Wasser-Hall (1,8 s), Tiefpass 8 kHz.
 
 ---
 
@@ -796,75 +798,75 @@ und B4 (`char_torvald`); `bat_swarm` hat keine Stimme (reiner Sound-Effects-Entw
 ### G1 `AC_unit_crossbowman` – Armbrustschütze (Einheit `crossbowman`, Glutkrone)
 - Mann, Anfang 40, trockener, ruhiger Bariton, nüchterner Söldnerveteran aus den Grenzgarnisonen, knappe Sätze, spricht über Reichweite wie über Handwerk.
 - **Prompt:** "A seasoned crossbow mercenary in his early forties with a dry, level baritone. Speaks German with a natural, native accent and a plain northern coloring. Short, matter-of-fact sentences, sober and unhurried, speaking of range and aim like a craftsman talks about tools, with a faint grim humour. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Atem anhalten, warten bis der Wind nachlässt, dann abdrücken. Schnell schießen kann jeder. Ich schieße
-  einmal.“
+- **Beispieltext:** „[calmly] Atem anhalten, warten bis der Wind nachlässt, dann abdrücken. [short pause] Schnell schießen kann jeder. Ich
+  schieße einmal.“
 - **Einstellungen:** v3 *Natural*, Speed 1,0.
 
 ### G2 `AC_unit_halberdier` – Hellebardier (Einheit `halberdier`, Glutkrone)
 - Mann, Mitte 40, tiefer, bärbeißiger Bass-Bariton, Gardist und Pferdebrecher; liebt Formationen, mag keine Reiter.
 - **Prompt:** "A gruff palace guard halberdier in his mid-forties with a deep, grumbling bass-baritone. Speaks German with a natural, native accent, clipped and disciplined, with a northern coloring. Slow, heavy and authoritative, barking short orders, with the stubborn pride of a man who has braced against many cavalry charges. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Schäfte auf den Boden, Spitzen raus, Schulter an Schulter. Lasst die Pferde kommen. Irgendwann bleiben
-  sie immer stehen.“
+- **Beispieltext:** „[firmly] Schäfte auf den Boden, Spitzen raus, Schulter an Schulter. [calmly] Lasst die Pferde kommen. Irgendwann
+  bleiben sie immer stehen.“
 - **Einstellungen:** v3 *Natural*, Speed 0,95.
 
 ### G3 `AC_unit_shieldbearer` – Schildträger (Einheit `shieldbearer`, Glutkrone)
 - Mann, ca. 38, sehr tiefer, ruhiger Bass; geduldiger, schwerer Bollwerkkämpfer, spricht wenig, stoisch.
 - **Prompt:** "A heavy shieldbearer in his late thirties with a very deep, calm bass voice, slow and stoic, speaking little and never raising his voice above a firm rumble. Speaks German with a natural, native accent, plain, steady, patient, with a northern coloring, the quiet confidence of a living wall. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Steht hinter mir. Der Schild ist schwer, aber ich bin schwerer. Hier kommt nichts durch.“
+- **Beispieltext:** „[firmly] Steht hinter mir. Der Schild ist schwer, aber ich bin schwerer. [calmly] Hier kommt nichts durch.“
 - **Einstellungen:** v3 *Natural*, Speed 0,92.
 
 ### G4 `AC_unit_scout_rider` – Spähreiter (Einheit `scout_rider`, Glutkrone)
 - Mann, Anfang 20, heller, flinker Tenor, übermütig, lacht gern, spricht schnell.
 - **Prompt:** "A young border scout rider in his early twenties with a bright, quick tenor voice. Speaks German with a natural, native accent and a lively regional coloring. Fast, breathless, cheeky and cheerful, laughing easily, full of restless energy as if speaking from horseback. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Der Kamm ist frei, die Straße ruhig, und mein Pferd langweilt sich. Sagt es, und ich bin da, bevor Ihr
-  zu Ende gefragt habt.“
+- **Beispieltext:** „[cheerfully] Der Kamm ist frei, die Straße ruhig, und mein Pferd langweilt sich. [confidently] Sagt es, und ich bin
+  da, bevor Ihr zu Ende gefragt habt.“
 - **Einstellungen:** v3 *Creative*, Speed 1,08.
 
 ### G5 `AC_unit_horse_archer` – Berittene Bogenschützin (Einheit `horse_archer`, Glutkrone)
 - Frau, Ende 20, geschmeidiger heller Alt, selbstsichere, leicht spöttische Steppen-Söldnerin.
 - **Prompt:** "A confident mounted archer, a woman in her late twenties with a smooth, light alto voice. Speaks German with a natural accent and a faintly foreign, lilting coloring. Playful, teasing and self-assured, speaking quickly and lightly as if loosing arrows at a gallop. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Ihr geht, ich reite, und trotzdem schieße ich zuerst. Versucht mitzuhalten.“
+- **Beispieltext:** „[confidently] Ihr geht, ich reite, und trotzdem schieße ich zuerst. [teasingly] Versucht mitzuhalten.“
 - **Einstellungen:** v3 *Creative*, Speed 1,05.
 
 ### G6 `AC_unit_battle_mage` – Kampfmagier (Feuerschule) (Einheit `battle_mage`, Glutkrone)
 - Mann, Anfang 30, höflicher, gespannter Tenor-Bariton, diszipliniert, unterdrückte Hitze in der Stimme (Flammenakademie von Kaldris).
 - **Prompt:** "A disciplined fire mage trained at an academy, a man in his early thirties with a polite, precise and slightly tense baritone-tenor. Speaks German with a natural, native accent, educated standard German. Controlled and formal, but with suppressed heat under every sentence, as if each word could ignite. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Geht bitte beiseite. Ich beherrsche die Flamme. Ich möchte nur nicht gefragt werden, wie sehr.“
+- **Beispieltext:** „[calmly] Geht bitte beiseite. Ich beherrsche die Flamme. [dryly] Ich möchte nur nicht gefragt werden, wie sehr.“
 - **Einstellungen:** v3 *Creative*, Speed 1,0.
 
 ### G7 `AC_unit_priest` – Priester der Flamme (Einheit `priest`, Glutkrone)
 - Mann, Ende 50, sanfter, warmer Bariton, Dorfkapellenpriester, zitiert Liturgie, ängstlich, hilft trotzdem.
 - **Prompt:** "A gentle village chapel priest in his late fifties with a soft, warm baritone. Speaks German with a natural, native accent and a kind, rural coloring. Calm and reassuring, quoting liturgy in a half-sung murmur, with a tremor of fear underneath that he overcomes out of duty. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Die Flamme verlangt nicht, dass wir keine Angst haben. Nur, dass wir sie am Brennen halten. Kommt,
+- **Beispieltext:** „[gently] Die Flamme verlangt nicht, dass wir keine Angst haben. Nur, dass wir sie am Brennen halten. [softly] Kommt,
   lasst mich die Wunde sehen.“
 - **Einstellungen:** v3 *Natural*, Speed 0,96.
 
 ### G8 `AC_unit_ram_crew` – Rammbock-Mannschaft (Chor) (Einheit `battering_ram`, Glutkrone)
 - Gruppe von 3–4 Männern, schwitzende Pioniere, Hau-Ruck-Rufe im Takt, dumpfe Anstrengung; mehrere Takes überlagern.
 - **Prompt:** "A crew of four sweating siege engineers shouting in rhythm, rough male voices, heaving and grunting as they swing a heavy ram, shouted work chants and effort sounds, tight and dry. They shout in German with a natural, native accent. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Zieht! Und zieht! Und zieht! Nochmal, legt euch ins Zeug!“
+- **Beispieltext:** „[shouting] Zieht! Und zieht! Und zieht! Nochmal, [excited] legt euch ins Zeug!“
 - **Einstellungen:** v3 *Creative*, Speed 1,0; je Zeile 3–4 Takes mit leicht verschobenem Einsatz überlagern (Chor), Mono-Summe.
 
 ### G9 `AC_unit_catapult_crew` – Katapult-Mannschaft (Einheit `catapult`, Glutkrone)
 - 2–3 erfahrene Geschützmeister, nüchterne Zurufe in Kommandoform, Winden und Seile hörbar.
 - **Prompt:** "Two or three experienced siege gunners, rough and businesslike male voices calling short, clear commands over creaking ropes and a winch, calm professionals, never panicked. They call out in German with a natural, native accent. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Spannt sie zurück! Laden! Ruhig … und los!“
+- **Beispieltext:** „[commanding] Spannt sie zurück! Laden! Ruhig … [short pause] und los!“
 - **Einstellungen:** v3 *Creative*, Speed 1,0; 2–3 Sprecher getrennt generieren und abwechselnd verwenden.
 
 ### G10 `AC_unit_hollow_digger` – Grabgräber (Hohle) (Einheit `hollow_digger`, Hohle)
 - Hohler Wiedergänger-Arbeiter, flach, heiser, murmelt Fetzen von Werkzeugen und Schichten; Hohle-Kette, Pitch −2.
 - **Prompt:** "A hollow, reanimated grave-digger with a flat, dusty, hoarse male voice, muttering fragments of tools and soil layers as if still at work, slow and monotonous, breathy and dry, mournful and unsettling. Mutters German word fragments with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Tiefer … noch eine Handbreit … die Erde ist kalt … immer tiefer.“
-- **Einstellungen:** v3 *Creative*, Speed 0,9; danach Hohle-Kette (Pitch −2).
+- **Beispieltext:** „[whispers] Tiefer … noch eine Handbreit … [sorrowfully] die Erde ist kalt … immer tiefer.“
+- **Einstellungen:** v3 *Creative*, Speed 0,9; Hohle-Kette (Pitch −2) setzt die Integration.
 
 ### G11 `AC_unit_ghoul` – Ghul (Hohle) (Einheit `ghoul`, Hohle)
 - Ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter.
 - **Prompt:** "A starving ghoul, a high, cracking, shrieking creature voice with wet smacking and snapping jaws, hoarse hissing and guttural gurgles, almost no words, feral and desperate. Rasps the few German words it has with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Hunger … so ein Hunger … Fleisch … warmes Fleisch …“
-- **Einstellungen:** v3 *Creative*, Speed 1,1; alternativ Voice Changer oder SFX-Prompt, danach Hohle-Kette; Zeilen sind überwiegend Laute.
+- **Beispieltext:** „[growls] Hunger … so ein Hunger … [hissing] Fleisch … warmes Fleisch …“
+- **Einstellungen:** v3 *Creative*, Speed 1,1; Zeilen sind überwiegend Laute. Hohle-Kette setzt die Integration.
 
 ### G12 `AC_unit_ash_witch` – Aschhexe (Hohle) (Einheit `ash_witch`, Hohle)
 - Frau, undefinierbares Alter, flüsternde, kalt-berechnende Nekromantin; spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall.
 - **Prompt:** "A whispering necromancer, a woman of indeterminate age with a cold, soft, breathy alto voice, speaking calmly and precisely like a teacher to her pupils, with a chill of dry ash in every syllable and an ancient, hollow undertone. Speaks German with a natural, native accent. Close-mic studio-quality recording, no background noise."
-- **Beispieltext:** „Erhebt euch, meine Kleinen. Die Asche erinnert sich, was die Lebenden vergessen.“
-- **Einstellungen:** v3 *Creative* mit `[whispers]`, Speed 0,92; danach Hohle-Kette mit mehr Hall-Anteil.
+- **Beispieltext:** „[softly] Erhebt euch, meine Kleinen. [menacingly] Die Asche erinnert sich, was die Lebenden vergessen.“
+- **Einstellungen:** v3 *Creative* mit `[whispers]`, Speed 0,92; Hohle-Kette mit mehr Hall-Anteil setzt die Integration.

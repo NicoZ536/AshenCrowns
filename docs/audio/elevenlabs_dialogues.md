@@ -29,7 +29,7 @@ Angriffswellen der Hohlen, findet den Schrein und zerstört ihn.
 
 ## 1.1 Erzähler (`narrator`)
 
-**Stimme:** `AC_narrator` · **Modell:** Eleven v3, Stability-Modus *Natural* (Robust, falls die Stimme zwischen Generierungen zu stark schwankt), Speed 0,95 · **Nachbearbeitung:** Integration · Manifest: +2 dB.
+**Stimme:** `AC_narrator` · **Modell:** Eleven v3, Stability-Modus *Natural* (Robust, falls die Stimme zwischen Generierungen zu stark schwankt), Speed 0,95 · **Integration (nicht vom Nutzer):** Lautheit, Schnitt, Format · Manifest: +2 dB.
 **Regie allgemein:** getragen, ehrfürchtig, leise Trauer; nie Trailer-Pathos. Eine Zeile = eine Generierung.
 
 ### narrator_m01_opening (Event `narrator.m01_opening`)
@@ -67,7 +67,7 @@ hat keine Spieltext-Entsprechung; er bleibt Teil der Datei und wird nach der Lie
 
 ## 1.2 Bruder Hal Venn (`char_hal_venn`)
 
-**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 · **Nachbearbeitung:** Integration · Manifest: +1 dB.
+**Stimme:** `AC_char_hal_venn` · **Modell:** Eleven v3, *Natural*, Speed 0,97 · **Integration (nicht vom Nutzer):** Lautheit, Schnitt, Format · Manifest: +1 dB.
 **Regie allgemein:** väterlicher Mentor, warm, geerdet; in Gefahr klar, nie panisch. Spricht Isolde mit Vornamen an (vertrautes „du“ im DE).
 
 ### char_hal_venn_m01_intro (Event `char_hal_venn.m01_intro`)
@@ -125,8 +125,7 @@ Der Text ist immer derselbe; die früheren vier Takes sind zu **einer** Datei zu
 - Bosse in Dialogszenen: `voices/characters/<boss_id>_aNN_<szene>_<NN>.ogg` (Vorschlag).
 - Entscheidungs-Reaktionen: `_choice_a_<NN>` / `_choice_b_<NN>` anhängen.
 - Laufende Nummern pro Sprecher und Szene; die Spalte **#** gibt die Reihenfolge der Szene an.
-- Modell: Dialog mit Eleven v3 (*Natural*), Erzähler mit Multilingual v2. Jede Zeile einzeln generieren; bei Bedarf den vorherigen
-  Satz des Gegenübers als Kontext voranstellen und danach wegschneiden.
+- Modell: alle Zeilen (Dialog, Bosse, Erzähler) mit Eleven v3 (*Natural*). Jede Zeile einzeln in einem Take generieren und unverändert liefern; kein Kontextsatz, der später weggeschnitten werden müsste.
 
 ## Zeitalter I – *The Last Settlement*: „Asche des Schreins“ (`a01_shrine_ash`)
 *Kontext:* Nacht nach Mission 1. Isolde und Hal Venn stehen in den Trümmern des Hohlschreins. Im Zentrum pulsiert ein Aschglas-Kern.
@@ -1295,10 +1294,8 @@ ohne Anpassung zu generieren.
 
 ## Anhang – Produktionshinweise Dialog
 
-1. **Kontext-Trick (v3):** Für natürliche Reaktionen den letzten Satz des Gegenübers als Kontext in dieselbe Generierung
-   schreiben (z. B. in Klammern als Regie oder als vorangestellter Satz) und nach der Generierung wegschneiden.
+1. **Kontext über Tags:** Für natürliche Reaktionen die Absicht über die Audio-Tags im Sprechtext steuern (z. B. `[interrupting]`, `[quietly]`). Kein vorangestellter Kontextsatz: es wird nichts weggeschnitten.
 2. **Konsistenz:** Eine Figur innerhalb einer Szene immer mit derselben Stimme, demselben Modell und derselben Stabilität generieren.
-3. **Szenen-Akustik** (Thronsaal, Berg, Hafen, Wald) wird im Spiel bzw. in der Cutscene-Mischung ergänzt; die gelieferten Dateien
-   bleiben trocken, sofern nicht im Charakterprofil anders angegeben (Deep Voice, Bosse).
-4. **Untertitel** aus der EN-Spalte ohne Tags und ohne Optionsmarker **[Option …]** übernehmen; die Marker sind Regie, nicht Text.
+3. **Szenen-Akustik** (Thronsaal, Berg, Hafen, Wald) sowie Effekte der Deep Voice und der Bosse setzt die Integration; geliefert werden trockene Takes.
+4. **Untertitel** aus der Sprechtext-Spalte ohne Tags übernehmen; Optionsmarker stehen in der Regie-Spalte, nicht im Sprechtext.
 5. **Lokalisierung:** Die DE-Spalte ist Bedeutungsreferenz; eine spätere deutsche Vertonung benötigt ein eigenes, lippen-/längenangepasstes Skript.

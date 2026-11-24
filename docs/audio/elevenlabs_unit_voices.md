@@ -4,17 +4,17 @@ Grundlage: `assets/audio/manifest.ron` (Events `voice.*`), Stimmprofile in `docs
 Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 
 **Legende**
-- **Ziel-Datei:** Pfad relativ zu `assets/audio/`. Exakt so benennen (`.ogg`, Vorbis q6, 48 kHz, mono).
-- **Sprechtext (DE):** Generierungstext, **gesprochen wird Deutsch** (Entscheidung: alle Stimmen im Spiel sind deutsch). Eckige Klammern = **Eleven-v3-Audio-Tags**
-  (bleiben englisch, werden nicht gesprochen; nicht in Untertitel übernehmen). Eigennamen exakt nach `docs/canon.md`; Aussprache laut Leitfaden, Abschnitt 6.
+- **Ziel-Datei:** Pfad relativ zu `assets/audio/`. Exakt so benennen (beliebiges Audioformat; die Integration konvertiert nach `.ogg`). **Eine Zeile = eine Datei = ein Take**; Barks mit mehreren Dateien (`_01`, `_02`, …) sind echte Textvarianten, jede mit eigenem, vollständigem Text.
+- **Sprechtext (DE):** einfügefertiger Generierungstext **inklusive Audio-Tags**; **gesprochen wird Deutsch** (Entscheidung: alle Stimmen im Spiel sind deutsch). Eckige Klammern = **Eleven-v3-Audio-Tags**
+  (englisch, 1–4 pro Zeile, werden nicht gesprochen; nicht in Untertitel übernehmen). Jede Zeile enthält mindestens einen Tag, abgeleitet aus der Regie. Eigennamen exakt nach `docs/canon.md`; Aussprache laut Leitfaden, Abschnitt 6.
   Der Sprechtext ist **exakt so einzufügen** (Kontraktionen wie „'ne“, „hab“, „ich mein“ sind gewollte Umgangssprache). Kurze Rufe nicht zu Sätzen ausbauen.
   Nur `bat_swarm` (reine Sound-Effects-Prompts) bleibt englisch.
-- **Regie:** Spielanweisung; Emotion, Lautstärke, Tempo, Besonderheiten.
-- **Batch-Methode:** Alle Zeilen *einer* Tabelle (gleiche Situation) möglichst in **einer** v3-Generierung erzeugen,
-  getrennt durch Absatz und „…“, danach schneiden. Kampf-/Schmerzlaute einzeln generieren, wenn die Emotion „überläuft“.
+- **Regie:** Kurzhinweis zur Absicht (Emotion, Lautstärke, Tempo, Besonderheiten); umgesetzt durch die Tags im Sprechtext.
+- **Generierung:** Jede Zeile einzeln erzeugen und unverändert liefern (kein Schneiden, keine Nachbearbeitung). Bei Kurzzeilen mehrere Takes erzeugen und den besten wählen.
 - **Variantenzahl:** select/move/attack 4–5, alle anderen Situationen mindestens 3 (gemäß Auftrag).
-- **Lautheit:** −16 LUFS (Short-Term-Max) für Glutkrone/Heldin/Boss, −17 für Hohle; Peak −1 dBTP (siehe Leitfaden, Abschnitt 7).
-- Modellnamen und Einstellungsoptionen zum Produktionszeitpunkt in der ElevenLabs-Oberfläche prüfen.
+- **Lautheit, Effekte, Schnitt:** Sache der Integration (siehe Leitfaden, Teil II); nicht vom Nutzer.
+- **Abweichungen** zwischen gesprochenem Ton und Spieltext (z. B. Verschlucktes, spontane Zusätze) behebt das Team nach der Lieferung, indem die Spieltexte an den Ton angepasst werden.
+- Modellnamen und Einstellungsoptionen zum Produktionszeitpunkt in der ElevenLabs-Oberfläche prüfen. Alle Stimmen laufen auf Eleven v3.
 
 ---
 
@@ -341,8 +341,8 @@ Produktionsregeln in `docs/audio/elevenlabs_production_guide.md`.
 
 **Stimme:** `AC_unit_hollow_thrall` (Profil D5.1) · **Modell:** Eleven v3, *Creative* · Speed 0,9
 **Konzept:** einstige Dorfbewohner; murmeln **Wortfetzen ihres früheren Lebens**. Nicht verständlich-deutlich sprechen: hauchig,
-röchelnd, verwaschen. Basisaufnahme trocken; danach **Hohle-Kette** (Leitfaden 8.3), Pitch −2. Manifest: −2 dB, max. 2 Instanzen.
-**Alternative:** Voice Changer (eigene Röchel-Performance → `AC_unit_hollow_thrall`) oder SFX-Prompt (siehe unten) als Layer.
+röchelnd, verwaschen. Geliefert wird die trockene Basisaufnahme; **Hohle-Kette** (Leitfaden 8.3) und Pitch −2 setzt die Integration. Manifest: −2 dB, max. 2 Instanzen.
+**Hinweis:** Ein SFX-Layer (Prompt unten) ist optionale Integration und wird nicht geliefert.
 
 ### hollow_thrall_attack (Event `voice.hollow_thrall.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -352,7 +352,7 @@ röchelnd, verwaschen. Basisaufnahme trocken; danach **Hohle-Kette** (Leitfaden 
 | `voices/units/hollow_thrall_attack_03.ogg` | [hisses] Hhhaaah! | wortloser Angriffslaut, Luftstoß |
 | `voices/units/hollow_thrall_attack_04.ogg` | [shouting] … Heim … meins … | gemurmelt, besitzergreifend |
 
-*SFX-Alternativprompt (Layer, 1,0 s, Influence 0,5):* „emaciated undead villager lunging, dry raspy throat hiss and weak
+*Integration, nicht zu liefern – SFX-Alternativprompt (Layer, 1,0 s, Influence 0,5):* „emaciated undead villager lunging, dry raspy throat hiss and weak
 groan, breathy, close, no reverb“.
 
 ### hollow_thrall_hit (Event `voice.hollow_thrall.hit`)
@@ -378,7 +378,7 @@ groan, breathy, close, no reverb“.
 ## 7. Hohle – `hollow_archer` (Knochenschütze)
 
 **Stimme:** `AC_unit_hollow_archer` (Profil D5.2) · **Modell:** Eleven v3, *Creative* mit `[whispers]`
-**Konzept:** skelettiert, fast ohne Atem; zischendes Flüstern, klickende Konsonanten. Nachbearbeitung: Hohle-Kette + Knochenklacken-Layer (−18 dB).
+**Konzept:** skelettiert, fast ohne Atem; zischendes Flüstern, klickende Konsonanten. Integration (nicht vom Nutzer): Hohle-Kette + Knochenklacken-Layer (−18 dB).
 
 ### hollow_archer_attack (Event `voice.hollow_archer.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -414,7 +414,7 @@ groan, breathy, close, no reverb“.
 
 **Stimme:** `AC_unit_grave_brute` (Profil D5.3) · **Modell:** Eleven v3, *Creative* · Speed 0,85
 **Konzept:** aufgedunsener untoter Riese; kehlig, nass, langsam; einzelne Wörter mit erdrückender Wucht.
-Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kette; SFX-Growl als Unterschicht (−8 dB).
+Integration (nicht vom Nutzer): Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kette; SFX-Growl als Unterschicht (−8 dB).
 
 ### grave_brute_attack (Event `voice.grave_brute.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -424,7 +424,7 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | `voices/units/grave_brute_attack_03.ogg` | [shouting] Runter! | kurz, wuchtig |
 | `voices/units/grave_brute_attack_04.ogg` | [greedily] [growls] Zerschmettern … die Kleinen … | langsam, genüsslich |
 
-*SFX-Layer-Prompt (1,2 s, Influence 0,55):* „massive undead giant roar, wet guttural bellow, deep and heavy, close, no reverb“.
+*Integration, nicht zu liefern – SFX-Layer-Prompt (1,2 s, Influence 0,55):* „massive undead giant roar, wet guttural bellow, deep and heavy, close, no reverb“.
 
 ### grave_brute_hit (Event `voice.grave_brute.hit`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -433,7 +433,7 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | `voices/units/grave_brute_hit_02.ogg` | [angry] [roars] Rrraah! | wütend, kurz |
 | `voices/units/grave_brute_hit_03.ogg` | [surprised] [groans] … tut weh … | träge, überrascht |
 
-*SFX-Layer-Prompt (0,7 s, Influence 0,55):* „huge creature pained grunt, low wet growl, short“.
+*Integration, nicht zu liefern – SFX-Layer-Prompt (0,7 s, Influence 0,55):* „huge creature pained grunt, low wet growl, short“.
 
 ### grave_brute_death (Event `voice.grave_brute.death`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -442,7 +442,7 @@ Nachbearbeitung: Pitch −4 bis −6, Subbass-Anhebung +2 dB @ 80 Hz, Hohle-Kett
 | `voices/units/grave_brute_death_02.ogg` | [tired] [exhales] … Erde … kalt … | müde, fast kindlich |
 | `voices/units/grave_brute_death_03.ogg` | [roars] Rrrraaaaagh … | Brüllen, das in Röcheln zerfällt |
 
-*SFX-Layer-Prompt (2,5 s, Influence 0,45):* „giant undead creature death groan fading into a heavy collapsing thud, deep“.
+*Integration, nicht zu liefern – SFX-Layer-Prompt (2,5 s, Influence 0,45):* „giant undead creature death groan fading into a heavy collapsing thud, deep“.
 
 ---
 
@@ -547,7 +547,7 @@ in `ember_cleave`/`rallying_banner`/`ashen_ward` können die Dateien entsprechen
 
 **Stimme:** `AC_boss_pale_reeve` (Profil C4) · **Modell:** Eleven v3, *Natural* (hit/death *Creative*) · Speed 0,95
 **Konzept:** untoter Steuervogt Aureths; Motive **Zehnt, Register, Schuld, Zinsen, Glocke**. Ablage laut Manifest unter `voices/units/`.
-Nachbearbeitung: Hohle-Kette + Vogt-Ergänzung (Chorus-Schicht, kalter Kathedralhall 1,8 s, Mix 12 %). Manifest: +1 dB, Cooldown 800 ms.
+Integration (nicht vom Nutzer): Hohle-Kette + Vogt-Ergänzung (Chorus-Schicht, kalter Kathedralhall 1,8 s, Mix 12 %). Manifest: +1 dB, Cooldown 800 ms.
 
 ### boss_pale_reeve_attack (Event `voice.boss_pale_reeve.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1423,12 +1423,12 @@ Heldenstimmen gelten für `voices/heroes/` (Manifest +1 dB, Cooldown 300 ms). Si
 
 ## 14. Echtzeit-Militär – Die Hohlen (neue Einheiten)
 
-Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen; Nachbearbeitung wie Abschnitt 6 (Hohle-Kette, Pitch −2), Loudness −17 LUFS.
+Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen; Integration wie Abschnitt 6 (Hohle-Kette, Pitch −2, Loudness −17 LUFS); nicht vom Nutzer.
 
 ### 14.1 Hohle – `hollow_digger` (Grabgräber)
 
 **Stimme:** `AC_unit_hollow_digger (Profil G10)` · **Modell:** Eleven v3, *Creative* · Speed 0,9
-**Haltung:** arbeitsamer Wiedergänger, der im Tod weiter schürft; murmelt Fetzen von Werkzeugen und Schichten. Wie `hollow_thrall`: Hohle-Kette, Pitch −2.
+**Haltung:** arbeitsamer Wiedergänger, der im Tod weiter schürft; murmelt Fetzen von Werkzeugen und Schichten. Wie `hollow_thrall`: Hohle-Kette und Pitch −2 setzt die Integration.
 
 ### hollow_digger_attack (Event `voice.hollow_digger.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1454,8 +1454,8 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 
 ### 14.2 Hohle – `ghoul` (Ghul)
 
-**Stimme:** `AC_unit_ghoul (Profil G11)` · **Modell:** Eleven v3, *Creative* + SFX-Layer · Speed 1,1
-**Haltung:** ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter. Basis: Voice Changer oder SFX-Prompt, danach Hohle-Kette.
+**Stimme:** `AC_unit_ghoul (Profil G11)` · **Modell:** Eleven v3, *Creative* · Speed 1,1
+**Haltung:** ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter. Basis: v3-Take mit Lauten; Hohle-Kette setzt die Integration.
 
 ### ghoul_attack (Event `voice.ghoul.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
@@ -1482,7 +1482,7 @@ Hohle Stimmen laufen im Manifest mit −2 dB, Cooldown 400 ms, max. 2 Instanzen;
 ### 14.3 Hohle – `ash_witch` (Aschhexe)
 
 **Stimme:** `AC_unit_ash_witch (Profil G12)` · **Modell:** Eleven v3, *Creative* mit `[whispers]` · Speed 0,92
-**Haltung:** flüsternde Nekromantin, kalt-berechnend, spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall-Anteil.
+**Haltung:** flüsternde Nekromantin, kalt-berechnend, spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall-Anteil (Integration).
 
 ### ash_witch_attack (Event `voice.ash_witch.attack`)
 | Ziel-Datei | Sprechtext (DE) | Regie |
