@@ -28,6 +28,7 @@ pub mod mapgen;
 pub mod military;
 pub mod model;
 pub mod neutral;
+pub mod observe;
 pub mod politics;
 pub mod population;
 pub mod religion;

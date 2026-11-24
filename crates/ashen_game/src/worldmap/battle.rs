@@ -7,7 +7,7 @@
 
 use ashen_core::noise::{fbm2, rand2};
 use ashen_sim::SimWorld;
-use ashen_sim::data::{Cost, GameData, UnitClass};
+use ashen_sim::data::{Cost, GameData};
 use ashen_sim::entity::{ENEMY, NodeKind, Order, PLAYER};
 use ashen_sim::env::Weather as SimWeather;
 use ashen_sim::map::{Decor, DecorKind, Terrain, TileMap};
@@ -16,6 +16,7 @@ use ashen_sim::mission::{
     TriggerDef, WaveRules,
 };
 use ashen_sim::scenario::{DecorPlace, MapData, NodePlace};
+use ashen_sim::systems::tactics;
 use ashen_strategy::catalog::{self, UClass};
 use ashen_strategy::{
     ArmyResult, BattleArmy, BattleRequest, BattleResult, BattleSide, Biome, HeroOutcome, Regiment,
@@ -999,40 +1000,16 @@ pub fn create_world(
     Ok(world)
 }
 
-/// Gegnerische Angreifer, die ihr Ziel erreicht haben, suchen den nächsten Spieler (alle paar Sekunden aufrufen).
+/// Führt die gegnerische Seite taktisch (alle paar Sekunden aufrufen): Fokusfeuer, Fernkämpfer hinter dem Nahkampf,
+/// Rückzug Angeschlagener, Belagerungswaffen gegen Tore und Mauern, bemannte Türme beim Verteidiger
+/// (siehe `ashen_sim::systems::tactics`).
 pub fn drive_enemy(world: &mut SimWorld, data: &GameData, player_attacks: bool) {
-    if player_attacks {
-        return;
-    }
-    let mine: Vec<Vec2> = world
-        .units
-        .iter()
-        .filter(|(_, u)| u.owner == PLAYER && data.unit(u.kind).class != UnitClass::Worker)
-        .map(|(_, u)| u.pos)
-        .collect();
-    if mine.is_empty() {
-        return;
-    }
-    let ids: Vec<_> = world
-        .units
-        .iter()
-        .filter(|(_, u)| u.owner == ENEMY && matches!(u.order, Order::Idle) && u.target.is_none())
-        .map(|(id, u)| (id, u.pos))
-        .collect();
-    for (id, pos) in ids {
-        let nearest = mine.iter().copied().min_by(|a, b| {
-            (*a - pos)
-                .length_squared()
-                .total_cmp(&(*b - pos).length_squared())
-        });
-        if let (Some(t), Some(u)) = (nearest, world.units.get_mut(id)) {
-            u.order = Order::Move {
-                target: t,
-                attack_move: true,
-            };
-            u.request_path(t);
-        }
-    }
+    let role = if player_attacks {
+        tactics::Role::Defender
+    } else {
+        tactics::Role::Attacker
+    };
+    tactics::drive(world, data, ENEMY, role);
 }
 
 /// Wertet den Stand der Schlacht aus: `Some(true)` = Spieler hat gesiegt.

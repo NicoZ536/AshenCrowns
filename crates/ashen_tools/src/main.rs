@@ -5,6 +5,8 @@
 //! cargo run -p ashen_tools -- validate-data [--assets <dir>] [--mod <mod-verzeichnis> ...]
 //! cargo run -p ashen_tools -- forge-scenarios [--assets <dir>]
 //! cargo run -p ashen_tools -- forge-campaign [--assets <dir>]
+//! cargo run -p ashen_tools -- rts-balance [--seeds 12] [--minutes 30]
+//! cargo run -p ashen_tools -- strategy-stats [--seeds 12] [--years 200] [--first-seed 1]
 //! ```
 
 mod campaign_forge;
@@ -12,6 +14,8 @@ mod campaign_missions;
 mod campaign_missions_b;
 mod campaign_missions_c;
 mod forge;
+mod rts_balance;
+mod strategy_stats;
 
 use ashen_engine::audio::manifest::AudioManifest;
 use ashen_engine::audio::scanner;
@@ -35,7 +39,11 @@ Befehle:
   forge-scenarios  Die mitgelieferten historischen Szenarien neu erzeugen (assets/data/scenarios/)
       --assets <dir>
   forge-campaign   Die Echtzeit-Kampagne neu erzeugen (assets/data/campaign/, Audio-Manifest, Sprechskript)
-      --assets <dir>"
+      --assets <dir>
+  rts-balance      Gefecht-KI gegen skriptgesteuerten Testspieler und Konter-Matrix messen
+      --seeds <n> --minutes <n>   (Standard: 12 Seeds, 30 Minuten)
+  strategy-stats   Balancemessung der Strategieebene: KI-Beobachterläufe, Siegquote und -zeitpunkt
+      --seeds <n> --years <n> --first-seed <n>   (Standard: 12 Seeds, 200 Jahre, ab Seed 1)"
 }
 
 fn assets_dir(arg: Option<PathBuf>) -> Result<PathBuf, String> {
@@ -106,6 +114,9 @@ fn validate_data(assets: &Path, mods: &[PathBuf]) -> Result<(), String> {
     for m in mods {
         let changes = data.apply_overlay(&m.join("data")).map_err(|e| format!("Mod {}: {e}", m.display()))?;
         println!("Mod {}: {} Einträge", m.display(), changes.len());
+    }
+    if let Some(e) = data.hotkey_conflicts().first() {
+        return Err(format!("Tastenkürzel-Konflikt: {e}"));
     }
     let dir = assets.join("data/missions");
     let mut count = 0;
@@ -201,6 +212,18 @@ fn main() -> ExitCode {
         println!("{}", usage());
         return ExitCode::from(2);
     };
+    if cmd == "strategy-stats" {
+        return strategy_stats::run(&args[1..]);
+    }
+    if cmd == "rts-balance" {
+        return match assets_dir(None) {
+            Ok(a) => rts_balance::run(&a, &args[1..]),
+            Err(e) => {
+                eprintln!("{e}");
+                ExitCode::FAILURE
+            }
+        };
+    }
     let mut assets = None;
     let mut apply = false;
     let mut convert = false;

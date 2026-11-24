@@ -371,12 +371,12 @@ wächst mit dem nächsten Angriff: Zielgröße `(8 + 3 · bisherige Angriffe) ·
 |---|---|---|---|---|
 | Entscheidung alle | 3,0 s | 2,0 s | 1,5 s | 1,0 s |
 | Arbeiter | 5 | 8 | 10 | 12 |
-| Einnahmenfaktor | 0,8 | 1,0 | 1,25 | 1,6 |
-| Armeegröße (Faktor / Maximum) | 0,7 / 16 | 1,0 / 28 | 1,3 / 44 | 1,6 / 60 |
-| Erster Angriff | 10:00 | 7:00 | 5:30 | 4:20 |
-| Angriffsabstand | 240 s | 160 s | 120 s | 90 s |
-| Schmiede-Stufe alle | 15:00 | 7:00 | 5:00 | 3:30 |
-| Konterlogik (`counter_skill`) | 15 % | 60 % | 85 % | 100 % |
+| Einnahmenfaktor | 0,7 | 0,9 | 1,25 | 1,6 |
+| Armeegröße (Faktor / Maximum) | 0,55 / 12 | 0,85 / 24 | 1,3 / 44 | 1,6 / 60 |
+| Erster Angriff | 11:00 | 8:00 | 5:30 | 4:20 |
+| Angriffsabstand | 260 s | 190 s | 120 s | 90 s |
+| Schmiede-Stufe alle | 15:00 | 8:00 | 5:00 | 3:30 |
+| Konterlogik (`counter_skill`) | 15 % | 50 % | 85 % | 100 % |
 | Rückzug bei Stärke unter | 30 % | 50 % | 65 % | 75 % |
 | Türme | 0 | 1 | 3 | 4 |
 | Belästigung (Arbeiter zuerst) | – | – | – | ja |
@@ -384,7 +384,45 @@ wächst mit dem nächsten Angriff: Zielgröße `(8 + 3 · bisherige Angriffe) ·
 Die Stufen sind auch Wellen-Multiplikatoren im Wellenmodus (Leicht ×0,65, Normal ×1,0, Schwer ×1,4, Albtraum ×1,8). Gemessen mit passivem Spieler (Test `enemy_ai_builds_a_base_and_attacks`, Schwer):
 innerhalb von neun Minuten ≥ 6 Arbeiter, ≥ 4 fertige Gebäude, ≥ 8 ausgebildete Soldaten, mindestens ein Angriff erreicht Brennhollow.
 
+### 10.5 Balancemessung gegen einen aktiven Testspieler
+
+Werkzeug: `cargo run -p ashen_tools -- rts-balance [--seeds 12] [--minutes 30]` (Code: `ashen_sim::balance`, Test `tests/balance.rs`). Ein skriptgesteuerter
+Testspieler der Glutkrone spielt Mission 1 im Gefechtsmodus gegen die KI: Arbeiter (10–14) sammeln Gold, Holz und Stein, Gehöfte, Kasernen, Schießplatz und
+Stall werden gebaut, eine gemischte Armee wird ausgebildet, die Basis verteidigt, in Wellen (ab 10–16 Soldaten, je Seed ein anderer Stil) angegriffen. Die
+Waffen- und Rüstungskette ist durch eine feste Lieferung ersetzt (1,3 Waffen und 0,8 Rüstung je 10 s ab Minute 1), der Testspieler nutzt keine Taktik-KI und keine Heldenfähigkeiten.
+Punktquote = (Siege + ½ · Zeitlimit) / Läufe des Testspielers; Zeitlimit 30 Minuten.
+
+| Stufe | Vorher (6 Seeds: Siege / Niederlagen / Zeitlimit) | Nachher (12 Seeds) | Soll |
+|---|---|---|---|
+| Leicht | 4 / 0 / 2 (67 %) | 11 / 0 / 1 (**96 %**) | Spieler gewinnt meist |
+| Normal | 0 / 3 / 3 (0 %, zu hart) | 3 / 4 / 5 (**46 %**) | ausgeglichen |
+| Schwer | 1 / 5 / 0 (17 %) | 1 / 11 / 0 (**8 %**) | KI gewinnt meist |
+| Albtraum | 0 / 6 / 0 (0 %) | 0 / 12 / 0 (**0 %**) | KI gewinnt meist |
+
+Angepasst wurde nur in `rules.ron → ai_levels`: Leicht (Einnahmen 0,8 → 0,7, Armee 0,7/16 → 0,55/12, erster Angriff 10:00 → 11:00, Abstand 240 → 260 s) und Normal
+(Einnahmen 1,0 → 0,9, Armee 1,0/28 → 0,85/24, erster Angriff 7:00 → 8:00, Abstand 160 → 190 s, Schmiede 7:00 → 8:00, Konterlogik 60 → 50 %); Schwer und Albtraum blieben unverändert.
+Der Test `difficulty_levels_scale_against_an_active_player` sichert die Spannen (Leicht ≥ 66 %, Normal 25–75 %, Schwer ≤ 40 %, Albtraum ≤ 25 %, monoton).
+
+**Konter-Matrix (1v1-Gruppen gleichen Gold-/Holz-/Steinwerts, 800 Wert, Angriffsbewegung, Restlebenspunkte):** Schwertkämpfer ×9 gegen Hohlknechte ×12 69 % : 0 %, Bogenschützen ×7 gegen Hohlschützen ×8 39 % : 0 %,
+Speerkämpfer ×9 gegen Hohlknechte ×12 0 % : 63 %, Ritter ×3 gegen Ghule ×10 0 % : 69 %, Hellebardiere ×8 gegen Grabkolosse ×3 77 % : 0 %, Kampfmagier ×6 gegen Aschehexen ×5 0 % : 25 %,
+Schwertkämpfer ×9 gegen Ghule ×10 40 % : 0 %, Bogenschützen ×7 gegen Ghule ×10 0 % : 57 %, Ritter ×3 gegen Hohlknechte ×12 0 % : 41 %. Die Ergebnisse folgen der Auslegung (Ghule schlagen Fernkämpfer und Reiter,
+Hellebarden schlagen Wucht, Infanterie schlägt Ghule/Knechte); kein Paar vernichtet das andere nahezu verlustfrei (Test `counter_matrix_has_no_extreme_outliers_at_equal_cost`: Differenz der Restanteile < 85 %). Offensichtliche Ausreißer wurden nicht gefunden, daher keine Wertänderungen an Einheiten.
+
+### 10.6 Taktische Führung in Weltkarten-Schlachten
+
+Schlachten der Großen Kampagne laufen ohne Wirtschaft; der Gegner wird vom Modul `systems/tactics.rs` geführt (`worldmap::battle::drive_enemy`, alle 1,5 s; zustandslos, deterministisch):
+
+* **Fokusfeuer**: Jede Einheit wählt unter Gegnern in Reichweite + 7 Kacheln das Ziel mit dem höchsten Wert (Heiler 3,4 > Belagerung 3,0 > Schützen 2,8 > Helden > Reiter > Infanterie > Arbeiter), verstärkt durch fehlende Lebenspunkte (bis ×3), geteilt durch Entfernung, mit Bonus für Ziele, die Kameraden schon angreifen. Das Ziel wird nur gewechselt, wenn ein anderes um 30 % besser ist.
+* **Fernkämpfer hinter dem Nahkampf**: Schützen und Heiler stellen sich 2–3 Kacheln hinter den Schwerpunkt der eigenen Nahkämpfer und weichen Nahkämpfern aus, solange mindestens zwei eigene Nahkämpfer decken.
+* **Rückzug**: Einheiten unter 30 % Leben (Helden 25 %) ziehen sich 9 Kacheln hinter die Front zurück und halten dort Stellung, solange mindestens vier gesunde Kameraden (≥ 50 %) kämpfen; sonst wird bis zum Ende gekämpft.
+* **Belagerungswaffen** greifen Tore, dann Türme, dann Mauern, dann übrige Gebäude an.
+* **Verteidiger einer Wehranlage** bemannen die Türme und Tore auf der Feindseite (Fernkämpfer, Befehl „Halten“), Nahkämpfer halten den Einfallspunkt (Wache mit Radius 7); bei einem Durchbruch (zwei Feinde im Inneren) greifen alle an.
+
+Tests: `crates/ashen_sim/tests/tactics.rs` (Fokusfeuer, Fernkämpfer hinten, Rückzug, Belagerung, Turmbesatzung, Determinismus sowie Duelle gleicher Heere: die geführte Seite gewinnt mindestens 5 von 6 Duellen gegen reine Angriffsbewegung).
+
 ## 11. Bedienung
+
+Ausbildungs-, Bau- und Fähigkeitskürzel stammen aus den Daten (`hotkey` an Einheiten und Gebäuden, Buchstaben A–Z; Fähigkeiten `Q W E R T Y` der Reihe nach). `validate-data` und der Test `all_data_hotkeys_are_mapped_and_conflict_free` melden doppelte Kürzel je Gebäude (Ausbildungsliste, zusätzlich zu den festen Tasten `R` Sammelpunkt, `L` Lager, `C` Stadt) und doppelte Baukürzel je Fraktion.
 
 | Aktion | Eingabe |
 |---|---|

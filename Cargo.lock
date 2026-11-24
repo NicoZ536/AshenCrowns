@@ -301,6 +301,7 @@ version = "0.1.0"
 dependencies = [
  "ashen_engine",
  "ashen_sim",
+ "ashen_strategy",
  "env_logger",
  "glam",
  "log",

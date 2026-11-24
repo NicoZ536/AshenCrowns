@@ -108,6 +108,9 @@ impl Content {
                 Err(e) => errors.push(format!("Mod {}: {e}", m.name)),
             }
         }
+        for c in data.hotkey_conflicts() {
+            log::warn!("Tastenkürzel: {c}");
+        }
         let mut missions = Vec::new();
         for d in mission_dirs {
             let Ok(rd) = std::fs::read_dir(&d) else { continue };

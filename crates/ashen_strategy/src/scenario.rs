@@ -371,6 +371,7 @@ impl StrategyWorld {
             league_chest: 0.0,
             veil_break_years: 0,
             trade_hold: BTreeMap::new(),
+            crown_hold: BTreeMap::new(),
             data,
             realm_provs: Vec::new(),
             realm_dist: Vec::new(),

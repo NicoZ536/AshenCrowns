@@ -66,7 +66,7 @@ pub fn formation_slots(world: &SimWorld, data: &GameData, units: &[UnitId], targ
         .collect()
 }
 
-fn set_order(u: &mut Unit, order: Order, queue: bool) {
+pub(crate) fn set_order(u: &mut Unit, order: Order, queue: bool) {
     if queue && u.order != Order::Idle {
         u.queue.push(order);
         return;

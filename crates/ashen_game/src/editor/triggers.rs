@@ -350,6 +350,50 @@ pub fn condition_ui(ui: &mut Ui, salt: u64, c: &mut Condition, l: &Lists, depth:
 
 /// Aktion bearbeiten.
 pub fn action_ui(ui: &mut Ui, salt: u64, a: &mut Action, l: &Lists) -> bool {
+    action_ui_at(ui, salt, a, l, 0)
+}
+
+/// Größte Schachtelungstiefe von Entscheidungen innerhalb von Entscheidungs-Aktionen im Editor.
+const MAX_ACTION_DEPTH: usize = 4;
+
+/// Liste von Aktionen mit Entfernen, Verschieben und Hinzufügen (für Entscheidungs-Optionen).
+fn action_list_ui(ui: &mut Ui, salt: u64, actions: &mut Vec<Action>, l: &Lists, depth: usize) -> bool {
+    let mut changed = false;
+    let mut remove = None;
+    let mut swap = None;
+    let n = actions.len();
+    for (i, a) in actions.iter_mut().enumerate() {
+        ui.horizontal_top(|ui| {
+            ui.vertical(|ui| {
+                if ui.small_button("×").on_hover_text("Folgeaktion entfernen").clicked() {
+                    remove = Some(i);
+                }
+                if i > 0 && ui.small_button("Auf").clicked() {
+                    swap = Some((i, i - 1));
+                }
+                if i + 1 < n && ui.small_button("Ab").clicked() {
+                    swap = Some((i, i + 1));
+                }
+            });
+            ui.vertical(|ui| changed |= action_ui_at(ui, salt.wrapping_mul(131).wrapping_add(i as u64 + 1), a, l, depth));
+        });
+    }
+    if let Some(i) = remove {
+        actions.remove(i);
+        changed = true;
+    }
+    if let Some((a, b)) = swap {
+        actions.swap(a, b);
+        changed = true;
+    }
+    if ui.small_button("+ Folgeaktion").clicked() {
+        actions.push(action_default(0, l));
+        changed = true;
+    }
+    changed
+}
+
+fn action_ui_at(ui: &mut Ui, salt: u64, a: &mut Action, l: &Lists, depth: usize) -> bool {
     let mut changed = false;
     let mut kind = action_kind(a);
     ui.horizontal_wrapped(|ui| {
@@ -447,11 +491,48 @@ pub fn action_ui(ui: &mut Ui, salt: u64, a: &mut Action, l: &Lists) -> bool {
         Action::Decision(d) => {
             changed |= ui.add(egui::TextEdit::singleline(&mut d.title).desired_width(f32::INFINITY).hint_text("Titel")).changed();
             changed |= ui.add(egui::TextEdit::multiline(&mut d.text).desired_rows(2).desired_width(f32::INFINITY).hint_text("Frage")).changed();
-            for o in d.options.iter_mut() {
+            let mut voice = d.voice.clone().unwrap_or_default();
+            if ui.add(egui::TextEdit::singleline(&mut voice).desired_width(220.0).hint_text("Sprach-Event (optional)")).changed() {
+                d.voice = Some(voice).filter(|v| !v.trim().is_empty());
+                changed = true;
+            }
+            let mut remove = None;
+            for (oi, o) in d.options.iter_mut().enumerate() {
                 ui.horizontal(|ui| {
+                    if ui.small_button("×").on_hover_text("Antwort entfernen").clicked() {
+                        remove = Some(oi);
+                    }
                     changed |= ui.add(egui::TextEdit::singleline(&mut o.flag).desired_width(120.0).hint_text("Flag")).changed();
                     changed |= ui.add(egui::TextEdit::singleline(&mut o.label).desired_width(f32::INFINITY).hint_text("Antwort")).changed();
                 });
+                ui.indent((salt, "opt", oi), |ui| {
+                    changed |= ui.add(egui::TextEdit::singleline(&mut o.detail).desired_width(f32::INFINITY).hint_text("Hinweis auf die Folgen (Tooltip)")).changed();
+                    let mut req = o.requires.join(", ");
+                    if ui.add(egui::TextEdit::singleline(&mut req).desired_width(f32::INFINITY).hint_text("Nur wählbar mit Flags (Komma-getrennt)")).changed() {
+                        o.requires = req.split(',').map(|f| f.trim().to_string()).filter(|f| !f.is_empty()).collect();
+                        changed = true;
+                    }
+                    let head = if o.actions.is_empty() { "Folgeaktionen (keine)".to_string() } else { format!("Folgeaktionen ({})", o.actions.len()) };
+                    egui::CollapsingHeader::new(RichText::new(head).font(theme::caps_font(13.0)).color(Color32::from_rgb(214, 190, 146))).id_salt((salt, "optacts", oi)).default_open(!o.actions.is_empty()).show(ui, |ui| {
+                        if depth < MAX_ACTION_DEPTH {
+                            changed |= action_list_ui(ui, salt.wrapping_mul(977).wrapping_add(oi as u64 + 1), &mut o.actions, l, depth + 1);
+                        } else {
+                            ui.label(RichText::new("Maximale Schachtelungstiefe erreicht.").font(theme::italic_font(13.0)).color(theme::PARCHMENT_DIM));
+                        }
+                    });
+                });
+            }
+            if let Some(oi) = remove {
+                d.options.remove(oi);
+                changed = true;
+            }
+            if ui.small_button("+ Antwort").clicked() {
+                let mut n = d.options.len() + 1;
+                while d.options.iter().any(|o| o.flag == format!("wahl_{n}")) {
+                    n += 1;
+                }
+                d.options.push(DecisionOption { flag: format!("wahl_{n}"), label: "Neue Antwort".into(), detail: String::new(), requires: vec![], actions: vec![] });
+                changed = true;
             }
         }
         _ => {}

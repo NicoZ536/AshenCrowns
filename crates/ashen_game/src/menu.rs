@@ -155,8 +155,11 @@ impl MenuScene {
         }
         art.glow(&fx, Rect::from_center_size(screen.center_bottom(), Vec2::new(screen.width() * 1.2, screen.height() * 0.5)), Color32::from_rgb(46, 16, 4));
         ui_art::embers(art, &fx, screen, t, 80, 3);
-        let title_size = 54.0 + 34.0 * k;
-        let ty = screen.min.y + 74.0 + 44.0 * k;
+        // Kleine Fenster: kleinerer Titel, damit Menüseiten Platz behalten.
+        let compact = screen.height() < 860.0;
+        let (base, grow, y0, yk) = if compact { (34.0, 18.0, 44.0, 20.0) } else { (54.0, 34.0, 74.0, 44.0) };
+        let title_size = base + grow * k;
+        let ty = screen.min.y + y0 + yk * k;
         art.soft_shadow(&fx, Rect::from_center_size(Pos2::new(screen.center().x, ty), Vec2::new(title_size * 13.0, title_size * 3.2)), 0.75);
         art.glow(&fx, Rect::from_center_size(Pos2::new(screen.center().x, ty - title_size * 0.85), Vec2::new(140.0, 90.0) * (0.6 + 0.4 * k)), Color32::from_rgb(70, 30, 6));
         art.crown(&fx, Pos2::new(screen.center().x, ty - title_size * 0.8 - 4.0), 1.5 + 1.5 * k);
@@ -172,9 +175,15 @@ impl MenuScene {
         art.divider(&fx, screen.center().x - dw / 2.0, screen.center().x + dw / 2.0, sr.max.y + 14.0);
         fx.text(screen.right_bottom() + Vec2::new(-14.0, -10.0), Align2::RIGHT_BOTTOM, format!("Vertical Slice {} · eigene Rust-Engine (wgpu)", env!("CARGO_PKG_VERSION")), theme::italic_font(13.0), Color32::from_rgb(150, 136, 114));
 
-        let top = sr.max.y + 34.0;
+        let top = sr.max.y + if compact { 18.0 } else { 34.0 };
+        let margin = if compact { egui::Margin::symmetric(30, 18) } else { egui::Margin::symmetric(36, 30) };
+        // Höhe, die dem Panel unterhalb des Titels bleibt (Rahmen und Fußzeile abgezogen); darüber wird gescrollt.
+        let avail = (screen.max.y - top - (margin.top + margin.bottom) as f32 - 28.0).max(160.0);
         egui::Area::new(Id::unique("menu_panel")).anchor(Align2::CENTER_TOP, Vec2::new(0.0, top - screen.min.y)).show(&ctx, |ui| {
-            art.panel(ui, PanelKind::Ornate, egui::Margin::symmetric(36, 30), |ui| {
+            // Die Fläche der verankerten Area ist kleiner als der Bildschirm: Höhe ausdrücklich freigeben.
+            ui.set_max_height(avail + (margin.top + margin.bottom) as f32 + 8.0);
+            art.panel(ui, PanelKind::Ornate, margin, |ui| {
+              egui::ScrollArea::vertical().id_salt("menu_scroll").max_height(avail).auto_shrink([true, true]).show(ui, |ui| {
                 match self.page {
                     Page::Main => self.main_page(ui, engine, content, art),
                     Page::NewGame => self.new_game_page(ui, engine, content, settings, art),
@@ -233,6 +242,7 @@ impl MenuScene {
                 if let Some(e) = &self.error {
                     ui.label(RichText::new(e).color(theme::EMBER));
                 }
+              });
             });
         });
     }
@@ -250,9 +260,38 @@ impl MenuScene {
     }
 
     fn main_page(&mut self, ui: &mut egui::Ui, engine: &mut Engine, content: &Content, art: &UiArt) {
+        // Bei niedrigen Fenstern zweispaltig, sonst läuft die Liste über den Rand.
+        let two_col = ui.ctx().content_rect().height() < 860.0;
+        let inner = |this: &mut Self, ui: &mut egui::Ui, engine: &mut Engine, from: usize, to: usize| {
+            this.main_entries(ui, engine, content, art, from, to);
+        };
+        if two_col {
+            ui.horizontal_top(|ui| {
+                ui.vertical(|ui| {
+                    ui.set_width(340.0);
+                    inner(self, ui, engine, 0, 7)
+                });
+                ui.add_space(16.0);
+                ui.vertical(|ui| {
+                    ui.set_width(340.0);
+                    inner(self, ui, engine, 7, usize::MAX)
+                });
+            });
+        } else {
+            inner(self, ui, engine, 0, usize::MAX);
+        }
+    }
+
+    /// Menüeinträge `from..to` der Startseite (Nummerierung in Reihenfolge der Anzeige).
+    fn main_entries(&mut self, ui: &mut egui::Ui, engine: &mut Engine, content: &Content, art: &UiArt, from: usize, to: usize) {
         ui.vertical_centered(|ui| {
             ui.spacing_mut().item_spacing.y = 4.0;
+            let mut n = 0usize;
             let mut b = |ui: &mut egui::Ui, t: &str, enabled: bool, tip: &str| {
+                n += 1;
+                if n <= from || n > to {
+                    return false;
+                }
                 let r = ui_art::menu_item(ui, art, t, 340.0, enabled, !enabled);
                 ui_common::sfx(engine, ui, &r);
                 let r = if tip.is_empty() {

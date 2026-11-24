@@ -14,4 +14,5 @@ pub mod fog;
 pub mod heroes;
 pub mod movement;
 pub mod script;
+pub mod tactics;
 pub mod units;
