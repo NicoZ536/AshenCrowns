@@ -132,11 +132,11 @@ V *The Divided Throne* · VI *The Fallen Gods* · VII *The Last Crown*
 ## Audio-Dateinamenskonvention (verbindlich, wird vom Asset-Scanner geprüft)
 Alle Dateien klein, `snake_case`, Format bevorzugt `.ogg` (auch `.wav`, `.flac`, `.mp3` werden erkannt).
 ```
-assets/audio/music/<track_id>[_intro|_loop].ogg              z.B. music/build_calm_loop.ogg
+assets/audio/music/<track_id>.ogg                           z.B. music/build_calm.ogg (eine Datei je Track)
 assets/audio/voices/heroes/<hero_id>_<situation>_<NN>.ogg     z.B. voices/heroes/hero_isolde_select_01.ogg
 assets/audio/voices/units/<unit_id>_<situation>_<NN>.ogg      z.B. voices/units/archer_move_02.ogg
-assets/audio/voices/characters/<char_id>_<line_id>.ogg        z.B. voices/characters/char_hal_venn_m01_intro_03.ogg
-assets/audio/voices/narrator/narrator_<line_id>.ogg           z.B. voices/narrator/narrator_m01_opening_01.ogg
+assets/audio/voices/characters/<char_id>_<line_id>_01.ogg     z.B. voices/characters/char_hal_venn_m01_intro_01.ogg (eine Datei je Zeile)
+assets/audio/voices/narrator/narrator_<line_id>_01.ogg        z.B. voices/narrator/narrator_m01_opening_01.ogg (eine Datei je Zeile)
 assets/audio/sfx/<category>/<sfx_id>[_NN].ogg                 category ∈ combat, magic, buildings, ui, units, world
 assets/audio/ambience/<ambience_id>[_loop].ogg
 ```
