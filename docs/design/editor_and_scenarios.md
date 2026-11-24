@@ -246,6 +246,6 @@ Benutzerordner: `ASHEN_USER_DIR`, sonst plattformüblich (Linux `~/.local/share/
 ## 7. Grenzen
 
 * Nur eine Spielerseite wird gespielt (Spieler 0); Startposition und Aufstellung für Spieler 1 dienen der Gegnerseite.
-* Der Editor kennt keine Höhenstufen (nicht im Datenmodell) und keine Weltkarten-Szenarien (Grand Campaign ist geplant).
+* Der Editor kennt keine Höhenstufen (nicht im Datenmodell) und keine Weltkarten-Szenarien (die Große Kampagne läuft auf der Strategieebene und ist nicht im Editor bearbeitbar).
 * Die Bestenliste ist rein lokal; ein Spielername wird noch nicht abgefragt („Wächterin“).
 * Der Editor setzt fertige Gebäude. Baustellen und Ausbauzustände einzelner Gebäude lassen sich nicht vorgeben.
