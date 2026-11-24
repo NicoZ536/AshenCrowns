@@ -4,11 +4,11 @@
 **Rolle:** Music Director / Komponist · **Produktionswerkzeug:** Suno (Produktion durch den Auftraggeber)
 **Verbindliche Quellen:** `docs/canon.md` (Namen, Fraktionen, Dateinamenskonvention) und
 `assets/audio/manifest.ron` (Abschnitt `music`, Track-IDs, Dateien, Feld `intensity`).
-**Ablage aller Musikdateien:** `assets/audio/music/` – Dateinamen exakt nach Kanon:
-`assets/audio/music/<track_id>[_intro|_loop].ogg`
+**Ablage aller Musikdateien:** `assets/audio/music/` – **pro Track genau eine Datei** `assets/audio/music/<track_id>.ogg` (komplette Suno-Ausgabe).
+**Lieferung:** Komplette Suno-Ausgabe (beste Version) liefern, beliebiges Format; Loop-Naht und Pegel übernimmt die Integration. Keine Intro-/Loop-Trennung, kein Schneiden, kein Normalisieren durch den Nutzer.
 
 Dieses Dokument ist die vollständige musikalische Bibel des Spiels: Identität, Suno-Arbeitsweise,
-dynamisches Musiksystem, eine Track-Bibel mit fertigen Prompts für **48 Tracks** sowie Checkliste und
+dynamisches Musiksystem, eine Track-Bibel mit fertigen Prompts für **52 Tracks** (davon 34 im Manifest) sowie Checkliste und
 Prioritäten. Alle Suno-spezifischen Funktionshinweise sind **Empfehlungen**: Funktionsumfang, Modellversion,
 Maximallängen, Exportformate und Nutzungsrechte ändern sich – **zum Produktionszeitpunkt in der genutzten
 Suno-Version und im gebuchten Plan prüfen.**
@@ -262,7 +262,7 @@ Tags sind **Hinweise**, keine Garantie. Suno interpretiert sie modellabhängig. 
 
 | Tag | Wirkung / Verwendung |
 |---|---|
-| `[Intro]` | Einleitung; für spätere `_intro`-Datei |
+| `[Intro]` | Einleitung des Stücks |
 | `[Verse]` | Hauptteil mit Thema; in Instrumentals „Thema A“ |
 | `[Build]` | Steigerung, Verdichtung |
 | `[Climax]` | Höhepunkt, volle Besetzung |
@@ -281,12 +281,11 @@ Tags sind **Hinweise**, keine Garantie. Suno interpretiert sie modellabhängig. 
 ### 2.3 Längensteuerung
 
 - Suno bestimmt die Länge selbst; die maximale Länge pro Generierung hängt von der Version ab (prüfen).
-- **Loop-Tracks:** Rohtake von **2:30–4:00** anstreben, damit ein stabiler Mittelteil von mindestens der
-  Ziel-Looplänge entsteht. Viele Abschnitte mit `[Verse]`/`[Instrumental]` verlängern, `[End]` weglassen.
-- **Stings:** sehr kurze Struktur (`[Intro]` → `[Climax]` → `[Outro]` → `[End]`). Liefert Suno zu lang, wird
-  der Sting aus einem starken Schluss oder Höhepunkt eines längeren Takes geschnitten (oft die bessere Wahl).
+- **Loop-Tracks:** Eine vollständige Ausgabe von etwa **2:30–4:00** anstreben (in der Track-Bibel steht die Ziellänge je Track). Viele Abschnitte
+  mit `[Verse]`/`[Instrumental]` verlängern, `[End]` und `[Fade Out]` weglassen. Die Ausgabe wird **als Ganzes** geloopt.
+- **Stings:** sehr kurze Struktur (`[Intro]` → `[Climax]` → `[Outro]` → `[End]`); die Ausgabe ist der Sting, einmalig, mit natürlichem Ausklang.
 - **Lineare Tracks (Story, Credits):** Gewünschte Dauer im Style-Feld nicht angeben (wirkt unzuverlässig);
-  stattdessen Abschnittsanzahl im Lyrics-Feld steuern und mit Extend verlängern.
+  stattdessen Abschnittsanzahl im Lyrics-Feld steuern und mit Extend verlängern; die verlängerte Ausgabe ist **eine** Datei.
 
 ### 2.4 Extend, Cover und weitere Funktionen (sofern verfügbar)
 
@@ -303,105 +302,45 @@ Tags sind **Hinweise**, keine Garantie. Suno interpretiert sie modellabhängig. 
 ### 2.5 Generierungs-Workflow pro Track
 
 1. Style-Prompt und Lyrics-/Struktur-Feld aus der Track-Bibel exakt übernehmen.
-2. **Mindestens 6–10 Takes** erzeugen (mehrere Durchläufe).
+2. Mehrere Takes erzeugen (6–10 empfohlen).
 3. Vorauswahl nach Kriterien: (a) Tempo stabil, (b) Tonart passt zum Set, (c) Kontur der Aschenkrone bzw.
    Fraktionskennung hörbar, (d) keine Gesangsartefakte, (e) keine Ähnlichkeit zu bekannter Musik,
-   (f) mindestens ein langer, gleichförmiger Abschnitt für den Loop.
+   (f) gleichförmiger, loopbarer Gesamtverlauf (bei Loop-Tracks), sauberer Schluss (bei Stings).
 4. Besten Take ggf. per Extend verlängern oder per Cover variieren.
-5. Download in höchster verfügbarer Qualität (WAV bevorzugt), sonst höchste MP3-Qualität.
-6. Prompt-Log führen: Track-ID, Datum, Suno-Modellversion, Style-Prompt, Lyrics-Feld, Take-Kennung/Link,
-   verwendete Funktion (Extend/Cover), Auswahlbegründung.
+5. Die **komplette Ausgabe der besten Version** unverändert herunterladen (höchste verfügbare Qualität, WAV bevorzugt) und als `<track_id>` liefern.
 
-### 2.6 Strategie für Intro- und Loop-Versionen
+### 2.6 Lieferung und Integration
 
-- **Intro und Loop stammen immer aus demselben Take** (gleiche Tonart, gleiches Tempo, gleicher Klang).
-- Die **Intro-Datei** enthält alles vom Anfang des Takes bis **exakt** zum Loop-Startpunkt. Sie endet
-  ohne Fade, ohne Stille – das Engine spielt danach sample-genau die Loop-Datei.
-- Die **Loop-Datei** beginnt am Loop-Startpunkt (Taktanfang) und endet am Loop-Endpunkt (Taktanfang des
-  Takts nach dem letzten Loop-Takt). Länge = ganze Anzahl Takte (bevorzugt 16, 24, 32, 48 oder 64 Takte).
-- Harmonisch muss der letzte Loop-Takt in den ersten Loop-Takt führen (z. B. Dominante oder ♭VII → i).
-- Tracks mit `intro: None` (z. B. `build_tension`) erhalten **keine** Intro-Datei; ihr Loop muss so beginnen,
-  dass er auch als Einstieg funktioniert (weicher erster Takt).
+- **Eine Datei pro Track:** `music/<track_id>` – die vollständige Suno-Ausgabe. Keine Intro-/Loop-Trennung, keine Teilstücke, kein Kürzen.
+- Das Manifest führt jeden Track mit `file: "music/<track_id>"` und `intro: None`; `looped: true` heißt, die Engine loopt die **ganze Datei**;
+  Stings (`looped: false`) spielen einmalig.
+- **Erledigt die Integration (nicht vom Nutzer):** Tempo-/Taktprüfung, Loop-Naht (Tail-Wrap, Crossfade 20–50 ms auf Taktgrenze), Stille trimmen,
+  Lautheit (−14 LUFS integriert, Stings Short-Term-Max ca. −12 LUFS, True Peak ≤ −1 dBTP), Konvertierung nach OGG Vorbis q6, 48 kHz, Stereo, Gapless-Test im Spiel.
+- Die in der Track-Bibel genannten Loop-Punkte („Loop-Eignung“) und Taktzahlen sind Hinweise für die Integration, keine Schnittanweisung an den Nutzer.
 
-### 2.7 Nahtlose Loops in der DAW schneiden (Schritt für Schritt)
-
-1. **Projekt anlegen:** Samplerate 48 kHz, 32-Bit-Float intern. Take importieren.
-2. **Tempo ermitteln und fixieren:** Tempo des Takes erkennen, Grid auf die **Ziel-BPM aus der Track-Bibel**
-   setzen. Abweichung bis ca. 3 % per hochwertigem Time-Stretch auf exakte Ziel-BPM korrigieren; driftet
-   das Tempo innerhalb des Takes stärker, Take verwerfen oder Warp-Marker pro Takt setzen.
-3. **Taktanfang 1 bestimmen:** ersten Schwerpunkt (Downbeat) auf Takt 1 legen. Alle Loop-Punkte liegen
-   **ausschließlich auf Taktgrenzen**.
-4. **Loop-Bereich wählen:** gleichförmigen Abschnitt mit ganzer Taktzahl suchen, dessen Anfangsakkord und
-   Klangdichte zum Endbereich passen. Kein Beckenwirbel, kein Chor-Einsatz, kein Crescendo über die Naht.
-5. **Ausklang einbacken (Tail-Wrap):** das Audio direkt hinter dem Loop-Ende (Hallfahne, ausklingende Noten,
-   1–2 Takte) kopieren und am Loop-Anfang unter den Beginn mischen, damit der Übergang nicht „trocken“ klingt.
-6. **Naht-Crossfade:** an Loop-Start und -Ende einen **Crossfade von 20–50 ms** (equal power) setzen bzw.
-   Nulldurchgänge nutzen, damit kein Klick entsteht. Kein längerer Fade – das Tempo-Raster bleibt exakt.
-7. **Intro schneiden:** von Take-Beginn (ggf. Anfangsstille entfernen, 5 ms Fade-in) bis exakt Loop-Start.
-8. **Test:** Loop mindestens 5× hintereinander und Intro→Loop→Loop im DAW-Loop abhören; auf Klicks,
-   Lautheitssprünge, Hall-Löcher und Phasenauslöschungen achten.
-9. **Längenprüfung:** Loop-Länge in Samples = Takte × Schläge pro Takt × 60 / BPM × 48 000.
-   Abweichung von mehr als 1 Sample korrigieren.
-
-### 2.8 Export und Formate
+### 2.7 Format
 
 | Stufe | Format |
 |---|---|
-| Arbeitsmaster (Archiv, nicht im Repo) | WAV, 48 kHz, 24 Bit, Stereo, je Datei |
-| Spieldatei (Repo) | **OGG Vorbis**, 48 kHz, Stereo, Qualität q6 (ca. 192 kbit/s) |
-| Alternativ vom Scanner erkannt | `.wav`, `.flac`, `.mp3` – nur in Ausnahmefällen, `.ogg` bevorzugt |
+| Lieferung durch den Nutzer | beliebig (WAV/FLAC/MP3/M4A …), komplette Suno-Ausgabe, unverändert |
+| Spieldatei (Repo, durch Integration erzeugt) | **OGG Vorbis**, 48 kHz, Stereo, Qualität q6 (ca. 192 kbit/s) |
 
-- Keine Stille am Anfang oder Ende von Loop-Dateien; keine eingebetteten Metadaten-Pausen.
-- Gapless-Wiedergabe der OGG-Dateien im Engine testen (Encoder-Vorlauf kann je nach Decoder Lücken erzeugen;
-  bei Problemen ist `.wav` für betroffene Loops zulässig).
-- Liefert Suno 44,1 kHz, wird vor dem Schnitt hochwertig auf 48 kHz konvertiert. Einheitliche Samplerate
-  für alle Musikdateien – falls das Engine eine andere Rate erwartet, gilt die Engine-Rate.
+### 2.8 Loudness (Integration)
 
-### 2.9 Loudness
-
-- **Zielwert: −14 LUFS integriert, True Peak ≤ −1 dBTP** für jede Datei.
-- Messung bei Loops über die gesamte Loop-Datei; bei Intros über die Intro-Datei; Intro und Loop dürfen
-  um höchstens 1 LU voneinander abweichen, damit der Übergang nicht springt.
-- **Stings** (unter 15 s) sind für integrierte Messung zu kurz: Short-Term-Maximum ca. −12 LUFS, True Peak
-  ≤ −1 dBTP, wahrgenommene Lautheit gegen `battle_large_loop` abgleichen.
+- **Zielwert: −14 LUFS integriert, True Peak ≤ −1 dBTP** für jede Datei; Stings (unter 15 s) Short-Term-Maximum ca. −12 LUFS.
 - Dynamikunterschiede zwischen Intensitätsstufen entstehen **im Arrangement und im Engine-Mix**, nicht durch
   unterschiedliche Mastering-Pegel. Empfohlene Engine-Offsets: Menu 0 dB, Calm −3 dB, Tension −2 dB,
   Combat −1 dB, Battle 0 dB, Boss 0 dB, Sting 0 dB.
-- Limiter sanft (Gain Reduction im Mittel ≤ 2 dB). Suno-Takes sind oft bereits laut – eher absenken als
-  komprimieren.
 
-### 2.10 Dateibenennung und Ablage
+### 2.9 Dateibenennung und Ablage
 
-Konvention laut Kanon: `assets/audio/music/<track_id>[_intro|_loop].ogg` – klein, `snake_case`.
+Konvention: `assets/audio/music/<track_id>.ogg` – klein, `snake_case`; **eine Datei je Track**, unabhängig von Loop oder Linear.
+Zukünftige Track-IDs dürfen nicht auf `_intro` oder `_loop` enden.
 
-| Track-Art | Dateien |
-|---|---|
-| Loop mit Intro | `<track_id>_intro.ogg` und `<track_id>_loop.ogg` |
-| Loop ohne Intro | nur `<track_id>_loop.ogg` |
-| Linear (Sting, Story, Credits) | nur `<track_id>.ogg` |
+**Pflichtdateien laut Manifest: 34 Dateien** (je Track `assets/audio/music/<id>.ogg`; vollständige Liste: `cargo run -p ashen_tools -- audio-list`
+und `docs/audio/PRODUCTION_CHECKLIST.md`, Abschnitt D).
 
-**Pflichtdateien laut Manifest (Vertical Slice, exakt 13 Dateien):**
-
-```text
-assets/audio/music/main_menu_intro.ogg
-assets/audio/music/main_menu_loop.ogg
-assets/audio/music/build_calm_intro.ogg
-assets/audio/music/build_calm_loop.ogg
-assets/audio/music/build_tension_loop.ogg
-assets/audio/music/battle_small_intro.ogg
-assets/audio/music/battle_small_loop.ogg
-assets/audio/music/battle_large_intro.ogg
-assets/audio/music/battle_large_loop.ogg
-assets/audio/music/boss_pale_reeve_intro.ogg
-assets/audio/music/boss_pale_reeve_loop.ogg
-assets/audio/music/victory_sting.ogg
-assets/audio/music/defeat_sting.ogg
-```
-
-Hinweis: `build_tension` hat laut Manifest **kein** Intro – eine Datei `build_tension_intro.ogg` darf nicht
-abgelegt werden. Zukünftige Track-IDs dürfen nicht auf `_intro` oder `_loop` enden.
-
-### 2.11 Rechte und Dokumentation
+### 2.10 Rechte und Dokumentation
 
 - Vor Produktionsbeginn prüfen und dokumentieren, welche Nutzungsrechte der gebuchte Suno-Plan für
   kommerzielle Spiele einräumt (Stand zum Generierungszeitpunkt).
@@ -444,19 +383,19 @@ Dadurch sind taktsynchrone Crossfades harmonisch und rhythmisch sauber.
 | **X – Einzelstücke** | je Track | je Track | je Track | boss_ashen_dragon, boss_root_mother, mystery_old_gods, story_lament, story_ashfall_memory |
 
 Die Glutkrone (F1) ist bewusst Teil von Set A, weil sie die Spielerfraktion der Kampagne ist.
-Bosse und Einzelstücke werden immer mit Intro oder Set-Wechsel-Regel betreten (siehe 3.3).
+Bosse und Einzelstücke werden immer mit harter Einblendung oder Set-Wechsel-Regel betreten (siehe 3.3).
 
 ### 3.3 Übergangsregeln
 
 | Nr. | Situation | Regel |
 |---|---|---|
 | R1 | Gleiches Set, benachbarte Stufe (Calm ↔ Tension, Combat ↔ Battle) | Taktsynchroner Equal-Power-Crossfade, Start am nächsten Taktanfang, Dauer **2 Takte** (Set A: 6,7 s bei 72 BPM bzw. 3,3 s bei 144 BPM). Ziel-Loop startet an derselben Taktposition innerhalb seines Loops (Positions-Sync) oder an Loop-Takt 1. |
-| R2 | Aufwärts in den Kampf (Calm/Tension → Combat/Battle) | Am nächsten Taktanfang (max. 1 Takt Wartezeit) laufende Musik über 1 Takt ausblenden; Ziel-**Intro** startet hart am Taktanfang, danach Loop. Ohne Intro: Loop ab Takt 1 mit 1 Takt Fade-in. Gilt auch setübergreifend. |
+| R2 | Aufwärts in den Kampf (Calm/Tension → Combat/Battle) | Am nächsten Taktanfang (max. 1 Takt Wartezeit) laufende Musik über 1 Takt ausblenden; Ziel-Track startet am Taktanfang mit 1 Takt Fade-in (Manifest-Tracks haben kein separates Intro). Gilt auch setübergreifend. |
 | R3 | Abwärts aus dem Kampf (Combat/Battle → Tension/Calm) | Erst nach **15 s ohne Kampfkontakt** (Hysterese). 4 Takte Fade-out, Ziel-Loop mit 2 Takten Fade-in. Calm-Tracks setzen an der zuletzt gespielten Position fort (Resume), um Wiederholung zu vermeiden. |
-| R4 | Beliebig → Boss | Am nächsten **Schlag** laufende Musik in 250–500 ms ausblenden, Boss-Intro startet hart. Boss-Musik bleibt bis zum Tod des Bosses. Danach 2 Takte Fade-out, 2 s Ambience, dann Battle- oder Calm-Loop nach R3. |
+| R4 | Beliebig → Boss | Am nächsten **Schlag** laufende Musik in 250–500 ms ausblenden, Boss-Musik startet hart. Boss-Musik bleibt bis zum Tod des Bosses. Danach 2 Takte Fade-out, 2 s Ambience, dann Battle- oder Calm-Loop nach R3. |
 | R5 | Sting | Laufende Musik über 500 ms ausblenden (bei gleichzeitigem Erzähler: auf −18 dB ducken), Sting spielt einmal, danach 1,5–3 s nur Ambience, dann Folgetrack (z. B. `victory_theme`, `defeat_theme` oder `main_menu`). Stings unterbrechen nie andere Stings. |
-| R6 | Set-Wechsel (andere Tonika oder BPM) bei gleicher oder fallender Intensität | Kein überlappender Crossfade. 2 Takte Fade-out → mindestens 1 s Ambience → Ziel-Intro bzw. Loop mit 2 Takten Fade-in. Ausnahme: tempolose Tracks (`mystery_*`) dürfen mit 4 s Crossfade überblendet werden. |
-| R7 | Menü → Spiel | `main_menu` 2 s Fade-out zum Ladebildschirm; Spielstart mit `build_calm_intro` (bzw. Intro des Kontext-Calm-Tracks). |
+| R6 | Set-Wechsel (andere Tonika oder BPM) bei gleicher oder fallender Intensität | Kein überlappender Crossfade. 2 Takte Fade-out → mindestens 1 s Ambience → Ziel-Track mit 2 Takten Fade-in. Ausnahme: tempolose Tracks (`mystery_*`) dürfen mit 4 s Crossfade überblendet werden. |
+| R7 | Menü → Spiel | `main_menu` 2 s Fade-out zum Ladebildschirm; Spielstart mit `build_calm` (bzw. dem Kontext-Calm-Track). |
 | R8 | Dialog, Erzähler | Musik-Ducking −6 dB, Attack 300 ms, Release 800 ms. Bei Skript-Zwischensequenzen mit Story-Track: Story-Track ersetzt den laufenden Loop nach R6. |
 
 **Mindestverweildauer (gegen „Flattern“):** Calm 30 s, Tension 20 s, Combat 20 s, Battle 30 s.
@@ -487,45 +426,45 @@ referenzieren, stehen inzwischen in `manifest.ron` (Abschnitt „Kampagne“ der
 und Skript-Auslösung vorgesehen.
 
 ```ron
-MusicTrack(id: "build_night", intensity: Calm, file: "music/build_night_loop", intro: Some("music/build_night_intro"), looped: true),
-MusicTrack(id: "economy_prosperity", intensity: Calm, file: "music/economy_prosperity_loop", intro: Some("music/economy_prosperity_intro"), looped: true),
-MusicTrack(id: "explore_wilds", intensity: Calm, file: "music/explore_wilds_loop", intro: Some("music/explore_wilds_intro"), looped: true),
-MusicTrack(id: "war_preparation", intensity: Tension, file: "music/war_preparation_loop", intro: None, looped: true),
-MusicTrack(id: "worldmap_spring", intensity: Calm, file: "music/worldmap_spring_loop", intro: Some("music/worldmap_spring_intro"), looped: true),
-MusicTrack(id: "worldmap_summer", intensity: Calm, file: "music/worldmap_summer_loop", intro: Some("music/worldmap_summer_intro"), looped: true),
-MusicTrack(id: "worldmap_autumn", intensity: Calm, file: "music/worldmap_autumn_loop", intro: Some("music/worldmap_autumn_intro"), looped: true),
-MusicTrack(id: "worldmap_winter", intensity: Calm, file: "music/worldmap_winter_loop", intro: Some("music/worldmap_winter_intro"), looped: true),
-MusicTrack(id: "worldmap_fallen_gods", intensity: Calm, file: "music/worldmap_fallen_gods_loop", intro: Some("music/worldmap_fallen_gods_intro"), looped: true),
-MusicTrack(id: "diplomacy_court", intensity: Calm, file: "music/diplomacy_court_loop", intro: None, looped: true),
-MusicTrack(id: "intrigue_shadows", intensity: Tension, file: "music/intrigue_shadows_loop", intro: None, looped: true),
-MusicTrack(id: "siege_assault", intensity: Battle, file: "music/siege_assault_loop", intro: Some("music/siege_assault_intro"), looped: true),
-MusicTrack(id: "siege_defense", intensity: Battle, file: "music/siege_defense_loop", intro: Some("music/siege_defense_intro"), looped: true),
-MusicTrack(id: "boss_hollow_king", intensity: Boss, file: "music/boss_hollow_king_loop", intro: Some("music/boss_hollow_king_intro"), looped: true),
-MusicTrack(id: "boss_ashen_dragon", intensity: Boss, file: "music/boss_ashen_dragon_loop", intro: Some("music/boss_ashen_dragon_intro"), looped: true),
-MusicTrack(id: "boss_root_mother", intensity: Boss, file: "music/boss_root_mother_loop", intro: Some("music/boss_root_mother_intro"), looped: true),
-MusicTrack(id: "faction_ember_crown_theme", intensity: Calm, file: "music/faction_ember_crown_theme_loop", intro: Some("music/faction_ember_crown_theme_intro"), looped: true),
-MusicTrack(id: "faction_ember_crown_battle", intensity: Combat, file: "music/faction_ember_crown_battle_loop", intro: Some("music/faction_ember_crown_battle_intro"), looped: true),
-MusicTrack(id: "faction_skarn_clans_theme", intensity: Calm, file: "music/faction_skarn_clans_theme_loop", intro: Some("music/faction_skarn_clans_theme_intro"), looped: true),
-MusicTrack(id: "faction_skarn_clans_battle", intensity: Combat, file: "music/faction_skarn_clans_battle_loop", intro: Some("music/faction_skarn_clans_battle_intro"), looped: true),
-MusicTrack(id: "faction_thorn_covenant_theme", intensity: Calm, file: "music/faction_thorn_covenant_theme_loop", intro: Some("music/faction_thorn_covenant_theme_intro"), looped: true),
-MusicTrack(id: "faction_thorn_covenant_battle", intensity: Combat, file: "music/faction_thorn_covenant_battle_loop", intro: Some("music/faction_thorn_covenant_battle_intro"), looped: true),
-MusicTrack(id: "faction_saelith_compact_theme", intensity: Calm, file: "music/faction_saelith_compact_theme_loop", intro: Some("music/faction_saelith_compact_theme_intro"), looped: true),
-MusicTrack(id: "faction_saelith_compact_battle", intensity: Combat, file: "music/faction_saelith_compact_battle_loop", intro: Some("music/faction_saelith_compact_battle_intro"), looped: true),
-MusicTrack(id: "faction_hollowed_theme", intensity: Tension, file: "music/faction_hollowed_theme_loop", intro: Some("music/faction_hollowed_theme_intro"), looped: true),
-MusicTrack(id: "faction_hollowed_battle", intensity: Combat, file: "music/faction_hollowed_battle_loop", intro: Some("music/faction_hollowed_battle_intro"), looped: true),
-MusicTrack(id: "faction_ashen_legion_theme", intensity: Tension, file: "music/faction_ashen_legion_theme_loop", intro: Some("music/faction_ashen_legion_theme_intro"), looped: true),
-MusicTrack(id: "faction_ashen_legion_battle", intensity: Combat, file: "music/faction_ashen_legion_battle_loop", intro: Some("music/faction_ashen_legion_battle_intro"), looped: true),
-MusicTrack(id: "victory_theme", intensity: Menu, file: "music/victory_theme_loop", intro: Some("music/victory_theme_intro"), looped: true),
-MusicTrack(id: "defeat_theme", intensity: Menu, file: "music/defeat_theme_loop", intro: Some("music/defeat_theme_intro"), looped: true),
+MusicTrack(id: "build_night", intensity: Calm, file: "music/build_night", intro: None, looped: true),
+MusicTrack(id: "economy_prosperity", intensity: Calm, file: "music/economy_prosperity", intro: None, looped: true),
+MusicTrack(id: "explore_wilds", intensity: Calm, file: "music/explore_wilds", intro: None, looped: true),
+MusicTrack(id: "war_preparation", intensity: Tension, file: "music/war_preparation", intro: None, looped: true),
+MusicTrack(id: "worldmap_spring", intensity: Calm, file: "music/worldmap_spring", intro: None, looped: true),
+MusicTrack(id: "worldmap_summer", intensity: Calm, file: "music/worldmap_summer", intro: None, looped: true),
+MusicTrack(id: "worldmap_autumn", intensity: Calm, file: "music/worldmap_autumn", intro: None, looped: true),
+MusicTrack(id: "worldmap_winter", intensity: Calm, file: "music/worldmap_winter", intro: None, looped: true),
+MusicTrack(id: "worldmap_fallen_gods", intensity: Calm, file: "music/worldmap_fallen_gods", intro: None, looped: true),
+MusicTrack(id: "diplomacy_court", intensity: Calm, file: "music/diplomacy_court", intro: None, looped: true),
+MusicTrack(id: "intrigue_shadows", intensity: Tension, file: "music/intrigue_shadows", intro: None, looped: true),
+MusicTrack(id: "siege_assault", intensity: Battle, file: "music/siege_assault", intro: None, looped: true),
+MusicTrack(id: "siege_defense", intensity: Battle, file: "music/siege_defense", intro: None, looped: true),
+MusicTrack(id: "boss_hollow_king", intensity: Boss, file: "music/boss_hollow_king", intro: None, looped: true),
+MusicTrack(id: "boss_ashen_dragon", intensity: Boss, file: "music/boss_ashen_dragon", intro: None, looped: true),
+MusicTrack(id: "boss_root_mother", intensity: Boss, file: "music/boss_root_mother", intro: None, looped: true),
+MusicTrack(id: "faction_ember_crown_theme", intensity: Calm, file: "music/faction_ember_crown_theme", intro: None, looped: true),
+MusicTrack(id: "faction_ember_crown_battle", intensity: Combat, file: "music/faction_ember_crown_battle", intro: None, looped: true),
+MusicTrack(id: "faction_skarn_clans_theme", intensity: Calm, file: "music/faction_skarn_clans_theme", intro: None, looped: true),
+MusicTrack(id: "faction_skarn_clans_battle", intensity: Combat, file: "music/faction_skarn_clans_battle", intro: None, looped: true),
+MusicTrack(id: "faction_thorn_covenant_theme", intensity: Calm, file: "music/faction_thorn_covenant_theme", intro: None, looped: true),
+MusicTrack(id: "faction_thorn_covenant_battle", intensity: Combat, file: "music/faction_thorn_covenant_battle", intro: None, looped: true),
+MusicTrack(id: "faction_saelith_compact_theme", intensity: Calm, file: "music/faction_saelith_compact_theme", intro: None, looped: true),
+MusicTrack(id: "faction_saelith_compact_battle", intensity: Combat, file: "music/faction_saelith_compact_battle", intro: None, looped: true),
+MusicTrack(id: "faction_hollowed_theme", intensity: Tension, file: "music/faction_hollowed_theme", intro: None, looped: true),
+MusicTrack(id: "faction_hollowed_battle", intensity: Combat, file: "music/faction_hollowed_battle", intro: None, looped: true),
+MusicTrack(id: "faction_ashen_legion_theme", intensity: Tension, file: "music/faction_ashen_legion_theme", intro: None, looped: true),
+MusicTrack(id: "faction_ashen_legion_battle", intensity: Combat, file: "music/faction_ashen_legion_battle", intro: None, looped: true),
+MusicTrack(id: "victory_theme", intensity: Menu, file: "music/victory_theme", intro: None, looped: true),
+MusicTrack(id: "defeat_theme", intensity: Menu, file: "music/defeat_theme", intro: None, looped: true),
 MusicTrack(id: "age_transition_sting", intensity: Sting, file: "music/age_transition_sting", intro: None, looped: false),
 MusicTrack(id: "story_lament", intensity: Calm, file: "music/story_lament", intro: None, looped: false),
 MusicTrack(id: "story_ashfall_memory", intensity: Calm, file: "music/story_ashfall_memory", intro: None, looped: false),
 MusicTrack(id: "story_revelation", intensity: Tension, file: "music/story_revelation", intro: None, looped: false),
-MusicTrack(id: "mystery_ruins", intensity: Calm, file: "music/mystery_ruins_loop", intro: None, looped: true),
-MusicTrack(id: "mystery_veilscar", intensity: Tension, file: "music/mystery_veilscar_loop", intro: None, looped: true),
-MusicTrack(id: "mystery_old_gods", intensity: Calm, file: "music/mystery_old_gods_loop", intro: None, looped: true),
-MusicTrack(id: "endgame_last_crown", intensity: Tension, file: "music/endgame_last_crown_loop", intro: Some("music/endgame_last_crown_intro"), looped: true),
-MusicTrack(id: "endgame_final_battle", intensity: Battle, file: "music/endgame_final_battle_loop", intro: Some("music/endgame_final_battle_intro"), looped: true),
+MusicTrack(id: "mystery_ruins", intensity: Calm, file: "music/mystery_ruins", intro: None, looped: true),
+MusicTrack(id: "mystery_veilscar", intensity: Tension, file: "music/mystery_veilscar", intro: None, looped: true),
+MusicTrack(id: "mystery_old_gods", intensity: Calm, file: "music/mystery_old_gods", intro: None, looped: true),
+MusicTrack(id: "endgame_last_crown", intensity: Tension, file: "music/endgame_last_crown", intro: None, looped: true),
+MusicTrack(id: "endgame_final_battle", intensity: Battle, file: "music/endgame_final_battle", intro: None, looped: true),
 MusicTrack(id: "credits_theme", intensity: Menu, file: "music/credits_theme", intro: None, looped: false),
 ```
 
@@ -534,63 +473,62 @@ MusicTrack(id: "credits_theme", intensity: Menu, file: "music/credits_theme", in
 
 ### 4.0 Übersicht aller Tracks
 
-Legende Dateien: **I+L** = `<id>_intro.ogg` + `<id>_loop.ogg` · **L** = nur `<id>_loop.ogg` ·
-**Lin** = nur `<id>.ogg` (linear). Priorität siehe Kapitel 6.
+Legende Dateien: jeder Track ist **genau eine** Datei `<id>.ogg` (komplette Suno-Ausgabe). **Loop** = wird als Ganzes geloopt · **Lin** = linear/einmalig. Priorität siehe Kapitel 6.
 
 | # | Track-ID | Bereich | Intensität | Set | Tonart | BPM | Dateien | Prio |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `main_menu` | Hauptmenü | Menu | A | D-äolisch | 72 | I+L | P0 |
-| 2 | `build_calm` | Städtebau Tag | Calm | A | D-dorisch | 72 | I+L | P0 |
-| 3 | `build_tension` | Bedrohung | Tension | A | D-äolisch | 72 | L | P0 |
-| 4 | `battle_small` | Kleine Schlacht | Combat | A | D-äolisch | 144 | I+L | P0 |
-| 5 | `battle_large` | Große Schlacht | Battle | A | D-äolisch | 144 | I+L | P0 |
-| 6 | `boss_pale_reeve` | Boss Fahler Vogt | Boss | A | D-phrygisch | 144 | I+L | P0 |
+| 1 | `main_menu` | Hauptmenü | Menu | A | D-äolisch | 72 | Loop | P0 |
+| 2 | `build_calm` | Städtebau Tag | Calm | A | D-dorisch | 72 | Loop | P0 |
+| 3 | `build_tension` | Bedrohung | Tension | A | D-äolisch | 72 | Loop | P0 |
+| 4 | `battle_small` | Kleine Schlacht | Combat | A | D-äolisch | 144 | Loop | P0 |
+| 5 | `battle_large` | Große Schlacht | Battle | A | D-äolisch | 144 | Loop | P0 |
+| 6 | `boss_pale_reeve` | Boss Fahler Vogt | Boss | A | D-phrygisch | 144 | Loop | P0 |
 | 7 | `victory_sting` | Sieg | Sting | A | D-Dur | 72 | Lin | P0 |
 | 8 | `defeat_sting` | Niederlage | Sting | A | D-Moll/Hohl | 72 | Lin | P0 |
-| 9 | `worldmap_spring` | Weltkarte Frühling | Calm | B | G-dorisch | 80 | I+L | P1 |
-| 10 | `worldmap_summer` | Weltkarte Sommer | Calm | B | G-mixolydisch | 80 | I+L | P2 |
-| 11 | `worldmap_autumn` | Weltkarte Herbst | Calm | B | G-äolisch | 80 | I+L | P1 |
-| 12 | `worldmap_winter` | Weltkarte Winter | Calm | B | G-äolisch | 80 | I+L | P2 |
-| 13 | `worldmap_fallen_gods` | Weltkarte Zeitalter VI | Calm | B | G-phrygisch | 80 | I+L | P3 |
-| 14 | `build_night` | Städtebau Nacht | Calm | A | D-äolisch | 72 | I+L | P1 |
-| 15 | `economy_prosperity` | Wirtschaft | Calm | A | D-mixolydisch | 72 | I+L | P2 |
-| 16 | `explore_wilds` | Erkundung | Calm | A | D-dorisch | 72 | I+L | P1 |
-| 17 | `diplomacy_court` | Diplomatie | Calm | B | G-dorisch | 80 | L | P2 |
-| 18 | `intrigue_shadows` | Politische Intrigen | Tension | B | G-phrygisch | 80 | L | P2 |
-| 19 | `war_preparation` | Kriegsvorbereitung | Tension | A | D-äolisch | 72 | L | P1 |
-| 20 | `siege_assault` | Belagerung Angriff | Battle | S | C-äolisch | 120 | I+L | P2 |
-| 21 | `siege_defense` | Belagerung Verteidigung | Battle | S | C-phrygisch | 120 | I+L | P2 |
-| 22 | `boss_hollow_king` | Boss Hohler König | Boss | E | D-phrygisch/Hohl | 132 | I+L | P3 |
-| 23 | `boss_ashen_dragon` | Boss Aschdrache Vyrmathax | Boss | X | F-phrygisch | 152 | I+L | P3 |
-| 24 | `boss_root_mother` | Boss Wurzelmutter | Boss | X | A-äolisch | ♩. = 84 (12/8) | I+L | P2 |
-| 25 | `faction_ember_crown_theme` | Glutkrone Thema | Calm | A | D-mixolydisch | 72 | I+L | P1 |
-| 26 | `faction_ember_crown_battle` | Glutkrone Kampf | Combat | A | D-dorisch | 144 | I+L | P1 |
-| 27 | `faction_skarn_clans_theme` | Skarnheim Thema | Calm | F2 | E-äolisch | 66 | I+L | P2 |
-| 28 | `faction_skarn_clans_battle` | Skarnheim Kampf | Combat | F2 | E-äolisch | 132 | I+L | P2 |
-| 29 | `faction_thorn_covenant_theme` | Dornenbund Thema | Calm | F3 | A-dorisch | ♩. = 72 (6/8) | I+L | P2 |
-| 30 | `faction_thorn_covenant_battle` | Dornenbund Kampf | Combat | F3 | A-äolisch | ♩. = 72 (6/8) | I+L | P2 |
-| 31 | `faction_saelith_compact_theme` | Saelith Thema | Calm | F4 | B♭-mixolydisch | 104 | I+L | P2 |
-| 32 | `faction_saelith_compact_battle` | Saelith Kampf | Combat | F4 | B♭-dorisch | 104 | I+L | P2 |
-| 33 | `faction_hollowed_theme` | Die Hohlen Thema | Tension | F5 | G♯-lokrisch | 60 | I+L | P1 |
-| 34 | `faction_hollowed_battle` | Die Hohlen Kampf | Combat | F5 | G♯-phrygisch | 120 | I+L | P1 |
-| 35 | `faction_ashen_legion_theme` | Aschenlegion Thema | Tension | F6 | C-phrygisch | 88 | I+L | P2 |
-| 36 | `faction_ashen_legion_battle` | Aschenlegion Kampf | Combat | F6 | C-phrygisch | 88 | I+L | P2 |
-| 37 | `victory_theme` | Sieg-Bildschirm | Menu | A | D-Dur/mixolydisch | 72 | I+L | P1 |
-| 38 | `defeat_theme` | Niederlage-Bildschirm | Menu | A | D-äolisch | 72 | I+L | P1 |
+| 9 | `worldmap_spring` | Weltkarte Frühling | Calm | B | G-dorisch | 80 | Loop | P1 |
+| 10 | `worldmap_summer` | Weltkarte Sommer | Calm | B | G-mixolydisch | 80 | Loop | P2 |
+| 11 | `worldmap_autumn` | Weltkarte Herbst | Calm | B | G-äolisch | 80 | Loop | P1 |
+| 12 | `worldmap_winter` | Weltkarte Winter | Calm | B | G-äolisch | 80 | Loop | P2 |
+| 13 | `worldmap_fallen_gods` | Weltkarte Zeitalter VI | Calm | B | G-phrygisch | 80 | Loop | P3 |
+| 14 | `build_night` | Städtebau Nacht | Calm | A | D-äolisch | 72 | Loop | P1 |
+| 15 | `economy_prosperity` | Wirtschaft | Calm | A | D-mixolydisch | 72 | Loop | P2 |
+| 16 | `explore_wilds` | Erkundung | Calm | A | D-dorisch | 72 | Loop | P1 |
+| 17 | `diplomacy_court` | Diplomatie | Calm | B | G-dorisch | 80 | Loop | P2 |
+| 18 | `intrigue_shadows` | Politische Intrigen | Tension | B | G-phrygisch | 80 | Loop | P2 |
+| 19 | `war_preparation` | Kriegsvorbereitung | Tension | A | D-äolisch | 72 | Loop | P1 |
+| 20 | `siege_assault` | Belagerung Angriff | Battle | S | C-äolisch | 120 | Loop | P2 |
+| 21 | `siege_defense` | Belagerung Verteidigung | Battle | S | C-phrygisch | 120 | Loop | P2 |
+| 22 | `boss_hollow_king` | Boss Hohler König | Boss | E | D-phrygisch/Hohl | 132 | Loop | P3 |
+| 23 | `boss_ashen_dragon` | Boss Aschdrache Vyrmathax | Boss | X | F-phrygisch | 152 | Loop | P3 |
+| 24 | `boss_root_mother` | Boss Wurzelmutter | Boss | X | A-äolisch | ♩. = 84 (12/8) | Loop | P2 |
+| 25 | `faction_ember_crown_theme` | Glutkrone Thema | Calm | A | D-mixolydisch | 72 | Loop | P1 |
+| 26 | `faction_ember_crown_battle` | Glutkrone Kampf | Combat | A | D-dorisch | 144 | Loop | P1 |
+| 27 | `faction_skarn_clans_theme` | Skarnheim Thema | Calm | F2 | E-äolisch | 66 | Loop | P2 |
+| 28 | `faction_skarn_clans_battle` | Skarnheim Kampf | Combat | F2 | E-äolisch | 132 | Loop | P2 |
+| 29 | `faction_thorn_covenant_theme` | Dornenbund Thema | Calm | F3 | A-dorisch | ♩. = 72 (6/8) | Loop | P2 |
+| 30 | `faction_thorn_covenant_battle` | Dornenbund Kampf | Combat | F3 | A-äolisch | ♩. = 72 (6/8) | Loop | P2 |
+| 31 | `faction_saelith_compact_theme` | Saelith Thema | Calm | F4 | B♭-mixolydisch | 104 | Loop | P2 |
+| 32 | `faction_saelith_compact_battle` | Saelith Kampf | Combat | F4 | B♭-dorisch | 104 | Loop | P2 |
+| 33 | `faction_hollowed_theme` | Die Hohlen Thema | Tension | F5 | G♯-lokrisch | 60 | Loop | P1 |
+| 34 | `faction_hollowed_battle` | Die Hohlen Kampf | Combat | F5 | G♯-phrygisch | 120 | Loop | P1 |
+| 35 | `faction_ashen_legion_theme` | Aschenlegion Thema | Tension | F6 | C-phrygisch | 88 | Loop | P2 |
+| 36 | `faction_ashen_legion_battle` | Aschenlegion Kampf | Combat | F6 | C-phrygisch | 88 | Loop | P2 |
+| 37 | `victory_theme` | Sieg-Bildschirm | Menu | A | D-Dur/mixolydisch | 72 | Loop | P1 |
+| 38 | `defeat_theme` | Niederlage-Bildschirm | Menu | A | D-äolisch | 72 | Loop | P1 |
 | 39 | `age_transition_sting` | Zeitalterwechsel | Sting | B | G-dorisch | 80 | Lin | P1 |
 | 40 | `story_lament` | Trauer, Verlust | Calm | X | D-äolisch | 60 rubato | Lin | P1 |
 | 41 | `story_ashfall_memory` | Rückblende Aschenfall | Calm | X | D-Dur → D-phrygisch | 66 rubato | Lin | P2 |
 | 42 | `story_revelation` | Enthüllung, Stimme aus dem Tief | Tension | F5 | G♯-lokrisch | 60 | Lin | P3 |
-| 43 | `mystery_ruins` | Ruinen Aureths | Calm | A | D-äolisch | 60 (tempolos) | L | P1 |
-| 44 | `mystery_veilscar` | Schleiernarbe | Tension | F5 | G♯ (Cluster) | 60 (tempolos) | L | P3 |
-| 45 | `mystery_old_gods` | Schreine der Alten Götter | Calm | X | E-lydisch | 60 (tempolos) | L | P2 |
-| 46 | `endgame_last_crown` | Zeitalter VII, Weltkarte/Aufbau | Tension | E | D-äolisch → dorisch | 66 | I+L | P3 |
-| 47 | `endgame_final_battle` | Letzte Schlacht vor Solmere | Battle | E | D-phrygisch → Dur | 132 | I+L | P3 |
+| 43 | `mystery_ruins` | Ruinen Aureths | Calm | A | D-äolisch | 60 (tempolos) | Loop | P1 |
+| 44 | `mystery_veilscar` | Schleiernarbe | Tension | F5 | G♯ (Cluster) | 60 (tempolos) | Loop | P3 |
+| 45 | `mystery_old_gods` | Schreine der Alten Götter | Calm | X | E-lydisch | 60 (tempolos) | Loop | P2 |
+| 46 | `endgame_last_crown` | Zeitalter VII, Weltkarte/Aufbau | Tension | E | D-äolisch → dorisch | 66 | Loop | P3 |
+| 47 | `endgame_final_battle` | Letzte Schlacht vor Solmere | Battle | E | D-phrygisch → Dur | 132 | Loop | P3 |
 | 48 | `credits_theme` | Abspann | Menu | A | D-dorisch → D-Dur | 72 | Lin | P3 |
-| 49 | `boss_stone_oath` | Boss Gharun (Kampagne, Mission 21) | Boss | S | C-phrygisch | 96 | I+L | P2 |
-| 50 | `boss_reef_mistress` | Boss Isarre Mol (Kampagne, Mission 14) | Boss | S | E-dorisch | 88 | I+L | P2 |
-| 51 | `escort_march` | Eskortmissionen (Kampagne) | Tension | A | D-äolisch | 72 | L | P1 |
-| 52 | `campaign_chronicle` | Kampagnenmenü | Menu | A | D-dorisch | 72 | I+L | P1 |
+| 49 | `boss_stone_oath` | Boss Gharun (Kampagne, Mission 21) | Boss | S | C-phrygisch | 96 | Loop | P2 |
+| 50 | `boss_reef_mistress` | Boss Isarre Mol (Kampagne, Mission 14) | Boss | S | E-dorisch | 88 | Loop | P2 |
+| 51 | `escort_march` | Eskortmissionen (Kampagne) | Tension | A | D-äolisch | 72 | Loop | P1 |
+| 52 | `campaign_chronicle` | Kampagnenmenü | Menu | A | D-dorisch | 72 | Loop | P1 |
 
 **Taktdauern zur Orientierung (4/4):** 60 BPM = 4,000 s · 66 = 3,636 s · 72 = 3,333 s · 80 = 3,000 s ·
 88 = 2,727 s · 104 = 2,308 s · 120 = 2,000 s · 132 = 1,818 s · 144 = 1,667 s · 152 = 1,579 s.
@@ -607,8 +545,9 @@ trifft diese Taktzahlen nicht exakt; maßgeblich sind die Abschnittsfunktionen u
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `main_menu` → `assets/audio/music/main_menu_intro.ogg`, `assets/audio/music/main_menu_loop.ogg` |
-| Manifest | intensity: Menu · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `main_menu` → `assets/audio/music/main_menu.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/main_menu`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Menu · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Hauptmenü und Pause-Menü (−6 dB). Erster Eindruck des Spiels; etabliert das Leitmotiv in der Asche-Form und deutet am Loop-Ende die Glut-Form an. |
 | Genre | Dark-Fantasy-Orchesterelegie, kinematisch |
 | Instrumentierung | Solo-Cello, tiefe Streicher, Harfe, Altflöte, wortlose Frauenstimme, gemischter Chor (pp, Old Aurethi), ferne Kirchenglocke, gedämpfte Pauke (Kronenschlag als Herzschlag), leises Ascheregen-Rauschen, Hörner (nur T. 25–32) |
@@ -617,11 +556,11 @@ trifft diese Taktzahlen nicht exakt; maßgeblich sind die Abschnittsfunktionen u
 | Stimmung | Melancholisch, würdevoll, wehmütig, ein Glimmen unter der Asche |
 | Dynamikverlauf | pp (Intro) → mp (T. 9) → mf (T. 25, Chor + Hörner) → p (T. 33–40), damit der Loop leise zurückkehrt |
 | Soundcharakter / Mix | Breites Stereobild, Steinhallen-Hall ca. 2,8 s; Cello vorne mittig, Chor weit hinten, Glocke sehr fern links. Kein Subbass, keine harten Transienten. |
-| Loop-Eignung | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 endet auf a-Moll (v) und führt zurück auf d-Moll in T. 9. Glocke nicht in T. 40 oder T. 9 platzieren. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 26,7 s · Loop 32 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 endet auf a-Moll (v) und führt zurück auf d-Moll in T. 9. Glocke nicht in T. 40 oder T. 9 platzieren. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Wind und Ascherauschen, Glockenschlag in T. 1, Harfen-Arpeggien auf d-Moll; ab T. 5 spielt das Solo-Cello das Fragment „Die Krone“ (1 – 5 – ♭6 – 5).
+- T. 1–8 (Einleitung): Wind und Ascherauschen, Glockenschlag in T. 1, Harfen-Arpeggien auf d-Moll; ab T. 5 spielt das Solo-Cello das Fragment „Die Krone“ (1 – 5 – ♭6 – 5).
 - T. 9–16: Cello spielt das vollständige Leitmotiv (Asche-Form) zweimal; Streicherteppich d – B – C – d.
 - T. 17–24: Wortlose Frauenstimme übernimmt die Melodie, Altflöte im Kontrapunkt, Pauke im halben Kronenschlag.
 - T. 25–32: Chor setzt pp ein und wächst auf mf; Hörner spielen die Glut-Form (große Sexte); Harmonik d – G – C – d (dorische Aufhellung).
@@ -675,8 +614,9 @@ Ith-ra ar, kael ar
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `build_calm` → `assets/audio/music/build_calm_intro.ogg`, `assets/audio/music/build_calm_loop.ogg` |
-| Manifest | intensity: Calm · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `build_calm` → `assets/audio/music/build_calm.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/build_calm`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Friedlicher Städtebau am Tag in der Aschmark (Brennhollow, M01 „Die letzte Siedlung“, Zeitalter I). Längste Hörzeit im Spiel – muss unaufdringlich und langlebig sein. |
 | Genre | Pastorales Folk-Orchester mit dunklem Unterton, Ambient-Anteil |
 | Instrumentierung | Gezupfte Laute (Ostinato), Holzflöte, Fidel, Bratschen, Harfe, Klarinette, leise Rahmentrommel, sehr seltene ferne Glocke |
@@ -685,11 +625,11 @@ Ith-ra ar, kael ar
 | Stimmung | Hoffnungsvoll, arbeitsam, zart; leise Wehmut über das Verlorene |
 | Dynamikverlauf | p bis mp, bewusst flach (max. ca. 6 dB Schwankung), keine Crescendi, keine Akzentschläge |
 | Soundcharakter / Mix | Warm, nah, kleiner Holzraum (Hall 1,4 s); Laute leicht links, Fidel rechts, Flöte mittig. Tiefmitten schlank halten, damit Arbeits-SFX (Holzhacken, Steinbruch) Platz haben. |
-| Loop-Eignung | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C-Dur (♭VII) → d-Moll in T. 5. Laute-Ostinato läuft über die Naht durch. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 13,3 s · Loop 48 Takte = 160,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C-Dur (♭VII) → d-Moll in T. 5. Laute-Ostinato läuft über die Naht durch. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Laute-Ostinato allein, d-Moll mit dorischer Sexte (H).
+- T. 1–4 (Einleitung): Laute-Ostinato allein, d-Moll mit dorischer Sexte (H).
 - T. 5–20: Thema A – Holzflöte mit dem Glut-Fragment „Die Krone“, Bratschen als Liegeklänge.
 - T. 21–28: Thema B – Fidel mit tänzerischer Figur, Rahmentrommel setzt leise ein.
 - T. 29–36: Vollständige Glut-Form in Klarinette und Bratschen unisono, Harfe umspielt.
@@ -738,7 +678,8 @@ pastoral dark fantasy folk orchestra, D dorian, 72 bpm, plucked lute ostinato, w
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `build_tension` → `assets/audio/music/build_tension_loop.ogg` (**kein Intro** laut Manifest) |
+| ID / Ziel-Datei | `build_tension` → `assets/audio/music/build_tension.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/build_tension`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest | intensity: Tension · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Bedrohung angekündigt: Wellenwarnung (Bruder Hal Venn), Feind in Sichtweite, Einbruch der Nacht in M01. Wird per R1 aus `build_calm` eingeblendet. |
 | Genre | Dunkle Orchester-Suspense |
@@ -748,8 +689,8 @@ pastoral dark fantasy folk orchestra, D dorian, 72 bpm, plucked lute ostinato, w
 | Stimmung | Lauernd, nervös, kalt; das Dorf hält den Atem an |
 | Dynamikverlauf | mp (T. 1) → mf (T. 17–24) → mp (T. 25–32); Anfang und Ende auf gleicher Dichte für die Naht |
 | Soundcharakter / Mix | Dunkel, tiefmittenbetont, Hall mittel (2,0 s); Tremolo breit, Ostinato mittig, Flüstern weit hinten und gefiltert |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte). T. 1 muss als weicher Einstieg funktionieren: kein Akzent, nur Ostinato und Tremolo. Naht: T. 32 auf A (V) → d in T. 1. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Loop 32 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte). T. 1 muss als weicher Einstieg funktionieren: kein Akzent, nur Ostinato und Tremolo. Naht: T. 32 auf A (V) → d in T. 1. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
 - T. 1–8: Celli-Ostinato, Streicher-Tremolo pp–mp, Bassklarinette tiefe Liegetöne.
@@ -793,8 +734,9 @@ dark fantasy suspense orchestral, D minor, 72 bpm, pulsing low cello ostinato, s
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `battle_small` → `assets/audio/music/battle_small_intro.ogg`, `assets/audio/music/battle_small_loop.ogg` |
-| Manifest | intensity: Combat · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `battle_small` → `assets/audio/music/battle_small.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/battle_small`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Combat · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Kleine Gefechte: Späher, erste Hohlknechte, Scharmützel bis ca. 15 Einheiten. Eingang per R2, Übergang zu `battle_large` per R1. |
 | Genre | Dark-Fantasy-Kampforchester |
 | Instrumentierung | Streicher-Spiccato-Ostinato, Kriegstrommeln im Kronenschlag, Hörner, Posaunen, Rührtrommel, Becken sparsam; kein Chor (reserviert für `battle_large`) |
@@ -803,11 +745,11 @@ dark fantasy suspense orchestral, D minor, 72 bpm, pulsing low cello ostinato, s
 | Stimmung | Dringlich, rau, entschlossen |
 | Dynamikverlauf | f (Intro) → mf (T. 5–20) → f (T. 21–36) → mp (Breakdown T. 37–44) → mf (T. 45–52) |
 | Soundcharakter / Mix | Trocken-kraftvoll, Hall kurz (1,6 s); Trommeln breit, Ostinato eng; Platz bei 2–4 kHz für Schwert-SFX lassen (Blech nicht zu hell) |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C (♭VII) → d in T. 5; Ostinato durchgehend. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 4 Takte = 6,7 s · Loop 48 Takte = 80,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C (♭VII) → d in T. 5; Ostinato durchgehend. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Paukenwirbel, Glutruf der Hörner (1 – 5 – 8), Schlag auf T. 4 Zählzeit 4 als Auftakt.
+- T. 1–4 (Einleitung): Paukenwirbel, Glutruf der Hörner (1 – 5 – 8), Schlag auf T. 4 Zählzeit 4 als Auftakt.
 - T. 5–20: Spiccato-Ostinato und Kronenschlag-Trommeln, Hörner mit „Die Krone“.
 - T. 21–36: Glut-Form augmentiert in Posaunen, Streicherläufe aufwärts, Rührtrommel.
 - T. 37–44: Breakdown – nur Trommeln und tiefe Streicher.
@@ -852,8 +794,9 @@ dark fantasy battle orchestral, D minor, 144 bpm, driving string ostinato, war d
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `battle_large` → `assets/audio/music/battle_large_intro.ogg`, `assets/audio/music/battle_large_loop.ogg` |
-| Manifest | intensity: Battle · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `battle_large` → `assets/audio/music/battle_large.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/battle_large`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Battle · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Große Schlachten: Wellenangriffe auf Brennhollow, Sturm auf den Hohlschrein, Isolde im Nahkampf, mehr als ca. 15 Einheiten. Aus `battle_small` per R1. |
 | Genre | Episches Dark-Fantasy-Orchester mit Chor |
 | Instrumentierung | Volles Orchester, gemischter Chor (Old Aurethi, Staccato-Rufe und lange Linien), Taiko-artige Großtrommeln, Ambosse, tiefes Blech, Glocken, dezente Subbass-Impulse |
@@ -862,11 +805,11 @@ dark fantasy battle orchestral, D minor, 144 bpm, driving string ostinato, war d
 | Stimmung | Überwältigend, verzweifelt-heroisch, brennend |
 | Dynamikverlauf | ff-Schlag (Intro-Ende) → f (T. 9–24) → f (T. 25–40) → mf, dunkel (T. 41–48) → ff (T. 49–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Groß, druckvoll, Hall 2,4 s; Chor breit, Trommeln tief zentriert, Subbass nur auf Zählzeit 1 einzelner Takte; Limiter-Reduktion moderat halten |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf A (V) → d in T. 9; Chor-Phrasen dürfen nicht über die Naht klingen. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 13,3 s · Loop 64 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf A (V) → d in T. 9; Chor-Phrasen dürfen nicht über die Naht klingen. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Chor-Ruf „Kael rhana!“, Großtrommeln im Crescendo, Blechcluster in T. 8.
+- T. 1–8 (Einleitung): Chor-Ruf „Kael rhana!“, Großtrommeln im Crescendo, Blechcluster in T. 8.
 - T. 9–24: Kronenschlag voll, Streicherostinato, Blech mit „Die Krone“.
 - T. 25–40: Chor singt die Glut-Form in Augmentation, Ambosse auf Zählzeit 4.
 - T. 41–48: Bridge – Hohl-Form in Posaunen, Cluster, der Feind schlägt zurück.
@@ -920,8 +863,9 @@ Au-reh cin-dra, kael rha-na
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_pale_reeve` → `assets/audio/music/boss_pale_reeve_intro.ogg`, `assets/audio/music/boss_pale_reeve_loop.ogg` |
-| Manifest | intensity: Boss · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `boss_pale_reeve` → `assets/audio/music/boss_pale_reeve.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_pale_reeve`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Boss · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Mini-Boss der ersten Mission: der Fahle Vogt, Hüter des Hohlschreins von Vael Dorn. Erster Kontakt des Spielers mit der Hohl-Form des Leitmotivs. Eingang per R4. |
 | Genre | Dark-Fantasy-Bosskampf, Horror-Orchester |
 | Instrumentierung | Tiefe Posaunen und Tuba, Kontrabässe col legno, Glasharmonika-Klang, Flüsterchor, tiefer Männerchor (Old Aurethi), Großtrommeln, Ketten als Perkussion, Streicher sul ponticello, tiefer Orgelpedalton D, Subbass |
@@ -930,11 +874,11 @@ Au-reh cin-dra, kael rha-na
 | Stimmung | Bedrohlich, unheilig, kalt, unausweichlich |
 | Dynamikverlauf | pp, Stille (T. 1–4) → ff-Schlag (T. 8) → f (T. 9–40) → p, unheimlich (T. 41–48) → ff (T. 49–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Dunkel, eng in den Höhen, langer unnatürlicher Hall (3,5 s) auf Chor und Glasklang, Trommeln trocken; Subbass-Pedal konstant, aber unter −18 dBFS RMS |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: Orgelpedal D läuft durch; T. 72 endet auf E♭ (♭II) → D in T. 9. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 13,3 s · Loop 64 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: Orgelpedal D läuft durch; T. 72 endet auf E♭ (♭II) → D in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Flüstern, Orgelpedal D, ab T. 5 Hohl-Form in Posaunen, Tutti-Schlag auf T. 8.
+- T. 1–8 (Einleitung): Flüstern, Orgelpedal D, ab T. 5 Hohl-Form in Posaunen, Tutti-Schlag auf T. 8.
 - T. 9–24: Phrygisches Ostinato (D – E♭) in Kontrabässen col legno, Kronenschlag in Ketten und Trommeln.
 - T. 25–40: Tiefer Männerchor „Varkh dhum“ auf der Hohl-Form.
 - T. 41–48: Breakdown – Glasharmonika, Flüstern, nur Puls (Raum für die Fähigkeit Seelenzug).
@@ -985,7 +929,8 @@ Au-reh dhum, au-reh dhum!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `victory_sting` → `assets/audio/music/victory_sting.ogg` |
+| ID / Ziel-Datei | `victory_sting` → `assets/audio/music/victory_sting.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/victory_sting`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest | intensity: Sting · intro: None · looped: false · Set A |
 | Zweck / Spielsituation | Missionssieg (z. B. Hohlschrein von Vael Dorn zerstört). Erstes Erklingen der Krone-Form (Dur) im Spiel. Danach `victory_theme` nach R5. |
 | Genre | Orchestrale Siegesfanfare |
@@ -995,8 +940,8 @@ Au-reh dhum, au-reh dhum!
 | Stimmung | Erlöst, edel, warm – kein überdrehter Triumph |
 | Dynamikverlauf | mf (Wirbel) → ff (T. 2) → f gehalten → Ausklang |
 | Soundcharakter / Mix | Hell und breit, Hall 3,0 s mit natürlichem Ausklang; Ausklang nicht abschneiden, sanfter Fade nur in den letzten 500 ms |
-| Loop-Eignung | Keine (linear). |
-| Ziellänge | Suno-Rohtake beliebig (Sting wird geschnitten) · Ziel 8–12 s inkl. Ausklang |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 8–12 s inkl. Ausklang |
 
 **Arrangement**
 - T. 1: Paukenwirbel, Hörner spielen „Die Krone“ in Dur (D – A – H – A).
@@ -1025,7 +970,7 @@ Ith-ra ar!
 ```
 
 **Varianten**
-- *Schnitt-Alternative:* Schluss-Akkord eines `victory_theme`-Takes als Sting schneiden, falls kein kurzer Take gelingt (identische Klangfarbe sichert Anschluss).
+- *Ersatz:* Gelingt kein kurzer Take, einen kurzen, geschlossenen Take mit demselben Prompt erneut erzeugen (Schneiden aus längeren Takes übernimmt bei Bedarf die Integration).
 - *Ohne Chor:* reine Blech-/Glocken-Fassung für Skirmish-Siege.
 
 ---
@@ -1034,7 +979,8 @@ Ith-ra ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `defeat_sting` → `assets/audio/music/defeat_sting.ogg` |
+| ID / Ziel-Datei | `defeat_sting` → `assets/audio/music/defeat_sting.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/defeat_sting`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest | intensity: Sting · intro: None · looped: false · Set A |
 | Zweck / Spielsituation | Missionsniederlage (Bergfried von Brennhollow fällt, Isolde stirbt). Danach `defeat_theme` nach R5. |
 | Genre | Orchestraler Trauer-Sting |
@@ -1044,7 +990,7 @@ Ith-ra ar!
 | Stimmung | Endgültig, kalt, still |
 | Dynamikverlauf | f (Glocke) → mp → pp, verklingend |
 | Soundcharakter / Mix | Dunkel, lang verhallt (4,0 s), Glocke tief und breit; letzte Klänge in die Stille ausklingen lassen |
-| Loop-Eignung | Keine (linear). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
 | Ziellänge | Ziel 8–12 s inkl. Ausklang |
 
 **Arrangement**
@@ -1072,7 +1018,7 @@ cin-dra...
 ```
 
 **Varianten**
-- *Schnitt-Alternative:* Schluss eines `defeat_theme`-Takes als Sting nutzen.
+- *Ersatz:* Gelingt kein kurzer Take, einen kurzen, geschlossenen Take mit demselben Prompt erneut erzeugen.
 - *Ohne Chor:* für Skirmish-Niederlagen ohne Story-Bezug.
 
 ---
@@ -1088,8 +1034,9 @@ per R1 (gleiches Set B, 2 Takte Crossfade = 6,0 s). In Zeitalter VI *The Fallen 
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_spring` → `assets/audio/music/worldmap_spring_intro.ogg`, `assets/audio/music/worldmap_spring_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set B |
+| ID / Ziel-Datei | `worldmap_spring` → `assets/audio/music/worldmap_spring.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_spring`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Strategische Weltkarte im Frühling: Planung, Truppenbewegung, Ausbau der Provinzen Valemarks. |
 | Genre | Kinematisches Fantasy-Orchester, weit und erzählend |
 | Instrumentierung | Streicher (legato), Holzflöte, Harfe, Laute, ferne Hörner, Glockenspiel sehr leise, Rahmentrommel im halben Kronenschlag |
@@ -1098,11 +1045,11 @@ per R1 (gleiches Set B, 2 Takte Crossfade = 6,0 s). In Zeitalter VI *The Fallen 
 | Stimmung | Erwachend, weit, vorsichtig zuversichtlich |
 | Dynamikverlauf | p (Intro) → mp (T. 5–20) → mf (T. 21–28) → mp (T. 29–52) |
 | Soundcharakter / Mix | Luftig, breit, Hall 2,6 s; Flöte vorne, Hörner weit hinten; hohe Lage hell, aber nicht scharf |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf F-Dur (♭VII) → g-Moll in T. 5. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 12,0 s · Loop 48 Takte = 144,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf F-Dur (♭VII) → g-Moll in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Harfe und Streicher-Flageoletts, ein Flötenton.
+- T. 1–4 (Einleitung): Harfe und Streicher-Flageoletts, ein Flötenton.
 - T. 5–20: Flötenthema über Laute-Begleitung, Streicher legato.
 - T. 21–28: Ferne Hörner mit der Glut-Form, Rahmentrommel im halben Kronenschlag.
 - T. 29–40: Streicher übernehmen das Thema, Harfe in Achteln.
@@ -1147,8 +1094,9 @@ cinematic fantasy orchestral, G dorian, 80 bpm, spring thaw, legato strings, woo
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_summer` → `assets/audio/music/worldmap_summer_intro.ogg`, `assets/audio/music/worldmap_summer_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set B |
+| ID / Ziel-Datei | `worldmap_summer` → `assets/audio/music/worldmap_summer.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_summer`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Weltkarte im Sommer – Erntezeit und klassische Feldzugssaison; Wohlstand mit drückender Vorahnung. |
 | Genre | Fantasy-Folk-Orchester, rhythmischer |
 | Instrumentierung | Fidel, Hackbrett, Laute, Rahmentrommeln, Streicher-Pizzicato, ferne Naturtrompeten, Holzflöte, tiefe Streicher |
@@ -1157,11 +1105,11 @@ cinematic fantasy orchestral, G dorian, 80 bpm, spring thaw, legato strings, woo
 | Stimmung | Warm, reich, geschäftig; schwüle Spannung darunter |
 | Dynamikverlauf | mp → mf (T. 13–36) → mp (T. 37–52) |
 | Soundcharakter / Mix | Sonnig-warm, Mitten präsent, Hall 2,0 s; Hackbrett rechts, Fidel links, Trompeten fern |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C-Dur (IV) → G in T. 5. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 12,0 s · Loop 48 Takte = 144,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C-Dur (IV) → G in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Hackbrett-Figur allein, dann Rahmentrommel.
+- T. 1–4 (Einleitung): Hackbrett-Figur allein, dann Rahmentrommel.
 - T. 5–12: Fidel spielt das Weltkartenthema, Pizzicato-Streicher.
 - T. 13–28: Volles Folk-Ensemble, Laute und Flöte im Wechsel.
 - T. 29–36: Ferne Naturtrompeten mit dem Glutruf, tiefe Streicher grollen leise (Vorahnung).
@@ -1203,8 +1151,9 @@ fantasy folk orchestra, G mixolydian, 80 bpm, summer harvest, fiddle theme, hamm
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_autumn` → `assets/audio/music/worldmap_autumn_intro.ogg`, `assets/audio/music/worldmap_autumn_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set B |
+| ID / Ziel-Datei | `worldmap_autumn` → `assets/audio/music/worldmap_autumn.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_autumn`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Weltkarte im Herbst – Bilanz, Rivalität der Herzogtümer (Herzogin Mireille Corvane), Vorbereitung auf den Winter. |
 | Genre | Melancholisches Kammerorchester |
 | Instrumentierung | Solo-Bratsche, Klarinette, Harfe, Celli, Kontrabass, Altflöte, ferne Glocke |
@@ -1213,11 +1162,11 @@ fantasy folk orchestra, G mixolydian, 80 bpm, summer harvest, fiddle theme, hamm
 | Stimmung | Herb, nachdenklich, vergänglich |
 | Dynamikverlauf | p → mp (T. 13–36) → p (T. 37–52) |
 | Soundcharakter / Mix | Warm-dunkel, intim, Hall 2,2 s; Bratsche vorne, Harfe breit |
-| Loop-Eignung | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf D (V) → g in T. 5. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 12,0 s · Loop 48 Takte = 144,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf D (V) → g in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Harfe in fallenden Arpeggien, ferner Glockenton.
+- T. 1–4 (Einleitung): Harfe in fallenden Arpeggien, ferner Glockenton.
 - T. 5–12: Klarinette mit dem Weltkartenthema in Moll.
 - T. 13–20: Solo-Bratsche mit Leitmotiv (Asche-Form), Celli tragen.
 - T. 21–36: Altflöte und Bratsche im Dialog, Harfe in Vierteln.
@@ -1259,8 +1208,9 @@ melancholic fantasy chamber orchestra, G minor, 80 bpm, autumn, solo viola melod
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_winter` → `assets/audio/music/worldmap_winter_intro.ogg`, `assets/audio/music/worldmap_winter_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set B |
+| ID / Ziel-Datei | `worldmap_winter` → `assets/audio/music/worldmap_winter.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_winter`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Weltkarte im Winter – Versorgungsnot, Stillstand der Fronten, Asche mischt sich in den Schnee. |
 | Genre | Minimalistisches Ambient-Orchester |
 | Instrumentierung | Hohe Streicher-Flageoletts, Altflöte, gestrichener Psalter-Klang, tiefer Bordun (Kontrabass), summender Männerchor fern, einzelne Harfentöne |
@@ -1269,11 +1219,11 @@ melancholic fantasy chamber orchestra, G minor, 80 bpm, autumn, solo viola melod
 | Stimmung | Kalt, still, ausharrend |
 | Dynamikverlauf | pp → p (T. 13–36) → pp (T. 37–52) |
 | Soundcharakter / Mix | Kalt-hell, sehr breit, langer Hall (4,0 s); keine Perkussion; tiefer Bordun sehr leise |
-| Loop-Eignung | Sehr hoch. Loop T. 5–52 (48 Takte). Bordun G läuft über die Naht. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 12,0 s · Loop 48 Takte = 144,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Loop T. 5–52 (48 Takte). Bordun G läuft über die Naht. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Flageoletts aus dem Nichts, Bordun G.
+- T. 1–4 (Einleitung): Flageoletts aus dem Nichts, Bordun G.
 - T. 5–12: Gestrichener Psalter-Klang mit langsamen Wechseln g – Es – g.
 - T. 13–16: Altflöte mit „Die Krone“.
 - T. 17–36: Summender Männerchor fern, Harfentöne wie Schneeflocken.
@@ -1317,8 +1267,9 @@ mmm... ooh... mmm...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_fallen_gods` → `assets/audio/music/worldmap_fallen_gods_intro.ogg`, `assets/audio/music/worldmap_fallen_gods_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set B |
+| ID / Ziel-Datei | `worldmap_fallen_gods` → `assets/audio/music/worldmap_fallen_gods.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_fallen_gods`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Weltkarte in Zeitalter VI *The Fallen Gods*: Der Schleier reißt weiter, die alten Götter Ithren, Morvaine, Calyx, Thal und Oruun bleiben stumm; Hohlung breitet sich aus. Ersetzt die Jahreszeiten. |
 | Genre | Sakral-dunkles Orchester mit Chor |
 | Instrumentierung | Orgel (weich), gemischter Chor (Old Aurethi), tiefes Blech, Glasharmonika-Klang, Streicher-Cluster, Großtrommel fern im halben Kronenschlag |
@@ -1327,11 +1278,11 @@ mmm... ooh... mmm...
 | Stimmung | Sakral, zerbrochen, ehrfürchtig, verloren |
 | Dynamikverlauf | p → mf (T. 21–36) → p (T. 37–52) |
 | Soundcharakter / Mix | Kathedralenraum, Hall 4,5 s; Orgel tief und breit, Chor hinten, Glasklang hoch und sehr leise |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Orgel-Bordun G über die Naht; Naht auf A♭ (♭II) → G. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 12,0 s · Loop 48 Takte = 144,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Orgel-Bordun G über die Naht; Naht auf A♭ (♭II) → G. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Orgel-Bordun G, Glasklang.
+- T. 1–4 (Einleitung): Orgel-Bordun G, Glasklang.
 - T. 5–20: Chor pp mit der Asche-Form, Streicher-Cluster.
 - T. 21–28: Chor wächst, Großtrommel fern.
 - T. 29–36: Posaunen mit Hohl-Form, Chor bricht ab, nur Orgel bleibt.
@@ -1384,13 +1335,14 @@ Vae-loth dhum
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_peace` → `assets/audio/music/worldmap_peace_intro.ogg`, `assets/audio/music/worldmap_peace_loop.ogg` |
-| Manifest | intensity: WorldPeace · intro: Some · looped: true (eingetragen) |
+| ID / Ziel-Datei | `worldmap_peace` → `assets/audio/music/worldmap_peace.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_peace`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: WorldPeace · intro: None · looped: true (eingetragen) |
 | Zweck / Spielsituation | Strategische Weltkarte ohne Krieg des Spielerreichs: Verwaltung, Handel, Dynastiepolitik. |
 | Instrumentierung | Streicher legato, Holzflöte, Harfe, Laute, ferne Hörner, Rahmentrommel |
 | Tempo / Takt | 78 BPM, 4/4 |
 | Tonart | G-dorisch |
-| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+| Loop-Eignung (Hinweis für die Integration) | Hoch; gleichförmiger Hauptteil von 48 Takten nach der Einleitung |
 
 **Suno-Style-Prompt**
 ```text
@@ -1419,13 +1371,14 @@ cinematic fantasy orchestral, G dorian, 78 bpm, calm kingdom at peace, legato st
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_war` → `assets/audio/music/worldmap_war_intro.ogg`, `assets/audio/music/worldmap_war_loop.ogg` |
-| Manifest | intensity: WorldWar · intro: Some · looped: true (eingetragen) |
+| ID / Ziel-Datei | `worldmap_war` → `assets/audio/music/worldmap_war.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_war`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: WorldWar · intro: None · looped: true (eingetragen) |
 | Zweck / Spielsituation | Das Spielerreich ist im Krieg oder eine Schlacht steht an. |
 | Instrumentierung | tiefe Streicher Ostinato, Kriegstrommeln, Blechbläser, Chor ohne Text, Becken |
 | Tempo / Takt | 96 BPM, 4/4 |
 | Tonart | G-dorisch (Set B, Moll-Färbung) |
-| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+| Loop-Eignung (Hinweis für die Integration) | Hoch; gleichförmiger Hauptteil von 48 Takten nach der Einleitung |
 
 **Suno-Style-Prompt**
 ```text
@@ -1454,13 +1407,14 @@ dark cinematic orchestral war theme, G minor, 96 bpm, relentless low string osti
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `worldmap_hollow` → `assets/audio/music/worldmap_hollow_intro.ogg`, `assets/audio/music/worldmap_hollow_loop.ogg` |
-| Manifest | intensity: WorldHollow · intro: Some · looped: true (eingetragen) |
+| ID / Ziel-Datei | `worldmap_hollow` → `assets/audio/music/worldmap_hollow.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/worldmap_hollow`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: WorldHollow · intro: None · looped: true (eingetragen) |
 | Zweck / Spielsituation | Hohlung des Reiches ab Pfad 2, Hohlung der Provinzen ≥ 30 oder Schleierdruck ≥ 60. |
 | Instrumentierung | tiefe Drones, Glasharfe, gedämpfte Chöre, Aschglas-Perkussion, verstimmte Laute |
 | Tempo / Takt | 64 BPM, 4/4 |
 | Tonart | G-phrygisch |
-| Loop-Eignung | Hoch; Loop 48 Takte, Intro 4 Takte |
+| Loop-Eignung (Hinweis für die Integration) | Hoch; gleichförmiger Hauptteil von 48 Takten nach der Einleitung |
 
 **Suno-Style-Prompt**
 ```text
@@ -1491,8 +1445,9 @@ dark ambient orchestral, G phrygian, 64 bpm, slow breathing drones, glass harmon
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `build_night` → `assets/audio/music/build_night_intro.ogg`, `assets/audio/music/build_night_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `build_night` → `assets/audio/music/build_night.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/build_night`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Friedlicher Städtebau bei Nacht (Tag-Nacht-Zyklus). Wechsel Tag ↔ Nacht per R1 mit `build_calm` (gleiches Set). |
 | Genre | Nächtliches Kammer-Ambient |
 | Instrumentierung | Solo-Cello, Harfe, leise Bratschen, Altflöte, Laute (sparsam), weiche Glockentöne fern |
@@ -1501,11 +1456,11 @@ dark ambient orchestral, G phrygian, 64 bpm, slow breathing drones, glass harmon
 | Stimmung | Still, wachsam, Lagerfeuerwärme gegen die Dunkelheit |
 | Dynamikverlauf | pp → p, flach |
 | Soundcharakter / Mix | Dunkel-warm, Hall 2,8 s; Höhen leicht abgesenkt, viel Raum für Nacht-Ambience (`ambience_night_loop`) |
-| Loop-Eignung | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C → d in T. 5; Harfen-Ostinato durchgehend. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 13,3 s · Loop 48 Takte = 160,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf C → d in T. 5; Harfen-Ostinato durchgehend. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Harfe allein, langsames Ostinato.
+- T. 1–4 (Einleitung): Harfe allein, langsames Ostinato.
 - T. 5–20: Altflöte mit dem Thema aus `build_calm`, nun in Moll.
 - T. 21–28: Bratschen-Liegeklänge, Laute einzelne Töne.
 - T. 29–36: Solo-Cello mit Asche-Form.
@@ -1547,8 +1502,9 @@ nocturnal dark fantasy chamber music, D minor, 72 bpm, slow harp ostinato, alto 
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `economy_prosperity` → `assets/audio/music/economy_prosperity_intro.ogg`, `assets/audio/music/economy_prosperity_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `economy_prosperity` → `assets/audio/music/economy_prosperity.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/economy_prosperity`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Wirtschaftliche Entwicklung: Siedlung wächst, Markt, Handel mit Aschglas, hohe Bevölkerung, Ressourcenüberschuss. |
 | Genre | Lebhaftes Fantasy-Folk-Ensemble |
 | Instrumentierung | Laute, Fidel, Hackbrett, Schalmei, Blockflöte, Pizzicato-Streicher, Rahmentrommeln, Tamburin |
@@ -1557,11 +1513,11 @@ nocturnal dark fantasy chamber music, D minor, 72 bpm, slow harp ostinato, alto 
 | Stimmung | Geschäftig, zuversichtlich, stolz; ein Hauch Mahnung |
 | Dynamikverlauf | mp → mf (T. 13–28) → mp (T. 29–44) |
 | Soundcharakter / Mix | Hell, nah, Hall 1,5 s; Instrumente klar getrennt im Panorama; Tiefmitten schlank für Bau-SFX |
-| Loop-Eignung | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf A (V) → D in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 4 Takte = 13,3 s · Loop 40 Takte = 133,3 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf A (V) → D in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Hackbrett und Tamburin.
+- T. 1–4 (Einleitung): Hackbrett und Tamburin.
 - T. 5–12: Fidel-Thema über Laute, Pizzicato.
 - T. 13–20: Schalmei mit Glut-Form, Rahmentrommeln.
 - T. 21–28: Tutti-Tanz, Blockflöte umspielt.
@@ -1606,8 +1562,9 @@ lively fantasy folk ensemble, D mixolydian, 72 bpm, bustling market, fiddle, ham
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `explore_wilds` → `assets/audio/music/explore_wilds_intro.ogg`, `assets/audio/music/explore_wilds_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `explore_wilds` → `assets/audio/music/explore_wilds.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/explore_wilds`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Erkundung: Späher und Held im Nebel des Krieges, Kartenrand, Entdeckung von Aschglas-Vorkommen und Ruinen. |
 | Genre | Atmosphärisches Abenteuer-Orchester |
 | Instrumentierung | Altflöte, Solo-Bratsche, Harfe, Streicher-Flageoletts, Holzperkussion, ferne tiefe Trommel, Hörner pp |
@@ -1616,11 +1573,11 @@ lively fantasy folk ensemble, D mixolydian, 72 bpm, bustling market, fiddle, ham
 | Stimmung | Neugierig, weit, vorsichtig, leise Gefahr |
 | Dynamikverlauf | p → mp (T. 21–36) → p (T. 37–52) |
 | Soundcharakter / Mix | Offen, sehr breit, Hall 3,0 s; Holzperkussion links/rechts verteilt (Schritte im Wald), Flöte mittig |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf G (IV) → d in T. 5. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 4 Takte = 13,3 s · Loop 48 Takte = 160,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf G (IV) → d in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Flageoletts und einzelne Harfentöne.
+- T. 1–4 (Einleitung): Flageoletts und einzelne Harfentöne.
 - T. 5–20: Altflöte mit tastender Melodie, Holzperkussion leise.
 - T. 21–24: Hörner pp mit „Die Krone“.
 - T. 25–36: Solo-Bratsche übernimmt, ferne Trommel im halben Kronenschlag.
@@ -1666,7 +1623,8 @@ atmospheric fantasy adventure orchestral, D dorian, 72 bpm, exploration, alto fl
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `diplomacy_court` → `assets/audio/music/diplomacy_court_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `diplomacy_court` → `assets/audio/music/diplomacy_court.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/diplomacy_court`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Diplomatie-Bildschirm: Verhandlungen mit König Aldric III., Torvald Eisenhand, Sylaen, Ophira Saelith-Varo, Bündnisse, Verträge. Aus der Weltkarte per R1 (Set B). |
 | Genre | Höfische Kammermusik, dunkel gefärbt |
@@ -1676,8 +1634,8 @@ atmospheric fantasy adventure orchestral, D dorian, 72 bpm, exploration, alto fl
 | Stimmung | Förmlich, abwägend, höflich-kühl |
 | Dynamikverlauf | p → mp (T. 9–24) → p (T. 25–32) |
 | Soundcharakter / Mix | Kleiner Saal, Hall 1,8 s; trocken und klar, damit Dialogtexte lesbar bleiben; Orgel weich |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte), T. 1 als weicher Einstieg. Naht: T. 32 auf D (V) → g in T. 1. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Loop 32 Takte = 96,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte), T. 1 als weicher Einstieg. Naht: T. 32 auf D (V) → g in T. 1. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
 - T. 1–8: Laute und Positiv-Orgel, höfische Kadenzen.
@@ -1719,7 +1677,8 @@ dark fantasy court chamber music, G dorian, 80 bpm, positive organ, lute, string
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `intrigue_shadows` → `assets/audio/music/intrigue_shadows_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `intrigue_shadows` → `assets/audio/music/intrigue_shadows.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/intrigue_shadows`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set B |
 | Zweck / Spielsituation | Politische Intrigen: Spionage-Missionen, Verrat, Thronstreit (Zeitalter V *The Divided Throne*), Kassian Vale, Herzogin Mireille Corvane; zugleich Tension-Stufe auf der Weltkarte. |
 | Genre | Verschwörerisches Kammer-Suspense |
@@ -1729,8 +1688,8 @@ dark fantasy court chamber music, G dorian, 80 bpm, positive organ, lute, string
 | Stimmung | Schleichend, misstrauisch, doppelbödig |
 | Dynamikverlauf | p → mp (T. 9–24) → p (T. 25–32) |
 | Soundcharakter / Mix | Nah, trocken, Hall 1,2 s; Pizzicato hart links/rechts, Bassklarinette mittig, Flüstern unterhalb der Wahrnehmungsschwelle |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte). Naht: T. 32 auf A♭ (♭II) → g in T. 1. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Loop 32 Takte = 96,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte). Naht: T. 32 auf A♭ (♭II) → g in T. 1. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
 - T. 1–8: Pizzicato-Muster und Holzblock, Kontrabass solo.
@@ -1768,7 +1727,8 @@ conspiratorial dark fantasy chamber suspense, G phrygian, 80 bpm, string pizzica
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `war_preparation` → `assets/audio/music/war_preparation_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `war_preparation` → `assets/audio/music/war_preparation.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/war_preparation`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Kriegsvorbereitung: Kaserne im Dauerbetrieb, Rekrutierung, Aufmarsch vor einem Angriff, Belagerungsvorbereitung. Alternative Tension-Stufe zu `build_tension`, wenn der Spieler selbst angreift. |
 | Genre | Treibendes Dark-Fantasy-Orchester |
@@ -1778,8 +1738,8 @@ conspiratorial dark fantasy chamber suspense, G phrygian, 80 bpm, string pizzica
 | Stimmung | Entschlossen, schwer, unheilvoll-zielgerichtet |
 | Dynamikverlauf | mp → mf (T. 9–24) → mp (T. 25–32) |
 | Soundcharakter / Mix | Erdig, mittenbetont, Hall 1,8 s; Amboss klar, aber nicht spitz (kein Konflikt mit `sfx.build_progress`) |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte), T. 1 ohne Akzent. Naht: T. 32 auf A (V) → d in T. 1. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Loop 32 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte), T. 1 ohne Akzent. Naht: T. 32 auf A (V) → d in T. 1. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
 - T. 1–8: Celli-Ostinato in Sechzehnteln, leiser Amboss im Kronenschlag.
@@ -1816,14 +1776,15 @@ mmm... hmm... mmm...
 ### 4.5 Belagerungen
 
 Beide Belagerungs-Tracks bilden Set S (C, 120 BPM). Wechsel zwischen ihnen per R1 (2 Takte = 4,0 s),
-Eintritt aus anderen Sets per R2 über das jeweilige Intro.
+Eintritt aus anderen Sets per R2 mit hartem Einsatz des Ziel-Tracks.
 
 #### 4.5.1 `siege_assault` – „Sturm auf die Mauern“
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `siege_assault` → `assets/audio/music/siege_assault_intro.ogg`, `assets/audio/music/siege_assault_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Battle · intro: Some · looped: true · Set S |
+| ID / Ziel-Datei | `siege_assault` → `assets/audio/music/siege_assault.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/siege_assault`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Battle · intro: None · looped: true · Set S |
 | Zweck / Spielsituation | Der Spieler belagert eine Festung: Rammböcke, Katapulte, Sturm auf Mauern (z. B. Bergfesten Skarnheims, Festung Solmere im Vorfeld). |
 | Genre | Episches Belagerungsorchester mit Chor |
 | Instrumentierung | Großtrommeln mit Rammbock-Schlägen (Zählzeit 1 und 3), Kriegshörner, tiefes Blech, Streicher-Ostinato, Männerchor-Rufe (Old Aurethi), Ketten, Holzkrachen als Perkussion, Pauken |
@@ -1832,11 +1793,11 @@ Eintritt aus anderen Sets per R2 über das jeweilige Intro.
 | Stimmung | Unaufhaltsam, wuchtig, opferbereit |
 | Dynamikverlauf | f (Intro) → f (T. 9–24) → ff (T. 25–40) → mf (T. 41–48) → ff (T. 49–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Massiv, tief, Hall 2,2 s; Rammbock-Schläge mono-zentriert mit Subanteil, Blech breit |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G (V) → c in T. 9. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 16,0 s · Loop 64 Takte = 128,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G (V) → c in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Kriegshörner, erster Rammbock-Schlag in T. 5, Paukenwirbel zu T. 9.
+- T. 1–8 (Einleitung): Kriegshörner, erster Rammbock-Schlag in T. 5, Paukenwirbel zu T. 9.
 - T. 9–24: Rammbock-Groove, Streicher-Ostinato, Ketten.
 - T. 25–40: Blech mit Glut-Form, Männerchor-Rufe.
 - T. 41–48: Breakdown – nur Trommeln und Holzkrachen (Katapult-Pausen).
@@ -1885,8 +1846,9 @@ Tor esk, kael rha-na!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `siege_defense` → `assets/audio/music/siege_defense_intro.ogg`, `assets/audio/music/siege_defense_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Battle · intro: Some · looped: true · Set S |
+| ID / Ziel-Datei | `siege_defense` → `assets/audio/music/siege_defense.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/siege_defense`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Battle · intro: None · looped: true · Set S |
 | Zweck / Spielsituation | Die eigene Stadt wird belagert: Mauern unter Beschuss, Hohle oder Aschenlegion vor den Toren, letzte Verteidigung. |
 | Genre | Verzweifelt-heroisches Orchester mit Chor |
 | Instrumentierung | Sturmglocke, Pauken, tiefe Streicher, Hörner, Frauenchor (Klage) und Männerchor (Trotz), Großtrommeln, Streicher-Tremolo |
@@ -1895,11 +1857,11 @@ Tor esk, kael rha-na!
 | Stimmung | Verzweifelt, dann trotzig; Durchhalten gegen die Übermacht |
 | Dynamikverlauf | mf (Glocke) → f (T. 9–16) → mf, klagend (T. 17–32) → f (T. 33–48) → ff (T. 49–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Dicht, eng, Hall 2,4 s; Glocke links fern, Chöre breit, Pauken zentriert |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf D♭ (♭II) → c in T. 9; Glocke nicht über die Naht. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 16,0 s · Loop 64 Takte = 128,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf D♭ (♭II) → c in T. 9; Glocke nicht über die Naht. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Sturmglocke allein, ab T. 5 Pauken und Streichertremolo.
+- T. 1–8 (Einleitung): Sturmglocke allein, ab T. 5 Pauken und Streichertremolo.
 - T. 9–16: Großtrommeln im Kronenschlag, tiefe Streicher.
 - T. 17–32: Frauenchor klagt mit Asche-Form.
 - T. 33–48: Männerchor antwortet trotzig, Hörner.
@@ -1954,8 +1916,9 @@ Do-mae ar, kael ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_hollow_king` → `assets/audio/music/boss_hollow_king_intro.ogg`, `assets/audio/music/boss_hollow_king_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Boss · intro: Some · looped: true · Set E |
+| ID / Ziel-Datei | `boss_hollow_king` → `assets/audio/music/boss_hollow_king.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_hollow_king`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Boss · intro: None · looped: true · Set E |
 | Zweck / Spielsituation | Finaler Bosskampf in der Festung Solmere gegen den Hohlen König – Varkhan Aurelith, der Letzte Sonnenkönig, gefangen und vom Hohlen Tief entstellt. Musikalischer Gipfel des Spiels: Alle Formen der Aschenkrone treffen aufeinander. |
 | Genre | Kolossales Dark-Fantasy-Finale, Orchester, Chor, Orgel |
 | Instrumentierung | Volles Orchester, großer gemischter Chor (Old Aurethi), Pfeifenorgel, Glocken, verfremdete imperiale Fanfaren, Frauenstimme solo, Glasharmonika-Klang, Großtrommeln, Subbass |
@@ -1964,12 +1927,12 @@ Do-mae ar, kael ar!
 | Stimmung | Tragisch, erschreckend, monumental; Mitleid mit dem gefallenen König |
 | Dynamikverlauf | p (T. 1–8) → ff (T. 16) → f (T. 17–48) → p (T. 49–56) → fff (T. 57–72) → f (T. 73–80) |
 | Soundcharakter / Mix | Riesige leere Halle, Hall 4,0 s; Orgel tief und breit, Chor raumfüllend, Frauenstimme nah und trocken (Erinnerung); Subbass kontrolliert |
-| Loop-Eignung | Hoch. Loop T. 17–80 (64 Takte). Naht: Orgel-Bordun D läuft durch; T. 80 auf E♭ → D in T. 17. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 16 Takte = 29,1 s · Loop 64 Takte = 116,4 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 17–80 (64 Takte). Naht: Orgel-Bordun D läuft durch; T. 80 auf E♭ → D in T. 17. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Orgel-Bordun, Frauenstimme singt „Solvae esketh“ auf der Asche-Form.
-- T. 9–16 (Intro-Datei): Imperiale Fanfare spielt die Krone-Form in Dur und bricht in die Hohl-Form; Crescendo, Tutti-Schlag am Ende von T. 16.
+- T. 1–8 (Einleitung): Orgel-Bordun, Frauenstimme singt „Solvae esketh“ auf der Asche-Form.
+- T. 9–16 (Einleitung): Imperiale Fanfare spielt die Krone-Form in Dur und bricht in die Hohl-Form; Crescendo, Tutti-Schlag am Ende von T. 16.
 - T. 17–32: Ostinato in Streichern und Trommeln, großer Chor „Varkh dhum“.
 - T. 33–48: Imperialer Marsch (Legionsmarsch-Kennung), Glocken, Blech mit Hohl-Form.
 - T. 49–56: Breakdown – Frauenstimme und Glasklang, die Erinnerung des Königs an Solmere.
@@ -2026,8 +1989,9 @@ Varkh dhum, varkh dhum
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_ashen_dragon` → `assets/audio/music/boss_ashen_dragon_intro.ogg`, `assets/audio/music/boss_ashen_dragon_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Boss · intro: Some · looped: true · Set X |
+| ID / Ziel-Datei | `boss_ashen_dragon` → `assets/audio/music/boss_ashen_dragon.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_ashen_dragon`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Boss · intro: None · looped: true · Set X |
 | Zweck / Spielsituation | Bosskampf gegen den Aschdrachen Vyrmathax in der Glutweite (Cinderreach): Vulkankessel, Ascheregen, Flugangriffe. |
 | Genre | Wildes Dark-Fantasy-Kampforchester, perkussiv |
 | Instrumentierung | Taiko-artige Großtrommeln, Metallperkussion (Ambosse, Bleche), Blechcluster, Horn-Glissandi (Drachenbrüllen), tiefer Männerchor, Streicher-Tremolo, Feuerrauschen-Riser |
@@ -2036,11 +2000,11 @@ Varkh dhum, varkh dhum
 | Stimmung | Rasend, glühend, urgewaltig |
 | Dynamikverlauf | mf (Intro-Beginn) → ff (T. 8) → f (T. 9–40) → mf (T. 41–48) → fff (T. 49–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Heiß, druckvoll, Hall 2,0 s; Trommeln dominant, Blech mit leichter Sättigung, Höhen gezähmt (Feuer-SFX brauchen Platz) |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G♭ (♭II) → f in T. 9. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 12,6 s · Loop 64 Takte = 101,1 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G♭ (♭II) → f in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Feuerrauschen, Horn-Glissando (Brüllen), Flügelschläge der Trommeln, Tutti-Schlag in T. 8.
+- T. 1–8 (Einleitung): Feuerrauschen, Horn-Glissando (Brüllen), Flügelschläge der Trommeln, Tutti-Schlag in T. 8.
 - T. 9–24: Taiko-Groove mit Kronenschlag, Streicher-Tremolo, Metallperkussion.
 - T. 25–40: Tiefer Männerchor „Kael dhum“, Hörner mit Asche-Form.
 - T. 41–48: Breakdown – Trommeln allein und Flügelschläge (Flugphase des Drachen).
@@ -2090,8 +2054,9 @@ Vyr-ma-thax! Vyr-ma-thax!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_root_mother` → `assets/audio/music/boss_root_mother_intro.ogg`, `assets/audio/music/boss_root_mother_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Boss · intro: Some · looped: true · Set X |
+| ID / Ziel-Datei | `boss_root_mother` → `assets/audio/music/boss_root_mother.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_root_mother`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Boss · intro: None · looped: true · Set X |
 | Zweck / Spielsituation | Bosskampf gegen die Wurzelmutter, Naturentität des Dornwalds – uralt, nicht böse, aber gnadenlos; ggf. von der Hohlung berührt. |
 | Genre | Urtümliches Wald-Boss-Orchester |
 | Instrumentierung | Holz- und Rindentrommeln, knarrende Kontrabässe col legno, Flüsterchor und Frauenchor (Old Aurethi), verfremdete Holzflöten, dissonante Harfe, tiefe Streicher, gestrichene Metallklänge |
@@ -2100,11 +2065,11 @@ Vyr-ma-thax! Vyr-ma-thax!
 | Stimmung | Uralt, wogend, erstickend, ehrfurchtgebietend |
 | Dynamikverlauf | p (Intro) → f (T. 9–16) → mf (T. 17–24) → ff (T. 25–36) → f (T. 37–40) |
 | Soundcharakter / Mix | Dicht, organisch, Hall 3,0 s mit dunklem Charakter; Holz knarrt nah, Chöre umhüllen von allen Seiten |
-| Loop-Eignung | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 auf E (V) → a in T. 9; Wiegefigur durchgehend. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 22,9 s · Loop 32 Takte = 91,4 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 auf E (V) → a in T. 9; Wiegefigur durchgehend. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Knarren der Kontrabässe, Flüstern „calyre“, Rindentrommeln setzen ein.
+- T. 1–8 (Einleitung): Knarren der Kontrabässe, Flüstern „calyre“, Rindentrommeln setzen ein.
 - T. 9–16: 12/8-Groove der Holztrommeln, verdunkelter Wurzelreigen in Flöten.
 - T. 17–24: Frauenchor mit Asche-Form, dissonante Harfe.
 - T. 25–36: Höhepunkt – Chöre, alle Trommeln, tiefe Streicher.
@@ -2159,8 +2124,9 @@ wenn gegen diese Fraktion gekämpft wird.
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_ember_crown_theme` → `assets/audio/music/faction_ember_crown_theme_intro.ogg`, `assets/audio/music/faction_ember_crown_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `faction_ember_crown_theme` → `assets/audio/music/faction_ember_crown_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_ember_crown_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Thema der Glutkrone von Valemark (Karmesin/Gold): Fraktionsauswahl, Gefecht als Glutkrone, Kampagnenmomente der Krone, Auftritte von König Aldric III. und Bruder Hal Venn. |
 | Genre | Feierliches Ritter-Orchester mit Folk-Elementen |
 | Instrumentierung | Hörner (Glutruf), Naturtrompeten, Laute, Fidel, Streicher, Frauenstimme solo (Glutstimme, Old Aurethi), Kirchenglocken, Rührtrommel, Orgel leise |
@@ -2169,11 +2135,11 @@ wenn gegen diese Fraktion gekämpft wird.
 | Stimmung | Gläubig, ritterlich, warm, pflichtbewusst |
 | Dynamikverlauf | mf (Glutruf) → mp (T. 5–12) → mf (T. 13–28) → f (T. 29–36) → mp (T. 37–44) |
 | Soundcharakter / Mix | Steinhalle, Hall 2,6 s; Hörner und Glocken mit Glanz, Laute nah, Frauenstimme mittig vorne |
-| Loop-Eignung | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf C (♭VII) → D in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 4 Takte = 13,3 s · Loop 40 Takte = 133,3 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf C (♭VII) → D in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Glutruf der Hörner, Glockenschlag, Orgel-Liegeton.
+- T. 1–4 (Einleitung): Glutruf der Hörner, Glockenschlag, Orgel-Liegeton.
 - T. 5–12: Laute und Fidel mit Prozessionsmelodie, Streicher.
 - T. 13–20: Frauenstimme singt die Glut-Form („Kael rhana“).
 - T. 21–28: Streicher und Naturtrompeten, Rührtrommel im Kronenschlag.
@@ -2220,8 +2186,9 @@ Kael ar, au-reh rha-na
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_ember_crown_battle` → `assets/audio/music/faction_ember_crown_battle_intro.ogg`, `assets/audio/music/faction_ember_crown_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `faction_ember_crown_battle` → `assets/audio/music/faction_ember_crown_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_ember_crown_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Kampfmusik, wenn gegen die Glutkrone gekämpft wird (Gefecht, Zeitalter V *The Divided Throne* – Bürgerkrieg gegen Herzogin Mireille Corvane) und als heroische Combat-Alternative bei Isoldes Großangriffen. |
 | Genre | Heroisches Kampforchester mit Chor |
 | Instrumentierung | Hörner, Trompeten, Streicher-Ostinato, Rührtrommeln, Großtrommeln im Kronenschlag, gemischter Chor, Glocken, Pauken |
@@ -2230,11 +2197,11 @@ Kael ar, au-reh rha-na
 | Stimmung | Entschlossen, stolz, glühend |
 | Dynamikverlauf | f (Intro) → f (T. 5–20) → ff (T. 21–36) → mf (T. 37–44) → ff (T. 45–60) → f (T. 61–68) |
 | Soundcharakter / Mix | Glänzend, kraftvoll, Hall 2,0 s; Blech hell, aber nicht schrill, Trommeln tief zentriert |
-| Loop-Eignung | Hoch. Loop T. 5–68 (64 Takte). Naht: T. 68 auf A (V) → d in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 6,7 s · Loop 64 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–68 (64 Takte). Naht: T. 68 auf A (V) → d in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Glutruf der Trompeten, Paukenwirbel.
+- T. 1–4 (Einleitung): Glutruf der Trompeten, Paukenwirbel.
 - T. 5–20: Streicher-Ostinato, Rührtrommeln, Hörner mit der Prozessionsmelodie des Themas.
 - T. 21–36: Chor mit Glut-Form, Glocken.
 - T. 37–44: Breakdown – Trommeln und tiefe Streicher.
@@ -2280,8 +2247,9 @@ Au-reh rha-na! Kael ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_skarn_clans_theme` → `assets/audio/music/faction_skarn_clans_theme_intro.ogg`, `assets/audio/music/faction_skarn_clans_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set F2 |
+| ID / Ziel-Datei | `faction_skarn_clans_theme` → `assets/audio/music/faction_skarn_clans_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_skarn_clans_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set F2 |
 | Zweck / Spielsituation | Thema der Clans von Skarnheim (Eisblau/Stahl): Clanrat, Bergfesten, Torvald Eisenhand, Ahnenpfad. |
 | Genre | Nordisches Folk-Orchester mit tiefem Männerchor |
 | Instrumentierung | Drehleier, Streichleier, tiefer Männerchor auf Quinten-Bordun, große Rahmentrommeln, Kriegshorn aus Horn, Kontrabässe, Celli |
@@ -2290,11 +2258,11 @@ Au-reh rha-na! Kael ar!
 | Stimmung | Stoisch, rau, ehrwürdig, kalt |
 | Dynamikverlauf | mp (Intro) → mf (T. 5–28) → mp (T. 29–36) |
 | Soundcharakter / Mix | Weiter Bergraum, Hall 3,5 s; Chor tief und breit, Drehleier mittig, Trommeln schwer |
-| Loop-Eignung | Hoch. Loop T. 5–36 (32 Takte). Naht: Bordun E über die Naht, T. 36 auf D (♭VII) → e in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 14,5 s · Loop 32 Takte = 116,4 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–36 (32 Takte). Naht: Bordun E über die Naht, T. 36 auf D (♭VII) → e in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Kriegshorn, Bordun der Drehleier.
+- T. 1–4 (Einleitung): Kriegshorn, Bordun der Drehleier.
 - T. 5–12: Männerchor auf Bordun mit Ruf „Haa – o-run“, Rahmentrommeln im Ahnenschritt.
 - T. 13–20: Streichleier mit Asche-Form.
 - T. 21–28: Chor und Drehleier gemeinsam, Kontrabässe.
@@ -2339,8 +2307,9 @@ Haa... o-run...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_skarn_clans_battle` → `assets/audio/music/faction_skarn_clans_battle_intro.ogg`, `assets/audio/music/faction_skarn_clans_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set F2 |
+| ID / Ziel-Datei | `faction_skarn_clans_battle` → `assets/audio/music/faction_skarn_clans_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_skarn_clans_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set F2 |
 | Zweck / Spielsituation | Kampf gegen die Clans von Skarnheim: schwere Infanterie, Schildwälle, Gebirgsschlachten. |
 | Genre | Wuchtiges Nordclan-Kampforchester |
 | Instrumentierung | Große Rahmentrommeln, Stampfen und Klatschen, Männerchor-Rufe, treibende Drehleier, tiefes Blech, Kriegshörner, Kontrabässe |
@@ -2349,11 +2318,11 @@ Haa... o-run...
 | Stimmung | Wild, unbeugsam, hart wie Eisen |
 | Dynamikverlauf | f (Intro) → f (T. 5–20) → ff (T. 21–36) → mf (T. 37–44) → ff (T. 45–60) → f (T. 61–68) |
 | Soundcharakter / Mix | Roh, tief, Hall 2,6 s; Stampfen und Trommeln vorne, Chor breit |
-| Loop-Eignung | Hoch. Loop T. 5–68 (64 Takte). Naht: T. 68 auf B (V) → e in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 7,3 s · Loop 64 Takte = 116,4 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–68 (64 Takte). Naht: T. 68 auf B (V) → e in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Kriegshörner, Stampfen, Ruf „Haa!“.
+- T. 1–4 (Einleitung): Kriegshörner, Stampfen, Ruf „Haa!“.
 - T. 5–20: Trommeln und Drehleier treiben, Kontrabässe.
 - T. 21–36: Posaunen mit Asche-Form, Chorrufe.
 - T. 37–44: Breakdown – nur Stampfen, Klatschen und Bordun.
@@ -2400,8 +2369,9 @@ O-run ar! Veth ar! Haa!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_thorn_covenant_theme` → `assets/audio/music/faction_thorn_covenant_theme_intro.ogg`, `assets/audio/music/faction_thorn_covenant_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set F3 |
+| ID / Ziel-Datei | `faction_thorn_covenant_theme` → `assets/audio/music/faction_thorn_covenant_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_thorn_covenant_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set F3 |
 | Zweck / Spielsituation | Thema des Dornenbundes (Moosgrün/Bernstein): Druidenzirkel, die Veyl, Sylaen, uralter Dornwald. |
 | Genre | Mystisches Wald-Folk-Ensemble |
 | Instrumentierung | Holzflöte, Harfe, gezupfte Leier, Rindentrommel, Frauenstimme (Old Aurethi), Flüsterchor, Streicher, Holzperkussion |
@@ -2410,11 +2380,11 @@ O-run ar! Veth ar! Haa!
 | Stimmung | Verwurzelt, geheimnisvoll, lebendig, alt |
 | Dynamikverlauf | p (Intro) → mp (T. 9–24) → mf (T. 25–40) → mp (T. 41–56) → p (T. 57–72) |
 | Soundcharakter / Mix | Dichter Wald, kurzer warmer Raum (Hall 1,6 s) plus ferner Hall auf Flüsterchor; Holzflöte nah |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G (♭VII) → a in T. 9; Wiegefigur der Leier durchgehend. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 8 Takte = 13,3 s · Loop 64 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf G (♭VII) → a in T. 9; Wiegefigur der Leier durchgehend. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Leier-Wiegefigur allein, Flüstern „calyre“.
+- T. 1–8 (Einleitung): Leier-Wiegefigur allein, Flüstern „calyre“.
 - T. 9–24: Holzflöte mit Wurzelreigen, Rindentrommel.
 - T. 25–40: Frauenstimme mit Glut-Form, Harfe und Streicher.
 - T. 41–56: Flöte und Harfe im Wechsel, Holzperkussion.
@@ -2459,8 +2429,9 @@ ca-li-reh...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_thorn_covenant_battle` → `assets/audio/music/faction_thorn_covenant_battle_intro.ogg`, `assets/audio/music/faction_thorn_covenant_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set F3 |
+| ID / Ziel-Datei | `faction_thorn_covenant_battle` → `assets/audio/music/faction_thorn_covenant_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_thorn_covenant_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set F3 |
 | Zweck / Spielsituation | Kampf gegen den Dornenbund: Guerilla, Hinterhalte, Naturmagie im dichten Wald. |
 | Genre | Treibendes Wald-Kampfensemble |
 | Instrumentierung | Holz- und Rindentrommeln (schnell), Streicher-Staccato, Flöten-Triller, Rindenhorn, rhythmische Flüsterrufe, Harfe gedämpft, tiefe Streicher |
@@ -2469,11 +2440,11 @@ ca-li-reh...
 | Stimmung | Hinterhältig, flink, wild |
 | Dynamikverlauf | mf (Intro) → f (T. 9–24) → mf (T. 25–32) → f (T. 33–56) → mf, plötzliche Pausen (T. 57–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Trocken, perkussiv, Hall 1,4 s; Trommeln im Panorama verteilt (Angriffe von allen Seiten) |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf E (V) → a in T. 9. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 8 Takte = 13,3 s · Loop 64 Takte = 106,7 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf E (V) → a in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Rindenhorn, Flüsterruf, Trommeln setzen schlagartig ein.
+- T. 1–8 (Einleitung): Rindenhorn, Flüsterruf, Trommeln setzen schlagartig ein.
 - T. 9–24: Staccato-Streicher mit Wurzelreigen, schnelle Holztrommeln.
 - T. 25–32: Rindenhorn mit Asche-Form.
 - T. 33–56: Flöten-Triller, alle Trommeln, Flüsterrufe.
@@ -2516,8 +2487,9 @@ driving dark fantasy forest battle, A minor, fast 6/8, 72 bpm, rapid wooden and 
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_saelith_compact_theme` → `assets/audio/music/faction_saelith_compact_theme_intro.ogg`, `assets/audio/music/faction_saelith_compact_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Calm · intro: Some · looped: true · Set F4 |
+| ID / Ziel-Datei | `faction_saelith_compact_theme` → `assets/audio/music/faction_saelith_compact_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_saelith_compact_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set F4 |
 | Zweck / Spielsituation | Thema des Saelith-Pakts (Türkis/Silber): Handelsrepublik, Händlerfürsten, Ophira Saelith-Varo, Häfen der Saelith-Inseln, Haus der Gezeiten. |
 | Genre | Weltgewandtes Fantasy-Orchester mit Saiteninstrumenten |
 | Instrumentierung | Hackbrett, gezupfte Kastenzither, Harfe, Streicher-Spiccato (Gezeitenlauf), Handtrommeln, Oboe, tiefe Streicher, Glockenspiel fern |
@@ -2526,11 +2498,11 @@ driving dark fantasy forest battle, A minor, fast 6/8, 72 bpm, rapid wooden and 
 | Stimmung | Glänzend, wendig, berechnend, seeluftig |
 | Dynamikverlauf | mp (Intro) → mf (T. 5–36) → mp (T. 37–52) |
 | Soundcharakter / Mix | Offener Hafen, hell, Hall 2,0 s; Hackbrett und Zither im Stereo verteilt, Oboe mittig |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf A♭ (♭VII) → B♭ in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 9,2 s · Loop 48 Takte = 110,8 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf A♭ (♭VII) → B♭ in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Gezeitenlauf im Hackbrett, Glockenspiel.
+- T. 1–4 (Einleitung): Gezeitenlauf im Hackbrett, Glockenspiel.
 - T. 5–20: Zither-Melodie über Spiccato-Wellen, Handtrommeln.
 - T. 21–28: Oboe mit Glut-Form.
 - T. 29–36: Tutti, tiefe Streicher wie Seegang.
@@ -2569,8 +2541,9 @@ elegant fantasy maritime orchestral, B-flat mixolydian, 104 bpm, hammered dulcim
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_saelith_compact_battle` → `assets/audio/music/faction_saelith_compact_battle_intro.ogg`, `assets/audio/music/faction_saelith_compact_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set F4 |
+| ID / Ziel-Datei | `faction_saelith_compact_battle` → `assets/audio/music/faction_saelith_compact_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_saelith_compact_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set F4 |
 | Zweck / Spielsituation | Kampf gegen den Saelith-Pakt: Söldnerheere, Küstenlandungen, Hafenkämpfe, Flotte. |
 | Genre | Rhythmisches Seefahrts-Kampforchester |
 | Instrumentierung | Handtrommeln und Großtrommeln, schnelles Hackbrett, Streicher-Spiccato, Blech (Flotte), Männerchor als Rudergesang, Zither-Tremolo |
@@ -2579,11 +2552,11 @@ elegant fantasy maritime orchestral, B-flat mixolydian, 104 bpm, hammered dulcim
 | Stimmung | Kühn, geschäftsmäßig-gefährlich, stürmisch |
 | Dynamikverlauf | f (Intro) → f (T. 5–20) → ff (T. 21–36) → mf (T. 37–44) → f (T. 45–52) |
 | Soundcharakter / Mix | Breit, lebhaft, Hall 1,8 s; Trommeln und Hackbrett vorne, Blech dahinter |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf F (V) → b in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 9,2 s · Loop 48 Takte = 110,8 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf F (V) → b in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Blechsignal, Trommelwirbel.
+- T. 1–4 (Einleitung): Blechsignal, Trommelwirbel.
 - T. 5–20: Hackbrett und Spiccato in schnellen Wellen, Handtrommeln.
 - T. 21–36: Rudergesang des Männerchors, Blech mit Thema.
 - T. 37–44: Breakdown – Trommeln und Zither-Tremolo.
@@ -2626,8 +2599,9 @@ Tha-len veh kael, nos rhan!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_hollowed_theme` → `assets/audio/music/faction_hollowed_theme_intro.ogg`, `assets/audio/music/faction_hollowed_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Tension · intro: Some · looped: true · Set F5 |
+| ID / Ziel-Datei | `faction_hollowed_theme` → `assets/audio/music/faction_hollowed_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_hollowed_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set F5 |
 | Zweck / Spielsituation | Thema der Hohlen (Aschgrau/Fahlgrün), Diener des Hohlen Tiefs: Hohlschreine, Knochentürme, Ausbreitung der Hohlung, Kult der Leeren Liturgie. Tension-Musik, wenn die Hohlen in Sicht sind. |
 | Genre | Horror-Ambient-Orchester mit Ritualchor |
 | Instrumentierung | Flüsterchor, tiefe Männerstimmen, Glasharmonika-Klang, Streicher sul ponticello, Subbass-Atem (Hohlatem), rückwärts laufende Klänge, ferne verstimmte Glocke |
@@ -2636,11 +2610,11 @@ Tha-len veh kael, nos rhan!
 | Stimmung | Unheimlich, seelenlos, kalt, rituell |
 | Dynamikverlauf | pp (Intro) → p (T. 5–12) → mp (T. 13–20) → pp (T. 21–28) |
 | Soundcharakter / Mix | Unnatürlich langer Hall (6,0 s), gefiltert; Subbass im Atemrhythmus, Flüstern im ganzen Panorama, Glasklang hoch und leise |
-| Loop-Eignung | Sehr hoch. Loop T. 5–28 (24 Takte). Hohlatem ist zyklisch und überbrückt die Naht. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 16,0 s · Loop 24 Takte = 96,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Loop T. 5–28 (24 Takte). Hohlatem ist zyklisch und überbrückt die Naht. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Rückwärts-Klang, verstimmte Glocke, erstes Einatmen des Clusters.
+- T. 1–4 (Einleitung): Rückwärts-Klang, verstimmte Glocke, erstes Einatmen des Clusters.
 - T. 5–12: Hohlatem im Subbass, Flüstern „dhum… umbrath“.
 - T. 13–20: Tiefe Männerstimmen mit der Hohl-Form, sul ponticello.
 - T. 21–28: Nur Atem und Glasklang.
@@ -2679,8 +2653,9 @@ Vae-loth dhum, um-brath rhan
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_hollowed_battle` → `assets/audio/music/faction_hollowed_battle_intro.ogg`, `assets/audio/music/faction_hollowed_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set F5 |
+| ID / Ziel-Datei | `faction_hollowed_battle` → `assets/audio/music/faction_hollowed_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_hollowed_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set F5 |
 | Zweck / Spielsituation | Kampf gegen die Hohlen: Hohlknechte, Knochenschützen, Grabkolosse; Combat-Musik, wenn die Hohlen der Gegner sind (ab Kampagne nach M01, in M01 selbst gilt `battle_small`). |
 | Genre | Untoten-Kampforchester, Horror |
 | Instrumentierung | Kontrabässe und Celli col legno, Knochenklappern (Holzperkussion), Großtrommeln, tiefes Blech, rhythmischer Flüsterchor, Streicher-Glissandi, Subbass |
@@ -2689,11 +2664,11 @@ Vae-loth dhum, um-brath rhan
 | Stimmung | Unaufhaltsam, morbide, erstickend |
 | Dynamikverlauf | f (Intro) → f (T. 5–20) → ff (T. 21–36) → mp (T. 37–44) → ff (T. 45–56) → f (T. 57–60) |
 | Soundcharakter / Mix | Dunkel, eng, Hall 3,0 s; Holzklappern trocken vorne, Blech tief, Flüstern breit |
-| Loop-Eignung | Hoch. Loop T. 5–60 (56 Takte). Naht: T. 60 auf A (♭II) → G♯ in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 8,0 s · Loop 56 Takte = 112,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–60 (56 Takte). Naht: T. 60 auf A (♭II) → G♯ in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Rückwärts-Riser, Schlag, Flüsterchor „dhum!“.
+- T. 1–4 (Einleitung): Rückwärts-Riser, Schlag, Flüsterchor „dhum!“.
 - T. 5–20: Col-legno-Ostinato, Knochenklappern im Kronenschlag, Großtrommeln.
 - T. 21–36: Tiefes Blech mit Hohl-Form, Flüsterchor rhythmisch.
 - T. 37–44: Breakdown – nur Klappern und Glissandi.
@@ -2740,8 +2715,9 @@ Um-brath ka mor-ra!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_ashen_legion_theme` → `assets/audio/music/faction_ashen_legion_theme_intro.ogg`, `assets/audio/music/faction_ashen_legion_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Tension · intro: Some · looped: true · Set F6 |
+| ID / Ziel-Datei | `faction_ashen_legion_theme` → `assets/audio/music/faction_ashen_legion_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_ashen_legion_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set F6 |
 | Zweck / Spielsituation | Thema der Aschenlegion (Schwarz/Glutorange), verfluchte Ritter Aureths, ewige Legion des Hohlen Königs: Aufmarsch, Legionsfestungen, Aurethwüste. |
 | Genre | Imperial-dunkler Marsch |
 | Instrumentierung | Tiefes Blech, Amboss auf Zählzeit 4, Ketten, Männerchor (Old Aurethi), verfremdete Fanfaren, Großtrommeln, Kontrabässe |
@@ -2750,11 +2726,11 @@ Um-brath ka mor-ra!
 | Stimmung | Unerbittlich, stolz-verdammt, imperial |
 | Dynamikverlauf | mf (Intro) → f (T. 5–28) → mf (T. 29–32) → f (T. 33–44) |
 | Soundcharakter / Mix | Riesige leere Halle, Hall 3,2 s; Blech tief und breit, Amboss klar, Chor schwer |
-| Loop-Eignung | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf D♭ (♭II) → c in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 10,9 s · Loop 40 Takte = 109,1 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–44 (40 Takte). Naht: T. 44 auf D♭ (♭II) → c in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Ketten, Amboss, ferne verfremdete Fanfare.
+- T. 1–4 (Einleitung): Ketten, Amboss, ferne verfremdete Fanfare.
 - T. 5–12: Legionsmarsch in Trommeln und Kontrabässen.
 - T. 13–20: Blech mit Hohl-Form.
 - T. 21–28: Männerchor „Aureh dhum, varkh ar“.
@@ -2802,8 +2778,9 @@ Au-reh dhum, varkh ar
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `faction_ashen_legion_battle` → `assets/audio/music/faction_ashen_legion_battle_intro.ogg`, `assets/audio/music/faction_ashen_legion_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Combat · intro: Some · looped: true · Set F6 |
+| ID / Ziel-Datei | `faction_ashen_legion_battle` → `assets/audio/music/faction_ashen_legion_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/faction_ashen_legion_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Combat · intro: None · looped: true · Set F6 |
 | Zweck / Spielsituation | Kampf gegen die Aschenlegion: schwere verfluchte Ritter, Phalanx, Glutwaffen. |
 | Genre | Brachiales Dark-Fantasy-Kampforchester |
 | Instrumentierung | Tiefes Blech, Amboss in Sechzehnteln, Männerchor-Staccato, Streicher-Ostinato, Pauken, Großtrommeln, Ketten, verfremdete Fanfaren |
@@ -2812,11 +2789,11 @@ Au-reh dhum, varkh ar
 | Stimmung | Erdrückend, gnadenlos, glühend |
 | Dynamikverlauf | f (Intro) → f (T. 5–20) → ff (T. 21–36) → mf (T. 37–44) → ff (T. 45–52) |
 | Soundcharakter / Mix | Massiv, Hall 2,6 s; Amboss und Pauken vorne, Chor breit, Blech mit leichter Sättigung |
-| Loop-Eignung | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf G (V, mit D♭ als Färbung) → c in T. 5. |
-| Ziellänge | Suno-Rohtake 3:00 · Intro 4 Takte = 10,9 s · Loop 48 Takte = 130,9 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–52 (48 Takte). Naht: T. 52 auf G (V, mit D♭ als Färbung) → c in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Fanfare bricht ab, Amboss-Salve, Chor „Aureh!“.
+- T. 1–4 (Einleitung): Fanfare bricht ab, Amboss-Salve, Chor „Aureh!“.
 - T. 5–20: Streicher-Ostinato, Amboss in Sechzehnteln, Pauken.
 - T. 21–36: Blech mit Hohl-Form augmentiert, Chor-Staccato.
 - T. 37–44: Breakdown – Ketten und Großtrommeln.
@@ -2860,8 +2837,9 @@ Varkh ar! Veth ar! Au-reh dhum!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `victory_theme` → `assets/audio/music/victory_theme_intro.ogg`, `assets/audio/music/victory_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Menu · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `victory_theme` → `assets/audio/music/victory_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/victory_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Menu · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Sieg-Bildschirm und Missionsauswertung nach `victory_sting` (R5); läuft, solange Statistiken und Belohnungen angezeigt werden. |
 | Genre | Feierliches Orchester mit Chor, getragen |
 | Instrumentierung | Hörner, Streicher, gemischter Chor (Old Aurethi), Harfe, Laute, Glocken, Pauken sanft |
@@ -2870,11 +2848,11 @@ Varkh ar! Veth ar! Au-reh dhum!
 | Stimmung | Erleichtert, dankbar, würdevoll; der Preis des Sieges schwingt mit |
 | Dynamikverlauf | f (Intro-Höhepunkt T. 5–8) → mp (Loop T. 9–24) → mf (T. 25–32) |
 | Soundcharakter / Mix | Hell, warm, Hall 2,8 s; Chor breit, Laute nah im Loop (unaufdringlich, da Bildschirmtexte gelesen werden) |
-| Loop-Eignung | Hoch. Loop T. 9–32 (24 Takte). Naht: T. 32 auf C (♭VII) → D in T. 9. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 8 Takte = 26,7 s · Loop 24 Takte = 80,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–32 (24 Takte). Naht: T. 32 auf C (♭VII) → D in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Hörner und Chor mit der vollständigen Krone-Form, Glocken, Höhepunkt T. 5–8, dann Abklingen.
+- T. 1–8 (Einleitung): Hörner und Chor mit der vollständigen Krone-Form, Glocken, Höhepunkt T. 5–8, dann Abklingen.
 - T. 9–16: Laute und Harfe mit dem Glut-Fragment, Streicher legato.
 - T. 17–24: Chor summt pp, Hörner fern.
 - T. 25–32: Streicher mit Glut-Form, Rückleitung über C-Dur.
@@ -2915,8 +2893,9 @@ mmm... aah... mmm...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `defeat_theme` → `assets/audio/music/defeat_theme_intro.ogg`, `assets/audio/music/defeat_theme_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Menu · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `defeat_theme` → `assets/audio/music/defeat_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/defeat_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Menu · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Niederlage-Bildschirm nach `defeat_sting` (R5) mit Optionen „Erneut versuchen“ / „Hauptmenü“. |
 | Genre | Elegisches Kammerorchester |
 | Instrumentierung | Solo-Cello, Harfe, tiefe Streicher, gehauchte Frauenstimme, Altflöte, ferne tiefe Glocke |
@@ -2925,11 +2904,11 @@ mmm... aah... mmm...
 | Stimmung | Trauernd, still, aber nicht hoffnungslos |
 | Dynamikverlauf | p (Intro) → mp (T. 5–20) → p (T. 21–28) |
 | Soundcharakter / Mix | Dunkel-warm, Hall 3,2 s; Cello nah, Stimme fern |
-| Loop-Eignung | Hoch. Loop T. 5–28 (24 Takte). Naht: T. 28 auf A (v) → d in T. 5. |
-| Ziellänge | Suno-Rohtake 2:30 · Intro 4 Takte = 13,3 s · Loop 24 Takte = 80,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–28 (24 Takte). Naht: T. 28 auf A (v) → d in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30 |
 
 **Arrangement**
-- T. 1–4 (Intro-Datei): Tiefe Glocke, Streicher mit Hohl-Andeutung (A♭ → A).
+- T. 1–4 (Einleitung): Tiefe Glocke, Streicher mit Hohl-Andeutung (A♭ → A).
 - T. 5–12: Solo-Cello mit Asche-Form, Harfe.
 - T. 13–20: Gehauchte Frauenstimme „cindra… liraen“, tiefe Streicher.
 - T. 21–24: Harfe allein.
@@ -2970,7 +2949,8 @@ cin-dra... sa do-mae...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `age_transition_sting` → `assets/audio/music/age_transition_sting.ogg` |
+| ID / Ziel-Datei | `age_transition_sting` → `assets/audio/music/age_transition_sting.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/age_transition_sting`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Sting · intro: None · looped: false · Set B |
 | Zweck / Spielsituation | Übergang zwischen den Kampagnenzeitaltern I *The Last Settlement* bis VII *The Last Crown*, über der Weltkarte; der Erzähler (Chronist) spricht darüber – Musik lässt Platz. |
 | Genre | Orchestraler Kapitel-Sting |
@@ -2980,7 +2960,7 @@ cin-dra... sa do-mae...
 | Stimmung | Erhaben, schicksalhaft, Seite einer Chronik wird umgeschlagen |
 | Dynamikverlauf | mp (Glocke) → f (T. 3–4) → p (T. 5–6) → Ausklang |
 | Soundcharakter / Mix | Breit, Hall 3,5 s; Mitten bei 1–3 kHz zurückhaltend für die Erzählerstimme |
-| Loop-Eignung | Keine (linear). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
 | Ziellänge | ca. 18 s Musik + 3–4 s Ausklang = ca. 22 s |
 
 **Arrangement**
@@ -3026,7 +3006,8 @@ das nominelle Tempo; kleine Tempoabweichungen sind erwünscht.
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `story_lament` → `assets/audio/music/story_lament.ogg` |
+| ID / Ziel-Datei | `story_lament` → `assets/audio/music/story_lament.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/story_lament`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Calm · intro: None · looped: false · Set X |
 | Zweck / Spielsituation | Trauer und Verlust: Tod wichtiger Figuren, Fall einer Siedlung, Abschied; auch nach dem Sieg über den Hohlen König (Mitleid mit Varkhan Aurelith). |
 | Genre | Orchesterlamento |
@@ -3036,7 +3017,7 @@ das nominelle Tempo; kleine Tempoabweichungen sind erwünscht.
 | Stimmung | Zutiefst traurig, zart, würdevoll |
 | Dynamikverlauf | pp → mf (T. 17–24) → pp (T. 25–30) |
 | Soundcharakter / Mix | Intim, Hall 3,0 s; Cello und Stimme nah, Streicher als weicher Teppich |
-| Loop-Eignung | Keine (linear). Bei längeren Szenen kann T. 9–16 im Engine wiederholt werden (Taktgrenzen sauber). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). Bei längeren Szenen kann T. 9–16 im Engine wiederholt werden (Taktgrenzen sauber). |
 | Ziellänge | ca. 2:00 (30 Takte = 120 s) inkl. Ausklang |
 
 **Arrangement**
@@ -3086,7 +3067,8 @@ Kael... ka esk...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `story_ashfall_memory` → `assets/audio/music/story_ashfall_memory.ogg` |
+| ID / Ziel-Datei | `story_ashfall_memory` → `assets/audio/music/story_ashfall_memory.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/story_ashfall_memory`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Calm · intro: None · looped: false · Set X |
 | Zweck / Spielsituation | Rückblende auf Aureth und den Aschenfall (Jahr 0): Varkhan Aurelith vollzieht das Ritual in Solmere, der Schleier öffnet sich, das Reich stürzt. |
 | Genre | Kinematische Orchestererzählung |
@@ -3096,7 +3078,7 @@ Kael... ka esk...
 | Stimmung | Pracht, Hybris, Entsetzen, Leere |
 | Dynamikverlauf | f (T. 1–12) → mf (T. 13–20) → ff-Zusammenbruch (T. 21–32) → pp (T. 33–41) |
 | Soundcharakter / Mix | Erst Kathedrale (Hall 3,5 s), hell und golden; ab T. 21 gefiltert, unnatürlicher Hall, Subbass; Ende fast still |
-| Loop-Eignung | Keine (linear). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
 | Ziellänge | ca. 2:30 (41 Takte = 149 s) |
 
 **Arrangement**
@@ -3144,7 +3126,8 @@ Sol-vae es-keth!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `story_revelation` → `assets/audio/music/story_revelation.ogg` |
+| ID / Ziel-Datei | `story_revelation` → `assets/audio/music/story_revelation.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/story_revelation`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Tension · intro: None · looped: false · Set F5 |
 | Zweck / Spielsituation | Enthüllungen und Wendepunkte: Die Stimme aus dem Tief spricht, Verrat (z. B. Kassian Vale), Erkenntnis über die wahre Natur des Hohlen Tiefs. |
 | Genre | Psychologischer Horror-Score |
@@ -3154,7 +3137,7 @@ Sol-vae es-keth!
 | Stimmung | Beklemmend, schwindelerregend, entlarvend |
 | Dynamikverlauf | pp → f (T. 21–22, Schlag) → pp (T. 23–26) |
 | Soundcharakter / Mix | Eng, dann plötzlich riesig; Hall 5,0 s auf der Stimme; Subbass langsam anschwellend |
-| Loop-Eignung | Keine (linear). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
 | Ziellänge | ca. 1:45 (26 Takte = 104 s) |
 
 **Arrangement**
@@ -3197,15 +3180,16 @@ Ka mor-ra, ka vael
 
 ### 4.10 Geheimnisvolle Orte
 
-Tempolose Ambient-Loops (nominell 60 BPM für das DAW-Raster). Dürfen nach R6 mit 4 s Crossfade
-überblendet werden. Loop-Länge 32 Takte = 128 s; Loop-Punkte trotzdem auf Taktgrenzen setzen, damit
+Tempolose Ambient-Loops (nominell 60 BPM als Taktraster). Dürfen nach R6 mit 4 s Crossfade
+überblendet werden. Loop-Länge 32 Takte = 128 s; die Integration setzt Loop-Punkte trotzdem auf Taktgrenzen, damit
 die Schnittlogik einheitlich bleibt.
 
 #### 4.10.1 `mystery_ruins` – „Echos von Aureth“
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `mystery_ruins` → `assets/audio/music/mystery_ruins_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `mystery_ruins` → `assets/audio/music/mystery_ruins.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/mystery_ruins`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Ruinen Aureths: Aurethwüste, Ruinen von Solmere, auch der Ort des Hohlschreins von Vael Dorn vor dessen Entdeckung; Aschglas-Vorkommen. Passt zu `ambience_ruins_loop`. |
 | Genre | Dunkles Ambient mit orchestralen Resten |
@@ -3215,8 +3199,8 @@ die Schnittlogik einheitlich bleibt.
 | Stimmung | Verlassen, ehrfürchtig, rätselhaft |
 | Dynamikverlauf | pp konstant, leichte Wellen |
 | Soundcharakter / Mix | Sehr weit, Hall 6,0 s, viel Raum; Kristallklänge hoch und verstreut |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte). Bordun über die Naht, keine Glocke in T. 32 oder T. 1. |
-| Ziellänge | Suno-Rohtake 3:00 · Loop 32 Takte = 128,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte). Bordun über die Naht, keine Glocke in T. 32 oder T. 1. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
 - T. 1–8: Bordun, Wind, vereinzelte Kristallklänge.
@@ -3259,7 +3243,8 @@ aaah... sol-vae... aaah...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `mystery_veilscar` → `assets/audio/music/mystery_veilscar_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `mystery_veilscar` → `assets/audio/music/mystery_veilscar.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/mystery_veilscar`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set F5 |
 | Zweck / Spielsituation | Die Schleiernarbe (Veilscar) im tiefen Süden: Realität instabil, vom Hohlen Tief beherrscht; auch Orte, an denen der Schleier dünn ist. |
 | Genre | Experimentelles Horror-Ambient |
@@ -3269,8 +3254,8 @@ aaah... sol-vae... aaah...
 | Stimmung | Desorientierend, falsch, unwirklich |
 | Dynamikverlauf | pp → p (T. 17–24) → pp |
 | Soundcharakter / Mix | Unnatürlich, Hall 8,0 s, Klänge wandern im Panorama; tiefe Frequenzen pulsieren langsam |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte); Atemrhythmus überbrückt die Naht. |
-| Ziellänge | Suno-Rohtake 3:00 · Loop 32 Takte = 128,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte); Atemrhythmus überbrückt die Naht. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
 - T. 1–8: Subbass-Atem, Glasklang, wandernde Töne.
@@ -3309,7 +3294,8 @@ dhum... vae... loth...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `mystery_old_gods` → `assets/audio/music/mystery_old_gods_loop.ogg` (kein Intro) |
+| ID / Ziel-Datei | `mystery_old_gods` → `assets/audio/music/mystery_old_gods.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/mystery_old_gods`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Calm · intro: None · looped: true · Set X |
 | Zweck / Spielsituation | Schreine und Relikte der Alten Götter Ithren, Morvaine, Calyx, Thal und Oruun, die seit dem Aschenfall verstummt sind. |
 | Genre | Ätherisches Sakral-Ambient |
@@ -3319,8 +3305,8 @@ dhum... vae... loth...
 | Stimmung | Erhaben, fern, still, wehmütig |
 | Dynamikverlauf | pp → p (T. 17–28) → pp |
 | Soundcharakter / Mix | Riesiger heller Raum, Hall 7,0 s; Klänge nacheinander, kaum gleichzeitig |
-| Loop-Eignung | Sehr hoch. Ganze Datei ist der Loop (32 Takte); Bordun E über die Naht. |
-| Ziellänge | Suno-Rohtake 3:00 · Loop 32 Takte = 128,0 s |
+| Loop-Eignung (Hinweis für die Integration) | Sehr hoch. Ganze Datei ist der Loop (32 Takte); Bordun E über die Naht. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00 |
 
 **Arrangement**
 - T. 1–4: Steinklang-Bordun E (Oruun).
@@ -3368,8 +3354,9 @@ tha-len... o-run...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `endgame_last_crown` → `assets/audio/music/endgame_last_crown_intro.ogg`, `assets/audio/music/endgame_last_crown_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Tension · intro: Some · looped: true · Set E |
+| ID / Ziel-Datei | `endgame_last_crown` → `assets/audio/music/endgame_last_crown.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/endgame_last_crown`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Tension · intro: None · looped: true · Set E |
 | Zweck / Spielsituation | Zeitalter VII *The Last Crown*: Weltkarte und Aufbau im Endgame; Valemark, Verbündete und Feinde ringen um die Aschenkrone, Solmere ruft. Ersetzt Weltkarten- und Calm-Musik. |
 | Genre | Monumentales Dark-Fantasy-Orchester |
 | Instrumentierung | Volles Orchester, Chor pp–mf, Glocken, Hörner; Zitate der Fraktionskennungen (Drehleier – Skarnheim, Holzflöte – Dornenbund, Hackbrett – Saelith, Glutruf – Glutkrone) |
@@ -3378,11 +3365,11 @@ tha-len... o-run...
 | Stimmung | Schicksalsschwer, gesammelt, alles steht auf dem Spiel |
 | Dynamikverlauf | p (Intro) → mf (T. 9–24) → f (T. 25–32) → mp (T. 33–48) |
 | Soundcharakter / Mix | Groß und tief, Hall 3,5 s; Fraktionszitate klar erkennbar im Panorama verteilt |
-| Loop-Eignung | Hoch. Loop T. 9–48 (40 Takte). Naht: T. 48 auf A (v) → d in T. 9. |
-| Ziellänge | Suno-Rohtake 3:30–4:00 · Intro 8 Takte = 29,1 s · Loop 40 Takte = 145,5 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–48 (40 Takte). Naht: T. 48 auf A (v) → d in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30–4:00 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Glocke, Solo-Cello mit Asche-Form, Chor pp.
+- T. 1–8 (Einleitung): Glocke, Solo-Cello mit Asche-Form, Chor pp.
 - T. 9–16: Streicher und Hörner mit Glut-Form; Glutruf-Zitat.
 - T. 17–24: Fraktionszitate nacheinander (je 2 Takte: Drehleier, Holzflöte, Hackbrett, Hörner).
 - T. 25–32: Hohl-Form in Posaunen gegen Glut-Form im Chor.
@@ -3427,8 +3414,9 @@ Au-reh...
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `endgame_final_battle` → `assets/audio/music/endgame_final_battle_intro.ogg`, `assets/audio/music/endgame_final_battle_loop.ogg` |
-| Manifest (Vorschlag) | intensity: Battle · intro: Some · looped: true · Set E |
+| ID / Ziel-Datei | `endgame_final_battle` → `assets/audio/music/endgame_final_battle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/endgame_final_battle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest (Vorschlag) | intensity: Battle · intro: None · looped: true · Set E |
 | Zweck / Spielsituation | Letzte Schlacht vor den Toren Solmeres: Vereinte Heere gegen Aschenlegion und Hohle. Mündet in `boss_hollow_king` (R4, gleiche Tonika D, Tempo 132). |
 | Genre | Episches Finale, Orchester und großer Chor |
 | Instrumentierung | Volles Orchester, großer Chor, alle Fraktionskennungen (Ahnenschritt-Trommeln, Wurzelreigen-Flöten, Gezeitenlauf-Hackbrett, Glutruf-Hörner) gegen Legionsmarsch-Amboss und Hohlatem-Cluster, Glocken, Orgel |
@@ -3437,11 +3425,11 @@ Au-reh...
 | Stimmung | Alles oder nichts, vereint, glühend |
 | Dynamikverlauf | f (Intro) → f (T. 9–24) → ff (T. 25–48) → mf (T. 49–56) → fff (T. 57–64) → f (T. 65–72) |
 | Soundcharakter / Mix | Maximal groß, Hall 3,0 s; Trommeln und Chor tragen, Fraktionskennungen kurz und klar hervorgehoben |
-| Loop-Eignung | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf E♭ (♭II) → D in T. 9. |
-| Ziellänge | Suno-Rohtake 3:30 · Intro 8 Takte = 14,5 s · Loop 64 Takte = 116,4 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–72 (64 Takte). Naht: T. 72 auf E♭ (♭II) → D in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:30 |
 
 **Arrangement**
-- T. 1–8 (Intro-Datei): Glutruf, Antwort der verfremdeten Legionsfanfare, Trommeln aller Fraktionen setzen ein.
+- T. 1–8 (Einleitung): Glutruf, Antwort der verfremdeten Legionsfanfare, Trommeln aller Fraktionen setzen ein.
 - T. 9–24: Ostinato und Kronenschlag, Amboss der Legion dagegen.
 - T. 25–48: Chor mit Glut-Form; Fraktionskennungen im Wechsel (Drehleier, Flöten, Hackbrett) über dem Groove.
 - T. 49–56: Breakdown – Hohlatem-Cluster, Orgel, die Übermacht.
@@ -3491,7 +3479,8 @@ Kael ar! El-dra ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `credits_theme` → `assets/audio/music/credits_theme.ogg` |
+| ID / Ziel-Datei | `credits_theme` → `assets/audio/music/credits_theme.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/credits_theme`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest (Vorschlag) | intensity: Menu · intro: None · looped: false · Set A |
 | Zweck / Spielsituation | Abspann nach dem Ende der Kampagne; musikalische Zusammenfassung des Spiels. |
 | Genre | Orchestrale Suite mit Chor |
@@ -3501,7 +3490,7 @@ Kael ar! El-dra ar!
 | Stimmung | Bittersüß, versöhnlich, hoffnungsvoll |
 | Dynamikverlauf | p (T. 1–16) → mf (T. 17–48) → ff (T. 49–72) → p (T. 73–96) |
 | Soundcharakter / Mix | Konzertsaal, Hall 3,0 s; natürlich-dynamisch, Limiter sehr sanft |
-| Loop-Eignung | Keine (linear). |
+| Loop-Eignung (Hinweis für die Integration) | Keine (linear). |
 | Ziellänge | ca. 5:20 (96 Takte = 320 s); Produktion in 2–3 Teilen per Extend |
 
 **Arrangement**
@@ -3547,7 +3536,7 @@ Kael rha-na, nos veth
 *Textbedeutung:* „Krone, erhebe dich, ewiges Licht. Ewige Glut, die Welt schwört. Ende der Asche, das Wachstum steigt. – Erinnerung an die Heimat. Glut, erhebe dich, wir schwören.“
 
 **Varianten**
-- *Produktion:* Teil 1 (T. 1–48) generieren, Teil 2 per Extend ab T. 49; Übergang in der DAW auf einer Taktgrenze verbinden.
+- *Produktion:* Teil 1 (T. 1–48) generieren, Teil 2 per Extend ab T. 49 in Suno fortsetzen; die verlängerte Ausgabe ist eine Datei.
 - *Kurzfassung:* T. 1–16 + T. 49–72 + T. 89–96 (ca. 2:40) für einen kurzen Abspann im Gefecht.
 
 ---
@@ -3563,8 +3552,9 @@ sonst den Standardtrack (Boss-Missionen: Boss-Thema der Mission). Alle Tracks di
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_stone_oath` → `assets/audio/music/boss_stone_oath_intro.ogg`, `assets/audio/music/boss_stone_oath_loop.ogg` |
-| Manifest | intensity: Boss · intro: Some · looped: true · Set S |
+| ID / Ziel-Datei | `boss_stone_oath` → `assets/audio/music/boss_stone_oath.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_stone_oath`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Boss · intro: None · looped: true · Set S |
 | Zweck / Spielsituation | Bosskampf gegen Gharun, den Steinernen Eid, im Schreinsaal Oruuns (Mission 21, Zeitalter VI). Ein Wächter aus Runenstein, dessen Eid das Tiefe verdreht hat: Pflicht ohne Hass. |
 | Genre | Schwerer, langsamer Boss-Marsch mit Männerchor |
 | Instrumentierung | Tiefe Steintrommeln (Taiko-artig, aber aus Fels), Amboss, Kontrabässe, tiefe Posaunen, Männerchor (Skarn-Ahnenlieder in Old Aurethi), Rahmentrommeln, Steinglocken |
@@ -3573,8 +3563,8 @@ sonst den Standardtrack (Boss-Missionen: Boss-Thema der Mission). Alle Tracks di
 | Stimmung | Unerbittlich, ehrfürchtig, feierlich-traurig |
 | Dynamikverlauf | p (Intro, T. 1–4) → mf (T. 5–12) → f (T. 13–20) → ff (T. 21–28) → mf (T. 29–32, Rückführung) |
 | Soundcharakter / Mix | Steinhalle, Hall 3,5 s, trockene tiefe Impacts, Chor weit; Tiefen bis 40 Hz |
-| Loop-Eignung | Hoch. Loop T. 5–32 (28 Takte = 70 s). Naht: T. 32 auf G (V) → c in T. 5. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 4 Takte = 10 s · Loop 28 Takte = 70 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–32 (28 Takte = 70 s). Naht: T. 32 auf G (V) → c in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Suno-Style-Prompt**
 ```text
@@ -3611,8 +3601,9 @@ Orun, orun, esk ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `boss_reef_mistress` → `assets/audio/music/boss_reef_mistress_intro.ogg`, `assets/audio/music/boss_reef_mistress_loop.ogg` |
-| Manifest | intensity: Boss · intro: Some · looped: true · Set S |
+| ID / Ziel-Datei | `boss_reef_mistress` → `assets/audio/music/boss_reef_mistress.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/boss_reef_mistress`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Boss · intro: None · looped: true · Set S |
 | Zweck / Spielsituation | Bosskampf gegen Isarre Mol, Herrin des Schwarzen Riffs, auf der Riffinsel (Mission 14, Zeitalter IV): eine ertrunkene Gezeitenpriesterin, mütterlich und bedrohlich. |
 | Genre | Maritimer Dark-Fantasy-Boss mit Frauenchor und Wellenrhythmik |
 | Instrumentierung | Verstimmte Hackbrett-Arpeggien (Saelith-Kennung), tiefe Streicher mit langen Glissandi, Muschelhorn, Frauenchor, Wasser-Percussion (Taucherglocke, Kesselpauken), Harfe unter Wasser (Tiefpass) |
@@ -3621,8 +3612,8 @@ Orun, orun, esk ar!
 | Stimmung | Wogend, mütterlich-bedrohlich, nass, schwermütig |
 | Dynamikverlauf | p (Intro, T. 1–8) → mf (T. 9–16) → f (T. 17–28) → ff (T. 29–36) → mf (T. 37–40) |
 | Soundcharakter / Mix | Weiter, feuchter Hall (2,6 s), Chorus auf Streichern, Tiefpass-Wellen als Zwischenschicht, Brandungsrauschen leise im Hintergrund |
-| Loop-Eignung | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 auf B (V) → e in T. 9. |
-| Ziellänge | Suno-Rohtake 3:00–3:30 · Intro 8 Takte = 21,8 s · Loop 32 Takte = 87,3 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 9–40 (32 Takte). Naht: T. 40 auf B (V) → e in T. 9. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 3:00–3:30 |
 
 **Suno-Style-Prompt**
 ```text
@@ -3659,7 +3650,8 @@ Tha-lel, tha-lel, esk ar!
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `escort_march` → `assets/audio/music/escort_march_loop.ogg` |
+| ID / Ziel-Datei | `escort_march` → `assets/audio/music/escort_march.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/escort_march`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
 | Manifest | intensity: Tension · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Eskortmissionen (Mission 2, Zeitalter I): Flüchtlinge durch das Aschmoor führen; Spannung ohne Schlachtlärm. |
 | Genre | Leiser Marsch mit gedämpfter Trommel und Solostreichern |
@@ -3669,8 +3661,8 @@ Tha-lel, tha-lel, esk ar!
 | Stimmung | Erschöpft, wachsam, leise Hoffnung |
 | Dynamikverlauf | pp (T. 1–8) → p (T. 9–24) → mp (T. 25–32) → p (T. 33–40) |
 | Soundcharakter / Mix | Trocken-nah, leichter Hall 1,6 s, Wind-Layer leise; viel Raum für Sprachausgabe (Mittenbereich 1–3 kHz zurückgenommen) |
-| Loop-Eignung | Hoch. Loop T. 1–40 (40 Takte = 133 s), kein Intro. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 1–40 (40 Takte = 133 s), kein Intro. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Suno-Style-Prompt**
 ```text
@@ -3689,8 +3681,9 @@ quiet dark fantasy marching theme, D minor, 72 bpm, muffled frame drum steps, so
 
 | Feld | Inhalt |
 |---|---|
-| ID / Ziel-Dateien | `campaign_chronicle` → `assets/audio/music/campaign_chronicle_intro.ogg`, `assets/audio/music/campaign_chronicle_loop.ogg` |
-| Manifest | intensity: Menu · intro: Some · looped: true · Set A |
+| ID / Ziel-Datei | `campaign_chronicle` → `assets/audio/music/campaign_chronicle.ogg` |
+| Lieferung | Komplette Suno-Ausgabe (beste Version) als eine Datei `music/campaign_chronicle`, beliebiges Format. Loop-Naht und Pegel übernimmt die Integration. |
+| Manifest | intensity: Menu · intro: None · looped: true · Set A |
 | Zweck / Spielsituation | Kampagnenmenü (Pergamentkarte, Briefing, Zusammenfassung): ruhige Chronikmusik, die zwischen den Missionen trägt. |
 | Genre | Kammermusikalisches Dark-Fantasy-Thema mit Chor-Andeutung |
 | Instrumentierung | Solo-Cello, Harfe, Laute, Holzflöte, leiser Frauenchor (Old Aurethi), Glockenspiel |
@@ -3699,8 +3692,8 @@ quiet dark fantasy marching theme, D minor, 72 bpm, muffled frame drum steps, so
 | Stimmung | Nachdenklich, würdevoll, wehmütig |
 | Dynamikverlauf | p (Intro, T. 1–4) → mp (T. 5–20) → mf (T. 21–28) → p (T. 29–32) |
 | Soundcharakter / Mix | Intimer Raum, Hall 2,0 s; Pergament-Knistern nicht in der Musik (kommt als UI-Effekt) |
-| Loop-Eignung | Hoch. Loop T. 5–32 (28 Takte = 93 s). Naht: T. 32 auf A (V) → d in T. 5. |
-| Ziellänge | Suno-Rohtake 2:30–3:00 · Intro 4 Takte = 13,3 s · Loop 28 Takte = 93,3 s |
+| Loop-Eignung (Hinweis für die Integration) | Hoch. Loop T. 5–32 (28 Takte = 93 s). Naht: T. 32 auf A (V) → d in T. 5. |
+| Ziellänge | Komplette Suno-Ausgabe, Ziel 2:30–3:00 |
 
 **Suno-Style-Prompt**
 ```text
@@ -3732,40 +3725,26 @@ Kael rha-na, nos veth
 
 ### 5.1 Vor Produktionsbeginn (einmalig)
 
-- [ ] Aktuelle Suno-Version, verfügbare Modelle, Maximallänge, Exportformate (WAV/MP3), Extend, Cover, Audio-Upload, Personas, Stems und Abschnittsbearbeitung geprüft und im Prompt-Log notiert.
+- [ ] Aktuelle Suno-Version, verfügbare Modelle, Maximallänge, Exportformate (WAV/MP3), Extend, Cover, Audio-Upload, Personas, Stems und Abschnittsbearbeitung geprüft.
 - [ ] Nutzungsrechte des gebuchten Suno-Plans für kommerzielle Spiele geprüft und dokumentiert.
-- [ ] Motiv-Seed „Die Aschenkrone“ in D (72 BPM) und G (80 BPM) selbst eingespielt (8–16 Takte, Asche- und Glut-Form).
-- [ ] DAW-Vorlage angelegt: 48 kHz, Tempo-Grid, Loudness-Meter (LUFS integriert, True Peak), Limiter, OGG-Export q6.
-- [ ] Prompt-Log angelegt (Spalten: Track-ID, Datum, Modellversion, Style-Prompt, Lyrics-Feld, Take-Kennung, Funktion, Auswahlbegründung, Loop-Punkte in Takten und Samples).
 - [ ] Old-Aurethi-Glossar (1.6) und Verbot-Liste (1.7) für alle Beteiligten verfügbar.
 
-### 5.2 Pro Track
+### 5.2 Pro Track (Nutzer)
 
 - [ ] Style-Prompt und Lyrics-/Struktur-Feld unverändert aus der Track-Bibel übernommen; keine Künstlernamen.
-- [ ] 6–10 Takes erzeugt; Vorauswahl nach Kriterien aus 2.5.
+- [ ] Mehrere Takes erzeugt; beste Version nach den Kriterien aus 2.5 gewählt.
 - [ ] Gegenhören auf Ähnlichkeit zu bekannter Musik; im Zweifel verwerfen.
 - [ ] Kontur des Leitmotivs bzw. Fraktionskennung hörbar; Tonart passt zum Set (3.2).
-- [ ] Bei abgeleiteten Tracks: Cover aus dem vorgesehenen Ausgangs-Take erzeugt (z. B. Kampfvariante aus Thema).
-- [ ] Download in höchster Qualität, ggf. Konvertierung auf 48 kHz.
-- [ ] Tempo auf Ziel-BPM fixiert (Abweichung ≤ 3 % gestreckt, sonst Take verworfen).
-- [ ] Loop-Punkte auf Taktgrenzen, Loop-Länge = geplante Taktzahl, Länge in Samples geprüft.
-- [ ] Tail-Wrap und Naht-Crossfade 20–50 ms gesetzt; 5× Loop-Test und Intro→Loop-Test ohne Klick.
-- [ ] Intro endet exakt am Loop-Start, ohne Fade und ohne Stille.
-- [ ] Loudness −14 LUFS integriert (Stings: Short-Term-Maximum ca. −12 LUFS), True Peak ≤ −1 dBTP; Intro und Loop innerhalb 1 LU.
-- [ ] Export als OGG Vorbis, 48 kHz, Stereo, q6; Dateiname exakt nach Kanon (klein, `snake_case`, `_intro`/`_loop` bzw. ohne Suffix bei linearen Tracks).
-- [ ] Ablage in `assets/audio/music/`; keine zusätzlichen Dateien (z. B. kein `build_tension_intro.ogg`).
-- [ ] Arbeitsmaster (WAV 24 Bit) und Prompt-Log-Eintrag archiviert.
+- [ ] Komplette Ausgabe unverändert geliefert als `music/<track_id>` (beliebiges Format, genau eine Datei, Dateiname exakt).
 
-### 5.3 Integrations- und Abnahmetest
+### 5.3 Integrations- und Abnahmetest (Integration, nicht vom Nutzer)
 
-- [ ] Asset-Scanner meldet keine Konventionsverstöße.
-- [ ] Alle 13 Pflichtdateien des Manifests vorhanden (Liste in 2.10).
-- [ ] Gapless-Test der OGG-Loops im Engine bestanden (sonst betroffene Loops als `.wav`).
-- [ ] Übergänge im Spiel getestet: R1 (build_calm ↔ build_tension, battle_small ↔ battle_large), R2 (Calm → Combat mit Intro), R3 (Hysterese 15 s), R4 (Boss), R5 (Stings), R6 (Set-Wechsel), R8 (Ducking bei Dialog und Erzähler).
-- [ ] Mindestverweildauern verhindern Flattern zwischen Stufen.
-- [ ] Lautheitsbalance gegen SFX und Stimmen im Spiel geprüft (Engine-Offsets aus 2.9).
+- [ ] Asset-Scanner meldet keine Konventionsverstöße; alle 34 Pflichtdateien des Manifests vorhanden.
+- [ ] Loop-Naht, Stille, Lautheit (−14 LUFS), True Peak, OGG-Konvertierung und Gapless-Test der Loops im Engine bestanden.
+- [ ] Übergänge im Spiel getestet: R1 (build_calm ↔ build_tension, battle_small ↔ battle_large), R2, R3 (Hysterese 15 s), R4 (Boss), R5 (Stings), R6 (Set-Wechsel), R8 (Ducking bei Dialog und Erzähler).
+- [ ] Lautheitsbalance gegen SFX und Stimmen im Spiel geprüft (Engine-Offsets aus 2.8).
 - [ ] Langzeittest: 60 Minuten Aufbauphase ohne störende Wiederholung (build_calm, build_night, economy_prosperity).
-- [ ] Vorgeschlagene Manifest-Einträge (3.4) für jeden fertigen Zukunfts-Track an die Audio-Integration übergeben.
+- [ ] Vorgeschlagene Manifest-Einträge (3.4) für jeden fertigen Zukunfts-Track übernommen.
 
 ---
 

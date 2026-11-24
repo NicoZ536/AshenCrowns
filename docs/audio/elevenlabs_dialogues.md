@@ -286,12 +286,12 @@ nehmen, um die Toten zu befehligen (Macht, die Stimme aus dem Tief bleibt).
 
 Dieser Teil wird aus den Missionsdaten erzeugt (`cargo run -p ashen_tools -- forge-campaign`): Jede Zeile steht
 identisch in der Mission (`assets/data/campaign/*.ron`), als Event im Manifest und hier. **Sprechtext = exakt der deutsche Spieltext**,
-ohne Anpassung zu generieren.
+Die Audio-Tags im Sprechtext sind von Hand ergänzt und bleiben beim Neuerzeugen erhalten, solange der Text ohne Tags dem Spieltext entspricht (sonst steht der Spieltext ohne Tags da und muss neu getaggt werden).
 
 **Konventionen**
 - Event: `<sprecher-id>.<mission>_<szene>_<buchstabe>`; Datei: `voices/narrator/narrator_<mission>_<szene>_<buchstabe>_01.ogg` bzw. `voices/characters/<sprecher-id>_<mission>_<szene>_<buchstabe>_01.ogg`.
 - Jede Zeile ein eigenes Event mit genau einer Datei (`_01`); die Reihenfolge der Zeilen steht in der Spalte **#**. Das Spiel spielt die Zeilen einer Szene nacheinander; die Pausen ergeben sich aus der Textlänge.
-- Stimme: Profil `AC_<sprecher-id>` aus `elevenlabs_characters.md` (Sprache **Deutsch**, Multilingual v2 für den Erzähler, Eleven v3 *Natural* für Figuren und Bosse; Tags nur sparsam und nicht im Spieltext). Akzentangaben der Profile gelten als leichte Färbung.
+- Stimme: Profil `AC_<sprecher-id>` aus `elevenlabs_characters.md` (Sprache **Deutsch**, alle Stimmen inklusive Erzähler mit Eleven v3, Stability-Modus *Natural*; jede Zeile enthält Eleven-v3-Audio-Tags in eckigen Klammern, die nicht gesprochen werden und nicht in den Spieltext gehören). Akzentangaben der Profile gelten als leichte Färbung.
 - Zielformat und Loudness wie in Teil 1 (Ogg Vorbis q6, 48 kHz, mono, −16 LUFS, −1 dBTP). Manifest: Erzähler +2 dB, Figuren +1 dB.
 - Neue Sprecher dieses Teils: `char_wendel`, `char_nel`, `boss_stone_oath`, `boss_reef_mistress` (Profile in `elevenlabs_characters.md`, Teil F).
 
@@ -1256,6 +1256,9 @@ ohne Anpassung zu generieren.
 | 4 | `voices/narrator/narrator_age_ende_d_01.ogg` | Erzähler (`AC_narrator`) | [solemn] [slowly] Und so wurde der Schleier geschlossen. [short pause] Niemand krönte die Wächterin der Aschmark. Aber in Brennhollow brennt seither jede Nacht ein Feuer, und niemand hat es je erlöschen lassen. | ruhig, getragen, langsam im letzten Satz |
 
 <!-- END KAMPAGNE -->
+
+---
+
 
 ---
 
