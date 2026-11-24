@@ -898,7 +898,7 @@ Kurze Dateien (< 3 s): Varianten einer Familie gehörmäßig gleich laut machen 
 
 ## B. ElevenLabs Stimmen (805 Dateien)
 
-**Vorgehen:** Pro Sprecher einmal die Stimme anlegen (Voice Design: Prompt aus dem Stimmprofil in *Voice Description*, Beispieltext in *Text to preview*, speichern als `AC_<id>`), dann alle Zeilen des Sprechers mit dieser Stimme erzeugen. Sprechtext **exakt** wie angegeben einfügen; eckige Klammern (`[sighs]`, `[shouting]`) sind Eleven-v3-Audio-Tags und werden nicht gesprochen. Sprache ist je Zeile angegeben: Einheiten-/Helden-Barks und Mission-1-Zeilen auf Englisch (Kanon-Entscheidung, deutsche Bedeutung in Klammern), Kampagnen-Dialoge auf **Deutsch** (exakter Spieltext).
+**Vorgehen:** Pro Sprecher einmal die Stimme anlegen (Voice Design: Prompt aus dem Stimmprofil in *Voice Description*, Beispieltext in *Text to preview*, speichern als `AC_<id>`), dann alle Zeilen des Sprechers mit dieser Stimme erzeugen. Sprechtext **exakt** wie angegeben einfügen; eckige Klammern (`[sighs]`, `[shouting]`) sind Eleven-v3-Audio-Tags und werden nicht gesprochen. Alle Stimmen werden auf **Deutsch** gesprochen (Erzähler, Dialoge, Helden-, Boss- und Einheitenrufe): in der Oberfläche/API die Sprache explizit auf Deutsch (`de`) stellen, Modell Eleven v3 bzw. Multilingual v2. Die Voice-Design-Prompts sind englisch formuliert und enthalten „speaks German with a natural, native accent“; die Audio-Tags in eckigen Klammern bleiben englisch. Zeilen mit dem Vermerk „exakter Spieltext“ entsprechen wortgleich dem Untertitel im Spiel (Prüfung: `python3 docs/audio/verify_spoken_text.py`); bei Sequenz-Events sind die Dateien `_01`, `_02`, … wörtliche Teilstücke der Spielzeile. Kanon-Eigennamen in deutscher Aussprache über das Aussprache-Wörterbuch (Leitfaden, Abschnitt 6).
 
 **Einstellungs-Startwerte** (Feinabstimmung je Sprecher im Profil): Eleven v3 – Stability-Modus *Natural* für Barks, Helden und Dialog, *Creative* für Kampf-/Schmerzlaute und Hohle, *Robust* für konsistenzkritische Bosse (v3 kennt kein Similarity/Style; Speed 0,92–1,08 laut Profil). Multilingual v2 (Erzähler): Stability 0,60, Similarity 0,80, Style 0,15, Speaker Boost an, Speed 0,95; ruhige Monologe 0,45–0,55 / 0,75–0,80 / 0,15–0,30; bedrohliche Stimmen 0,60–0,75 / 0,80–0,90 / 0,05–0,15. Style über 0,4 erhöht das Artefaktrisiko. Nachbearbeitung: Standardkette Stimme (Hochpass 80–100 Hz, De-Esser, Kompressor 3:1, Limiter −1 dBTP); Hohle/Bosse/Deep Voice zusätzlich Spezialketten laut Leitfaden Abschnitt 8.3.
 
@@ -913,7 +913,7 @@ Kurze Dateien (< 3 s): Varianten einer Familie gehörmäßig gleich laut machen 
 > | Rolle | Chronist von Eldraeth; erzählt aus späterer Rückschau |
 > | Alter | Mitte 60 |
 > | Timbre | tiefer, warmer, satter Bariton, sehr sauber, Erzähl-Resonanz ohne Theatralik |
-> | Akzent | neutrales, gebildetes britisches Englisch |
+> | Akzent | Deutsch: neutrales, gebildetes Hochdeutsch (Hörbuch-Diktion) |
 > | Tempo | gemessen, getragen, klare Satzbögen; nie langsam-schleppend |
 > | Emotion | ernst, ehrfürchtig, leise Trauer, Würde; Hoffnung nur angedeutet |
 > | Do | Gewicht auf Namen und Zahlen, Pausen nach Kernsätzen |
@@ -921,16 +921,15 @@ Kurze Dateien (< 3 s): Varianten einer Familie gehörmäßig gleich laut machen 
 >
 > **Voice-Design-Prompt:**
 > > A distinguished male narrator in his mid-sixties with a deep, warm and resonant baritone voice, immaculately clear.
-> > Neutral, educated British accent. Measured, solemn storytelling pace with natural pauses, the voice of an old chronicler
-> > recounting history with reverence and quiet sorrow, never theatrical. Studio-quality audiobook recording, close
-> > microphone, no background noise, no reverb.
+> > Speaks German with a natural, native accent: neutral, educated standard German (Hochdeutsch) with audiobook diction.
+> > Measured, solemn storytelling pace with natural pauses, the voice of an old chronicler recounting history with reverence
+> > and quiet sorrow, never theatrical. Studio-quality audiobook recording, close microphone, no background noise, no
+> > reverb.
 >
 > **Beispieltext:**
-> > "In the eight hundred and ninety-seventh year After the Fall, the Ashmarch was a land of empty farms and silent bells.
-> > Of all the villages that once lined the southern road, only one still kept its fires burning. Its name was Brennhollow."
->
-> *DE:* „Im achthundertsiebenundneunzigsten Jahr nach dem Fall war die Aschmark ein Land leerer Höfe und stummer Glocken. Von all den Dörfern,
-> die einst die Südstraße säumten, hielt nur noch eines seine Feuer am Brennen. Sein Name war Brennhollow.“
+> > „Im achthundertsiebenundneunzigsten Jahr nach dem Fall war die Aschmark ein Land leerer Höfe und stummer Glocken. Von
+> > all den Dörfern, die einst die Südstraße säumten, hielt nur noch eines seine Feuer am Brennen. Sein Name war
+> > Brennhollow.“
 >
 > **Modell & Einstellungen:** **Multilingual v2** (Stability 0,60, Similarity 0,80, Style 0,15, Speaker Boost an, Speed 0,95);
 > für lange Kampagnenstrecken in **Studio** mit Aussprache-Wörterbuch.
@@ -942,66 +941,66 @@ Kurze Dateien (< 3 s): Varianten einer Familie gehörmäßig gleich laut machen 
 ##### narrator_m01_opening (Event `narrator.m01_opening`)
 Kontext: Missionsstart, Kamera fährt über verbrannte Felder der Aschmark auf Brennhollow zu. Musik `main_menu`→`build_calm`.
 
-- [ ] `voices/narrator/narrator_m01_opening_01.ogg` · Regie: ruhig, gewichtig; Pause nach „went dark“
-  > Eight hundred and ninety-seven years after the fall of Aureth, the world still remembers the day the sun went dark. They call it the Ashfall. And they call what followed the Age of Ash.
-  > *(Bedeutung DE: Achthundertsiebenundneunzig Jahre nach dem Fall Aureths erinnert sich die Welt noch an den Tag, an dem die Sonne erlosch. Man nennt ihn den Aschenfall. Und was folgte, nennt man das Zeitalter der Asche.)*
+- [ ] `voices/narrator/narrator_m01_opening_01.ogg` · Regie: ruhig, gewichtig; Pause nach dem Satz (Sequenz: 0,4–0,8 s)
+  > Jahr 897 nach dem Fall.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_opening_02.ogg` · Regie: düster werdend, letzte Phrase leiser
-  > In the south of Valemark lies the Ashmarch, a borderland of burned farms and silent bells. Beyond it, the ruins whisper, and the dead do not stay buried.
-  > *(Bedeutung DE: Im Süden Valemarks liegt die Aschmark, ein Grenzland verbrannter Höfe und stummer Glocken. Dahinter flüstern die Ruinen, und die Toten bleiben nicht begraben.)*
+- [ ] `voices/narrator/narrator_m01_opening_02.ogg` · Regie: Satz bleibt offen: Stimme am Ende nicht absenken, Gedankenstrich als Schwebe
+  > Am Rand der Aschmark hält Brennhollow noch stand –
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_opening_03.ogg` · Regie: Wärme, Hoffnungsschimmer bei „Brennhollow“
-  > Of all the villages that once lined the southern road, only one still keeps its fires burning. Thirty souls. One chapel without a roof. Its name is Brennhollow.
-  > *(Bedeutung DE: Von allen Dörfern, die einst die Südstraße säumten, hält nur noch eines seine Feuer am Brennen. Dreißig Seelen. Eine Kapelle ohne Dach. Sein Name ist Brennhollow.)*
+- [ ] `voices/narrator/narrator_m01_opening_03.ogg` · Regie: Aufzählung mit kleinen Pausen; Wärme, Hoffnungsschimmer; Satzende fällt ab
+  > dreißig Seelen, ein Bergfried, ein Feld.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_opening_04.ogg` · Regie: feierlich, Abschluss, langsamer Schlusssatz
-  > And to Brennhollow, at the end of a long and bitter winter, came Isolde Raventhorn, Warden of the Ashmarch. Here, in the last settlement, our chronicle begins.
-  > *(Bedeutung DE: Und nach Brennhollow kam, am Ende eines langen, bitteren Winters, Isolde Raventhorn, Wächterin der Aschmark. Hier, in der letzten Siedlung, beginnt unsere Chronik.)*
+- [ ] `voices/narrator/narrator_m01_opening_04.ogg` · Regie: düster werdend, langsamer Schlusssatz, letzte Phrase leiser
+  > Und jede Nacht kommt der Nebel näher.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### narrator_m01_night_falls (Event `narrator.m01_night_falls`)
 Kontext: Tag-Nacht-Wechsel; Ambience wechselt `ambience_day` → `ambience_night`. Kann in der Mission mehrfach auftreten.
 
-- [ ] `voices/narrator/narrator_m01_night_falls_01.ogg` · Regie: warnend, gedämpft
-  > Night falls over the Ashmarch. Bar the doors and keep the fires lit, for the dead walk in darkness.
-  > *(Bedeutung DE: Die Nacht senkt sich über die Aschmark. Verriegelt die Türen und haltet die Feuer am Brennen, denn die Toten wandeln im Dunkeln.)*
+- [ ] `voices/narrator/narrator_m01_night_falls_01.ogg` · Regie: Take 1: warnend, gedämpft
+  > Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_night_falls_02.ogg` · Regie: still, Anspannung
-  > The sun sinks behind the ruins. In Brennhollow, the watchmen count the torches, and pray the count still holds at dawn.
-  > *(Bedeutung DE: Die Sonne sinkt hinter die Ruinen. In Brennhollow zählen die Wächter die Fackeln und beten, dass die Zahl bei Morgengrauen noch stimmt.)*
+- [ ] `voices/narrator/narrator_m01_night_falls_02.ogg` · Regie: Take 2: still, angespannt, etwas schneller
+  > Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_night_falls_03.ogg` · Regie: unheilvoll, langsam
-  > Darkness comes, and with it the cold breath of the Hollow Deep. Whatever sleeps in the ruins is stirring now.
-  > *(Bedeutung DE: Die Dunkelheit kommt und mit ihr der kalte Atem des Hohlen Tiefs. Was immer in den Ruinen schläft, regt sich nun.)*
+- [ ] `voices/narrator/narrator_m01_night_falls_03.ogg` · Regie: Take 3: unheilvoll, langsam, lange Pause nach „Aschhügel“
+  > Die Sonne sank hinter die Aschhügel. Aus dem Nordosten wehte ein Geruch nach kaltem Stein und alten Gräbern.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### narrator_m01_victory (Event `narrator.m01_victory`)
 Kontext: Hohlschrein zerstört, Fahler Vogt besiegt. Musik `victory_sting`, danach ruhige Ambience. Folgt auf Hal Venns `m01_victory`.
 
-- [ ] `voices/narrator/narrator_m01_victory_01.ogg` · Regie: Erleichterung, ruhig
-  > The Hollow Shrine of Vael Dorn fell silent, and the Pale Reeve's bell rang no more.
-  > *(Bedeutung DE: Der Hohlschrein von Vael Dorn verstummte, und die Glocke des Fahlen Vogts läutete nicht mehr.)*
+- [ ] `voices/narrator/narrator_m01_victory_01.ogg` · Regie: ruhig, Erleichterung; Doppelpunkt als kurze Pause
+  > So begann es:
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_victory_02.ogg` · Regie: wachsende Wärme
-  > In Brennhollow, thirty souls became forty, and then sixty, as word spread that a fire still burned in the Ashmarch.
-  > *(Bedeutung DE: In Brennhollow wurden aus dreißig Seelen vierzig, dann sechzig, als sich herumsprach, dass in der Aschmark noch ein Feuer brannte.)*
+- [ ] `voices/narrator/narrator_m01_victory_02.ogg` · Regie: Satz bleibt offen, leichtes Heben der Stimme
+  > nicht mit einer Krone,
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_victory_03.ogg` · Regie: Ausblick, würdevoll, Hoffnung
-  > It was a small victory, in a small corner of a broken world. But every crown in the history of Eldraeth began with a single settlement that refused to die.
-  > *(Bedeutung DE: Es war ein kleiner Sieg, in einem kleinen Winkel einer zerbrochenen Welt. Doch jede Krone in der Geschichte Eldraeths begann mit einer einzigen Siedlung, die sich weigerte zu sterben.)*
+- [ ] `voices/narrator/narrator_m01_victory_03.ogg` · Regie: wachsende Wärme, würdevoll; Gewicht auf „weigerte zu sterben“, Satzende ausklingen lassen
+  > sondern mit einem Dorf, das sich weigerte zu sterben.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### narrator_m01_defeat (Event `narrator.m01_defeat`)
 Kontext: Bergfried zerstört oder Isolde gefallen. Musik `defeat_sting`.
 
-- [ ] `voices/narrator/narrator_m01_defeat_01.ogg` · Regie: schwer, langsam
-  > The fires of Brennhollow went out, one by one, and the dead walked in through open doors.
-  > *(Bedeutung DE: Die Feuer Brennhollows erloschen, eines nach dem anderen, und die Toten traten durch offene Türen ein.)*
+- [ ] `voices/narrator/narrator_m01_defeat_01.ogg` · Regie: schwer, langsam, tonlos
+  > Brennhollow ist gefallen.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_defeat_02.ogg` · Regie: tonlos, Trauer
-  > The Pale Reeve wrote thirty more names into his ledger, and the Ashmarch fell silent.
-  > *(Bedeutung DE: Der Fahle Vogt trug dreißig weitere Namen in sein Register ein, und die Aschmark verstummte.)*
+- [ ] `voices/narrator/narrator_m01_defeat_02.ogg` · Regie: Trauer, leiser werdend (Sätze 01+02 = `defeat_text` der Mission, siehe Hinweis)
+  > Asche bedeckt die Mark.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/narrator/narrator_m01_defeat_03.ogg` · Regie: Wendung zur Ermutigung im letzten Satz
-  > So ended the last settlement. But this chronicle is not yet carved in stone. Rise, Warden, and try again.
-  > *(Bedeutung DE: So endete die letzte Siedlung. Doch diese Chronik ist noch nicht in Stein gemeißelt. Erhebe dich, Wächterin, und versuche es erneut.)*
+- [ ] `voices/narrator/narrator_m01_defeat_03.ogg` · Regie: Wendung zur Ermutigung; Zusatzsegment ohne Spieltext-Entsprechung (Ergebnisbildschirm zeigt nur `defeat_text`)
+  > Doch die Chronik ist noch nicht zu Ende. Erhebt Euch, Wächterin, und versucht es erneut.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### `m02_aufbruch` · Mission 2 – Die Flüchtlinge von Harrowmere (`m02`)
 Kontext: Beginn der Eskorte, Ascheregen setzt ein.
@@ -1335,7 +1334,7 @@ Kontext: Enden der Kampagne, gesprochen nach dem Abspann der letzten Mission.
 > | Rolle | Spielbare Heldin, Ritterin und Glutklingen-Adeptin; Tochter eines gefallenen Grenzlords |
 > | Alter | 34 (klingt Anfang/Mitte 30, mit gelebter Härte) |
 > | Timbre | mittlere bis tiefe Frauenstimme, leicht rau/heiser (Folge des Aschenfiebers), fester Kern, kaum Vibrato |
-> | Akzent | neutrales Nordenglisch, geerdet, nicht adlig-geziert; Konsonanten klar |
+> | Akzent | Deutsch: neutrales Hochdeutsch mit leicht norddeutscher Färbung, geerdet, nicht adlig-geziert; Konsonanten klar |
 > | Tempo | knapp, ökonomisch; im Humor kurze Verzögerung vor der Pointe |
 > | Emotion | pflichtbewusst, kontrolliert, trocken-humorvoll; Wärme nur durchscheinend; Wut kalt, nicht schrill |
 > | Do | Understatement, Müdigkeit hörbar machen, Befehle ruhig und sicher |
@@ -1343,16 +1342,15 @@ Kontext: Enden der Kampagne, gesprochen nach dem Abspann der letzten Mission.
 >
 > **Voice-Design-Prompt:**
 > > A woman in her mid-thirties with a low, slightly husky alto voice, a faint roughness at the edges as if her throat was
-> > scarred by illness long ago. Grounded northern English accent, plain and unpretentious. She speaks in short, controlled,
-> > economical sentences, calm authority of a veteran knight, with a dry, understated sense of humour. Steady breath, no
-> > vibrato, never shrill. Close-mic, studio-quality recording, no background noise.
+> > scarred by illness long ago. Speaks German with a natural, native accent: grounded standard German with a faint northern
+> > coloring, plain and unpretentious. She speaks in short, controlled, economical sentences, calm authority of a veteran
+> > knight, with a dry, understated sense of humour. Steady breath, no vibrato, never shrill. Close-mic, studio-quality
+> > recording, no background noise.
 >
 > **Beispieltext:**
-> > "The Ashmarch doesn't forgive mistakes, and neither do I. Rebuild the palisade by nightfall, keep the fires lit, and if
-> > anything crawls out of those ruins… well. Leave it to me. That's what they pay me for. In theory."
->
-> *DE:* „Die Aschmark verzeiht keine Fehler, und ich auch nicht. Baut die Palisade bis zum Einbruch der Nacht wieder auf, haltet
-> die Feuer am Brennen, und wenn irgendetwas aus diesen Ruinen kriecht … nun. Überlasst es mir. Dafür bezahlt man mich. Theoretisch.“
+> > „Die Aschmark verzeiht keine Fehler, und ich auch nicht. Baut die Palisade bis zum Einbruch der Nacht wieder auf, haltet
+> > die Feuer am Brennen, und wenn irgendetwas aus diesen Ruinen kriecht … nun. Überlasst es mir. Dafür bezahlt man mich.
+> > Theoretisch.“
 >
 > **Modell & Einstellungen:** Eleven v3, Stabilität *Natural* (Kampfrufe ggf. *Creative*), Speed 1.0. Tags sparsam:
 > `[sarcastic]`, `[chuckles]`, `[exhales]`, `[shouting]`, `[groans]`.
@@ -1365,192 +1363,192 @@ Kontext: Enden der Kampagne, gesprochen nach dem Abspann der letzten Mission.
 ##### hero_isolde_select (Event `voice.hero_isolde.select`)
 
 - [ ] `voices/heroes/hero_isolde_select_01.ogg` · Regie: knapp, Autorität, **Referenzdatei**
-  > Raventhorn. Speak.
-  > *(Bedeutung DE: Raventhorn. Sprecht.)*
+  > Raventhorn. Sprecht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_select_02.ogg` · Regie: ruhig-stolz
-  > The Ashmarch still stands. So do I.
-  > *(Bedeutung DE: Die Aschmark steht noch. Ich auch.)*
+  > Die Aschmark steht noch. Ich auch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_select_03.ogg` · Regie: leicht ungeduldig
-  > Yes? Make it quick, the dead don't wait.
-  > *(Bedeutung DE: Ja? Macht schnell, die Toten warten nicht.)*
+  > Ja? Macht schnell, die Toten warten nicht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_select_04.ogg` · Regie: sachlich
-  > Warden here.
-  > *(Bedeutung DE: Wächterin hier.)*
+  > Wächterin hier.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_select_05.ogg` · Regie: trocken-ironisch, nicht genervt
-  > [sarcastic] What now? Another fire to put out?
-  > *(Bedeutung DE: Was jetzt? Noch ein Feuer zu löschen?)*
+  > [sarcastic] Was jetzt? Noch ein Feuer zu löschen?
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_move (Event `voice.hero_isolde.move`)
 
 - [ ] `voices/heroes/hero_isolde_move_01.ogg` · Regie: knapp
-  > Moving.
-  > *(Bedeutung DE: Unterwegs.)*
+  > Unterwegs.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_move_02.ogg` · Regie: sicher, ein Hauch Wehmut
-  > I know these roads.
-  > *(Bedeutung DE: Ich kenne diese Wege.)*
+  > Ich kenne diese Wege.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_move_03.ogg` · Regie: entschlossen
-  > Through the ash, then.
-  > *(Bedeutung DE: Dann durch die Asche.)*
+  > Dann durch die Asche.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_move_04.ogg` · Regie: trockener Humor
-  > On my way. Try not to lose the village while I'm gone.
-  > *(Bedeutung DE: Bin unterwegs. Versucht, das Dorf nicht zu verlieren, solange ich weg bin.)*
+  > Bin unterwegs. Versucht, das Dorf nicht zu verlieren, solange ich weg bin.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_move_05.ogg` · Regie: lakonisch
-  > If it's burning, I'm going.
-  > *(Bedeutung DE: Wenn's brennt, geh ich.)*
+  > Wenn's brennt, geh ich.
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_attack (Event `voice.hero_isolde.attack`)
 
 - [ ] `voices/heroes/hero_isolde_attack_01.ogg` · Regie: voller Schlachtruf
-  > [shouting] For the Ashmarch!
-  > *(Bedeutung DE: Für die Aschmark!)*
+  > [shouting] Für die Aschmark!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_attack_02.ogg` · Regie: kalte Wut
-  > Back into the dark with you!
-  > *(Bedeutung DE: Zurück ins Dunkel mit euch!)*
+  > Zurück ins Dunkel mit euch!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_attack_03.ogg` · Regie: Kampfformel, kraftvoll
-  > Steel and ember!
-  > *(Bedeutung DE: Stahl und Glut!)*
+  > Stahl und Glut!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_attack_04.ogg` · Regie: gefährlich ruhig
-  > Let's see if you bleed.
-  > *(Bedeutung DE: Mal sehen, ob ihr blutet.)*
+  > Mal sehen, ob ihr blutet.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_attack_05.ogg` · Regie: Befehl an Truppe
-  > [shouting] Burn them down!
-  > *(Bedeutung DE: Brennt sie nieder!)*
+  > [shouting] Brennt sie nieder!
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_retreat (Event `voice.hero_isolde.retreat`)
 
 - [ ] `voices/heroes/hero_isolde_retreat_01.ogg` · Regie: scharf, kontrolliert
-  > Fall back. That's not a request.
-  > *(Bedeutung DE: Rückzug. Das ist keine Bitte.)*
+  > Rückzug. Das ist keine Bitte.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_retreat_02.ogg` · Regie: bitter-vernünftig
-  > Pulling out. We fight again tomorrow.
-  > *(Bedeutung DE: Wir ziehen ab. Morgen kämpfen wir wieder.)*
+  > Wir ziehen ab. Morgen kämpfen wir wieder.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_retreat_03.ogg` · Regie: außer Atem, entschlossen
-  > [exhales] Not here. Not today. Back!
-  > *(Bedeutung DE: Nicht hier. Nicht heute. Zurück!)*
+  > [exhales] Nicht hier. Nicht heute. Zurück!
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_hit (Event `voice.hero_isolde.hit`)
 
 - [ ] `voices/heroes/hero_isolde_hit_01.ogg` · Regie: trotzig
-  > [grunts] Ngh! Is that all?
-  > *(Bedeutung DE: Ngh! Ist das alles?)*
+  > [grunts] Ngh! Ist das alles?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_hit_02.ogg` · Regie: Anspielung Aschenfieber, gepresst
-  > [groans] Hah… I've had worse fevers.
-  > *(Bedeutung DE: Hah … ich hatte schon schlimmeres Fieber.)*
+  > [groans] Hah … ich hatte schon schlimmeres Fieber.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_hit_03.ogg` · Regie: reiner Schmerzlaut, kurz
   > [gasps] Argh!
-  > *(Bedeutung DE: Argh!)*
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_death (Event `voice.hero_isolde.death`)
 
 - [ ] `voices/heroes/hero_isolde_death_01.ogg` · Regie: letzter Auftrag, schwach
-  > [gasps] Keep… the fires… lit…
-  > *(Bedeutung DE: Haltet … die Feuer … am Brennen …)*
+  > [gasps] Haltet … die Feuer … am Brennen …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_death_02.ogg` · Regie: verletzlich, leise
-  > Father… I held… as long as I could…
-  > *(Bedeutung DE: Vater … ich hab gehalten … so lang ich konnte …)*
+  > Vater … ich hab gehalten … so lang ich konnte …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_death_03.ogg` · Regie: Wut gegen das Sterben
-  > [exhales] Not… yet… damn it…
-  > *(Bedeutung DE: Nicht … jetzt … verdammt …)*
+  > [exhales] Nicht … jetzt … verdammt …
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_victory (Event `voice.hero_isolde.victory`)
 
-- [ ] `voices/heroes/hero_isolde_victory_01.ogg` · Regie: erschöpft, Pause vor „Today“
-  > The March holds. Today.
-  > *(Bedeutung DE: Die Mark hält. Heute.)*
+- [ ] `voices/heroes/hero_isolde_victory_01.ogg` · Regie: erschöpft, Pause vor „Heute“
+  > Die Mark hält. Heute.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_victory_02.ogg` · Regie: Understatement
-  > [exhales] Well. That could have gone worse.
-  > *(Bedeutung DE: Na ja. Hätte schlimmer laufen können.)*
+  > [exhales] Na ja. Hätte schlimmer laufen können.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_victory_03.ogg` · Regie: ernst, Verantwortung
-  > Count the living first. Then the dead.
-  > *(Bedeutung DE: Zählt zuerst die Lebenden. Dann die Toten.)*
+  > Zählt zuerst die Lebenden. Dann die Toten.
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_ability (Event `voice.hero_isolde.ability`)
 
 - [ ] `voices/heroes/hero_isolde_ability_01.ogg` · Regie: Glutspalter (`ember_cleave`), Schlagschrei
-  > [shouting] Taste the ember!
-  > *(Bedeutung DE: Kostet die Glut!)*
+  > [shouting] Kostet die Glut!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_ability_02.ogg` · Regie: Glutspalter, mit Hiebanstrengung
-  > Cleave and burn!
-  > *(Bedeutung DE: Spalten und brennen!)*
+  > Spalten und brennen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_ability_03.ogg` · Regie: Sammelbanner (`rallying_banner`), mitreißend
-  > [shouting] To me! Raise the banner!
-  > *(Bedeutung DE: Zu mir! Hebt das Banner!)*
+  > [shouting] Zu mir! Hebt das Banner!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_ability_04.ogg` · Regie: Sammelbanner, Moralruf
-  > Stand with me. The March is watching!
-  > *(Bedeutung DE: Steht zu mir. Die Mark sieht zu!)*
+  > Steht zu mir. Die Mark sieht zu!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_ability_05.ogg` · Regie: Aschenschild (`ashen_ward`), konzentriert, halblaut
-  > Ash, shield me.
-  > *(Bedeutung DE: Asche, schirme mich.)*
+  > Asche, schirme mich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_ability_06.ogg` · Regie: Aschenschild, schützend-befehlend
-  > Behind me. Now.
-  > *(Bedeutung DE: Hinter mich. Sofort.)*
+  > Hinter mich. Sofort.
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_greet (Event `voice.hero_isolde.greet`)
 
 - [ ] `voices/heroes/hero_isolde_greet_01.ogg` · Regie: Vorstellung, sachlich-warm
-  > Isolde Raventhorn, Warden of the Ashmarch. Let's get to work.
-  > *(Bedeutung DE: Isolde Raventhorn, Wächterin der Aschmark. An die Arbeit.)*
+  > Isolde Raventhorn, Wächterin der Aschmark. An die Arbeit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_greet_02.ogg` · Regie: ruhig, entschlossen
-  > Brennhollow's still breathing. Good. Let's keep it that way.
-  > *(Bedeutung DE: Brennhollow atmet noch. Gut. Dabei soll's bleiben.)*
+  > Brennhollow atmet noch. Gut. Dabei soll's bleiben.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_greet_03.ogg` · Regie: trocken, augenzwinkernd
-  > [sarcastic] You called, I came. Try to have a plan this time.
-  > *(Bedeutung DE: Ihr habt gerufen, ich bin da. Versucht diesmal, einen Plan zu haben.)*
+  > [sarcastic] Ihr habt gerufen, ich bin da. Versucht diesmal, einen Plan zu haben.
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_levelup (Event `voice.hero_isolde.levelup`)
 
 - [ ] `voices/heroes/hero_isolde_levelup_01.ogg` · Regie: nüchtern zufrieden
-  > Stronger. Good. The ruins won't get any kinder.
-  > *(Bedeutung DE: Stärker. Gut. Die Ruinen werden nicht freundlicher.)*
+  > Stärker. Gut. Die Ruinen werden nicht freundlicher.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_levelup_02.ogg` · Regie: spürbar, fast ehrfürchtig
-  > [exhales] The ember burns brighter.
-  > *(Bedeutung DE: Die Glut brennt heller.)*
+  > [exhales] Die Glut brennt heller.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_levelup_03.ogg` · Regie: trockener Humor
-  > Older, wiser, more scars. The usual.
-  > *(Bedeutung DE: Älter, klüger, mehr Narben. Das Übliche.)*
+  > Älter, klüger, mehr Narben. Das Übliche.
+  > *(Sprache: Deutsch)*
 
 ##### hero_isolde_lowhp (Event `voice.hero_isolde.lowhp`)
 
 - [ ] `voices/heroes/hero_isolde_lowhp_01.ogg` · Regie: ehrlich, gepresst
-  > [groans] I'm hurt… badly.
-  > *(Bedeutung DE: Ich bin verletzt … schwer.)*
+  > [groans] Ich bin verletzt … schwer.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_lowhp_02.ogg` · Regie: Humor trotz Schmerz
-  > [gasps] Need a healer. Or a miracle.
-  > *(Bedeutung DE: Brauche einen Heiler. Oder ein Wunder.)*
+  > [gasps] Brauche einen Heiler. Oder ein Wunder.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_isolde_lowhp_03.ogg` · Regie: erschöpft, Warnung an Spieler
-  > [exhales] Can't take much more of this.
-  > *(Bedeutung DE: Viel mehr halte ich nicht aus.)*
+  > [exhales] Viel mehr halte ich nicht aus.
+  > *(Sprache: Deutsch)*
 
 ##### `m02_kern` · Mission 2 – Die Flüchtlinge von Harrowmere (`m02`)
 Kontext: Nacht nach der Zerstörung des Hohlschreins. Isolde und Hal Venn stehen in den Trümmern; im Zentrum pulsiert ein Aschglas-Kern. Die Stimme aus dem Tief spricht zum ersten Mal – nur Isolde hört sie.
@@ -2028,23 +2026,21 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 > | Rolle | Mentor, Priester der Ewigen Flamme, Stimme der Mission 1 |
 > | Alter | Anfang 60 |
 > | Timbre | warmer, kiesiger Bariton, leicht rauchig (Jahre am Altarfeuer), freundlicher Brustklang |
-> | Akzent | weiches nordenglisches Landidiom (Yorkshire-artig), ländlicher als Isolde |
+> | Akzent | Deutsch: weiches, ländlich gefärbtes Hochdeutsch (leichte norddeutsche Wärme), ländlicher als Isolde |
 > | Tempo | ruhig, erzählend; bei Gefahr klar und schnell, aber nie panisch |
 > | Emotion | Fürsorge, Glaube ohne Fanatismus, gutmütiger Humor, Trauer um verlorene Gemeinden |
 > | Do | väterlich, gelegentlich sanfter Spott über Isoldes Sturheit |
 > | Don't | Predigerpathos, Frömmelei, Märchenonkel-Ton |
 >
 > **Voice-Design-Prompt:**
-> > A kind priest in his early sixties with a warm, gravelly baritone, slightly smoky from years beside altar fires.
-> > Soft rural northern English accent. Calm, patient, storytelling pace, gentle humour and quiet faith, fatherly but not
-> > preachy. When urgent, he becomes clear and firm without panic. Studio-quality recording, close microphone, no background noise.
+> > A kind priest in his early sixties with a warm, gravelly baritone, slightly smoky from years beside altar fires. Speaks
+> > German with a natural, native accent: soft, down-to-earth standard German with a faint rural northern warmth. Calm,
+> > patient, storytelling pace, gentle humour and quiet faith, fatherly but not preachy. When urgent, he becomes clear and
+> > firm without panic. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "Thirty souls, Isolde. Thirty souls, a cold hearth and a chapel with no roof. It isn't much of a kingdom. But the Flame
-> > has started from less, and so have you. Light the first fire, and let's see who comes home to it."
->
-> *DE:* „Dreißig Seelen, Isolde. Dreißig Seelen, ein kalter Herd und eine Kapelle ohne Dach. Kein großes Königreich. Aber die Flamme hat
-> mit weniger begonnen, und du auch. Entzünde das erste Feuer, und dann sehen wir, wer zu ihm heimkehrt.“
+> > „Dreißig Seelen, Isolde. Dreißig Seelen, ein kalter Herd und eine Kapelle ohne Dach. Kein großes Königreich. Aber die
+> > Flamme hat mit weniger begonnen, und du auch. Entzünde das erste Feuer, und dann sehen wir, wer zu ihm heimkehrt.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* für Mission-1-Zeilen (`[chuckles]`, `[sighs]` gezielt); alternativ Multilingual v2
 > (Stability 0,50, Similarity 0,78, Style 0,20, Speed 0,97) für ruhige Passagen.
@@ -2058,278 +2054,278 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 ##### hero_hal_venn_select (Event `voice.hero_hal_venn.select`)
 
 - [ ] `voices/heroes/hero_hal_venn_select_01.ogg` · Regie: warm
-  > Yes, Warden?
-  > *(Bedeutung DE: Ja, Wächterin?)*
+  > Ja, Wächterin?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_select_02.ogg` · Regie: ruhig
-  > The Flame is with us.
-  > *(Bedeutung DE: Die Flamme ist mit uns.)*
+  > Die Flamme ist mit uns.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_select_03.ogg` · Regie: sanft
-  > My hands are yours.
-  > *(Bedeutung DE: Meine Hände gehören Euch.)*
+  > Meine Hände gehören Euch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_select_04.ogg` · Regie: selbstironisch
-  > Ah, old bones, ready as ever.
-  > *(Bedeutung DE: Ach, alte Knochen, bereit wie immer.)*
+  > Ach, alte Knochen, bereit wie immer.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_select_05.ogg` · Regie: sorgend
-  > What does Brennhollow need of me?
-  > *(Bedeutung DE: Was braucht Brennhollow von mir?)*
+  > Was braucht Brennhollow von mir?
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_move (Event `voice.hero_hal_venn.move`)
 
 - [ ] `voices/heroes/hero_hal_venn_move_01.ogg` · Regie: ruhig
-  > Lead on, I'll follow.
-  > *(Bedeutung DE: Geht voran, ich folge.)*
+  > Geht voran, ich folge.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_move_02.ogg` · Regie: trocken
-  > Slowly, my knees remember Aureth.
-  > *(Bedeutung DE: Langsam, meine Knie erinnern sich an Aureth.)*
+  > Langsam, meine Knie erinnern sich an Aureth.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_move_03.ogg` · Regie: ernst
-  > To where the need is greatest.
-  > *(Bedeutung DE: Dorthin, wo die Not am größten ist.)*
+  > Dorthin, wo die Not am größten ist.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_move_04.ogg` · Regie: gemütlich
-  > Walking, walking.
-  > *(Bedeutung DE: Ich gehe, ich gehe.)*
+  > Ich gehe, ich gehe.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_move_05.ogg` · Regie: neutral
-  > Onward, then.
-  > *(Bedeutung DE: Dann vorwärts.)*
+  > Dann vorwärts.
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_attack (Event `voice.hero_hal_venn.attack`)
 
 - [ ] `voices/heroes/hero_hal_venn_attack_01.ogg` · Regie: kräftig
-  > In the Flame's name!
-  > *(Bedeutung DE: Im Namen der Flamme!)*
+  > Im Namen der Flamme!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_attack_02.ogg` · Regie: laut
-  > Be gone, shadows!
-  > *(Bedeutung DE: Fort mit euch, Schatten!)*
+  > Fort mit euch, Schatten!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_attack_03.ogg` · Regie: scharf
-  > Enough! Back!
-  > *(Bedeutung DE: Genug! Zurück!)*
+  > Genug! Zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_attack_04.ogg` · Regie: hymnisch
-  > Light, strike true!
-  > *(Bedeutung DE: Licht, triff sicher!)*
+  > Licht, triff sicher!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_attack_05.ogg` · Regie: entschlossen
-  > I'll not have another village lost!
-  > *(Bedeutung DE: Ich dulde kein weiteres verlorenes Dorf!)*
+  > Ich dulde kein weiteres verlorenes Dorf!
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_retreat (Event `voice.hero_hal_venn.retreat`)
 
 - [ ] `voices/heroes/hero_hal_venn_retreat_01.ogg` · Regie: dringlich
-  > Fall back, fall back!
-  > *(Bedeutung DE: Zurück, zurück!)*
+  > Zurück, zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_retreat_02.ogg` · Regie: sorgend-laut
-  > Gather the wounded!
-  > *(Bedeutung DE: Sammelt die Verwundeten!)*
+  > Sammelt die Verwundeten!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_retreat_03.ogg` · Regie: angespannt
-  > We live to fight again!
-  > *(Bedeutung DE: Wir leben, um wieder zu kämpfen!)*
+  > Wir leben, um wieder zu kämpfen!
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_hit (Event `voice.hero_hal_venn.hit`)
 
 - [ ] `voices/heroes/hero_hal_venn_hit_01.ogg` · Regie: trocken
-  > [grunts] Hm. That stung.
-  > *(Bedeutung DE: Hm. Das hat gebrannt.)*
+  > [grunts] Hm. Das hat gebrannt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_hit_02.ogg` · Regie: erschrocken
-  > [gasps] Flame, hold me!
-  > *(Bedeutung DE: Flamme, halte mich!)*
+  > [gasps] Flamme, halte mich!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_hit_03.ogg` · Regie: trotzig
-  > [groans] Old, not dead!
-  > *(Bedeutung DE: Alt, nicht tot!)*
+  > [groans] Alt, nicht tot!
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_death (Event `voice.hero_hal_venn.death`)
 
 - [ ] `voices/heroes/hero_hal_venn_death_01.ogg` · Regie: verhauchend, warm
-  > [exhales] Warden… the Flame… keeps you…
-  > *(Bedeutung DE: Wächterin … die Flamme … behüte Euch …)*
+  > [exhales] Wächterin … die Flamme … behüte Euch …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_death_02.ogg` · Regie: leise
-  > [gasps] Tell Brennhollow… I tried…
-  > *(Bedeutung DE: Sagt Brennhollow … ich habe es versucht …)*
+  > [gasps] Sagt Brennhollow … ich habe es versucht …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_death_03.ogg` · Regie: erlöst
-  > [sighs] Into the light…
-  > *(Bedeutung DE: Ins Licht …)*
+  > [sighs] Ins Licht …
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_victory (Event `voice.hero_hal_venn.victory`)
 
 - [ ] `voices/heroes/hero_hal_venn_victory_01.ogg` · Regie: erleichtert
-  > The Flame prevailed.
-  > *(Bedeutung DE: Die Flamme hat gesiegt.)*
+  > Die Flamme hat gesiegt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_victory_02.ogg` · Regie: gerührt
-  > Praise be, we're alive.
-  > *(Bedeutung DE: Gelobt sei die Flamme, wir leben.)*
+  > Gelobt sei die Flamme, wir leben.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_victory_03.ogg` · Regie: ruhig
-  > Let us tend the wounded.
-  > *(Bedeutung DE: Lasst uns die Verwundeten versorgen.)*
+  > Lasst uns die Verwundeten versorgen.
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_ability (Event `voice.hero_hal_venn.ability`)
 
 - [ ] `voices/heroes/hero_hal_venn_ability_01.ogg` · Regie: warm, laut
-  > Flame, mend them!
-  > *(Bedeutung DE: Flamme, heile sie!)*
+  > Flamme, heile sie!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_ability_02.ogg` · Regie: scharf
-  > Burn clean!
-  > *(Bedeutung DE: Brennt rein!)*
+  > Brennt rein!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_ability_03.ogg` · Regie: hymnisch
-  > Faith be our fire!
-  > *(Bedeutung DE: Glaube sei unser Feuer!)*
+  > Glaube sei unser Feuer!
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_greet (Event `voice.hero_hal_venn.greet`)
 
 - [ ] `voices/heroes/hero_hal_venn_greet_01.ogg` · Regie: warm
-  > Warden. Good to see you standing.
-  > *(Bedeutung DE: Wächterin. Schön, Euch aufrecht zu sehen.)*
+  > Wächterin. Schön, Euch aufrecht zu sehen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_greet_02.ogg` · Regie: ernst-freundlich
-  > The settlement needs you, and so do I.
-  > *(Bedeutung DE: Die Siedlung braucht Euch, und ich auch.)*
+  > Die Siedlung braucht Euch, und ich auch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_greet_03.ogg` · Regie: sanft
-  > I've kept the lamp lit.
-  > *(Bedeutung DE: Ich habe die Lampe am Brennen gehalten.)*
+  > Ich habe die Lampe am Brennen gehalten.
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_levelup (Event `voice.hero_hal_venn.levelup`)
 
 - [ ] `voices/heroes/hero_hal_venn_levelup_01.ogg` · Regie: überrascht, froh
-  > The Flame burns brighter in me.
-  > *(Bedeutung DE: Die Flamme brennt heller in mir.)*
+  > Die Flamme brennt heller in mir.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_levelup_02.ogg` · Regie: bescheiden
-  > Stronger. Humbling.
-  > *(Bedeutung DE: Stärker. Demütigend.)*
+  > Stärker. Und das macht demütig.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_levelup_03.ogg` · Regie: leise
-  > Grace, grown.
-  > *(Bedeutung DE: Gnade, gewachsen.)*
+  > Die Gnade wächst.
+  > *(Sprache: Deutsch)*
 
 ##### hero_hal_venn_lowhp (Event `voice.hero_hal_venn.lowhp`)
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_01.ogg` · Regie: angestrengt
-  > I must… tend myself…
-  > *(Bedeutung DE: Ich muss … mich selbst versorgen …)*
+  > Ich muss … mich selbst versorgen …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_02.ogg` · Regie: gepresst
-  > Not yet, Flame, not yet.
-  > *(Bedeutung DE: Noch nicht, Flamme, noch nicht.)*
+  > Noch nicht, Flamme, noch nicht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_hal_venn_lowhp_03.ogg` · Regie: trocken-schwach
-  > Bleeding. Naturally.
-  > *(Bedeutung DE: Ich blute. Natürlich.)*
+  > Ich blute. Natürlich.
+  > *(Sprache: Deutsch)*
 
 ##### char_hal_venn_m01_intro (Event `char_hal_venn.m01_intro`)
-Kontext: direkt nach `narrator_m01_opening`. Isolde trifft am Bergfried ein; Hal kommt ihr entgegen. Erste Aufgaben: Holz, Stein.
+Kontext: direkt nach `narrator_m01_opening`. Isolde trifft am Bergfried ein; Hal kommt ihr entgegen. Erste Aufgabe: zweites Gehöft und Holz (`obj_farm`).
 
-- [ ] `voices/characters/char_hal_venn_m01_intro_01.ogg` · Regie: herzliche Erleichterung, etwas außer Atem
-  > Isolde! Flame be praised, you came. I half feared the road had swallowed you, like it swallowed the last courier.
-  > *(Bedeutung DE: Isolde! Die Flamme sei gepriesen, du bist gekommen. Ich fürchtete schon, die Straße hätte dich verschluckt, wie den letzten Boten.)*
+- [ ] `voices/characters/char_hal_venn_m01_intro_01.ogg` · Regie: sorgenvoll, nüchtern, direkt zur Heldin gesprochen
+  > Wächterin, die Speicher reichen nicht über den Winter.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_intro_02.ogg` · Regie: Seufzer, nüchterne Trauer
-  > [sighs] Look around you. Thirty souls, a cold hearth, and a chapel with no roof. This is what's left of Brennhollow.
-  > *(Bedeutung DE: Sieh dich um. Dreißig Seelen, ein kalter Herd und eine Kapelle ohne Dach. Das ist, was von Brennhollow übrig ist.)*
+- [ ] `voices/characters/char_hal_venn_m01_intro_02.ogg` · Regie: tatkräftig, Tutorial-Hinweis klar betonen; Satz geht in _03 weiter
+  > Wir brauchen ein zweites Gehöft
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_intro_03.ogg` · Regie: tatkräftig, pragmatisch; Tutorial-Hinweis klar betonen
-  > The keep still stands, at least. Set the people to work: timber from the woods, stone from the old quarry. We need walls before we need prayers.
-  > *(Bedeutung DE: Wenigstens steht der Bergfried noch. Stell die Leute an die Arbeit: Holz aus dem Wald, Stein aus dem alten Bruch. Wir brauchen Mauern, bevor wir Gebete brauchen.)*
+- [ ] `voices/characters/char_hal_venn_m01_intro_03.ogg` · Regie: Stimme bleibt oben (Satz offen), Gedankenstrich als kurze Pause
+  > und Holz aus dem Westwald –
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_intro_04.ogg` · Regie: gesenkte Stimme, letzter Satz geflüstert
-  > And Isolde… the bells in the northeast ruins have started ringing again. No one has rung them in a hundred years. [whispers] No one living.
-  > *(Bedeutung DE: Und Isolde … die Glocken in den Ruinen im Nordosten läuten wieder. Seit hundert Jahren hat sie niemand geläutet. Niemand Lebendes.)*
+- [ ] `voices/characters/char_hal_venn_m01_intro_04.ogg` · Regie: eindringlich, leiser werdend, ein Hauch Angst
+  > bevor es dunkel wird.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### char_hal_venn_m01_first_farm (Event `char_hal_venn.m01_first_farm`)
-Kontext: erstes Gehöft (`farmstead`) fertiggestellt; Nahrung wird produziert.
+Kontext: zweites Gehöft (`farmstead` ×2) fertiggestellt; nächstes Ziel: Kaserne.
 
-- [ ] `voices/characters/char_hal_venn_m01_first_farm_01.ogg` · Regie: ehrliche Freude
-  > A farmstead! Now that's a sight I'd stopped hoping for.
-  > *(Bedeutung DE: Ein Gehöft! Ein Anblick, auf den ich nicht mehr zu hoffen wagte.)*
+- [ ] `voices/characters/char_hal_venn_m01_first_farm_01.ogg` · Regie: ehrliche Erleichterung, warm
+  > Die Felder werden uns ernähren.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_first_farm_02.ogg` · Regie: Schmunzeln, Pointe
-  > Bread before banners, my old abbot used to say. Fed people work harder, fight harder, and complain less. [chuckles] Well… slightly less.
-  > *(Bedeutung DE: Brot vor Bannern, sagte mein alter Abt immer. Satte Leute arbeiten härter, kämpfen härter und klagen weniger. Nun … etwas weniger.)*
+- [ ] `voices/characters/char_hal_venn_m01_first_farm_02.ogg` · Regie: Ton kippt von Wärme zu Ernst, Pause danach
+  > Doch Brot allein hält die Toten nicht auf.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_first_farm_03.ogg` · Regie: Tutorial-Hinweis (mehr Gehöfte), freundlich
-  > Build a few more, and Brennhollow will have a harvest by autumn. The Flame keeps us warm, but it doesn't fill our bellies.
-  > *(Bedeutung DE: Bau noch ein paar, und Brennhollow hat bis zum Herbst eine Ernte. Die Flamme wärmt uns, aber sie füllt nicht unsere Bäuche.)*
+- [ ] `voices/characters/char_hal_venn_m01_first_farm_03.ogg` · Regie: Tutorial-Hinweis (Kaserne), bestimmt, klar
+  > Errichtet eine Kaserne.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### char_hal_venn_m01_barracks (Event `char_hal_venn.m01_barracks`)
 Kontext: Kaserne (`barracks`) fertiggestellt; Ausbildung von Schwertkämpfern, Speerträgern, Bogenschützen möglich.
 
-- [ ] `voices/characters/char_hal_venn_m01_barracks_01.ogg` · Regie: bedrückt
-  > Barracks. [sighs] I had hoped we would never need one again.
-  > *(Bedeutung DE: Eine Kaserne. Ich hatte gehofft, wir bräuchten nie wieder eine.)*
+- [ ] `voices/characters/char_hal_venn_m01_barracks_01.ogg` · Regie: bedrückt, kurzer Seufzer vor dem Satz
+  > [sighs] Die Kaserne steht.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_barracks_02.ogg` · Regie: Vertrauen in die Menschen
-  > Our people are farmers and woodcutters, Isolde, not soldiers. But give them a sword and someone to stand beside, and they'll learn.
-  > *(Bedeutung DE: Unsere Leute sind Bauern und Holzfäller, Isolde, keine Soldaten. Aber gib ihnen ein Schwert und jemanden an ihrer Seite, und sie werden es lernen.)*
+- [ ] `voices/characters/char_hal_venn_m01_barracks_02.ogg` · Regie: Tutorial-Hinweis (Einheitentypen), bestimmt; Satz geht in _03 weiter
+  > Bildet Speerträger und Bogenschützen aus –
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_barracks_03.ogg` · Regie: Tutorial-Hinweis (Einheitentypen), bestimmt
-  > Train them well. Swords for the line, spears to hold it, and bows on the walls. The dead don't tire, so we'll need numbers.
-  > *(Bedeutung DE: Bilde sie gut aus. Schwerter für die Linie, Speere, um sie zu halten, und Bögen auf den Mauern. Die Toten ermüden nicht, also brauchen wir Masse.)*
+- [ ] `voices/characters/char_hal_venn_m01_barracks_03.ogg` · Regie: grimmige Zuversicht, Gewicht auf „Stahl“
+  > die Hohlen kennen keine Furcht, aber sie kennen Stahl.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### char_hal_venn_m01_wave_warning (Event `char_hal_venn.m01_wave_warning`)
-Kontext: Angriffswelle der Hohlen nähert sich (mehrfach pro Mission). Wird von `sfx/world/horn_alarm_*` begleitet.
+Kontext: erste Angriffswelle der Hohlen über die Brücke (Auslöser `wave_warning`, 215 s). Wird von `sfx/world/horn_alarm_*` begleitet.
 
-- [ ] `voices/characters/char_hal_venn_m01_wave_warning_01.ogg` · Regie: laut, dringlich, nicht hysterisch
-  > [shouting] Isolde! Movement from the ruins! The Hollowed are coming!
-  > *(Bedeutung DE: Isolde! Bewegung bei den Ruinen! Die Hohlen kommen!)*
+- [ ] `voices/characters/char_hal_venn_m01_wave_warning_01.ogg` · Regie: Take 1: laut, dringlich, nicht hysterisch
+  > [shouting] Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried!
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_wave_warning_02.ogg` · Regie: erst lauschend leise, dann Befehl
-  > Do you hear that? Bones on stone… They're coming. Man the walls!
-  > *(Bedeutung DE: Hörst du das? Knochen auf Stein … Sie kommen. Besetzt die Mauern!)*
+- [ ] `voices/characters/char_hal_venn_m01_wave_warning_02.ogg` · Regie: Take 2: erst lauschend leise („Horn?“), dann Befehl
+  > Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried!
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_wave_warning_03.ogg` · Regie: gehetzt, kräftig
-  > The bells are ringing again! Get everyone behind the palisade, now!
-  > *(Bedeutung DE: Die Glocken läuten wieder! Alle hinter die Palisade, sofort!)*
+- [ ] `voices/characters/char_hal_venn_m01_wave_warning_03.ogg` · Regie: Take 3: gehetzt, kräftig, außer Atem
+  > Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried!
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_wave_warning_04.ogg` · Regie: angespannt, trockener Rest-Humor
-  > Torches up! Something is coming out of the dark, and it isn't friendly!
-  > *(Bedeutung DE: Fackeln hoch! Etwas kommt aus der Dunkelheit, und es ist nicht freundlich!)*
+- [ ] `voices/characters/char_hal_venn_m01_wave_warning_04.ogg` · Regie: Take 4: angespannt, trockener Rest-Autorität, Schlusssatz Befehlston
+  > [shouting] Hört Ihr das Horn? Sie kommen über die Brücke! Alle Mann an den Bergfried!
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### char_hal_venn_m01_shrine_found (Event `char_hal_venn.m01_shrine_found`)
 Kontext: Einheiten entdecken den Hohlschrein (`hollow_shrine`) mit Knochentürmen (`bone_spire`). Musik wechselt Richtung `build_tension`.
 
-- [ ] `voices/characters/char_hal_venn_m01_shrine_found_01.ogg` · Regie: Ehrfurcht, Furcht, leise
-  > Flame preserve us… That's the Hollow Shrine of Vael Dorn. I thought it was only a story to frighten novices.
-  > *(Bedeutung DE: Flamme bewahre uns … Das ist der Hohlschrein von Vael Dorn. Ich dachte, er sei nur eine Geschichte, um Novizen zu erschrecken.)*
+- [ ] `voices/characters/char_hal_venn_m01_shrine_found_01.ogg` · Regie: Ehrfurcht, Furcht, leise; „…“ als Atempause
+  > [whispers] Bei der Flamme … eine Aureth-Kapelle, und der Schleier darin ist offen.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_shrine_found_02.ogg` · Regie: erklärend, beunruhigt
-  > Look at the ashglass growing from the stones. The Veil is thin there, Isolde. Thin enough for something to reach through.
-  > *(Bedeutung DE: Sieh dir das Aschglas an, das aus den Steinen wächst. Der Schleier ist dort dünn, Isolde. Dünn genug, dass etwas hindurchgreifen kann.)*
+- [ ] `voices/characters/char_hal_venn_m01_shrine_found_02.ogg` · Regie: Missionsziel klar, entschlossen
+  > Zerstört den Schrein, Wächterin.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_shrine_found_03.ogg` · Regie: Missionsziel klar, entschlossen
-  > That bell… it's the Pale Reeve's bell. Destroy the shrine, and the dead lose their anchor here. Burn it to the ground.
-  > *(Bedeutung DE: Diese Glocke … das ist die Glocke des Fahlen Vogts. Zerstöre den Schrein, und die Toten verlieren hier ihren Anker. Brenn ihn nieder.)*
+- [ ] `voices/characters/char_hal_venn_m01_shrine_found_03.ogg` · Regie: warnend, gedämpft, letzte Worte schwer
+  > Und hütet Euch vor dem, der ihn bewacht.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### char_hal_venn_m01_victory (Event `char_hal_venn.m01_victory`)
 Kontext: Schrein zerstört, Vogt gefallen; vor `narrator_m01_victory`.
 
 - [ ] `voices/characters/char_hal_venn_m01_victory_01.ogg` · Regie: Erleichterung, fast Tränen
-  > [exhales] It's over. By the Flame, it's truly over. The shrine is ash.
-  > *(Bedeutung DE: Es ist vorbei. Bei der Flamme, es ist wirklich vorbei. Der Schrein ist Asche.)*
+  > [exhales] Der Riss ist verschlossen.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_victory_02.ogg` · Regie: warm, stolz
-  > Do you know what you've done? You've given these people something they haven't had in years. A reason to stay.
-  > *(Bedeutung DE: Weißt du, was du getan hast? Du hast diesen Leuten etwas gegeben, das sie seit Jahren nicht hatten. Einen Grund zu bleiben.)*
+- [ ] `voices/characters/char_hal_venn_m01_victory_02.ogg` · Regie: warm, stolz; Satz geht in _03 weiter
+  > Brennhollow wird diesen Winter überstehen –
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
-- [ ] `voices/characters/char_hal_venn_m01_victory_03.ogg` · Regie: humorvoll, Ausblick auf Zeitalter II
-  > [chuckles] Word will spread, Isolde. Refugees, traders… and the attention of greater lords. Let's fix the chapel roof before the king's men arrive.
-  > *(Bedeutung DE: Das spricht sich herum, Isolde. Flüchtlinge, Händler … und die Aufmerksamkeit größerer Herren. Reparieren wir das Kapellendach, bevor die Männer des Königs eintreffen.)*
+- [ ] `voices/characters/char_hal_venn_m01_victory_03.ogg` · Regie: ehrliche Dankbarkeit, ruhig, Ausblick auf Zeitalter II
+  > dank Euch, Wächterin.
+  > *(Sprache: Deutsch, exakter Spieltext)*
 
 ##### `m02_kern` · Mission 2 – Die Flüchtlinge von Harrowmere (`m02`)
 Kontext: Nacht nach der Zerstörung des Hohlschreins. Isolde und Hal Venn stehen in den Trümmern; im Zentrum pulsiert ein Aschglas-Kern. Die Stimme aus dem Tief spricht zum ersten Mal – nur Isolde hört sie.
@@ -2542,7 +2538,7 @@ Kontext: Letzte Wahl: Hohle Krone nehmen.
 > | Rolle | Clanfürst, potenzieller Verbündeter/Rivale |
 > | Alter | Mitte 50 |
 > | Timbre | sehr tiefer, voluminöser Bassbariton, Brustresonanz, rau vom Kälte- und Schmiederauch |
-> | Akzent | nordischer, rollender Burr (schottisch-skandinavisch gefärbtes Englisch), harte Konsonanten |
+> | Akzent | Deutsch: nordisch gefärbt, rollendes Zungenspitzen-R, harte Konsonanten |
 > | Tempo | gemessen und schwer; Lachen dröhnend, Zorn explosiv |
 > | Emotion | Stolz, Ahnenehre, misstrauisch gegenüber Südländern, großzügig gegenüber Bewährten |
 > | Do | Pausen wie Gewicht, Ahnen beschwören |
@@ -2550,16 +2546,14 @@ Kontext: Letzte Wahl: Hohle Krone nehmen.
 >
 > **Voice-Design-Prompt:**
 > > A massive clan chieftain in his mid-fifties with a very deep, booming bass-baritone voice, rich chest resonance and a
-> > rough edge from cold air and forge smoke. Rolling northern burr accent with hard consonants. Heavy, measured pacing, a
-> > proud and weathered authority, capable of thunderous laughter and sudden anger. Studio-quality recording, close
-> > microphone, no background noise.
+> > rough edge from cold air and forge smoke. Speaks German with a natural, native accent: northern-sounding standard German
+> > with a rolling r and hard consonants. Heavy, measured pacing, a proud and weathered authority, capable of thunderous
+> > laughter and sudden anger. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "My ancestors carved this pass with their bare hands and buried their sons beneath its stones. You come up here with your
-> > southern banners and ask for iron? Then you'll drink with us, bleed with us, and swear by the Ancestor Path. Or go home."
->
-> *DE:* „Meine Ahnen haben diesen Pass mit bloßen Händen gehauen und ihre Söhne unter seinen Steinen begraben. Ihr kommt mit euren
-> südlichen Bannern herauf und wollt Eisen? Dann trinkt ihr mit uns, blutet mit uns und schwört beim Ahnenpfad. Oder geht heim.“
+> > „Meine Ahnen haben diesen Pass mit bloßen Händen gehauen und ihre Söhne unter seinen Steinen begraben. Ihr kommt mit
+> > euren südlichen Bannern herauf und wollt Eisen? Dann trinkt ihr mit uns, blutet mit uns und schwört beim Ahnenpfad. Oder
+> > geht heim.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* (`[laughs]`, `[shouting]`); Speed 0,95.
 > **Nachbearbeitung:** Hochpass 60 Hz, leichte Tiefmitten-Fülle +1 dB @ 150 Hz, im Freien kurzer Berghall szenisch.
@@ -2570,180 +2564,180 @@ Kontext: Letzte Wahl: Hohle Krone nehmen.
 ##### hero_torvald_select (Event `voice.hero_torvald.select`)
 
 - [ ] `voices/heroes/hero_torvald_select_01.ogg` · Regie: tief, kräftig
-  > Torvald Ironhand listens.
-  > *(Bedeutung DE: Torvald Eisenhand hört zu.)*
+  > Torvald Eisenhand hört zu.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_select_02.ogg` · Regie: ungeduldig
-  > Speak, and make it quick.
-  > *(Bedeutung DE: Sprecht, und macht's kurz.)*
+  > Sprecht, und macht's kurz.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_select_03.ogg` · Regie: ernst
-  > The ancestors are watching.
-  > *(Bedeutung DE: Die Ahnen sehen zu.)*
+  > Die Ahnen sehen zu.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_select_04.ogg` · Regie: gut gelaunt
-  > Ha! A fight, I hope?
-  > *(Bedeutung DE: Ha! Ein Kampf, hoffe ich?)*
+  > Ha! Ein Kampf, hoffe ich?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_select_05.ogg` · Regie: ehrlich
-  > Skarnheim stands with you.
-  > *(Bedeutung DE: Skarnheim steht an Eurer Seite.)*
+  > Skarnheim steht an Eurer Seite.
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_move (Event `voice.hero_torvald.move`)
 
 - [ ] `voices/heroes/hero_torvald_move_01.ogg` · Regie: grob-fröhlich
-  > The road is long, the axe is light!
-  > *(Bedeutung DE: Der Weg ist lang, die Axt ist leicht!)*
+  > Der Weg ist lang, die Axt ist leicht!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_move_02.ogg` · Regie: laut
-  > Forward, forward!
-  > *(Bedeutung DE: Vorwärts, vorwärts!)*
+  > Vorwärts, vorwärts!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_move_03.ogg` · Regie: brummig
-  > My feet know the mountain, not this mud.
-  > *(Bedeutung DE: Meine Füße kennen den Berg, nicht diesen Matsch.)*
+  > Meine Füße kennen den Berg, nicht diesen Matsch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_move_04.ogg` · Regie: herzlich
-  > Lead on, Warden!
-  > *(Bedeutung DE: Führt an, Wächterin!)*
+  > Führt an, Wächterin!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_move_05.ogg` · Regie: trocken
-  > To the next throat, then.
-  > *(Bedeutung DE: Dann zur nächsten Kehle.)*
+  > Dann zur nächsten Kehle.
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_attack (Event `voice.hero_torvald.attack`)
 
 - [ ] `voices/heroes/hero_torvald_attack_01.ogg` · Regie: Schlachtruf, laut
-  > For the clans!
-  > *(Bedeutung DE: Für die Clans!)*
+  > Für die Clans!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_attack_02.ogg` · Regie: wild
-  > Crush them!
-  > *(Bedeutung DE: Zerschmettert sie!)*
+  > Zerschmettert sie!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_attack_03.ogg` · Regie: kehlig
-  > Ancestors, watch me!
-  > *(Bedeutung DE: Ahnen, seht mir zu!)*
+  > Ahnen, seht mir zu!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_attack_04.ogg` · Regie: hart
-  > Stand and die!
-  > *(Bedeutung DE: Steht und sterbt!)*
+  > Steht und sterbt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_attack_05.ogg` · Regie: brüllend
-  > Hahh! Come to the iron!
-  > *(Bedeutung DE: Hahh! Kommt ans Eisen!)*
+  > Hahh! Kommt ans Eisen!
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_retreat (Event `voice.hero_torvald.retreat`)
 
 - [ ] `voices/heroes/hero_torvald_retreat_01.ogg` · Regie: knurrend
-  > A clansman retreats for no one… today.
-  > *(Bedeutung DE: Ein Clanmann weicht vor niemandem … heute.)*
+  > Ein Clanmann weicht vor niemandem … heute.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_retreat_02.ogg` · Regie: laut
-  > Fall back to the shields!
-  > *(Bedeutung DE: Zurück zu den Schilden!)*
+  > Zurück zu den Schilden!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_retreat_03.ogg` · Regie: fluchend
-  > Back, by the beard of my father!
-  > *(Bedeutung DE: Zurück, beim Bart meines Vaters!)*
+  > Zurück, beim Bart meines Vaters!
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_hit (Event `voice.hero_torvald.hit`)
 
 - [ ] `voices/heroes/hero_torvald_hit_01.ogg` · Regie: höhnisch
-  > [grunts] Is that all?
-  > *(Bedeutung DE: Ist das alles?)*
+  > [grunts] Ist das alles?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_hit_02.ogg` · Regie: wütend
-  > [roars] That one drew blood!
-  > *(Bedeutung DE: Der hat Blut gezogen!)*
+  > [roars] Der hat Blut gezogen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_hit_03.ogg` · Regie: dumpf
   > [groans] Hrnn!
-  > *(Bedeutung DE: Hrnn!)*
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_death (Event `voice.hero_torvald.death`)
 
 - [ ] `voices/heroes/hero_torvald_death_01.ogg` · Regie: verhauchend
-  > [exhales] Skarnheim… remember…
-  > *(Bedeutung DE: Skarnheim … erinnere dich …)*
+  > [exhales] Skarnheim … erinnere dich …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_death_02.ogg` · Regie: friedlich-leise
-  > [gasps] Father… I come…
-  > *(Bedeutung DE: Vater … ich komme …)*
+  > [gasps] Vater … ich komme …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_death_03.ogg` · Regie: gebrochen, rau
-  > [roars weakly] The… mountain… calls…
-  > *(Bedeutung DE: Der … Berg … ruft …)*
+  > [roars weakly] Der … Berg … ruft …
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_victory (Event `voice.hero_torvald.victory`)
 
 - [ ] `voices/heroes/hero_torvald_victory_01.ogg` · Regie: dröhnend
-  > Ha! Drink to that!
-  > *(Bedeutung DE: Ha! Darauf trinken wir!)*
+  > Ha! Darauf trinken wir!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_victory_02.ogg` · Regie: zufrieden
-  > The ancestors are pleased.
-  > *(Bedeutung DE: Die Ahnen sind zufrieden.)*
+  > Die Ahnen sind zufrieden.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_victory_03.ogg` · Regie: stolz
-  > None can say the clans bow.
-  > *(Bedeutung DE: Keiner kann sagen, die Clans beugten sich.)*
+  > Keiner kann sagen, die Clans beugten sich.
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_ability (Event `voice.hero_torvald.ability`)
 
 - [ ] `voices/heroes/hero_torvald_ability_01.ogg` · Regie: laut, Ruf
-  > Hear me, mountain!
-  > *(Bedeutung DE: Hört mich, Berge!)*
+  > Hört mich, Berge!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_ability_02.ogg` · Regie: kehlig
-  > Ancestors, lend me iron!
-  > *(Bedeutung DE: Ahnen, leiht mir Eisen!)*
+  > Ahnen, leiht mir Eisen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_ability_03.ogg` · Regie: kurz, hart
-  > Break!
-  > *(Bedeutung DE: Brecht!)*
+  > Brecht!
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_greet (Event `voice.hero_torvald.greet`)
 
 - [ ] `voices/heroes/hero_torvald_greet_01.ogg` · Regie: herzlich-grob
-  > Warden Isolde! Your ale is thin, but your cause is good.
-  > *(Bedeutung DE: Wächterin Isolde! Euer Bier ist dünn, Eure Sache gut.)*
+  > Wächterin Isolde! Euer Bier ist dünn, Eure Sache gut.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_greet_02.ogg` · Regie: stolz
-  > Skarnheim sends iron, and me.
-  > *(Bedeutung DE: Skarnheim schickt Eisen, und mich.)*
+  > Skarnheim schickt Eisen, und mich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_greet_03.ogg` · Regie: ungeduldig
-  > Point me at the enemy.
-  > *(Bedeutung DE: Richtet mich auf den Feind.)*
+  > Richtet mich auf den Feind.
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_levelup (Event `voice.hero_torvald.levelup`)
 
 - [ ] `voices/heroes/hero_torvald_levelup_01.ogg` · Regie: dröhnend
-  > The ancestors' strength grows in me!
-  > *(Bedeutung DE: Die Kraft der Ahnen wächst in mir!)*
+  > Die Kraft der Ahnen wächst in mir!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_levelup_02.ogg` · Regie: lachend
-  > Heavier fists, lighter heart!
-  > *(Bedeutung DE: Schwerere Fäuste, leichteres Herz!)*
+  > Schwerere Fäuste, leichteres Herz!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_levelup_03.ogg` · Regie: froh
-  > More iron in the blood!
-  > *(Bedeutung DE: Mehr Eisen im Blut!)*
+  > Mehr Eisen im Blut!
+  > *(Sprache: Deutsch)*
 
 ##### hero_torvald_lowhp (Event `voice.hero_torvald.lowhp`)
 
 - [ ] `voices/heroes/hero_torvald_lowhp_01.ogg` · Regie: keuchend-trotzig
-  > I've had worse — I think.
-  > *(Bedeutung DE: Ich hatte Schlimmeres – glaube ich.)*
+  > Ich hatte Schlimmeres – glaube ich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_lowhp_02.ogg` · Regie: gepresst
-  > Not… yet… ancestors!
-  > *(Bedeutung DE: Noch … nicht … Ahnen!)*
+  > Noch … nicht … Ahnen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/heroes/hero_torvald_lowhp_03.ogg` · Regie: schwach
-  > My blood is leaving…
-  > *(Bedeutung DE: Mein Blut verlässt mich …)*
+  > Mein Blut verlässt mich …
+  > *(Sprache: Deutsch)*
 
 ##### `m09_schwur` · Mission 9 – Der Schwarze Winter (`m09`)
 Kontext: Der Torhof von Hrimgard. Torvald Eisenhand empfängt Isolde vor den Gräbern seiner Ahnen.
@@ -2810,24 +2804,22 @@ Kontext: Nur wenn Torvald den Blutschwur gehalten hat.
 > | Rolle | alternder König mit schwankender Legitimität |
 > | Alter | Ende 60 |
 > | Timbre | einst kräftiger Bariton, jetzt dünner, belegter Klang; leichte Altersbrüchigkeit, gelegentliches Zittern bei langen Sätzen |
-> | Akzent | gepflegtes, königliches britisches Englisch (RP), altmodische Formulierungen |
+> | Akzent | Deutsch: gepflegtes, getragenes Hochdeutsch (Bühnenaussprache), altmodische Formulierungen |
 > | Tempo | langsam, mit Pausen zum Atemholen; beschleunigt bei Zorn |
 > | Emotion | Würde, die er festhält; darunter Angst vor Bedeutungslosigkeit; aufflackernder Stolz |
 > | Do | Pluralis Majestatis gelegentlich; Erschöpfung im Atem |
 > | Don't | senile Karikatur, Brüllen |
 >
 > **Voice-Design-Prompt:**
-> > An elderly king in his late sixties with a fading baritone voice that was once powerful, now thinner and slightly hoarse,
-> > with a subtle tremor on long phrases. Refined, aristocratic British received pronunciation, old-fashioned and formal.
-> > Slow, deliberate pacing with audible breaths, dignity holding back fear and weariness. Studio-quality recording, close
-> > microphone, no background noise.
+> > An elderly king in his late sixties with a fading baritone voice that was once powerful, now thinner and slightly
+> > hoarse, with a subtle tremor on long phrases. Speaks German with a natural, native accent: refined, aristocratic
+> > stage-standard German, old-fashioned and formal. Slow, deliberate pacing with audible breaths, dignity holding back fear
+> > and weariness. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "My grandfather held this crown against famine and fire. My father held it against the Hollowing. And I… I am told I must
-> > hold it against my own dukes. Tell me, Warden. Do you still kneel to the Ember Crown, or merely to the man who wears it?"
->
-> *DE:* „Mein Großvater hielt diese Krone gegen Hunger und Feuer. Mein Vater gegen die Hohlung. Und ich … mir wird gesagt, ich müsse
-> sie gegen meine eigenen Herzöge halten. Sagt mir, Wächterin: Kniet Ihr noch vor der Glutkrone – oder nur vor dem Mann, der sie trägt?“
+> > „Mein Großvater hielt diese Krone gegen Hunger und Feuer. Mein Vater gegen die Hohlung. Und ich … mir wird gesagt, ich
+> > müsse sie gegen meine eigenen Herzöge halten. Sagt mir, Wächterin: Kniet Ihr noch vor der Glutkrone – oder nur vor dem
+> > Mann, der sie trägt?“
 >
 > **Modell & Einstellungen:** Multilingual v2 für Monologe (Stability 0,50, Similarity 0,80, Style 0,20, Speed 0,93);
 > Eleven v3 *Natural* für emotionale Ausbrüche (`[tired]`, `[angry]`, `[coughs]` sehr selten).
@@ -2881,24 +2873,22 @@ Kontext: Entscheidung: Aldrens Linie verteidigen.
 > | Rolle | ehrgeizige Herzogin von Nordmark, Rivalin der Krone |
 > | Alter | Anfang 40 |
 > | Timbre | klarer, kühler Mezzosopran, sehr präzise Artikulation, samtig in den Tiefen |
-> | Akzent | scharfes, elegantes RP mit schneidenden Konsonanten |
+> | Akzent | Deutsch: scharfes, elegantes Hochdeutsch mit schneidenden Konsonanten |
 > | Tempo | kontrolliert, gezielt eingesetzte Pausen; nie gehetzt |
 > | Emotion | berechnend, charmant-gefährlich, verächtlich gegenüber Schwäche; echte Überzeugung, dass sie das Reich retten muss |
 > | Do | Lächeln hörbar, Drohungen höflich verpacken |
 > | Don't | Klischee-Schurkin, Lachen à la Bösewicht |
 >
 > **Voice-Design-Prompt:**
-> > A poised woman in her early forties with a cool, clear mezzo-soprano voice, velvety in the lower register. Crisp,
-> > elegant British received pronunciation with precise, cutting consonants. Measured and confident delivery, every pause
-> > deliberate, a polite smile that carries a quiet threat. Intelligent, ambitious, never rushed. Studio-quality recording,
-> > close microphone, no background noise.
+> > A poised woman in her early forties with a cool, clear mezzo-soprano voice, velvety in the lower register. Speaks German
+> > with a natural, native accent: crisp, elegant standard German with precise, cutting consonants. Measured and confident
+> > delivery, every pause deliberate, a polite smile that carries a quiet threat. Intelligent, ambitious, never rushed.
+> > Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "Loyalty is a lovely word, Warden. It costs nothing to say and everything to keep. The king offers you gratitude. I offer
-> > you soldiers, grain and a future for your little settlement. Choose quickly. The Hollowed will not wait for courtesy."
->
-> *DE:* „Loyalität ist ein hübsches Wort, Wächterin. Es kostet nichts, es auszusprechen, und alles, es zu halten. Der König bietet Euch
-> Dankbarkeit. Ich biete Euch Soldaten, Korn und eine Zukunft für Eure kleine Siedlung. Wählt rasch. Die Hohlen warten nicht auf Höflichkeit.“
+> > „Loyalität ist ein hübsches Wort, Wächterin. Es kostet nichts, es auszusprechen, und alles, es zu halten. Der König
+> > bietet Euch Dankbarkeit. Ich biete Euch Soldaten, Korn und eine Zukunft für Eure kleine Siedlung. Wählt rasch. Die
+> > Hohlen warten nicht auf Höflichkeit.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* (`[sarcastic]`, `[laughs softly]` selten); Monologe Multilingual v2
 > (Stability 0,55, Similarity 0,80, Style 0,25).
@@ -2969,7 +2959,7 @@ Kontext: Entscheidung: Aldrens Linie verteidigen.
 > | Rolle | Veyl-Druidin, Brücke zwischen Wald und Menschen |
 > | Alter | alterslos (klingt Ende 20 bis Mitte 30, spricht aber mit uralter Ruhe) |
 > | Timbre | weiche, hauchige, helle Stimme mit leichter Brüchigkeit wie trockenes Laub; sehr nahe |
-> | Akzent | weiche, singende Satzmelodie (walisisch/irisch angelehnt), ungewöhnliche Betonungen; nicht menschlich-urban |
+> | Akzent | Deutsch: weiche, singende Satzmelodie, ungewöhnliche Betonungen; nicht menschlich-urban |
 > | Tempo | langsam, fließend, mit langen Atembögen; Stille ist Teil der Rede |
 > | Emotion | ruhig, wissend, melancholisch; Zorn leise und eisig |
 > | Do | Naturbilder sanft betonen, Fragen statt Behauptungen |
@@ -2977,16 +2967,15 @@ Kontext: Entscheidung: Aldrens Linie verteidigen.
 >
 > **Voice-Design-Prompt:**
 > > An ageless androgynous-leaning female voice that sounds around thirty yet carries centuries of calm. Soft, airy and
-> > light, with a delicate dry texture like rustling leaves, very intimate and close. A gentle lilting cadence with unusual,
-> > musical stress patterns, unhurried, long flowing phrases and meaningful silences. Wise, melancholic, quietly otherworldly.
-> > Studio-quality recording, close microphone, no background noise.
+> > light, with a delicate dry texture like rustling leaves, very intimate and close. Speaks German with a natural, native
+> > accent, in a gentle lilting cadence with unusual, musical stress patterns, unhurried, long flowing phrases and
+> > meaningful silences. Wise, melancholic, quietly otherworldly. Studio-quality recording, close microphone, no background
+> > noise.
 >
 > **Beispieltext:**
-> > "The Thornwild remembers every axe, Warden. Every root you cut is a word you can never take back. Walk softly here… the
-> > Root Mother is dreaming, and her dreams have turned grey. If she wakes like this, none of us will have a forest left."
->
-> *DE:* „Der Dornwald erinnert sich an jede Axt, Wächterin. Jede Wurzel, die du schneidest, ist ein Wort, das du nie zurücknehmen kannst.
-> Geh leise hier … die Wurzelmutter träumt, und ihre Träume sind grau geworden. Wenn sie so erwacht, bleibt keinem von uns ein Wald.“
+> > „Der Dornwald erinnert sich an jede Axt, Wächterin. Jede Wurzel, die du schneidest, ist ein Wort, das du nie
+> > zurücknehmen kannst. Geh leise hier … die Wurzelmutter träumt, und ihre Träume sind grau geworden. Wenn sie so erwacht,
+> > bleibt keinem von uns ein Wald.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* (`[whispers]` nur bei Geheimnissen); Speed 0,92.
 > **Nachbearbeitung:** Veyl-Signatur (Leitfaden 8.3): Luft +2 dB ab 10 kHz, kurzer heller Hall.
@@ -3050,24 +3039,22 @@ Kontext: Nur wenn die Wurzelmutter erwacht ist (Pakt).
 > | Rolle | Händlerfürstin des Saelith-Pakts |
 > | Alter | Mitte 40 |
 > | Timbre | warmer, samtiger Alt, voll und lächelnd, leicht kehliges Lachen |
-> | Akzent | leichter, melodischer Mittelmeer-Anklang, weltgewandt, mehrsprachig wirkend |
+> | Akzent | Deutsch mit leichtem, melodischem Mittelmeer-Anklang, weltgewandt, mehrsprachig wirkend |
 > | Tempo | entspannt, verführerisch langsam bei Angeboten; schnell und präzise beim Feilschen |
 > | Emotion | amüsiert, kalkulierend, gastfreundlich mit Hintergedanken; ehrliche Verachtung für Fanatismus |
 > | Do | Zahlen und Preise genießen; Charme |
 > | Don't | Gier-Karikatur, Akzent übertreiben |
 >
 > **Voice-Design-Prompt:**
-> > A worldly merchant princess in her mid-forties with a warm, velvety contralto voice, full and smiling, with a low throaty
-> > laugh. A light, melodic Mediterranean lilt in her English, cosmopolitan and refined. Relaxed, unhurried and charming when
-> > making offers, quick and precise when bargaining. Amused, calculating, hospitable with an edge. Studio-quality recording,
-> > close microphone, no background noise.
+> > A worldly merchant princess in her mid-forties with a warm, velvety contralto voice, full and smiling, with a low
+> > throaty laugh. Speaks fluent German with a natural accent and a light, melodic Mediterranean lilt, cosmopolitan and
+> > refined. Relaxed, unhurried and charming when making offers, quick and precise when bargaining. Amused, calculating,
+> > hospitable with an edge. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "Everyone in Eldraeth prays to something, Warden. Your people pray to a flame, the clans to their dead. In Saelith we pray
-> > to the tide, and the tide is honest: it always comes back for what it is owed. Now. Shall we discuss your debt?"
->
-> *DE:* „Jeder in Eldraeth betet zu irgendetwas, Wächterin. Eure Leute zu einer Flamme, die Clans zu ihren Toten. In Saelith beten wir zur
-> Flut, und die Flut ist ehrlich: Sie kommt immer zurück, um zu holen, was man ihr schuldet. Nun. Sprechen wir über Eure Schulden?“
+> > „Jeder in Eldraeth betet zu irgendetwas, Wächterin. Eure Leute zu einer Flamme, die Clans zu ihren Toten. In Saelith
+> > beten wir zur Flut, und die Flut ist ehrlich: Sie kommt immer zurück, um zu holen, was man ihr schuldet. Nun. Sprechen
+> > wir über Eure Schulden?“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* (`[laughs softly]`, `[amused]`); Speed 0,97.
 > **Nachbearbeitung:** Standardkette, Hochpass 90 Hz, Wärme leicht.
@@ -3117,7 +3104,7 @@ Kontext: Nur wenn der Vertrag mit Ophira geschlossen wurde.
 > | Rolle | Spionagemeister, undurchsichtig, wechselnde Loyalitäten |
 > | Alter | Ende 30 bis Mitte 40 (bewusst schwer einzuschätzen) |
 > | Timbre | glatter, leiser Tenor-Bariton, sehr nah am Mikrofon, fast vertraulich; wenig Brustklang |
-> | Akzent | schwer verortbar: gepflegt, neutral britisch mit verschliffenen Kanten |
+> | Akzent | Deutsch, schwer verortbar: gepflegtes, neutrales Hochdeutsch mit verschliffenen Kanten |
 > | Tempo | gleichmäßig ruhig, keine Hast, Sätze enden oft offen |
 > | Emotion | höflich, amüsiert, nie überrascht; Bedrohung durch Ruhe |
 > | Do | flüsternahe Intimität, Halbsätze, Ironie |
@@ -3125,16 +3112,13 @@ Kontext: Nur wenn der Vertrag mit Ophira geschlossen wurde.
 >
 > **Voice-Design-Prompt:**
 > > A soft-spoken man in his early forties with a smooth, quiet tenor-baritone voice, very close to the microphone, intimate
-> > and confidential. A refined but hard-to-place neutral British accent with softened edges. Even, unhurried delivery, never
-> > surprised, politely amused, sentences that trail off as if he knows more than he says. Studio-quality recording, close
-> > microphone, no background noise.
+> > and confidential. Speaks German with a natural, native accent: refined, neutral standard German with softened edges,
+> > hard to place regionally. Even, unhurried delivery, never surprised, politely amused, sentences that trail off as if he
+> > knows more than he says. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "You needn't look for the knife, Warden. If I wanted you dead, you would have died comfortably, in your sleep, three
-> > weeks ago. No… I'm here because someone in the royal court is feeding the Hollowed. And I'd rather like to know who."
->
-> *DE:* „Ihr müsst nicht nach dem Messer suchen, Wächterin. Wollte ich Euch tot sehen, wärt Ihr vor drei Wochen bequem im Schlaf gestorben.
-> Nein … ich bin hier, weil jemand am Königshof die Hohlen füttert. Und ich wüsste gern, wer.“
+> > „Ihr müsst nicht nach dem Messer suchen, Wächterin. Wollte ich Euch tot sehen, wärt Ihr vor drei Wochen bequem im Schlaf
+> > gestorben. Nein … ich bin hier, weil jemand am Königshof die Hohlen füttert. Und ich wüsste gern, wer.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural/Robust* (`[whispers]`, `[amused]`); Speed 0,96.
 > **Nachbearbeitung:** Standardkette, Nahbesprechungseffekt erhalten (kein starker Hochpass, 70 Hz), sehr leichter Kompressor.
@@ -3214,7 +3198,7 @@ Kontext: Nur wenn Kassian Isolde einen Gefallen schuldet (Entscheidung in Missio
 > | Rolle | Manifestation des Hohlen Tiefs, älter als die Götter |
 > | Alter | zeitlos; weder männlich noch weiblich festgelegt |
 > | Timbre | tief, ruhig, hohl, mit flüsterndem Luftanteil; wirkt wie viele Stimmen in einer (entsteht in der Nachbearbeitung) |
-> | Akzent | keiner; extrem deutliche, langsame Artikulation, als lerne es menschliche Sprache gerade |
+> | Akzent | Deutsch, kein Regionalakzent; extrem deutliche, langsame Artikulation, als lerne es menschliche Sprache gerade |
 > | Tempo | sehr langsam, lange Pausen, Silben gedehnt |
 > | Emotion | geduldig, fast zärtlich, vollkommen gleichgültig gegenüber Leid – Versuchung statt Drohung |
 > | Do | Intimität, Pausen, Fragen |
@@ -3222,16 +3206,15 @@ Kontext: Nur wenn Kassian Isolde einen Gefallen schuldet (Entscheidung in Missio
 >
 > **Voice-Design-Prompt:**
 > > An ancient, genderless voice, deep and calm, hollow and breathy, as if speaking from the bottom of a vast empty cavern.
-> > No accent, extremely slow and precise articulation, each syllable placed carefully as though the speaker is relearning
-> > human words. Patient, intimate, almost tender, utterly indifferent to suffering. Seductive rather than threatening.
-> > Studio-quality recording, close microphone, no background noise.
+> > Speaks German with a natural, native pronunciation and no regional accent, extremely slow and precise articulation, each
+> > syllable placed carefully as though the speaker is relearning human words. Patient, intimate, almost tender, utterly
+> > indifferent to suffering. Seductive rather than threatening. Studio-quality recording, close microphone, no background
+> > noise.
 >
 > **Beispieltext:**
-> > "You lit a fire… and called it hope. I remember when your gods were children, small one. I remember when they fell
-> > silent. Every flame goes out. Every crown turns to ash. Come down… and I will show you what lies beneath the Veil."
->
-> *DE:* „Du hast ein Feuer entzündet … und es Hoffnung genannt. Ich erinnere mich, als eure Götter Kinder waren, Kleine. Ich erinnere mich,
-> als sie verstummten. Jede Flamme erlischt. Jede Krone wird zu Asche. Komm herab … und ich zeige dir, was unter dem Schleier liegt.“
+> > „Du hast ein Feuer entzündet … und es Hoffnung genannt. Ich erinnere mich, als eure Götter Kinder waren, Kleine. Ich
+> > erinnere mich, als sie verstummten. Jede Flamme erlischt. Jede Krone wird zu Asche. Komm herab … und ich zeige dir, was
+> > unter dem Schleier liegt.“
 >
 > **Modell & Einstellungen:** Multilingual v2 (Stability 0,70, Similarity 0,85, Style 0,10, Speed 0,85) für Grundschicht;
 > zusätzlicher Take mit Eleven v3 und `[whispers]` als Flüsterschicht.
@@ -3348,7 +3331,7 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 > | Rolle | Banditenhauptmann der Grauen Straße (Mission 3); je nach Entscheidung gehängt oder Verbündeter |
 > | Alter | Mitte 50 |
 > | Timbre | heiser, rauchig, tiefer Bariton mit Kratzen; klingt, als habe er zu lange im Freien geschlafen |
-> | Akzent | rau, bodenständig, leicht nordenglisch gefärbt |
+> | Akzent | Deutsch: rau, bodenständig, leicht norddeutsch gefärbt |
 > | Tempo | gemächlich, trockene Pausen vor Pointen |
 > | Emotion | müde, spöttisch, ehrlich bis zur Selbstverachtung |
 > | Do | trockener Galgenhumor, kurze Seufzer |
@@ -3356,8 +3339,9 @@ Kontext: Letzte Wahl: Das Tiefe verbrennen (nur mit zerschlagenem Kern und versi
 >
 > **Voice-Design-Prompt:**
 > > A weathered man in his mid fifties with a hoarse, smoky baritone, gravel in the throat, a dry and tired tone with
-> > sarcastic edges. Slow, unhurried pacing with pauses before the punchline. A rough, down-to-earth northern accent.
-> > Studio-quality recording, close microphone, no background noise.
+> > sarcastic edges. Slow, unhurried pacing with pauses before the punchline. Speaks German with a natural, native accent:
+> > rough, down-to-earth, northern-leaning colloquial German. Studio-quality recording, close microphone, no background
+> > noise.
 >
 > **Beispieltext:** „Ich habe Befehle befolgt, die mit Gold kamen. Das ist kein Freispruch, ich weiß. Aber ich kenne jeden Pfad bis Kaldris.“
 >
@@ -3404,7 +3388,7 @@ Kontext: Wendel, wenn er in Isoldes Dienst getreten ist.
 > | Rolle | Mädchen, das im Schlaf mit der Stimme aus dem Tief spricht; später „Hörerin“ am Riss und beim Hohlen König |
 > | Alter | etwa 8 Jahre (in späteren Missionen derselbe Charakter, Stimme unverändert, da im Spiel nur Kurzzeilen) |
 > | Timbre | helle, ruhige Kinderstimme, fast ohne Betonung; leicht abwesend |
-> | Akzent | neutral, leise |
+> | Akzent | Deutsch: neutral, leise, schlichte Kindersprache |
 > | Tempo | langsam, gleichmäßig; Sätze enden ohne Frage-Intonation |
 > | Emotion | still, nicht ängstlich; unheimlich durch Gelassenheit |
 > | Do | monotone Gelassenheit, flüsternahe Nähe |
@@ -3412,7 +3396,8 @@ Kontext: Wendel, wenn er in Isoldes Dienst getreten ist.
 >
 > **Voice-Design-Prompt:**
 > > A quiet eight-year-old girl with a clear, calm child's voice, almost flat intonation, slightly distant and dreamlike,
-> > speaking slowly and evenly without rising question tones. Studio-quality recording, close microphone, no background noise.
+> > speaking slowly and evenly without rising question tones. Speaks German with a natural, native accent, plain child's
+> > diction. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:** „Der Mann im Moor hat gesagt, ich soll dir ausrichten: Es war nett, dich kennenzulernen.“
 >
@@ -3464,7 +3449,7 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 > | Rolle | Hüter des Hohlschreins von Vael Dorn; sammelt Seelen als „Zehnt“ für das Hohle Tief |
 > | Alter | einst ein Steuervogt Aureths, Mitte 50, seit Jahrhunderten hohl |
 > | Timbre | dünne, trockene, hohe Männerstimme, kalt und pedantisch, rasselnder Atem, Flüsteranteil |
-> | Akzent | altmodisch-bürokratisches Britisch, überpräzise Konsonanten |
+> | Akzent | Deutsch: altmodisch-bürokratische Kanzleisprache, überpräzise Konsonanten |
 > | Tempo | gleichmäßig, aufzählend, wie beim Verlesen einer Liste; bei Schmerz plötzlich kreischend |
 > | Emotion | gefühllose Pflichterfüllung, morbider Ordnungssinn, Gier nach „ausstehenden“ Seelen |
 > | Motiv | Zehnt, Schuld, Register, Siegel, Zählen |
@@ -3472,16 +3457,13 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 >
 > **Voice-Design-Prompt:**
 > > A thin, dry, high-pitched male voice of an ancient undead tax collector, cold and pedantic, with a rattling, breathy
-> > texture as if his lungs are full of dust. Old-fashioned bureaucratic British diction with over-precise consonants. Even,
-> > listing cadence like reading names from a ledger; eerie calm that can snap into a shriek. Studio-quality recording, close
-> > microphone, no background noise.
+> > texture as if his lungs are full of dust. Speaks German with a natural, native accent, in old-fashioned bureaucratic
+> > diction with over-precise consonants. Even, listing cadence like reading names from a ledger; eerie calm that can snap
+> > into a shriek. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "Brennhollow. Thirty souls. Nine hundred years in arrears. The Hollow Deep is patient, but the ledger must be balanced.
-> > Every breath you take is borrowed, Warden. I have come to collect the interest."
->
-> *DE:* „Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. Das Hohle Tief ist geduldig, doch das Register muss ausgeglichen werden.
-> Jeder Atemzug, den Ihr tut, ist geliehen, Wächterin. Ich bin gekommen, die Zinsen einzutreiben.“
+> > „Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand. Das Hohle Tief ist geduldig, doch das Register muss
+> > ausgeglichen werden. Jeder Atemzug, den Ihr tut, ist geliehen, Wächterin. Ich bin gekommen, die Zinsen einzutreiben.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural* (Taunts/Ability), *Creative* (hit/death mit `[shrieks]`, `[groans]`); Speed 0,95.
 > **Nachbearbeitung:** Hohle-Signatur + Vogt-Ergänzung (Leitfaden 8.3); Ablage unter `voices/units/`.
@@ -3491,80 +3473,80 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 ##### boss_pale_reeve_attack (Event `voice.boss_pale_reeve.attack`)
 
 - [ ] `voices/units/boss_pale_reeve_attack_01.ogg` · Regie: kalt, beiläufig
-  > Your tithe is due.
-  > *(Bedeutung DE: Euer Zehnt ist fällig.)*
+  > Euer Zehnt ist fällig.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_attack_02.ogg` · Regie: scharf, lauter
-  > Pay what you owe!
-  > *(Bedeutung DE: Zahlt, was Ihr schuldet!)*
+  > Zahlt, was Ihr schuldet!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_attack_03.ogg` · Regie: pedantisch, zischend
-  > Every soul is counted.
-  > *(Bedeutung DE: Jede Seele wird gezählt.)*
+  > Jede Seele wird gezählt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_attack_04.ogg` · Regie: süffisant
-  > Into the ledger with you.
-  > *(Bedeutung DE: Ab ins Register mit Euch.)*
+  > Ab ins Register mit Euch.
+  > *(Sprache: Deutsch)*
 
 ##### boss_pale_reeve_ability (Event `voice.boss_pale_reeve.ability`)
 
 - [ ] `voices/units/boss_pale_reeve_ability_01.ogg` · Regie: Seelenentzug (`reeve_soul_drain`), langsam, genüsslich
-  > I claim the debt of your breath.
-  > *(Bedeutung DE: Ich fordere die Schuld Eures Atems ein.)*
+  > Ich fordere die Schuld Eures Atems ein.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_ability_02.ogg` · Regie: Beschwörung (`hollow_summon`), geflüstert-befehlend
-  > [whispers] Rise, defaulters. Rise and serve.
-  > *(Bedeutung DE: Erhebt euch, Säumige. Erhebt euch und dient.)*
+  > [whispers] Erhebt euch, Säumige. Erhebt euch und dient.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_ability_03.ogg` · Regie: Urteil, eisig
-  > Your soul is forfeit.
-  > *(Bedeutung DE: Eure Seele ist verwirkt.)*
+  > Eure Seele ist verwirkt.
+  > *(Sprache: Deutsch)*
 
 ##### boss_pale_reeve_hit (Event `voice.boss_pale_reeve.hit`)
 
 - [ ] `voices/units/boss_pale_reeve_hit_01.ogg` · Regie: empörtes Zischen
-  > [hisses] Insolence!
-  > *(Bedeutung DE: Unverschämtheit!)*
+  > [hisses] Unverschämtheit!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_hit_02.ogg` · Regie: schrill, kippende Stimme
-  > [shrieks] You dare strike the Reeve?
-  > *(Bedeutung DE: Ihr wagt es, den Vogt zu schlagen?)*
+  > [shrieks] Ihr wagt es, den Vogt zu schlagen?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_hit_03.ogg` · Regie: gekränkt-pedantisch
-  > [groans] This will be… recorded.
-  > *(Bedeutung DE: Das wird … vermerkt.)*
+  > [groans] Das wird … vermerkt.
+  > *(Sprache: Deutsch)*
 
 ##### boss_pale_reeve_death (Event `voice.boss_pale_reeve.death`)
 
 - [ ] `voices/units/boss_pale_reeve_death_01.ogg` · Regie: Entsetzen, zerfallend, 2–3 s
-  > [shrieks] No — the ledger… unbalanced…
-  > *(Bedeutung DE: Nein – das Register … nicht ausgeglichen …)*
+  > [shrieks] Nein – das Register … nicht ausgeglichen …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_death_02.ogg` · Regie: Drohung im Sterben
-  > [rattling breath] The Deep… will send… another…
-  > *(Bedeutung DE: Das Tief … schickt … einen anderen …)*
+  > [rattling breath] Das Tief … schickt … einen anderen …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_death_03.ogg` · Regie: fast erlöst, verhauchend
-  > [exhales] …paid… in full…
-  > *(Bedeutung DE: … vollständig … bezahlt …)*
+  > [exhales] … vollständig … bezahlt …
+  > *(Sprache: Deutsch)*
 
 ##### boss_pale_reeve_taunt (Event `voice.boss_pale_reeve.taunt`)
 
 - [ ] `voices/units/boss_pale_reeve_taunt_01.ogg` · Regie: verlesend wie aus einem Register
-  > Brennhollow. Thirty souls. Nine hundred years in arrears.
-  > *(Bedeutung DE: Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand.)*
+  > Brennhollow. Dreißig Seelen. Neunhundert Jahre im Rückstand.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_taunt_02.ogg` · Regie: leise, genüsslich
-  > Do you hear the bell, Warden? It tolls for your account.
-  > *(Bedeutung DE: Hört Ihr die Glocke, Wächterin? Sie läutet für Euer Konto.)*
+  > Hört Ihr die Glocke, Wächterin? Sie läutet für Euer Konto.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_taunt_03.ogg` · Regie: kalt, Pause in der Mitte
-  > The Hollow Deep is patient. I am not.
-  > *(Bedeutung DE: Das Hohle Tief ist geduldig. Ich bin es nicht.)*
+  > Das Hohle Tief ist geduldig. Ich bin es nicht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/boss_pale_reeve_taunt_04.ogg` · Regie: trockenes, hohles Lachen
-  > [laughs] Run, if you like. The dead always collect.
-  > *(Bedeutung DE: Lauft nur. Die Toten treiben immer ein.)*
+  > [laughs] Lauft nur. Die Toten treiben immer ein.
+  > *(Sprache: Deutsch)*
 
 #### Der Hohle König – Stimme `AC_boss_hollow_king` (6 Dateien)
 
@@ -3575,7 +3557,7 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 > | Rolle | Endgegner; Varkhan selbst, gefangen in Solmere |
 > | Alter | sterblich etwa 50 gestorben, seit fast 900 Jahren untot |
 > | Timbre | majestätischer, einst goldener Bariton, jetzt brüchig, rissig wie verbranntes Pergament; trockener Atem |
-> | Akzent | archaisches, hochformelles königliches Englisch |
+> | Akzent | Deutsch: archaisches, hochformelles königliches Register |
 > | Tempo | langsam, souverän, gelegentlich zu lange Pausen (Erinnerungslücken) |
 > | Emotion | Größenwahn, verletzter Stolz, tragische Sehnsucht nach dem Sonnenlicht; Wahnsinn bricht kurz durch |
 > | Do | Tragik und Würde; Wut als plötzlicher Riss |
@@ -3583,16 +3565,14 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 >
 > **Voice-Design-Prompt:**
 > > A regal male voice of a fallen sun king, a once golden and commanding baritone now cracked and dry like burnt parchment,
-> > with a rasping, breathy texture. Archaic, highly formal royal English. Slow, sovereign pacing with unsettling pauses, as
-> > if he forgets and then remembers. Proud, tragic and longing, with flashes of barely contained madness. Studio-quality
-> > recording, close microphone, no background noise.
+> > with a rasping, breathy texture. Speaks German with a natural, native accent, in an archaic, highly formal royal
+> > register. Slow, sovereign pacing with unsettling pauses, as if he forgets and then remembers. Proud, tragic and longing,
+> > with flashes of barely contained madness. Studio-quality recording, close microphone, no background noise.
 >
 > **Beispieltext:**
-> > "I was the sun of Aureth. Kings knelt to my shadow. I opened the Veil to save my people from death itself… and death
-> > answered. Look upon Solmere, little warden, and tell me again that your flame can outshine what I have lost."
->
-> *DE:* „Ich war die Sonne Aureths. Könige knieten vor meinem Schatten. Ich öffnete den Schleier, um mein Volk vor dem Tod selbst zu retten …
-> und der Tod antwortete. Blick auf Solmere, kleine Wächterin, und sag mir noch einmal, deine Flamme könne überstrahlen, was ich verloren habe.“
+> > „Ich war die Sonne Aureths. Könige knieten vor meinem Schatten. Ich öffnete den Schleier, um mein Volk vor dem Tod
+> > selbst zu retten … und der Tod antwortete. Blick auf Solmere, kleine Wächterin, und sag mir noch einmal, deine Flamme
+> > könne überstrahlen, was ich verloren habe.“
 >
 > **Modell & Einstellungen:** Eleven v3 *Natural/Robust* (`[laughs]` – ein hohles, kurzes Lachen; `[whispers]`); Speed 0,9.
 > **Nachbearbeitung:** Leitfaden 8.3 (Deep-Voice-Layer auf Schlüsselwörtern, Thronsaal-Hall).
@@ -3642,23 +3622,22 @@ Kontext: Letzte Wahl: Varkhan erlösen (nur mit Nel und der Wahrheit über die S
 > | Rolle | Naturentität des Dornwalds, von der Hohlung angegriffen |
 > | Alter | uralt |
 > | Timbre | tiefe, warme Frauenstimme, knarzend wie altes Holz, mehrstimmig (Chor-Dopplung in der Nachbearbeitung) |
-> | Akzent | keiner; Wörter wie langsam wachsend, sehr langgezogene Vokale |
+> | Akzent | Deutsch, kein Regionalakzent; Wörter wie langsam wachsend, sehr langgezogene Vokale |
 > | Tempo | extrem langsam, lange Atembögen, Wortwiederholungen |
 > | Emotion | mütterlich und verwundet; im korrumpierten Zustand fiebrig, verwirrt, besitzergreifend |
 > | Do | Zärtlichkeit, die in Schmerz umschlägt |
 > | Don't | Hexen-Kreischen |
 >
 > **Voice-Design-Prompt:**
-> > An ancient motherly female voice, deep, warm and earthy, with a creaking texture like old wood bending in the wind. No
-> > accent, words stretched slowly as if growing, long sustained vowels and deep breaths. Tender and wounded, drifting into
-> > feverish confusion. Studio-quality recording, close microphone, no background noise.
+> > An ancient motherly female voice, deep, warm and earthy, with a creaking texture like old wood bending in the wind.
+> > Speaks German with a natural, native pronunciation and no regional accent, words stretched slowly as if growing, long
+> > sustained vowels and deep breaths. Tender and wounded, drifting into feverish confusion. Studio-quality recording, close
+> > microphone, no background noise.
 >
 > **Beispieltext:**
-> > "Children… my children with axes and fire. I fed your fathers. I sheltered your dead. Now grey roots drink from me, and
-> > I cannot tell which hands are yours. Stay… stay with me. Let me hold you. Let the soil keep you warm."
->
-> *DE:* „Kinder … meine Kinder mit Äxten und Feuer. Ich nährte eure Väter. Ich barg eure Toten. Nun trinken graue Wurzeln von mir, und ich
-> kann nicht sagen, welche Hände die euren sind. Bleibt … bleibt bei mir. Lasst mich euch halten. Lasst die Erde euch wärmen.“
+> > „Kinder … meine Kinder mit Äxten und Feuer. Ich nährte eure Väter. Ich barg eure Toten. Nun trinken graue Wurzeln von
+> > mir, und ich kann nicht sagen, welche Hände die euren sind. Bleibt … bleibt bei mir. Lasst mich euch halten. Lasst die
+> > Erde euch wärmen.“
 >
 > **Modell & Einstellungen:** Multilingual v2 (Stability 0,55, Similarity 0,80, Style 0,20, Speed 0,85); korrumpierte Zeilen v3 *Creative*.
 > **Nachbearbeitung:** Chor-Dopplung, Holz-Knarz-Layer, warmer Waldhall (Leitfaden 8.3).
@@ -3686,7 +3665,7 @@ Kontext: Entscheidung: Wurzeln verbrennen – die Wurzelmutter erwacht als Boss.
 > | Rolle | Boss der Mission 21; ein in Runenstein gebundener Eid, vom Tiefen verdreht |
 > | Alter | zeitlos |
 > | Timbre | extrem tiefer, langsamer Bass, mahlend wie Mühlstein, mit natürlichem Höhlenhall |
-> | Akzent | keiner; archaisch, wenige Silben je Atemzug |
+> | Akzent | Deutsch, kein Regionalakzent; archaisch, wenige Silben je Atemzug |
 > | Tempo | sehr langsam, gewichtige Pausen |
 > | Emotion | unerbittlich, pflichttreu bis zur Selbstvergessenheit; kein Hass |
 > | Do | langgezogene Vokale, Stein-Resonanz (Nachbearbeitung) |
@@ -3694,7 +3673,8 @@ Kontext: Entscheidung: Wurzeln verbrennen – die Wurzelmutter erwacht als Boss.
 >
 > **Voice-Design-Prompt:**
 > > An immensely deep, ancient bass voice, slow and grinding like a millstone, with long vowels and heavy pauses, stern and
-> > dutiful without hatred. Sounds as if spoken inside a stone hall. Studio-quality recording, no background noise.
+> > dutiful without hatred. Sounds as if spoken inside a stone hall. Speaks German with a natural, native pronunciation,
+> > archaic and heavy. Studio-quality recording, no background noise.
 >
 > **Beispieltext:** „Wer wagt es, den Eid zu stören? Ich wurde gebunden, zu bewahren – und ich bewahre.“
 >
@@ -3716,16 +3696,16 @@ Kontext: Isolde und Gharun im Schreinsaal.
 > | Rolle | Boss der Mission 14; ertrunkene Gezeitenpriesterin im Bund mit dem Hohlen Tief |
 > | Alter | zeitlos (zu Lebzeiten Mitte 40) |
 > | Timbre | tiefe Altstimme, nass und gurgelnd, mehrstimmig überlagert wie Wellen, die einander überlaufen |
-> | Akzent | leicht mediterran gefärbt (Saelith), unter dem Wasser verschliffen |
+> | Akzent | Deutsch, leicht mediterran gefärbt (Saelith), unter dem Wasser verschliffen |
 > | Tempo | gleitend, Wellenrhythmus; Sätze enden mit auslaufendem Atem |
 > | Emotion | mütterlich-bedrohlich, belustigt; Fürsorge als Drohung |
 > | Do | Unterwasser-Textur, Flüstern neben Gesang |
 > | Don't | Zischeln, Monsterknurren |
 >
 > **Voice-Design-Prompt:**
-> > A low contralto woman's voice, wet and gurgling, as if speaking from under shallow water, layered with a faint second voice
-> > that follows a beat behind like waves washing back. A trace of a Mediterranean lilt. Flowing, motherly and menacing.
-> > Studio-quality recording, no background noise.
+> > A low contralto woman's voice, wet and gurgling, as if speaking from under shallow water, layered with a faint second
+> > voice that follows a beat behind like waves washing back. Speaks German with a natural accent and a trace of a
+> > Mediterranean lilt. Flowing, motherly and menacing. Studio-quality recording, no background noise.
 >
 > **Beispieltext:** „Ihr kommt auf trockenen Füßen zu meiner Tür. Wie rührend. Das Meer hat mir jedes meiner Kinder zurückgegeben.“
 >
@@ -3744,317 +3724,315 @@ Kontext: Isarre Mol, auf der Riffinsel.
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
-> - Mann, Mitte 40, rau-gutmütiger Bariton, breiter West-Country-Landakzent, bodenständig, etwas langsam, müde aber willig, trockene Bauernwitze.
-> - **Prompt:** "A weathered peasant labourer in his mid-forties with a rough, good-natured baritone voice and a broad rural
->   West Country English accent. Slow, plain, slightly tired but willing delivery, humble and practical, with a hint of
->   grumbling humour. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Aye, I'll fetch the timber. Same as yesterday, same as tomorrow. Mind you, if the dead come back
->   tonight, I'm hiding behind the knight, not in front of him." – *DE:* „Jo, ich hol das Holz. Wie gestern, wie morgen. Aber
->   wenn die Toten heut Nacht wiederkommen, versteck ich mich hinter dem Ritter, nicht vor ihm.“
+> - Mann, Mitte 40, rau-gutmütiger Bariton, breite ländliche Umgangssprache (süddeutsch gefärbt), bodenständig, etwas langsam, müde aber willig, trockene Bauernwitze.
+> - **Prompt:** "A weathered peasant labourer in his mid-forties with a rough, good-natured baritone voice. Speaks German
+>   with a natural, native accent and a broad rural, southern-leaning dialect coloring. Slow, plain, slightly tired but
+>   willing delivery, humble and practical, with a hint of grumbling humour. Close-mic studio-quality recording, no background
+>   noise."
+> - **Beispieltext:** „Jo, ich hol das Holz. Wie gestern, wie morgen. Aber wenn die Toten heut Nacht wiederkommen, versteck
+>   ich mich hinter dem Ritter, nicht vor ihm.“
 > - **Einstellungen:** v3 *Natural*, Speed 0,98.
 
 - Stimme: `AC_unit_worker` (Profil D1.1) · Modell: Eleven v3, *Natural* (hit/death *Creative*) · Speed 0,98
-- Haltung: gutmütig-müder Bauer, West-Country-Landakzent, kein Soldat – Kampfzeilen klingen improvisiert und etwas ängstlich.
+- Haltung: gutmütig-müder Bauer, ländliche Umgangssprache mit leichter süddeutscher Färbung, kein Soldat – Kampfzeilen klingen improvisiert und etwas ängstlich.
 
 ##### worker_select (Event `voice.worker.select`)
 
 - [ ] `voices/units/worker_select_01.ogg` · Regie: freundlich-willig, mittlere Lautstärke
-  > Aye, what needs doing?
-  > *(Bedeutung DE: Jo, was gibt's zu tun?)*
+  > Jo, was gibt's zu tun?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_select_02.ogg` · Regie: kurzer Seufzer, dann gutmütig
-  > [sighs] Another job, is it?
-  > *(Bedeutung DE: Noch 'ne Arbeit, was?)*
+  > [sighs] Noch 'ne Arbeit, was?
+  > *(Sprache: Deutsch)*
 
-- [ ] `voices/units/worker_select_03.ogg` · Regie: trocken, kleine Pause vor „For now“
-  > Got my hands free. For now.
-  > *(Bedeutung DE: Hab die Hände frei. Noch.)*
+- [ ] `voices/units/worker_select_03.ogg` · Regie: trocken, kleine Pause vor „Noch“
+  > Hab die Hände frei. Noch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_select_04.ogg` · Regie: respektvoll, leicht unterwürfig
-  > Yes, Warden? I'm listening.
-  > *(Bedeutung DE: Ja, Wächterin? Ich hör zu.)*
+  > Ja, Wächterin? Ich hör zu.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_select_05.ogg` · Regie: Ächzen in der Stimme, lächelnd
-  > Back's sore, but I'm here.
-  > *(Bedeutung DE: Rücken tut weh, aber ich bin da.)*
+  > Rücken tut weh, aber ich bin da.
+  > *(Sprache: Deutsch)*
 
 ##### worker_move (Event `voice.worker.move`)
 
 - [ ] `voices/units/worker_move_01.ogg` · Regie: knapp, bodenständig
-  > Right, on my way.
-  > *(Bedeutung DE: Gut, bin unterwegs.)*
+  > Gut, bin unterwegs.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_move_02.ogg` · Regie: leichtes Brummen, gemütlich
-  > Off I go, then.
-  > *(Bedeutung DE: Dann mal los.)*
+  > Dann mal los.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_move_03.ogg` · Regie: zu sich selbst, halblaut
-  > Mind the mud… going.
-  > *(Bedeutung DE: Pass auf den Schlamm auf … geh ja schon.)*
+  > Pass auf den Schlamm auf … geh ja schon.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_move_04.ogg` · Regie: selbstsicher
-  > Aye, I know the path.
-  > *(Bedeutung DE: Jo, ich kenn den Weg.)*
+  > Jo, ich kenn den Weg.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_move_05.ogg` · Regie: müde, leicht genervt
-  > [tired] Walking, walking.
-  > *(Bedeutung DE: Geh ja, geh ja.)*
+  > [tired] Geh ja, geh ja.
+  > *(Sprache: Deutsch)*
 
 ##### worker_attack (Event `voice.worker.attack`)
 
 - [ ] `voices/units/worker_attack_01.ogg` · Regie: verzweifelt-wütend, laut
-  > [shouting] Get away from our homes!
-  > *(Bedeutung DE: Weg von unseren Häusern!)*
+  > [shouting] Weg von unseren Häusern!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_attack_02.ogg` · Regie: Mut zusammengekratzt, Stimme kippt leicht
-  > I've a pitchfork, and I'm not afraid to use it!
-  > *(Bedeutung DE: Ich hab 'ne Mistgabel und scheu mich nicht!)*
+  > Ich hab 'ne Mistgabel und scheu mich nicht!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_attack_03.ogg` · Regie: Dorfstolz, kräftig
-  > [shouting] For Brennhollow!
-  > *(Bedeutung DE: Für Brennhollow!)*
+  > [shouting] Für Brennhollow!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_attack_04.ogg` · Regie: nervös, sich selbst Mut machend
-  > Alright, alright — have at you!
-  > *(Bedeutung DE: Schon gut, schon gut – nimm das!)*
+  > Schon gut, schon gut – nimm das!
+  > *(Sprache: Deutsch)*
 
 ##### worker_retreat (Event `voice.worker.retreat`)
 
 - [ ] `voices/units/worker_retreat_01.ogg` · Regie: panisch, gehetzt, mit Atem
-  > Not paid enough for this! Run!
-  > *(Bedeutung DE: Dafür werd ich nicht bezahlt! Lauft!)*
+  > Dafür werd ich nicht bezahlt! Lauft!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_retreat_02.ogg` · Regie: laut, Angst
-  > [shouting] Back to the village!
-  > *(Bedeutung DE: Zurück ins Dorf!)*
+  > [shouting] Zurück ins Dorf!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_retreat_03.ogg` · Regie: hastige Selbstkorrektur, unfreiwillig komisch
-  > Every man for himself — I mean, fall back!
-  > *(Bedeutung DE: Jeder für sich – ich mein, Rückzug!)*
+  > Jeder für sich – ich mein, Rückzug!
+  > *(Sprache: Deutsch)*
 
 ##### worker_hit (Event `voice.worker.hit`)
 
 - [ ] `voices/units/worker_hit_01.ogg` · Regie: Schmerz + Ärger, abgebrochen
-  > [groans] Ow! Blast it —
-  > *(Bedeutung DE: Au! Verflucht –)*
+  > [groans] Au! Verflucht –
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_hit_02.ogg` · Regie: erschrocken, scharf
-  > [gasps] Argh, my arm!
-  > *(Bedeutung DE: Argh, mein Arm!)*
+  > [gasps] Argh, mein Arm!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_hit_03.ogg` · Regie: kurzer Stoßlaut, ≤ 0,6 s
-  > [grunts] Oof!
-  > *(Bedeutung DE: Uff!)*
+  > [grunts] Uff!
+  > *(Sprache: Deutsch)*
 
 ##### worker_death (Event `voice.worker.death`)
 
 - [ ] `voices/units/worker_death_01.ogg` · Regie: schwach, verlöschend, letzte Sorge
-  > [gasps] Tell my wife… the roof…
-  > *(Bedeutung DE: Sag meiner Frau … das Dach …)*
+  > [gasps] Sag meiner Frau … das Dach …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_death_02.ogg` · Regie: leiser werdend
-  > [groans] Ahh… so cold…
-  > *(Bedeutung DE: Ahh … so kalt …)*
+  > [groans] Ahh … so kalt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_death_03.ogg` · Regie: abgebrochen, letzter Atem
-  > No… not like this — [exhales]
-  > *(Bedeutung DE: Nein … nicht so –)*
+  > Nein … nicht so – [exhales]
+  > *(Sprache: Deutsch)*
 
 ##### worker_victory (Event `voice.worker.victory`)
 
 - [ ] `voices/units/worker_victory_01.ogg` · Regie: erleichtertes Lachen
-  > [laughs] Ha! Still standing!
-  > *(Bedeutung DE: Ha! Steh noch!)*
+  > [laughs] Ha! Steh noch!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_victory_02.ogg` · Regie: stolz, brummig
-  > That'll teach 'em to come round here.
-  > *(Bedeutung DE: Das lehrt sie, hier aufzukreuzen.)*
+  > Das lehrt sie, hier aufzukreuzen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_victory_03.ogg` · Regie: ungläubige Freude
-  > We did it… we actually did it!
-  > *(Bedeutung DE: Wir haben's geschafft … wirklich geschafft!)*
+  > Wir haben's geschafft … wirklich geschafft!
+  > *(Sprache: Deutsch)*
 
 ##### worker_work (Event `voice.worker.work`)
 
 - [ ] `voices/units/worker_work_01.ogg` · Regie: ergeben, freundlich
-  > Back to the grindstone.
-  > *(Bedeutung DE: Zurück an die Arbeit.)*
+  > Zurück an die Arbeit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_work_02.ogg` · Regie: rhythmisch, halb gesungen
-  > Chop, haul, stack. Chop, haul, stack.
-  > *(Bedeutung DE: Hacken, schleppen, stapeln.)*
+  > Hacken, schleppen, stapeln.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_work_03.ogg` · Regie: zufrieden, fachmännisch
-  > Good timber, this.
-  > *(Bedeutung DE: Gutes Holz, das.)*
+  > Gutes Holz, das.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_work_04.ogg` · Regie: Volksweisheit, trocken
-  > Field won't plough itself.
-  > *(Bedeutung DE: Das Feld pflügt sich nicht von allein.)*
+  > Das Feld pflügt sich nicht von allein.
+  > *(Sprache: Deutsch)*
 
 ##### worker_build_done (Event `voice.worker.build_done`)
 
 - [ ] `voices/units/worker_build_done_01.ogg` · Regie: stolz, dann trockene Einschränkung
-  > There. Built to last. Mostly.
-  > *(Bedeutung DE: So. Gebaut für die Ewigkeit. Meistens.)*
+  > So. Gebaut für die Ewigkeit. Meistens.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_build_done_02.ogg` · Regie: laut genug als Meldung
-  > Job's done, Warden!
-  > *(Bedeutung DE: Arbeit erledigt, Wächterin!)*
+  > Arbeit erledigt, Wächterin!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/worker_build_done_03.ogg` · Regie: freudig
-  > Finished! Come and have a look!
-  > *(Bedeutung DE: Fertig! Kommt, schaut's euch an!)*
+  > Fertig! Kommt, schaut's euch an!
+  > *(Sprache: Deutsch)*
 
 #### Schwertkämpfer – Stimme `AC_unit_swordsman` (27 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
-> - Mann, Ende 20, kerniger, leicht heiserer Bariton, nordenglischer Stadtakzent, zackig, entschlossen, mit Galgenhumor.
-> - **Prompt:** "A young militia swordsman in his late twenties with a firm, slightly hoarse baritone voice and a working-class
->   northern English accent. Brisk, determined, soldierly delivery with a touch of gallows humour, confident but not
->   arrogant. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Sword's sharp, shield's dented, and the sergeant's still yelling. Must be a normal day in the Ashmarch.
->   Point me at something dead and I'll make it deader." – *DE:* „Schwert scharf, Schild verbeult, und der Feldwebel brüllt
->   immer noch. Muss ein normaler Tag in der Aschmark sein. Zeig mir was Totes, und ich mach's noch toter.“
+> - Mann, Ende 20, kerniger, leicht heiserer Bariton, norddeutsch-städtische Färbung, zackig, entschlossen, mit Galgenhumor.
+> - **Prompt:** "A young militia swordsman in his late twenties with a firm, slightly hoarse baritone voice. Speaks German
+>   with a natural, native accent and a working-class northern urban coloring. Brisk, determined, soldierly delivery with a
+>   touch of gallows humour, confident but not arrogant. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Schwert scharf, Schild verbeult, und der Feldwebel brüllt immer noch. Muss ein normaler Tag in der
+>   Aschmark sein. Zeig mir was Totes, und ich mach's noch toter.“
 > - **Einstellungen:** v3 *Natural*, Kampfrufe *Creative*.
 
 - Stimme: `AC_unit_swordsman` (Profil D1.2) · Modell: Eleven v3, *Natural* (attack/hit/death *Creative*)
-- Haltung: junger Milizsoldat, zackig, Galgenhumor, nordenglischer Stadtakzent.
+- Haltung: junger Milizsoldat, zackig, Galgenhumor, norddeutsch-städtisch gefärbte Umgangssprache.
 
 ##### swordsman_select (Event `voice.swordsman.select`)
 
 - [ ] `voices/units/swordsman_select_01.ogg` · Regie: zackig, knapp
-  > Sword ready.
-  > *(Bedeutung DE: Schwert bereit.)*
+  > Schwert bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_select_02.ogg` · Regie: soldatisch, Haltung annehmen
-  > Militia, at your command.
-  > *(Bedeutung DE: Miliz, zu Befehl.)*
+  > Miliz, zu Befehl.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_select_03.ogg` · Regie: entschlossen, leicht grinsend
-  > Point me at the trouble.
-  > *(Bedeutung DE: Zeigt mir den Ärger.)*
+  > Zeigt mir den Ärger.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_select_04.ogg` · Regie: wach, aufmerksam
-  > Shield's up. What now?
-  > *(Bedeutung DE: Schild oben. Was jetzt?)*
+  > Schild oben. Was jetzt?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_select_05.ogg` · Regie: Galgenhumor
-  > Still breathing. What's the order?
-  > *(Bedeutung DE: Atme noch. Was ist der Befehl?)*
+  > Atme noch. Was ist der Befehl?
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_move (Event `voice.swordsman.move`)
 
 - [ ] `voices/units/swordsman_move_01.ogg` · Regie: knapp
-  > Moving out.
-  > *(Bedeutung DE: Rücken aus.)*
+  > Rücken aus.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_move_02.ogg` · Regie: energisch
-  > On the double!
-  > *(Bedeutung DE: Im Laufschritt!)*
+  > Im Laufschritt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_move_03.ogg` · Regie: loyal
-  > Right behind you, Warden.
-  > *(Bedeutung DE: Direkt hinter Euch, Wächterin.)*
+  > Direkt hinter Euch, Wächterin.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_move_04.ogg` · Regie: neutral, militärisch
-  > Marching.
-  > *(Bedeutung DE: Marschieren.)*
+  > Marschieren.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_move_05.ogg` · Regie: leicht resigniert, entschlossen
-  > Through the ash, then.
-  > *(Bedeutung DE: Dann eben durch die Asche.)*
+  > Dann eben durch die Asche.
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_attack (Event `voice.swordsman.attack`)
 
 - [ ] `voices/units/swordsman_attack_01.ogg` · Regie: Kampfschrei, voll
-  > [shouting] Cut them down!
-  > *(Bedeutung DE: Haut sie nieder!)*
+  > [shouting] Haut sie nieder!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_attack_02.ogg` · Regie: Schlachtruf, Stolz
-  > [shouting] For the Ember Crown!
-  > *(Bedeutung DE: Für die Glutkrone!)*
+  > [shouting] Für die Glutkrone!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_attack_03.ogg` · Regie: anfeuernd
-  > Steel, lads! Steel!
-  > *(Bedeutung DE: Stahl, Jungs! Stahl!)*
+  > Stahl, Jungs! Stahl!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_attack_04.ogg` · Regie: wütend, verächtlich
-  > Back to your graves!
-  > *(Bedeutung DE: Zurück in eure Gräber!)*
+  > Zurück in eure Gräber!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_attack_05.ogg` · Regie: Anstrengung im Schlag
-  > [grunts] Have some of this!
-  > *(Bedeutung DE: Da, nimm das!)*
+  > [grunts] Da, nimm das!
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_retreat (Event `voice.swordsman.retreat`)
 
 - [ ] `voices/units/swordsman_retreat_01.ogg` · Regie: laut, dringlich
-  > Fall back! Fall back!
-  > *(Bedeutung DE: Rückzug! Rückzug!)*
+  > Rückzug! Rückzug!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_retreat_02.ogg` · Regie: befehlend, außer Atem
-  > Regroup at the keep!
-  > *(Bedeutung DE: Sammeln am Bergfried!)*
+  > Sammeln am Bergfried!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_retreat_03.ogg` · Regie: Angst, gehetzt
-  > Pull back, we're overrun!
-  > *(Bedeutung DE: Zurück, wir werden überrannt!)*
+  > Zurück, wir werden überrannt!
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_hit (Event `voice.swordsman.hit`)
 
 - [ ] `voices/units/swordsman_hit_01.ogg` · Regie: kurzer Schmerzlaut
   > [grunts] Argh!
-  > *(Bedeutung DE: Argh!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_hit_02.ogg` · Regie: trotzig
-  > [groans] Ngh — just a scratch!
-  > *(Bedeutung DE: Ngh – nur ein Kratzer!)*
+  > [groans] Ngh – nur ein Kratzer!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_hit_03.ogg` · Regie: scharf, überrascht
-  > [gasps] Damn it!
-  > *(Bedeutung DE: Verdammt!)*
+  > [gasps] Verdammt!
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_death (Event `voice.swordsman.death`)
 
 - [ ] `voices/units/swordsman_death_01.ogg` · Regie: letzter Atem
-  > [gasps] For… the Crown…
-  > *(Bedeutung DE: Für … die Krone …)*
+  > [gasps] Für … die Krone …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_death_02.ogg` · Regie: schwach, stolz
-  > Tell the sergeant… I held…
-  > *(Bedeutung DE: Sagt dem Feldwebel … ich hab gehalten …)*
+  > Sagt dem Feldwebel … ich hab gehalten …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_death_03.ogg` · Regie: verlöschend
-  > [exhales] The fire's… going out…
-  > *(Bedeutung DE: Das Feuer … geht aus …)*
+  > [exhales] Das Feuer … geht aus …
+  > *(Sprache: Deutsch)*
 
 ##### swordsman_victory (Event `voice.swordsman.victory`)
 
 - [ ] `voices/units/swordsman_victory_01.ogg` · Regie: Jubel
-  > [shouting] Ha! Victory!
-  > *(Bedeutung DE: Ha! Sieg!)*
+  > [shouting] Ha! Sieg!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_victory_02.ogg` · Regie: zufrieden, trocken
-  > They won't be getting up again.
-  > *(Bedeutung DE: Die stehen nicht wieder auf.)*
+  > Die stehen nicht wieder auf.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/swordsman_victory_03.ogg` · Regie: stolz
-  > The Crown stands!
-  > *(Bedeutung DE: Die Krone steht!)*
+  > Die Krone steht!
+  > *(Sprache: Deutsch)*
 
 #### Speerträger – Stimme `AC_unit_spearman` (24 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
-> - Mann, Mitte 50, tiefer, rauer, ruhiger Bass-Bariton, Yorkshire-artiger Landakzent, wortkarg, unerschütterlich, väterlich gegenüber Jüngeren.
-> - **Prompt:** "A grizzled veteran spearman in his mid-fifties with a deep, gravelly, calm bass-baritone voice and a rural
->   Yorkshire-like accent. Laconic, steady and unshakeable, few words, each one weighty, a protective old soldier. Close-mic
->   studio-quality recording, no background noise."
-> - **Beispieltext:** "Hold the line, lads. Plant your feet, point the spear, and let them come to you. I've buried better
->   men than these things, and I'll outlive them too." – *DE:* „Haltet die Linie, Jungs. Füße fest, Speer nach vorn, lasst sie
->   kommen. Ich hab bessere Männer begraben als diese Dinger, und ich überlebe die auch.“
+> - Mann, Mitte 50, tiefer, rauer, ruhiger Bass-Bariton, ländlich-bodenständige Färbung, wortkarg, unerschütterlich, väterlich gegenüber Jüngeren.
+> - **Prompt:** "A grizzled veteran spearman in his mid-fifties with a deep, gravelly, calm bass-baritone voice. Speaks
+>   German with a natural, native accent and a rural, down-to-earth coloring. Laconic, steady and unshakeable, few words, each
+>   one weighty, a protective old soldier. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Haltet die Linie, Jungs. Füße fest, Speer nach vorn, lasst sie kommen. Ich hab bessere Männer begraben
+>   als diese Dinger, und ich überlebe die auch.“
 > - **Einstellungen:** v3 *Natural/Robust*, Speed 0,95.
 
 - Stimme: `AC_unit_spearman` (Profil D1.3) · Modell: Eleven v3, *Natural/Robust* · Speed 0,95
@@ -4063,124 +4041,123 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### spearman_select (Event `voice.spearman.select`)
 
 - [ ] `voices/units/spearman_select_01.ogg` · Regie: ruhig, tief
-  > Spear's ready.
-  > *(Bedeutung DE: Speer bereit.)*
+  > Speer bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_select_02.ogg` · Regie: wortkarg
-  > Aye. Speak.
-  > *(Bedeutung DE: Jo. Sprich.)*
+  > Jo. Sprich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_select_03.ogg` · Regie: trockener Humor
-  > Old bones, sharp point.
-  > *(Bedeutung DE: Alte Knochen, scharfe Spitze.)*
+  > Alte Knochen, scharfe Spitze.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_select_04.ogg` · Regie: gelassen
-  > Line's holding. What is it?
-  > *(Bedeutung DE: Linie hält. Was gibt's?)*
+  > Linie hält. Was gibt's?
+  > *(Sprache: Deutsch)*
 
 ##### spearman_move (Event `voice.spearman.move`)
 
 - [ ] `voices/units/spearman_move_01.ogg` · Regie: neutral
-  > On the move.
-  > *(Bedeutung DE: In Bewegung.)*
+  > In Bewegung.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_move_02.ogg` · Regie: an die Truppe gerichtet
-  > Steady pace, lads.
-  > *(Bedeutung DE: Gleichmäßiger Schritt, Jungs.)*
+  > Gleichmäßiger Schritt, Jungs.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_move_03.ogg` · Regie: gelassen
-  > Aye, we'll go.
-  > *(Bedeutung DE: Jo, wir gehen.)*
+  > Jo, wir gehen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_move_04.ogg` · Regie: Kommandoton, nicht laut
-  > Spears up. Marching.
-  > *(Bedeutung DE: Speere hoch. Marsch.)*
+  > Speere hoch. Marsch.
+  > *(Sprache: Deutsch)*
 
 ##### spearman_attack (Event `voice.spearman.attack`)
 
 - [ ] `voices/units/spearman_attack_01.ogg` · Regie: Kommandoruf
-  > [shouting] Hold and strike!
-  > *(Bedeutung DE: Halten und zustoßen!)*
+  > [shouting] Halten und zustoßen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_attack_02.ogg` · Regie: kräftig
-  > Spears forward!
-  > *(Bedeutung DE: Speere nach vorn!)*
+  > Speere nach vorn!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_attack_03.ogg` · Regie: grimmig, provozierend
-  > Come on, then. Come onto the point!
-  > *(Bedeutung DE: Na komm. Komm in die Spitze!)*
+  > Na komm. Komm in die Spitze!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_attack_04.ogg` · Regie: Timing: Pause, dann Ausbruch
-  > Brace… now — thrust!
-  > *(Bedeutung DE: Abstützen … jetzt – stoßt!)*
+  > Abstützen … jetzt – stoßt!
+  > *(Sprache: Deutsch)*
 
 ##### spearman_retreat (Event `voice.spearman.retreat`)
 
 - [ ] `voices/units/spearman_retreat_01.ogg` · Regie: kontrolliert
-  > Back, slow and steady!
-  > *(Bedeutung DE: Zurück, langsam und ruhig!)*
+  > Zurück, langsam und ruhig!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_retreat_02.ogg` · Regie: Kommandoton
-  > Withdraw! Keep your spears facing!
-  > *(Bedeutung DE: Rückzug! Speere zum Feind!)*
+  > Rückzug! Speere zum Feind!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_retreat_03.ogg` · Regie: väterlich-bestimmt
-  > Give ground, lads. Don't run.
-  > *(Bedeutung DE: Boden aufgeben, Jungs. Nicht rennen.)*
+  > Boden aufgeben, Jungs. Nicht rennen.
+  > *(Sprache: Deutsch)*
 
 ##### spearman_hit (Event `voice.spearman.hit`)
 
 - [ ] `voices/units/spearman_hit_01.ogg` · Regie: kaum beeindruckt
-  > [grunts] Hmph.
-  > *(Bedeutung DE: Hmpf.)*
+  > [grunts] Hmpf.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_hit_02.ogg` · Regie: gepresst
-  > [groans] Had worse.
-  > *(Bedeutung DE: Hatte Schlimmeres.)*
+  > [groans] Hatte Schlimmeres.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_hit_03.ogg` · Regie: kurzer Stoß
   > [exhales sharply] Nngh!
-  > *(Bedeutung DE: Nngh!)*
+  > *(Sprache: Deutsch)*
 
 ##### spearman_death (Event `voice.spearman.death`)
 
 - [ ] `voices/units/spearman_death_01.ogg` · Regie: letzter Befehl
-  > [exhales] Hold… the line…
-  > *(Bedeutung DE: Haltet … die Linie …)*
+  > [exhales] Haltet … die Linie …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_death_02.ogg` · Regie: fast erleichtert
-  > Finally… a rest…
-  > *(Bedeutung DE: Endlich … Ruhe …)*
+  > Endlich … Ruhe …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_death_03.ogg` · Regie: leises Lächeln im Sterben
-  > [groans] Not bad… for an old man…
-  > *(Bedeutung DE: Nicht schlecht … für einen alten Mann …)*
+  > [groans] Nicht schlecht … für einen alten Mann …
+  > *(Sprache: Deutsch)*
 
 ##### spearman_victory (Event `voice.spearman.victory`)
 
 - [ ] `voices/units/spearman_victory_01.ogg` · Regie: knapp, zufrieden
-  > Line held. Good.
-  > *(Bedeutung DE: Linie gehalten. Gut.)*
+  > Linie gehalten. Gut.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_victory_02.ogg` · Regie: stolz-väterlich
-  > That's how it's done, lads.
-  > *(Bedeutung DE: So macht man das, Jungs.)*
+  > So macht man das, Jungs.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/spearman_victory_03.ogg` · Regie: düster-trocken
-  > Bury them. Properly, this time.
-  > *(Bedeutung DE: Begrabt sie. Diesmal richtig.)*
+  > Begrabt sie. Diesmal richtig.
+  > *(Sprache: Deutsch)*
 
 #### Bogenschützin – Stimme `AC_unit_archer` (26 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
-> - Frau, Anfang 20, helle, scharfe, klare Stimme, leichter ländlicher Midlands-Akzent, wach, schnell, keck, präzise.
-> - **Prompt:** "A sharp-eyed young woman archer in her early twenties with a bright, clear and focused voice and a light rural
->   Midlands English accent. Quick, alert and cheeky delivery, precise and confident, a hunter's calm when aiming.
->   Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Wind from the east, two fingers left. I could hit a crow at a hundred paces before you'd finished
->   pointing at it. Go on then, give me something worth shooting." – *DE:* „Wind von Osten, zwei Finger links. Ich treff eine
->   Krähe auf hundert Schritt, bevor du fertig gezeigt hast. Na los, gib mir was, das sich lohnt.“
+> - Frau, Anfang 20, helle, scharfe, klare Stimme, leichte ländliche Färbung, wach, schnell, keck, präzise.
+> - **Prompt:** "A sharp-eyed young woman archer in her early twenties with a bright, clear and focused voice. Speaks
+>   German with a natural, native accent and a light rural coloring. Quick, alert and cheeky delivery, precise and confident,
+>   a hunter's calm when aiming. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Wind von Osten, zwei Finger links. Ich treff eine Krähe auf hundert Schritt, bevor du fertig gezeigt
+>   hast. Na los, gib mir was, das sich lohnt.“
 > - **Einstellungen:** v3 *Natural*, Speed 1,03.
 
 - Stimme: `AC_unit_archer` (Profil D1.4) · Modell: Eleven v3, *Natural* · Speed 1,03
@@ -4189,133 +4166,131 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### archer_select (Event `voice.archer.select`)
 
 - [ ] `voices/units/archer_select_01.ogg` · Regie: knapp, wach
-  > Bow's strung.
-  > *(Bedeutung DE: Bogen gespannt.)*
+  > Bogen gespannt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_select_02.ogg` · Regie: konzentriert
-  > Eyes on the field.
-  > *(Bedeutung DE: Augen aufs Feld.)*
+  > Augen aufs Feld.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_select_03.ogg` · Regie: keck
-  > What am I shooting?
-  > *(Bedeutung DE: Worauf schieß ich?)*
+  > Worauf schieß ich?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_select_04.ogg` · Regie: militärisch
-  > Archer, ready.
-  > *(Bedeutung DE: Schützin bereit.)*
+  > Schützin bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_select_05.ogg` · Regie: selbstbewusst, leicht spöttisch
-  > Got a clear line. Who's first?
-  > *(Bedeutung DE: Freie Schussbahn. Wer ist zuerst dran?)*
+  > Freie Schussbahn. Wer ist zuerst dran?
+  > *(Sprache: Deutsch)*
 
 ##### archer_move (Event `voice.archer.move`)
 
 - [ ] `voices/units/archer_move_01.ogg` · Regie: sachlich
-  > Moving to position.
-  > *(Bedeutung DE: Beziehe Stellung.)*
+  > Beziehe Stellung.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_move_02.ogg` · Regie: geflüstert, verschwörerisch
-  > [whispers] Quick and quiet.
-  > *(Bedeutung DE: Schnell und leise.)*
+  > [whispers] Schnell und leise.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_move_03.ogg` · Regie: zielstrebig
-  > Finding high ground.
-  > *(Bedeutung DE: Such mir 'ne Anhöhe.)*
+  > Such mir 'ne Anhöhe.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_move_04.ogg` · Regie: flink
-  > On it.
-  > *(Bedeutung DE: Bin dran.)*
+  > Bin dran.
+  > *(Sprache: Deutsch)*
 
 ##### archer_attack (Event `voice.archer.attack`)
 
 - [ ] `voices/units/archer_attack_01.ogg` · Regie: scharfer Ruf
-  > Loose!
-  > *(Bedeutung DE: Los!)*
+  > Los!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_attack_02.ogg` · Regie: kräftig
-  > Arrows away!
-  > *(Bedeutung DE: Pfeile ab!)*
+  > Pfeile ab!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_attack_03.ogg` · Regie: Kampfeslust
-  > [shouting] Fill them with feathers!
-  > *(Bedeutung DE: Spickt sie mit Federn!)*
+  > [shouting] Spickt sie mit Federn!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_attack_04.ogg` · Regie: triumphierend
-  > Got you!
-  > *(Bedeutung DE: Hab dich!)*
+  > Hab dich!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_attack_05.ogg` · Regie: ruhige Atempause vor dem Schuss
-  > Mark… and loose!
-  > *(Bedeutung DE: Ziel … und los!)*
+  > Ziel … und los!
+  > *(Sprache: Deutsch)*
 
 ##### archer_retreat (Event `voice.archer.retreat`)
 
 - [ ] `voices/units/archer_retreat_01.ogg` · Regie: gehetzt
-  > Pulling back!
-  > *(Bedeutung DE: Ziehe mich zurück!)*
+  > Ziehe mich zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_retreat_02.ogg` · Regie: alarmiert
-  > Too close! Falling back!
-  > *(Bedeutung DE: Zu nah! Rückzug!)*
+  > Zu nah! Rückzug!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_retreat_03.ogg` · Regie: Panik mit Restwitz
-  > Can't shoot what's on top of me — back!
-  > *(Bedeutung DE: Kann nicht schießen, was auf mir hockt – zurück!)*
+  > Kann nicht schießen, was auf mir hockt – zurück!
+  > *(Sprache: Deutsch)*
 
 ##### archer_hit (Event `voice.archer.hit`)
 
 - [ ] `voices/units/archer_hit_01.ogg` · Regie: kurzer Schreck
   > [gasps] Ah!
-  > *(Bedeutung DE: Ah!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_hit_02.ogg` · Regie: empört, Schmerz
-  > [grunts] They hit me!
-  > *(Bedeutung DE: Die haben mich erwischt!)*
+  > [grunts] Die haben mich erwischt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_hit_03.ogg` · Regie: trotzig
-  > [groans] Ngh — still shooting!
-  > *(Bedeutung DE: Ngh – schieß trotzdem!)*
+  > [groans] Ngh – schieß trotzdem!
+  > *(Sprache: Deutsch)*
 
 ##### archer_death (Event `voice.archer.death`)
 
 - [ ] `voices/units/archer_death_01.ogg` · Regie: ungläubig, leise
-  > [gasps] I… missed…
-  > *(Bedeutung DE: Ich … hab verfehlt …)*
+  > [gasps] Ich … hab verfehlt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_death_02.ogg` · Regie: verlöschend
-  > Ah… it's getting dark…
-  > *(Bedeutung DE: Ah … es wird dunkel …)*
+  > Ah … es wird dunkel …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_death_03.ogg` · Regie: schwacher Stolz
-  > [exhales] Tell them… I got… the last one…
-  > *(Bedeutung DE: Sagt ihnen … ich hab den Letzten … erwischt …)*
+  > [exhales] Sagt ihnen … ich hab den Letzten … erwischt …
+  > *(Sprache: Deutsch)*
 
 ##### archer_victory (Event `voice.archer.victory`)
 
 - [ ] `voices/units/archer_victory_01.ogg` · Regie: jubelnd
-  > Not a single one got through!
-  > *(Bedeutung DE: Nicht einer kam durch!)*
+  > Nicht einer kam durch!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_victory_02.ogg` · Regie: stolzes Lachen
-  > [laughs] Clean shots, every one.
-  > *(Bedeutung DE: Saubere Schüsse, jeder einzelne.)*
+  > [laughs] Saubere Schüsse, jeder einzelne.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/archer_victory_03.ogg` · Regie: kühl, selbstbewusst
-  > Count my arrows. Then count their dead.
-  > *(Bedeutung DE: Zählt meine Pfeile. Dann zählt ihre Toten.)*
+  > Zählt meine Pfeile. Dann zählt ihre Toten.
+  > *(Sprache: Deutsch)*
 
 #### Ritter – Stimme `AC_unit_knight` (26 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
-> - Mann, Anfang 40, voller, edler Bariton mit Brustklang, gehobenes RP, stolz, ritterlich-formell, etwas pathetisch (bewusst kontrastiert zu Isolde).
-> - **Prompt:** "A noble armoured knight in his early forties with a full, resonant and commanding baritone voice and refined
->   British received pronunciation. Proud, chivalrous and formal delivery with a touch of grandeur, unwavering and
->   honourable. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "By the Eternal Flame and the oath of my house, no shadow shall cross this field while I still sit my
->   saddle. Sound the horn, and let the dead learn what a charge of Valemark means." – *DE:* „Bei der Ewigen Flamme und dem Eid
->   meines Hauses: Kein Schatten überquert dieses Feld, solange ich im Sattel sitze. Blast das Horn, und lasst die Toten lernen,
->   was ein Ansturm Valemarks bedeutet.“
+> - Mann, Anfang 40, voller, edler Bariton mit Brustklang, gehobenes Hochdeutsch (Bühnenaussprache), stolz, ritterlich-formell, etwas pathetisch (bewusst kontrastiert zu Isolde).
+> - **Prompt:** "A noble armoured knight in his early forties with a full, resonant and commanding baritone voice. Speaks
+>   German with a natural, native accent in refined, noble stage-standard pronunciation. Proud, chivalrous and formal delivery
+>   with a touch of grandeur, unwavering and honourable. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Bei der Ewigen Flamme und dem Eid meines Hauses: Kein Schatten überquert dieses Feld, solange ich im
+>   Sattel sitze. Blast das Horn, und lasst die Toten lernen, was ein Ansturm Valemarks bedeutet.“
 > - **Einstellungen:** v3 *Natural*, Speed 0,97.
 > - **Nachbearbeitung:** dezente Helm-Nähe optional (Bandpass-Andeutung 120 Hz–9 kHz).
 
@@ -4325,128 +4300,129 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### knight_select (Event `voice.knight.select`)
 
 - [ ] `voices/units/knight_select_01.ogg` · Regie: edel, aufrecht
-  > Your command?
-  > *(Bedeutung DE: Euer Befehl?)*
+  > Euer Befehl?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_select_02.ogg` · Regie: stolz
-  > Steel and saddle, ready.
-  > *(Bedeutung DE: Stahl und Sattel, bereit.)*
+  > Stahl und Sattel, bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_select_03.ogg` · Regie: feierlich
-  > The Crown's lance awaits.
-  > *(Bedeutung DE: Die Lanze der Krone wartet.)*
+  > Die Lanze der Krone wartet.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_select_04.ogg` · Regie: formell
-  > Speak, and I shall ride.
-  > *(Bedeutung DE: Sprecht, und ich reite.)*
+  > Sprecht, und ich reite.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_select_05.ogg` · Regie: gläubig, fest
-  > By the Flame, I am ready.
-  > *(Bedeutung DE: Bei der Flamme, ich bin bereit.)*
+  > Bei der Flamme, ich bin bereit.
+  > *(Sprache: Deutsch)*
 
 ##### knight_move (Event `voice.knight.move`)
 
 - [ ] `voices/units/knight_move_01.ogg` · Regie: knapp, sicher
-  > Riding out.
-  > *(Bedeutung DE: Reite aus.)*
+  > Reite aus.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_move_02.ogg` · Regie: kraftvoll
-  > Onward!
-  > *(Bedeutung DE: Vorwärts!)*
+  > Vorwärts!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_move_03.ogg` · Regie: Reiterjargon, zackig
-  > Spurs to flank.
-  > *(Bedeutung DE: Sporen in die Flanke.)*
+  > Sporen in die Flanke.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_move_04.ogg` · Regie: höflich-formell
-  > As you command.
-  > *(Bedeutung DE: Wie Ihr befehlt.)*
+  > Wie Ihr befehlt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_move_05.ogg` · Regie: selbstbewusst
-  > The road is ours.
-  > *(Bedeutung DE: Die Straße gehört uns.)*
+  > Die Straße gehört uns.
+  > *(Sprache: Deutsch)*
 
 ##### knight_attack (Event `voice.knight.attack`)
 
 - [ ] `voices/units/knight_attack_01.ogg` · Regie: maximaler Schlachtruf
-  > [shouting] Charge!
-  > *(Bedeutung DE: Angriff!)*
+  > [shouting] Angriff!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_attack_02.ogg` · Regie: pathetisch, voll
-  > [shouting] For Valemark and the Flame!
-  > *(Bedeutung DE: Für Valemark und die Flamme!)*
+  > [shouting] Für Valemark und die Flamme!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_attack_03.ogg` · Regie: befehlend
-  > Ride them down!
-  > *(Bedeutung DE: Reitet sie nieder!)*
+  > Reitet sie nieder!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_attack_04.ogg` · Regie: Spannung, dann Ausbruch
-  > Lances… now!
-  > *(Bedeutung DE: Lanzen … jetzt!)*
+  > Lanzen … jetzt!
+  > *(Sprache: Deutsch)*
 
 ##### knight_retreat (Event `voice.knight.retreat`)
 
 - [ ] `voices/units/knight_retreat_01.ogg` · Regie: Kommando, laut
-  > Wheel about! Withdraw!
-  > *(Bedeutung DE: Kehrt! Rückzug!)*
+  > Kehrt! Rückzug!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_retreat_02.ogg` · Regie: dringlich
-  > Fall back to the lines!
-  > *(Bedeutung DE: Zurück zu den Linien!)*
+  > Zurück zu den Linien!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_retreat_03.ogg` · Regie: Würde wahrend, leicht verlegen
-  > A tactical withdrawal. Ride!
-  > *(Bedeutung DE: Ein taktischer Rückzug. Reitet!)*
+  > Ein taktischer Rückzug. Reitet!
+  > *(Sprache: Deutsch)*
 
 ##### knight_hit (Event `voice.knight.hit`)
 
 - [ ] `voices/units/knight_hit_01.ogg` · Regie: verächtlich
-  > [grunts] Ha — a glancing blow!
-  > *(Bedeutung DE: Ha – nur gestreift!)*
+  > [grunts] Ha – nur gestreift!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_hit_02.ogg` · Regie: gepresst, trotzig
-  > [groans] My armour holds!
-  > *(Bedeutung DE: Meine Rüstung hält!)*
+  > [groans] Meine Rüstung hält!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_hit_03.ogg` · Regie: empört
-  > [gasps] Ngh! Insolent!
-  > *(Bedeutung DE: Ngh! Unverschämt!)*
+  > [gasps] Ngh! Unverschämt!
+  > *(Sprache: Deutsch)*
 
 ##### knight_death (Event `voice.knight.death`)
 
 - [ ] `voices/units/knight_death_01.ogg` · Regie: würdevoll sterbend
-  > [gasps] My oath… fulfilled…
-  > *(Bedeutung DE: Mein Eid … erfüllt …)*
+  > [gasps] Mein Eid … erfüllt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_death_02.ogg` · Regie: leises Gebet
-  > Forgive me… Flame…
-  > *(Bedeutung DE: Vergib mir … Flamme …)*
+  > Vergib mir … Flamme …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_death_03.ogg` · Regie: letzte Kraft
-  > [exhales] Tell my house… I did not yield…
-  > *(Bedeutung DE: Sagt meinem Haus … ich wich nicht …)*
+  > [exhales] Sagt meinem Haus … ich wich nicht …
+  > *(Sprache: Deutsch)*
 
 ##### knight_victory (Event `voice.knight.victory`)
 
 - [ ] `voices/units/knight_victory_01.ogg` · Regie: triumphal
-  > [shouting] Glory to the Ember Crown!
-  > *(Bedeutung DE: Ruhm der Glutkrone!)*
+  > [shouting] Ruhm der Glutkrone!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_victory_02.ogg` · Regie: stolz
-  > The field is ours!
-  > *(Bedeutung DE: Das Feld gehört uns!)*
+  > Das Feld gehört uns!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/knight_victory_03.ogg` · Regie: ritterlich, anerkennend
-  > A worthy charge. Well fought.
-  > *(Bedeutung DE: Ein würdiger Ansturm. Gut gekämpft.)*
+  > Ein würdiger Ansturm. Gut gekämpft.
+  > *(Sprache: Deutsch)*
 
 #### Armbrustschütze – Stimme `AC_unit_crossbowman` (24 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, Anfang 40, trockener, ruhiger Bariton, nüchterner Söldnerveteran aus den Grenzgarnisonen, knappe Sätze, spricht über Reichweite wie über Handwerk.
-> - **Prompt:** "A seasoned crossbow mercenary in his early forties with a dry, level baritone and a plain northern English accent. Short, matter-of-fact sentences, sober and unhurried, speaking of range and aim like a craftsman talks about tools, with a faint grim humour. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Hold your breath, wait for the wind to drop, then squeeze. Anyone can shoot fast. I shoot once." – *DE:* „Atem anhalten, warten bis der Wind nachlässt, dann abdrücken. Schnell schießen kann jeder. Ich schieße einmal.“
+> - **Prompt:** "A seasoned crossbow mercenary in his early forties with a dry, level baritone. Speaks German with a natural, native accent and a plain northern coloring. Short, matter-of-fact sentences, sober and unhurried, speaking of range and aim like a craftsman talks about tools, with a faint grim humour. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Atem anhalten, warten bis der Wind nachlässt, dann abdrücken. Schnell schießen kann jeder. Ich schieße
+>   einmal.“
 > - **Einstellungen:** v3 *Natural*, Speed 1,0.
 
 - Stimme: `AC_unit_crossbowman (Profil G1)` · Modell: Eleven v3, *Natural* · Speed 1,0
@@ -4455,120 +4431,121 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### crossbowman_select (Event `voice.crossbowman.select`)
 
 - [ ] `voices/units/crossbowman_select_01.ogg` · Regie: knapp, sachlich
-  > Crossbow ready.
-  > *(Bedeutung DE: Armbrust bereit.)*
+  > Armbrust bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_select_02.ogg` · Regie: trocken, leise
-  > Bolt's in the groove.
-  > *(Bedeutung DE: Bolzen liegt in der Rinne.)*
+  > Bolzen liegt in der Rinne.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_select_03.ogg` · Regie: ruhig-selbstsicher
-  > Aye, sir. Steady hands.
-  > *(Bedeutung DE: Jawohl. Ruhige Hände.)*
+  > Jawohl. Ruhige Hände.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_select_04.ogg` · Regie: leicht grimmig
-  > Say the word and I'll put one through it.
-  > *(Bedeutung DE: Sagt's, und ich schieß einen durch.)*
+  > Sagt's, und ich schieß einen durch.
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_move (Event `voice.crossbowman.move`)
 
 - [ ] `voices/units/crossbowman_move_01.ogg` · Regie: knapp
-  > Moving up.
-  > *(Bedeutung DE: Rücke vor.)*
+  > Rücke vor.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_move_02.ogg` · Regie: ruhig
-  > Keep the line, I'll follow.
-  > *(Bedeutung DE: Haltet die Linie, ich komme nach.)*
+  > Haltet die Linie, ich komme nach.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_move_03.ogg` · Regie: beiläufig, mit Metallklicken
-  > Winding as I walk.
-  > *(Bedeutung DE: Spanne im Gehen.)*
+  > Spanne im Gehen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_move_04.ogg` · Regie: neutral
-  > On my way.
-  > *(Bedeutung DE: Bin unterwegs.)*
+  > Bin unterwegs.
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_attack (Event `voice.crossbowman.attack`)
 
 - [ ] `voices/units/crossbowman_attack_01.ogg` · Regie: scharf, laut
-  > Loose!
-  > *(Bedeutung DE: Schuss!)*
+  > Schuss!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_attack_02.ogg` · Regie: grimmig
-  > Armor-piercing, this one!
-  > *(Bedeutung DE: Der hier durchschlägt Panzer!)*
+  > Der hier durchschlägt Panzer!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_attack_03.ogg` · Regie: hart
-  > Down you go!
-  > *(Bedeutung DE: Runter mit dir!)*
+  > Runter mit dir!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_attack_04.ogg` · Regie: rhythmisch, zweiteilig
-  > Winding… and loose!
-  > *(Bedeutung DE: Spannen … und Schuss!)*
+  > Spannen … und Schuss!
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_retreat (Event `voice.crossbowman.retreat`)
 
 - [ ] `voices/units/crossbowman_retreat_01.ogg` · Regie: gehetzt
-  > Fall back, I'm reloading!
-  > *(Bedeutung DE: Zurück, ich lade nach!)*
+  > Zurück, ich lade nach!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_retreat_02.ogg` · Regie: angespannt
-  > Too close! Cover me!
-  > *(Bedeutung DE: Zu nah! Deckt mich!)*
+  > Zu nah! Deckt mich!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_retreat_03.ogg` · Regie: laut
-  > Back to the line!
-  > *(Bedeutung DE: Zurück in die Linie!)*
+  > Zurück in die Linie!
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_hit (Event `voice.crossbowman.hit`)
 
 - [ ] `voices/units/crossbowman_hit_01.ogg` · Regie: Schmerz, kurz
-  > [grunts] Ah, my arm!
-  > *(Bedeutung DE: Mein Arm!)*
+  > [grunts] Mein Arm!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_hit_02.ogg` · Regie: überrascht
-  > [gasps] Hit!
-  > *(Bedeutung DE: Getroffen!)*
+  > [gasps] Getroffen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_hit_03.ogg` · Regie: ärgerlich
-  > Not the string, damn it!
-  > *(Bedeutung DE: Nicht die Sehne, verflucht!)*
+  > Nicht die Sehne, verflucht!
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_death (Event `voice.crossbowman.death`)
 
 - [ ] `voices/units/crossbowman_death_01.ogg` · Regie: verhauchend
-  > [exhales] Cold… so cold…
-  > *(Bedeutung DE: Kalt … so kalt …)*
+  > [exhales] Kalt … so kalt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_death_02.ogg` · Regie: Pflichtgefühl bis zuletzt
-  > [gasps] Reload… someone…
-  > *(Bedeutung DE: Nachladen … jemand …)*
+  > [gasps] Nachladen … jemand …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_death_03.ogg` · Regie: stolz-müde
-  > [groans] I missed… nothing…
-  > *(Bedeutung DE: Ich hab … nichts verfehlt …)*
+  > [groans] Ich hab … nichts verfehlt …
+  > *(Sprache: Deutsch)*
 
 ##### crossbowman_victory (Event `voice.crossbowman.victory`)
 
 - [ ] `voices/units/crossbowman_victory_01.ogg` · Regie: zufrieden, ruhig
-  > Clean shooting, everyone.
-  > *(Bedeutung DE: Saubere Arbeit, alle.)*
+  > Saubere Arbeit, alle.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_victory_02.ogg` · Regie: trocken
-  > That's the last bolt for today.
-  > *(Bedeutung DE: Das war der letzte Bolzen für heute.)*
+  > Das war der letzte Bolzen für heute.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/crossbowman_victory_03.ogg` · Regie: müde-trocken
-  > Count the bolts, not the dead.
-  > *(Bedeutung DE: Zählt die Bolzen, nicht die Toten.)*
+  > Zählt die Bolzen, nicht die Toten.
+  > *(Sprache: Deutsch)*
 
 #### Hellebardier – Stimme `AC_unit_halberdier` (24 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, Mitte 40, tiefer, bärbeißiger Bass-Bariton, Gardist und Pferdebrecher; liebt Formationen, mag keine Reiter.
-> - **Prompt:** "A gruff palace guard halberdier in his mid-forties with a deep, grumbling bass-baritone and a clipped, disciplined northern English accent. Slow, heavy and authoritative, barking short orders, with the stubborn pride of a man who has braced against many cavalry charges. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Planks down, points out, shoulders together. Let the horses come. They always stop eventually." – *DE:* „Schäfte auf den Boden, Spitzen raus, Schulter an Schulter. Lasst die Pferde kommen. Irgendwann bleiben sie immer stehen.“
+> - **Prompt:** "A gruff palace guard halberdier in his mid-forties with a deep, grumbling bass-baritone. Speaks German with a natural, native accent, clipped and disciplined, with a northern coloring. Slow, heavy and authoritative, barking short orders, with the stubborn pride of a man who has braced against many cavalry charges. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Schäfte auf den Boden, Spitzen raus, Schulter an Schulter. Lasst die Pferde kommen. Irgendwann bleiben
+>   sie immer stehen.“
 > - **Einstellungen:** v3 *Natural*, Speed 0,95.
 
 - Stimme: `AC_unit_halberdier (Profil G2)` · Modell: Eleven v3, *Natural* · Speed 0,95
@@ -4577,120 +4554,120 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### halberdier_select (Event `voice.halberdier.select`)
 
 - [ ] `voices/units/halberdier_select_01.ogg` · Regie: tief, knapp
-  > Halberd up.
-  > *(Bedeutung DE: Hellebarde hoch.)*
+  > Hellebarde hoch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_select_02.ogg` · Regie: steif, stolz
-  > Present and braced.
-  > *(Bedeutung DE: Zur Stelle und bereit.)*
+  > Zur Stelle und bereit.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_select_03.ogg` · Regie: grimmig-amüsiert
-  > Let them come on horseback.
-  > *(Bedeutung DE: Sollen sie nur zu Pferd kommen.)*
+  > Sollen sie nur zu Pferd kommen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_select_04.ogg` · Regie: respektvoll
-  > Orders, Warden?
-  > *(Bedeutung DE: Befehle, Wächterin?)*
+  > Befehle, Wächterin?
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_move (Event `voice.halberdier.move`)
 
 - [ ] `voices/units/halberdier_move_01.ogg` · Regie: knapp
-  > Marching.
-  > *(Bedeutung DE: Marschiere.)*
+  > Marschiere.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_move_02.ogg` · Regie: kommandoartig
-  > Steady pace, keep the shafts level.
-  > *(Bedeutung DE: Gleichmäßiger Schritt, Stangen waagerecht.)*
+  > Gleichmäßiger Schritt, Stangen waagerecht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_move_03.ogg` · Regie: brummig
-  > Heavy boots, honest road.
-  > *(Bedeutung DE: Schwere Stiefel, ehrliche Straße.)*
+  > Schwere Stiefel, ehrliche Straße.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_move_04.ogg` · Regie: neutral
-  > Moving out.
-  > *(Bedeutung DE: Rücken ab.)*
+  > Rücken ab.
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_attack (Event `voice.halberdier.attack`)
 
 - [ ] `voices/units/halberdier_attack_01.ogg` · Regie: laut, kommandierend
-  > Brace! Brace!
-  > *(Bedeutung DE: Anlegen! Anlegen!)*
+  > Anlegen! Anlegen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_attack_02.ogg` · Regie: Schlachtruf
-  > Horse-breaker!
-  > *(Bedeutung DE: Pferdebrecher!)*
+  > Pferdebrecher!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_attack_03.ogg` · Regie: grimmig, Anstrengung
-  > Hook and drag!
-  > *(Bedeutung DE: Haken und zerren!)*
+  > Haken und zerren!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_attack_04.ogg` · Regie: kräftig
-  > For the Crown!
-  > *(Bedeutung DE: Für die Krone!)*
+  > Für die Krone!
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_retreat (Event `voice.halberdier.retreat`)
 
 - [ ] `voices/units/halberdier_retreat_01.ogg` · Regie: laut
-  > Pull back, pull back!
-  > *(Bedeutung DE: Zurück, zurück!)*
+  > Zurück, zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_retreat_02.ogg` · Regie: befehlend
-  > Reform the line!
-  > *(Bedeutung DE: Linie neu bilden!)*
+  > Linie neu bilden!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_retreat_03.ogg` · Regie: gepresst
-  > Back, damn you, back!
-  > *(Bedeutung DE: Zurück, verflucht!)*
+  > Zurück, verflucht!
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_hit (Event `voice.halberdier.hit`)
 
 - [ ] `voices/units/halberdier_hit_01.ogg` · Regie: trotzig
-  > [grunts] Armor held.
-  > *(Bedeutung DE: Rüstung hält.)*
+  > [grunts] Rüstung hält.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_hit_02.ogg` · Regie: trocken
-  > [groans] That'll bruise.
-  > *(Bedeutung DE: Das gibt einen Bluterguss.)*
+  > [groans] Das gibt einen Bluterguss.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_hit_03.ogg` · Regie: kurz
   > [hisses] Ah!
-  > *(Bedeutung DE: Ah!)*
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_death (Event `voice.halberdier.death`)
 
 - [ ] `voices/units/halberdier_death_01.ogg` · Regie: verhauchend
-  > [exhales] Hold the line…
-  > *(Bedeutung DE: Haltet die Linie …)*
+  > [exhales] Haltet die Linie …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_death_02.ogg` · Regie: schwer
-  > [groans] Forgive me, Captain.
-  > *(Bedeutung DE: Vergebt mir, Hauptmann.)*
+  > [groans] Vergebt mir, Hauptmann.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_death_03.ogg` · Regie: gebrochen-stur
-  > [gasps] Not… one step…
-  > *(Bedeutung DE: Nicht … einen Schritt …)*
+  > [gasps] Nicht … einen Schritt …
+  > *(Sprache: Deutsch)*
 
 ##### halberdier_victory (Event `voice.halberdier.victory`)
 
 - [ ] `voices/units/halberdier_victory_01.ogg` · Regie: zufrieden
-  > Not a hoof got past us.
-  > *(Bedeutung DE: Kein Huf kam an uns vorbei.)*
+  > Kein Huf kam an uns vorbei.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_victory_02.ogg` · Regie: ruhig
-  > Shafts down. Well done.
-  > *(Bedeutung DE: Stangen runter. Gut gemacht.)*
+  > Stangen runter. Gut gemacht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/halberdier_victory_03.ogg` · Regie: stolz
-  > The line held.
-  > *(Bedeutung DE: Die Linie hielt.)*
+  > Die Linie hielt.
+  > *(Sprache: Deutsch)*
 
 #### Schildträger – Stimme `AC_unit_shieldbearer` (27 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, ca. 38, sehr tiefer, ruhiger Bass; geduldiger, schwerer Bollwerkkämpfer, spricht wenig, stoisch.
-> - **Prompt:** "A heavy shieldbearer in his late thirties with a very deep, calm bass voice, slow and stoic, speaking little and never raising his voice above a firm rumble. Plain, steady, patient northern English, the quiet confidence of a living wall. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Stand behind me. The shield is heavy, but I am heavier. Nothing passes here." – *DE:* „Steht hinter mir. Der Schild ist schwer, aber ich bin schwerer. Hier kommt nichts durch.“
+> - **Prompt:** "A heavy shieldbearer in his late thirties with a very deep, calm bass voice, slow and stoic, speaking little and never raising his voice above a firm rumble. Speaks German with a natural, native accent, plain, steady, patient, with a northern coloring, the quiet confidence of a living wall. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Steht hinter mir. Der Schild ist schwer, aber ich bin schwerer. Hier kommt nichts durch.“
 > - **Einstellungen:** v3 *Natural*, Speed 0,92.
 
 - Stimme: `AC_unit_shieldbearer (Profil G3)` · Modell: Eleven v3, *Natural* · Speed 0,92
@@ -4699,134 +4676,135 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### shieldbearer_select (Event `voice.shieldbearer.select`)
 
 - [ ] `voices/units/shieldbearer_select_01.ogg` · Regie: tief, ruhig
-  > Shield up.
-  > *(Bedeutung DE: Schild hoch.)*
+  > Schild hoch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_select_02.ogg` · Regie: stoisch
-  > I'm your wall.
-  > *(Bedeutung DE: Ich bin Eure Mauer.)*
+  > Ich bin Eure Mauer.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_select_03.ogg` · Regie: ruhig-bestimmt
-  > Behind me.
-  > *(Bedeutung DE: Hinter mich.)*
+  > Hinter mich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_select_04.ogg` · Regie: einsilbig
-  > Ready.
-  > *(Bedeutung DE: Bereit.)*
+  > Bereit.
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_move (Event `voice.shieldbearer.move`)
 
 - [ ] `voices/units/shieldbearer_move_01.ogg` · Regie: gleichmäßig
-  > Advancing, shields locked.
-  > *(Bedeutung DE: Rücke vor, Schilde verhakt.)*
+  > Rücke vor, Schilde verhakt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_move_02.ogg` · Regie: brummend
-  > Slow and steady.
-  > *(Bedeutung DE: Langsam und stetig.)*
+  > Langsam und stetig.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_move_03.ogg` · Regie: knapp
-  > To the front.
-  > *(Bedeutung DE: Nach vorn.)*
+  > Nach vorn.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_move_04.ogg` · Regie: neutral
-  > Moving.
-  > *(Bedeutung DE: Marschiere.)*
+  > Marschiere.
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_attack (Event `voice.shieldbearer.attack`)
 
 - [ ] `voices/units/shieldbearer_attack_01.ogg` · Regie: laut, kommandierend
-  > Shield wall!
-  > *(Bedeutung DE: Schildwall!)*
+  > Schildwall!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_attack_02.ogg` · Regie: Anstrengung
-  > Push!
-  > *(Bedeutung DE: Drücken!)*
+  > Drücken!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_attack_03.ogg` · Regie: hart
-  > Not past me!
-  > *(Bedeutung DE: Nicht an mir vorbei!)*
+  > Nicht an mir vorbei!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_attack_04.ogg` · Regie: rhythmisch
-  > Hold and strike!
-  > *(Bedeutung DE: Halten und zuschlagen!)*
+  > Halten und zuschlagen!
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_retreat (Event `voice.shieldbearer.retreat`)
 
 - [ ] `voices/units/shieldbearer_retreat_01.ogg` · Regie: laut
-  > Shields back, back!
-  > *(Bedeutung DE: Schilde zurück, zurück!)*
+  > Schilde zurück, zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_retreat_02.ogg` · Regie: gepresst
-  > I can't hold alone!
-  > *(Bedeutung DE: Allein halte ich nicht!)*
+  > Allein halte ich nicht!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_retreat_03.ogg` · Regie: dringlich
-  > Fall back behind the wall!
-  > *(Bedeutung DE: Zurück hinter die Mauer!)*
+  > Zurück hinter die Mauer!
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_hit (Event `voice.shieldbearer.hit`)
 
 - [ ] `voices/units/shieldbearer_hit_01.ogg` · Regie: trocken
-  > [grunts] Shield took it.
-  > *(Bedeutung DE: Der Schild hat's abgefangen.)*
+  > [grunts] Der Schild hat's abgefangen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_hit_02.ogg` · Regie: brummig
-  > [groans] Heavy one.
-  > *(Bedeutung DE: Ein schwerer.)*
+  > [groans] Ein schwerer.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_hit_03.ogg` · Regie: stur
-  > [grunts] Still standing.
-  > *(Bedeutung DE: Steh noch.)*
+  > [grunts] Steh noch.
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_death (Event `voice.shieldbearer.death`)
 
 - [ ] `voices/units/shieldbearer_death_01.ogg` · Regie: schwer, langsam
-  > [exhales] The wall… falls…
-  > *(Bedeutung DE: Die Mauer … fällt …)*
+  > [exhales] Die Mauer … fällt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_death_02.ogg` · Regie: beschützend
-  > [groans] Behind… me…
-  > *(Bedeutung DE: Hinter … mir …)*
+  > [groans] Hinter … mir …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_death_03.ogg` · Regie: erlöst
-  > [sighs] Rest…
-  > *(Bedeutung DE: Ruhe …)*
+  > [sighs] Ruhe …
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_victory (Event `voice.shieldbearer.victory`)
 
 - [ ] `voices/units/shieldbearer_victory_01.ogg` · Regie: ruhig-stolz
-  > Wall still stands.
-  > *(Bedeutung DE: Die Mauer steht noch.)*
+  > Die Mauer steht noch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_victory_02.ogg` · Regie: trocken-humorvoll
-  > Not a scratch. Well, some.
-  > *(Bedeutung DE: Kein Kratzer. Na gut, ein paar.)*
+  > Kein Kratzer. Na gut, ein paar.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_victory_03.ogg` · Regie: erleichtert
-  > Shields down.
-  > *(Bedeutung DE: Schilde runter.)*
+  > Schilde runter.
+  > *(Sprache: Deutsch)*
 
 ##### shieldbearer_ability (Event `voice.shieldbearer.ability`)
 
 - [ ] `voices/units/shieldbearer_ability_01.ogg` · Regie: laut, befehlend
-  > Shield wall! Close up!
-  > *(Bedeutung DE: Schildwall! Aufschließen!)*
+  > Schildwall! Aufschließen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_ability_02.ogg` · Regie: kurz, scharf
-  > Lock shields!
-  > *(Bedeutung DE: Schilde verhaken!)*
+  > Schilde verhaken!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/shieldbearer_ability_03.ogg` · Regie: kräftig
-  > Form the wall!
-  > *(Bedeutung DE: Bildet die Mauer!)*
+  > Bildet die Mauer!
+  > *(Sprache: Deutsch)*
 
 #### Spähreiter – Stimme `AC_unit_scout_rider` (24 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, Anfang 20, heller, flinker Tenor, übermütig, lacht gern, spricht schnell.
-> - **Prompt:** "A young border scout rider in his early twenties with a bright, quick tenor voice and a lively regional English accent. Fast, breathless, cheeky and cheerful, laughing easily, full of restless energy as if speaking from horseback. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Ridge is clear, road's quiet, and my horse is bored. Say the word and I'll be there before you finish asking." – *DE:* „Der Kamm ist frei, die Straße ruhig, und mein Pferd langweilt sich. Sagt es, und ich bin da, bevor Ihr zu Ende gefragt habt.“
+> - **Prompt:** "A young border scout rider in his early twenties with a bright, quick tenor voice. Speaks German with a natural, native accent and a lively regional coloring. Fast, breathless, cheeky and cheerful, laughing easily, full of restless energy as if speaking from horseback. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Der Kamm ist frei, die Straße ruhig, und mein Pferd langweilt sich. Sagt es, und ich bin da, bevor Ihr
+>   zu Ende gefragt habt.“
 > - **Einstellungen:** v3 *Creative*, Speed 1,08.
 
 - Stimme: `AC_unit_scout_rider (Profil G4)` · Modell: Eleven v3, *Creative* · Speed 1,08
@@ -4835,120 +4813,120 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### scout_rider_select (Event `voice.scout_rider.select`)
 
 - [ ] `voices/units/scout_rider_select_01.ogg` · Regie: schnell, munter
-  > Ready to ride!
-  > *(Bedeutung DE: Bereit zum Ritt!)*
+  > Bereit zum Ritt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_select_02.ogg` · Regie: neugierig
-  > What do you need seen?
-  > *(Bedeutung DE: Was soll ich auskundschaften?)*
+  > Was soll ich auskundschaften?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_select_03.ogg` · Regie: zufrieden
-  > Good horse, good eyes.
-  > *(Bedeutung DE: Gutes Pferd, gute Augen.)*
+  > Gutes Pferd, gute Augen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_select_04.ogg` · Regie: eifrig
-  > Point the way.
-  > *(Bedeutung DE: Zeigt mir den Weg.)*
+  > Zeigt mir den Weg.
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_move (Event `voice.scout_rider.move`)
 
 - [ ] `voices/units/scout_rider_move_01.ogg` · Regie: freudig
-  > Off like the wind!
-  > *(Bedeutung DE: Los wie der Wind!)*
+  > Los wie der Wind!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_move_02.ogg` · Regie: schnell
-  > Ahead of the dust!
-  > *(Bedeutung DE: Dem Staub voraus!)*
+  > Dem Staub voraus!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_move_03.ogg` · Regie: leichthin
-  > I'll be back before supper.
-  > *(Bedeutung DE: Ich bin vor dem Abendessen zurück.)*
+  > Ich bin vor dem Abendessen zurück.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_move_04.ogg` · Regie: Zuruf, kurz
-  > Hyah!
-  > *(Bedeutung DE: Hü!)*
+  > Hü!
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_attack (Event `voice.scout_rider.attack`)
 
 - [ ] `voices/units/scout_rider_attack_01.ogg` · Regie: laut
-  > Hyah! Ride them down!
-  > *(Bedeutung DE: Hü! Reitet sie nieder!)*
+  > Hü! Reitet sie nieder!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_attack_02.ogg` · Regie: scharf
-  > Quick and clean!
-  > *(Bedeutung DE: Schnell und sauber!)*
+  > Schnell und sauber!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_attack_03.ogg` · Regie: Schlachtruf
-  > For Brennhollow!
-  > *(Bedeutung DE: Für Brennhollow!)*
+  > Für Brennhollow!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_attack_04.ogg` · Regie: herausfordernd
-  > Come on, then!
-  > *(Bedeutung DE: Na kommt schon!)*
+  > Na kommt schon!
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_retreat (Event `voice.scout_rider.retreat`)
 
 - [ ] `voices/units/scout_rider_retreat_01.ogg` · Regie: panisch
-  > Too many! Ride!
-  > *(Bedeutung DE: Zu viele! Reiten!)*
+  > Zu viele! Reiten!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_retreat_02.ogg` · Regie: gehetzt
-  > Fall back, fall back!
-  > *(Bedeutung DE: Rückzug, Rückzug!)*
+  > Rückzug, Rückzug!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_retreat_03.ogg` · Regie: zum Pferd
-  > Faster, girl, faster!
-  > *(Bedeutung DE: Schneller, Mädchen, schneller!)*
+  > Schneller, Mädchen, schneller!
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_hit (Event `voice.scout_rider.hit`)
 
 - [ ] `voices/units/scout_rider_hit_01.ogg` · Regie: scharf
-  > [gasps] Ah, my side!
-  > *(Bedeutung DE: Ah, meine Seite!)*
+  > [gasps] Ah, meine Seite!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_hit_02.ogg` · Regie: überspielt
-  > [grunts] Scratched.
-  > *(Bedeutung DE: Gestreift.)*
+  > [grunts] Gestreift.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_hit_03.ogg` · Regie: besorgt
-  > [hisses] Hold on, girl!
-  > *(Bedeutung DE: Halt durch, Mädchen!)*
+  > [hisses] Halt durch, Mädchen!
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_death (Event `voice.scout_rider.death`)
 
 - [ ] `voices/units/scout_rider_death_01.ogg` · Regie: verhauchend
-  > [gasps] Tell them… what I saw…
-  > *(Bedeutung DE: Sagt ihnen … was ich sah …)*
+  > [gasps] Sagt ihnen … was ich sah …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_death_02.ogg` · Regie: leise
-  > [exhales] Ride on…
-  > *(Bedeutung DE: Reitet weiter …)*
+  > [exhales] Reitet weiter …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_death_03.ogg` · Regie: erlöst
-  > [sighs] Wind's… cold…
-  > *(Bedeutung DE: Der Wind … ist kalt …)*
+  > [sighs] Der Wind … ist kalt …
+  > *(Sprache: Deutsch)*
 
 ##### scout_rider_victory (Event `voice.scout_rider.victory`)
 
 - [ ] `voices/units/scout_rider_victory_01.ogg` · Regie: lachend
-  > Told you I was fast!
-  > *(Bedeutung DE: Ich sagte doch, ich bin schnell!)*
+  > Ich sagte doch, ich bin schnell!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_victory_02.ogg` · Regie: zufrieden
-  > The road is clear.
-  > *(Bedeutung DE: Der Weg ist frei.)*
+  > Der Weg ist frei.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/scout_rider_victory_03.ogg` · Regie: munter
-  > Back with news, as promised.
-  > *(Bedeutung DE: Zurück mit Neuigkeiten, wie versprochen.)*
+  > Zurück mit Neuigkeiten, wie versprochen.
+  > *(Sprache: Deutsch)*
 
 #### Berittene Bogenschützin – Stimme `AC_unit_horse_archer` (24 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Frau, Ende 20, geschmeidiger heller Alt, selbstsichere, leicht spöttische Steppen-Söldnerin.
-> - **Prompt:** "A confident mounted archer, a woman in her late twenties with a smooth, light alto voice and a faintly foreign, lilting accent. Playful, teasing and self-assured, speaking quickly and lightly as if loosing arrows at a gallop. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "You walk, I ride, and still I shoot first. Do try to keep up." – *DE:* „Ihr geht, ich reite, und trotzdem schieße ich zuerst. Versucht mitzuhalten.“
+> - **Prompt:** "A confident mounted archer, a woman in her late twenties with a smooth, light alto voice. Speaks German with a natural accent and a faintly foreign, lilting coloring. Playful, teasing and self-assured, speaking quickly and lightly as if loosing arrows at a gallop. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Ihr geht, ich reite, und trotzdem schieße ich zuerst. Versucht mitzuhalten.“
 > - **Einstellungen:** v3 *Creative*, Speed 1,05.
 
 - Stimme: `AC_unit_horse_archer (Profil G5)` · Modell: Eleven v3, *Creative* · Speed 1,05
@@ -4957,120 +4935,120 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### horse_archer_select (Event `voice.horse_archer.select`)
 
 - [ ] `voices/units/horse_archer_select_01.ogg` · Regie: selbstsicher
-  > Bow strung, horse fed.
-  > *(Bedeutung DE: Bogen gespannt, Pferd gefüttert.)*
+  > Bogen gespannt, Pferd gefüttert.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_select_02.ogg` · Regie: spöttisch
-  > Make it a moving target.
-  > *(Bedeutung DE: Macht es zum bewegten Ziel.)*
+  > Macht es zum bewegten Ziel.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_select_03.ogg` · Regie: ruhig
-  > You have my bow.
-  > *(Bedeutung DE: Ihr habt meinen Bogen.)*
+  > Ihr habt meinen Bogen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_select_04.ogg` · Regie: locker
-  > Where to, Warden?
-  > *(Bedeutung DE: Wohin, Wächterin?)*
+  > Wohin, Wächterin?
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_move (Event `voice.horse_archer.move`)
 
 - [ ] `voices/units/horse_archer_move_01.ogg` · Regie: kurz
-  > Riding wide.
-  > *(Bedeutung DE: Reite weit aus.)*
+  > Reite weit aus.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_move_02.ogg` · Regie: neckend
-  > Catch me if you can.
-  > *(Bedeutung DE: Fangt mich, wenn ihr könnt.)*
+  > Fangt mich, wenn ihr könnt.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_move_03.ogg` · Regie: knapp
-  > Flank, then fire.
-  > *(Bedeutung DE: Flanke, dann Feuer.)*
+  > Flanke, dann Feuer.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_move_04.ogg` · Regie: Zuruf
-  > Hyah!
-  > *(Bedeutung DE: Hü!)*
+  > Hü!
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_attack (Event `voice.horse_archer.attack`)
 
 - [ ] `voices/units/horse_archer_attack_01.ogg` · Regie: laut
-  > Arrows away!
-  > *(Bedeutung DE: Pfeile los!)*
+  > Pfeile los!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_attack_02.ogg` · Regie: rhythmisch
-  > Shoot and ride!
-  > *(Bedeutung DE: Schießen und reiten!)*
+  > Schießen und reiten!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_attack_03.ogg` · Regie: spöttisch
-  > Too slow!
-  > *(Bedeutung DE: Zu langsam!)*
+  > Zu langsam!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_attack_04.ogg` · Regie: Schlachtruf
-  > Rain on them!
-  > *(Bedeutung DE: Lasst es auf sie regnen!)*
+  > Lasst es auf sie regnen!
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_retreat (Event `voice.horse_archer.retreat`)
 
 - [ ] `voices/units/horse_archer_retreat_01.ogg` · Regie: gehetzt
-  > Disengage! Ride out!
-  > *(Bedeutung DE: Absetzen! Raus hier!)*
+  > Absetzen! Raus hier!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_retreat_02.ogg` · Regie: angespannt
-  > They're too close!
-  > *(Bedeutung DE: Sie sind zu nah!)*
+  > Sie sind zu nah!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_retreat_03.ogg` · Regie: dringlich
-  > Falling back, shoot as you go!
-  > *(Bedeutung DE: Rückzug, schießt beim Reiten!)*
+  > Rückzug, schießt beim Reiten!
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_hit (Event `voice.horse_archer.hit`)
 
 - [ ] `voices/units/horse_archer_hit_01.ogg` · Regie: scharf
-  > [gasps] Arrow in my coat!
-  > *(Bedeutung DE: Ein Pfeil im Mantel!)*
+  > [gasps] Ein Pfeil im Mantel!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_hit_02.ogg` · Regie: überspielt
-  > [grunts] Not bad.
-  > *(Bedeutung DE: Nicht schlecht.)*
+  > [grunts] Nicht schlecht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_hit_03.ogg` · Regie: zum Pferd
-  > [hisses] Easy, girl!
-  > *(Bedeutung DE: Ruhig, Mädchen!)*
+  > [hisses] Ruhig, Mädchen!
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_death (Event `voice.horse_archer.death`)
 
 - [ ] `voices/units/horse_archer_death_01.ogg` · Regie: verhauchend
-  > [exhales] Last… arrow…
-  > *(Bedeutung DE: Letzter … Pfeil …)*
+  > [exhales] Letzter … Pfeil …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_death_02.ogg` · Regie: poetisch-leise
-  > [gasps] The wind took me…
-  > *(Bedeutung DE: Der Wind hat mich geholt …)*
+  > [gasps] Der Wind hat mich geholt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_death_03.ogg` · Regie: ruhig
-  > [sighs] Ride on without me…
-  > *(Bedeutung DE: Reitet ohne mich weiter …)*
+  > [sighs] Reitet ohne mich weiter …
+  > *(Sprache: Deutsch)*
 
 ##### horse_archer_victory (Event `voice.horse_archer.victory`)
 
 - [ ] `voices/units/horse_archer_victory_01.ogg` · Regie: zufrieden
-  > They never got close.
-  > *(Bedeutung DE: Sie kamen nie nah heran.)*
+  > Sie kamen nie nah heran.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_victory_02.ogg` · Regie: gelöst
-  > Quiver's light, heart's lighter.
-  > *(Bedeutung DE: Köcher leicht, Herz leichter.)*
+  > Köcher leicht, Herz leichter.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/horse_archer_victory_03.ogg` · Regie: ruhig
-  > Another hunt done.
-  > *(Bedeutung DE: Wieder eine Jagd vorbei.)*
+  > Wieder eine Jagd vorbei.
+  > *(Sprache: Deutsch)*
 
 #### Kampfmagier – Stimme `AC_unit_battle_mage` (27 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, Anfang 30, höflicher, gespannter Tenor-Bariton, diszipliniert, unterdrückte Hitze in der Stimme (Flammenakademie von Kaldris).
-> - **Prompt:** "A disciplined fire mage trained at an academy, a man in his early thirties with a polite, precise and slightly tense baritone-tenor and an educated English accent. Controlled and formal, but with suppressed heat under every sentence, as if each word could ignite. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Stand clear, if you would. I can control the flame. I simply prefer not to be asked how hard." – *DE:* „Geht bitte beiseite. Ich beherrsche die Flamme. Ich möchte nur nicht gefragt werden, wie sehr.“
+> - **Prompt:** "A disciplined fire mage trained at an academy, a man in his early thirties with a polite, precise and slightly tense baritone-tenor. Speaks German with a natural, native accent, educated standard German. Controlled and formal, but with suppressed heat under every sentence, as if each word could ignite. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Geht bitte beiseite. Ich beherrsche die Flamme. Ich möchte nur nicht gefragt werden, wie sehr.“
 > - **Einstellungen:** v3 *Creative*, Speed 1,0.
 
 - Stimme: `AC_unit_battle_mage (Profil G6)` · Modell: Eleven v3, *Creative* · Speed 1,0
@@ -5079,134 +5057,135 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### battle_mage_select (Event `voice.battle_mage.select`)
 
 - [ ] `voices/units/battle_mage_select_01.ogg` · Regie: ruhig, tief
-  > The flame answers.
-  > *(Bedeutung DE: Die Flamme antwortet.)*
+  > Die Flamme antwortet.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_select_02.ogg` · Regie: knapp
-  > Ember and will.
-  > *(Bedeutung DE: Glut und Wille.)*
+  > Glut und Wille.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_select_03.ogg` · Regie: konzentriert
-  > Name the target.
-  > *(Bedeutung DE: Nennt das Ziel.)*
+  > Nennt das Ziel.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_select_04.ogg` · Regie: leise-intensiv
-  > I am ready to burn.
-  > *(Bedeutung DE: Ich bin bereit zu brennen.)*
+  > Ich bin bereit zu brennen.
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_move (Event `voice.battle_mage.move`)
 
 - [ ] `voices/units/battle_mage_move_01.ogg` · Regie: gelassen
-  > Walking in the light.
-  > *(Bedeutung DE: Ich gehe im Licht.)*
+  > Ich gehe im Licht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_move_02.ogg` · Regie: trocken-warnend
-  > Keep your distance from my hem.
-  > *(Bedeutung DE: Haltet Abstand zu meinem Saum.)*
+  > Haltet Abstand zu meinem Saum.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_move_03.ogg` · Regie: ruhig
-  > As the flame wills.
-  > *(Bedeutung DE: Wie die Flamme will.)*
+  > Wie die Flamme will.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_move_04.ogg` · Regie: knapp
-  > Moving.
-  > *(Bedeutung DE: Bewegung.)*
+  > Bewegung.
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_attack (Event `voice.battle_mage.attack`)
 
 - [ ] `voices/units/battle_mage_attack_01.ogg` · Regie: scharf, laut
-  > Burn!
-  > *(Bedeutung DE: Brennt!)*
+  > Brennt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_attack_02.ogg` · Regie: grimmig
-  > Ash to ash!
-  > *(Bedeutung DE: Asche zu Asche!)*
+  > Asche zu Asche!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_attack_03.ogg` · Regie: hymnisch
-  > By the Eternal Flame!
-  > *(Bedeutung DE: Bei der Ewigen Flamme!)*
+  > Bei der Ewigen Flamme!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_attack_04.ogg` · Regie: knapp, Zauberruf
-  > Kindle!
-  > *(Bedeutung DE: Entfacht!)*
+  > Entfacht!
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_retreat (Event `voice.battle_mage.retreat`)
 
 - [ ] `voices/units/battle_mage_retreat_01.ogg` · Regie: dringlich
-  > Shield me, I'm drained!
-  > *(Bedeutung DE: Deckt mich, ich bin erschöpft!)*
+  > Deckt mich, ich bin erschöpft!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_retreat_02.ogg` · Regie: panisch
-  > Too close, too close!
-  > *(Bedeutung DE: Zu nah, zu nah!)*
+  > Zu nah, zu nah!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_retreat_03.ogg` · Regie: gehetzt
-  > Fall back to the line!
-  > *(Bedeutung DE: Zurück zur Linie!)*
+  > Zurück zur Linie!
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_hit (Event `voice.battle_mage.hit`)
 
 - [ ] `voices/units/battle_mage_hit_01.ogg` · Regie: scharf
-  > [gasps] My concentration!
-  > *(Bedeutung DE: Meine Konzentration!)*
+  > [gasps] Meine Konzentration!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_hit_02.ogg` · Regie: bissig
-  > [hisses] Burns… the wrong way.
-  > *(Bedeutung DE: Brennt … falsch herum.)*
+  > [hisses] Das brennt … in die falsche Richtung.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_hit_03.ogg` · Regie: zu sich selbst
-  > [grunts] Hold steady.
-  > *(Bedeutung DE: Ruhig bleiben.)*
+  > [grunts] Ruhig bleiben.
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_death (Event `voice.battle_mage.death`)
 
 - [ ] `voices/units/battle_mage_death_01.ogg` · Regie: verhauchend
-  > [exhales] The flame… goes out…
-  > *(Bedeutung DE: Die Flamme … erlischt …)*
+  > [exhales] Die Flamme … erlischt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_death_02.ogg` · Regie: leise
-  > [gasps] Let it… not be… in vain…
-  > *(Bedeutung DE: Lasst es … nicht umsonst sein …)*
+  > [gasps] Lasst es … nicht umsonst sein …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_death_03.ogg` · Regie: erlöst
-  > [sighs] Ash… at last.
-  > *(Bedeutung DE: Asche … endlich.)*
+  > [sighs] Asche … endlich.
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_victory (Event `voice.battle_mage.victory`)
 
 - [ ] `voices/units/battle_mage_victory_01.ogg` · Regie: zufrieden-ruhig
-  > The embers are quiet.
-  > *(Bedeutung DE: Die Glut ist still.)*
+  > Die Glut ist still.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_victory_02.ogg` · Regie: leise
-  > Let the fire rest.
-  > *(Bedeutung DE: Lasst das Feuer ruhen.)*
+  > Lasst das Feuer ruhen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_victory_03.ogg` · Regie: feierlich
-  > Light prevailed.
-  > *(Bedeutung DE: Das Licht hat gesiegt.)*
+  > Das Licht hat gesiegt.
+  > *(Sprache: Deutsch)*
 
 ##### battle_mage_ability (Event `voice.battle_mage.ability`)
 
 - [ ] `voices/units/battle_mage_ability_01.ogg` · Regie: laut, Zauberruf
-  > Fire, answer me!
-  > *(Bedeutung DE: Feuer, antworte mir!)*
+  > Feuer, antworte mir!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_ability_02.ogg` · Regie: scharf
-  > Cinders, rise!
-  > *(Bedeutung DE: Funken, erhebt euch!)*
+  > Funken, erhebt euch!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battle_mage_ability_03.ogg` · Regie: hart
-  > Flame, take them!
-  > *(Bedeutung DE: Flamme, nimm sie!)*
+  > Flamme, nimm sie!
+  > *(Sprache: Deutsch)*
 
 #### Priester der Flamme – Stimme `AC_unit_priest` (27 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Mann, Ende 50, sanfter, warmer Bariton, Dorfkapellenpriester, zitiert Liturgie, ängstlich, hilft trotzdem.
-> - **Prompt:** "A gentle village chapel priest in his late fifties with a soft, warm baritone and a kind rural English accent. Calm and reassuring, quoting liturgy in a half-sung murmur, with a tremor of fear underneath that he overcomes out of duty. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "The Flame does not ask us to be unafraid. Only to keep it lit. Come, let me see that wound." – *DE:* „Die Flamme verlangt nicht, dass wir keine Angst haben. Nur, dass wir sie am Brennen halten. Kommt, lasst mich die Wunde sehen.“
+> - **Prompt:** "A gentle village chapel priest in his late fifties with a soft, warm baritone. Speaks German with a natural, native accent and a kind, rural coloring. Calm and reassuring, quoting liturgy in a half-sung murmur, with a tremor of fear underneath that he overcomes out of duty. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Die Flamme verlangt nicht, dass wir keine Angst haben. Nur, dass wir sie am Brennen halten. Kommt,
+>   lasst mich die Wunde sehen.“
 > - **Einstellungen:** v3 *Natural*, Speed 0,96.
 
 - Stimme: `AC_unit_priest (Profil G7)` · Modell: Eleven v3, *Natural* · Speed 0,96
@@ -5215,134 +5194,134 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### priest_select (Event `voice.priest.select`)
 
 - [ ] `voices/units/priest_select_01.ogg` · Regie: warm, sanft
-  > The Flame be with you.
-  > *(Bedeutung DE: Die Flamme sei mit Euch.)*
+  > Die Flamme sei mit Euch.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_select_02.ogg` · Regie: freundlich
-  > How may I serve?
-  > *(Bedeutung DE: Wie kann ich dienen?)*
+  > Wie kann ich dienen?
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_select_03.ogg` · Regie: tröstend
-  > I am here, child.
-  > *(Bedeutung DE: Ich bin hier, Kind.)*
+  > Ich bin hier, Kind.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_select_04.ogg` · Regie: ruhig
-  > Let the light guide us.
-  > *(Bedeutung DE: Lasst das Licht uns leiten.)*
+  > Lasst das Licht uns leiten.
+  > *(Sprache: Deutsch)*
 
 ##### priest_move (Event `voice.priest.move`)
 
 - [ ] `voices/units/priest_move_01.ogg` · Regie: gelassen
-  > We walk in the light.
-  > *(Bedeutung DE: Wir gehen im Licht.)*
+  > Wir gehen im Licht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_move_02.ogg` · Regie: ruhig
-  > Lead on, I follow.
-  > *(Bedeutung DE: Geht voran, ich folge.)*
+  > Geht voran, ich folge.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_move_03.ogg` · Regie: sorgend
-  > Mind the wounded.
-  > *(Bedeutung DE: Gebt auf die Verwundeten acht.)*
+  > Gebt auf die Verwundeten acht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_move_04.ogg` · Regie: leicht gehetzt
-  > Yes, yes, going.
-  > *(Bedeutung DE: Ja, ja, ich gehe.)*
+  > Ja, ja, ich gehe.
+  > *(Sprache: Deutsch)*
 
 ##### priest_attack (Event `voice.priest.attack`)
 
 - [ ] `voices/units/priest_attack_01.ogg` · Regie: mutig, zitternd
-  > Back, creatures of the dark!
-  > *(Bedeutung DE: Zurück, Geschöpfe der Dunkelheit!)*
+  > Zurück, Geschöpfe der Dunkelheit!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_attack_02.ogg` · Regie: laut
-  > Flame, protect us!
-  > *(Bedeutung DE: Flamme, beschütze uns!)*
+  > Flamme, beschütze uns!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_attack_03.ogg` · Regie: hymnisch
-  > In the Eternal Flame's name!
-  > *(Bedeutung DE: Im Namen der Ewigen Flamme!)*
+  > Im Namen der Ewigen Flamme!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_attack_04.ogg` · Regie: entschlossen
-  > Stand away from them!
-  > *(Bedeutung DE: Weg von ihnen!)*
+  > Weg von ihnen!
+  > *(Sprache: Deutsch)*
 
 ##### priest_retreat (Event `voice.priest.retreat`)
 
 - [ ] `voices/units/priest_retreat_01.ogg` · Regie: panisch
-  > I can't! I can't!
-  > *(Bedeutung DE: Ich kann nicht! Ich kann nicht!)*
+  > Ich kann nicht! Ich kann nicht!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_retreat_02.ogg` · Regie: dringlich
-  > Protect the healers!
-  > *(Bedeutung DE: Beschützt die Heiler!)*
+  > Beschützt die Heiler!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_retreat_03.ogg` · Regie: verzweifelt
-  > Flame, forgive me!
-  > *(Bedeutung DE: Flamme, vergib mir!)*
+  > Flamme, vergib mir!
+  > *(Sprache: Deutsch)*
 
 ##### priest_hit (Event `voice.priest.hit`)
 
 - [ ] `voices/units/priest_hit_01.ogg` · Regie: erschrocken
-  > [gasps] Oh! Mercy!
-  > *(Bedeutung DE: Oh! Gnade!)*
+  > [gasps] Oh! Gnade!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_hit_02.ogg` · Regie: tapfer
-  > [groans] It's only pain.
-  > *(Bedeutung DE: Es ist nur Schmerz.)*
+  > [groans] Es ist nur Schmerz.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_hit_03.ogg` · Regie: gepresst
-  > [hisses] Forgive them…
-  > *(Bedeutung DE: Vergib ihnen …)*
+  > [hisses] Vergib ihnen …
+  > *(Sprache: Deutsch)*
 
 ##### priest_death (Event `voice.priest.death`)
 
 - [ ] `voices/units/priest_death_01.ogg` · Regie: friedlich
-  > [exhales] Into the Flame… I go…
-  > *(Bedeutung DE: In die Flamme … gehe ich …)*
+  > [exhales] In die Flamme … gehe ich …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_death_02.ogg` · Regie: besorgt
-  > [gasps] Who… will tend… them…
-  > *(Bedeutung DE: Wer … wird … sie pflegen …)*
+  > [gasps] Wer … wird … sie pflegen …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_death_03.ogg` · Regie: erlöst
-  > [sighs] Light… take me.
-  > *(Bedeutung DE: Licht … nimm mich.)*
+  > [sighs] Licht … nimm mich.
+  > *(Sprache: Deutsch)*
 
 ##### priest_victory (Event `voice.priest.victory`)
 
 - [ ] `voices/units/priest_victory_01.ogg` · Regie: erleichtert
-  > Praise the Flame. Tend the wounded.
-  > *(Bedeutung DE: Lob der Flamme. Versorgt die Verwundeten.)*
+  > Lob der Flamme. Versorgt die Verwundeten.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_victory_02.ogg` · Regie: gerührt
-  > We lived. Thank the light.
-  > *(Bedeutung DE: Wir leben. Dank dem Licht.)*
+  > Wir leben. Dank dem Licht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_victory_03.ogg` · Regie: feierlich
-  > Peace to the fallen.
-  > *(Bedeutung DE: Friede den Gefallenen.)*
+  > Friede den Gefallenen.
+  > *(Sprache: Deutsch)*
 
 ##### priest_ability (Event `voice.priest.ability`)
 
 - [ ] `voices/units/priest_ability_01.ogg` · Regie: warm, kräftig
-  > Be healed!
-  > *(Bedeutung DE: Werdet geheilt!)*
+  > Werdet geheilt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_ability_02.ogg` · Regie: hymnisch
-  > Flame, restore them!
-  > *(Bedeutung DE: Flamme, richte sie auf!)*
+  > Flamme, richte sie auf!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/priest_ability_03.ogg` · Regie: strahlend
-  > Rise and be blessed!
-  > *(Bedeutung DE: Erhebt euch und seid gesegnet!)*
+  > Erhebt euch und seid gesegnet!
+  > *(Sprache: Deutsch)*
 
 #### Rammbock-Mannschaft – Stimme `AC_unit_ram_crew` (15 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Gruppe von 3–4 Männern, schwitzende Pioniere, Hau-Ruck-Rufe im Takt, dumpfe Anstrengung; mehrere Takes überlagern.
-> - **Prompt:** "A crew of four sweating siege engineers shouting in rhythm, rough male voices, heaving and grunting as they swing a heavy ram, shouted work chants and effort sounds, tight and dry. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Heave! And heave! And heave! Again, put your backs into it!" – *DE:* „Zieht! Und zieht! Und zieht! Nochmal, legt euch ins Zeug!“
+> - **Prompt:** "A crew of four sweating siege engineers shouting in rhythm, rough male voices, heaving and grunting as they swing a heavy ram, shouted work chants and effort sounds, tight and dry. They shout in German with a natural, native accent. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Zieht! Und zieht! Und zieht! Nochmal, legt euch ins Zeug!“
 > - **Einstellungen:** v3 *Creative*, Speed 1,0; je Zeile 3–4 Takes mit leicht verschobenem Einsatz überlagern (Chor), Mono-Summe.
 
 - Stimme: `AC_unit_ram_crew (Profil G8)` · Modell: Eleven v3, *Creative* (Mehrstimmen-Chor, 3–4 Männer) · Speed 1,0
@@ -5351,78 +5330,78 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### battering_ram_select (Event `voice.battering_ram.select`)
 
 - [ ] `voices/units/battering_ram_select_01.ogg` · Regie: Chor, Zuruf
-  > Ram's ready!
-  > *(Bedeutung DE: Ramme bereit!)*
+  > Ramme bereit!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_select_02.ogg` · Regie: grimmig, rau
-  > Aye, the gate won't hold.
-  > *(Bedeutung DE: Jawohl, das Tor hält nicht.)*
+  > Jawohl, das Tor hält nicht.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_select_03.ogg` · Regie: Anfeuerung
-  > Put your backs into it!
-  > *(Bedeutung DE: Legt Euch ins Zeug!)*
+  > Legt Euch ins Zeug!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_select_04.ogg` · Regie: rhythmisch
-  > Heave, lads!
-  > *(Bedeutung DE: Hau ruck, Jungs!)*
+  > Hau ruck, Jungs!
+  > *(Sprache: Deutsch)*
 
 ##### battering_ram_move (Event `voice.battering_ram.move`)
 
 - [ ] `voices/units/battering_ram_move_01.ogg` · Regie: Anstrengung, im Takt
-  > Push, push!
-  > *(Bedeutung DE: Schieben, schieben!)*
+  > Schieben, schieben!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_move_02.ogg` · Regie: hektisch
-  > Mind the wheels!
-  > *(Bedeutung DE: Achtet auf die Räder!)*
+  > Achtet auf die Räder!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_move_03.ogg` · Regie: gepresst
-  > Easy… easy…
-  > *(Bedeutung DE: Langsam … langsam …)*
+  > Langsam … langsam …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_move_04.ogg` · Regie: Zuruf
-  > Roll her up!
-  > *(Bedeutung DE: Rollt sie vor!)*
+  > Rollt sie vor!
+  > *(Sprache: Deutsch)*
 
 ##### battering_ram_attack (Event `voice.battering_ram.attack`)
 
 - [ ] `voices/units/battering_ram_attack_01.ogg` · Regie: laut, im Takt
-  > Swing! Swing!
-  > *(Bedeutung DE: Schwingen! Schwingen!)*
+  > Schwingen! Schwingen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_attack_02.ogg` · Regie: wild
-  > Break it down!
-  > *(Bedeutung DE: Reißt es nieder!)*
+  > Reißt es nieder!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_attack_03.ogg` · Regie: Chor
-  > All together — now!
-  > *(Bedeutung DE: Alle zusammen – jetzt!)*
+  > Alle zusammen – jetzt!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_attack_04.ogg` · Regie: Schlachtruf
-  > Smash the gate!
-  > *(Bedeutung DE: Zerschmettert das Tor!)*
+  > Zerschmettert das Tor!
+  > *(Sprache: Deutsch)*
 
 ##### battering_ram_death (Event `voice.battering_ram.death`)
 
 - [ ] `voices/units/battering_ram_death_01.ogg` · Regie: panisch, Chor
-  > [shouting] She's breaking up!
-  > *(Bedeutung DE: Sie bricht auseinander!)*
+  > [shouting] Sie bricht auseinander!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_death_02.ogg` · Regie: gebrochen
-  > [groans] The ram… is lost…
-  > *(Bedeutung DE: Der Rammbock … ist verloren …)*
+  > [groans] Der Rammbock … ist verloren …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/battering_ram_death_03.ogg` · Regie: Chor, hektisch
-  > [shouting] Run, lads, run!
-  > *(Bedeutung DE: Lauft, Jungs, lauft!)*
+  > [shouting] Lauft, Jungs, lauft!
+  > *(Sprache: Deutsch)*
 
 #### Katapult-Mannschaft – Stimme `AC_unit_catapult_crew` (15 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - 2–3 erfahrene Geschützmeister, nüchterne Zurufe in Kommandoform, Winden und Seile hörbar.
-> - **Prompt:** "Two or three experienced siege gunners, rough and businesslike male voices calling short, clear commands over creaking ropes and a winch, calm professionals, never panicked. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Wind her back! Load! Steady... and release!" – *DE:* „Spannt sie zurück! Laden! Ruhig ... und los!“
+> - **Prompt:** "Two or three experienced siege gunners, rough and businesslike male voices calling short, clear commands over creaking ropes and a winch, calm professionals, never panicked. They call out in German with a natural, native accent. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Spannt sie zurück! Laden! Ruhig … und los!“
 > - **Einstellungen:** v3 *Creative*, Speed 1,0; 2–3 Sprecher getrennt generieren und abwechselnd verwenden.
 
 - Stimme: `AC_unit_catapult_crew (Profil G9)` · Modell: Eleven v3, *Creative* (2–3 Sprecher) · Speed 1,0
@@ -5431,70 +5410,70 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### catapult_select (Event `voice.catapult.select`)
 
 - [ ] `voices/units/catapult_select_01.ogg` · Regie: nüchtern
-  > Engine's loaded.
-  > *(Bedeutung DE: Geschütz ist geladen.)*
+  > Geschütz ist geladen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_select_02.ogg` · Regie: knapp
-  > Give us a target.
-  > *(Bedeutung DE: Gebt uns ein Ziel.)*
+  > Gebt uns ein Ziel.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_select_03.ogg` · Regie: Zuruf
-  > Wind her back!
-  > *(Bedeutung DE: Spannt sie zurück!)*
+  > Spannt sie zurück!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_select_04.ogg` · Regie: fachlich
-  > Range and bearing, sir?
-  > *(Bedeutung DE: Reichweite und Richtung, Herr?)*
+  > Reichweite und Richtung, Herr?
+  > *(Sprache: Deutsch)*
 
 ##### catapult_move (Event `voice.catapult.move`)
 
 - [ ] `voices/units/catapult_move_01.ogg` · Regie: Anstrengung
-  > Haul her, haul her!
-  > *(Bedeutung DE: Zieht sie, zieht sie!)*
+  > Zieht sie, zieht sie!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_move_02.ogg` · Regie: besorgt
-  > Careful with the arm!
-  > *(Bedeutung DE: Vorsicht mit dem Arm!)*
+  > Vorsicht mit dem Arm!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_move_03.ogg` · Regie: hektisch
-  > Mind the ruts!
-  > *(Bedeutung DE: Achtet auf die Spurrillen!)*
+  > Achtet auf die Spurrillen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_move_04.ogg` · Regie: gepresst
-  > Easy, easy!
-  > *(Bedeutung DE: Langsam, langsam!)*
+  > Langsam, langsam!
+  > *(Sprache: Deutsch)*
 
 ##### catapult_attack (Event `voice.catapult.attack`)
 
 - [ ] `voices/units/catapult_attack_01.ogg` · Regie: laut, Kommando
-  > Loose!
-  > *(Bedeutung DE: Los!)*
+  > Los!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_attack_02.ogg` · Regie: scharf
-  > Fire!
-  > *(Bedeutung DE: Feuer!)*
+  > Feuer!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_attack_03.ogg` · Regie: Warnruf
-  > Stand clear — loose!
-  > *(Bedeutung DE: Zurücktreten – los!)*
+  > Zurücktreten – los!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_attack_04.ogg` · Regie: Triumph
-  > Away, away!
-  > *(Bedeutung DE: Fort damit!)*
+  > Fort damit!
+  > *(Sprache: Deutsch)*
 
 ##### catapult_death (Event `voice.catapult.death`)
 
 - [ ] `voices/units/catapult_death_01.ogg` · Regie: entsetzt
-  > [shouting] She's gone — the arm snapped!
-  > *(Bedeutung DE: Sie ist hin – der Arm ist gebrochen!)*
+  > [shouting] Sie ist hin – der Arm ist gebrochen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_death_02.ogg` · Regie: gebrochen
-  > [groans] Years of work…
-  > *(Bedeutung DE: Jahre an Arbeit …)*
+  > [groans] Jahre an Arbeit …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/catapult_death_03.ogg` · Regie: panisch
-  > [shouting] Clear out!
-  > *(Bedeutung DE: Weg hier!)*
+  > [shouting] Weg hier!
+  > *(Sprache: Deutsch)*
 
 ### B6 Die Hohlen
 
@@ -5503,10 +5482,10 @@ Kontext: Isarre Mol, auf der Riffinsel.
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - **Prompt:** "A hollow, emaciated male voice of a reanimated villager, dry and breathy, with a weak rattling rasp in the
->   throat, murmuring fragments of words as if half-remembering a past life. Slow, confused, mournful, unsettling. Close-mic
->   studio-quality recording, no background noise."
-> - **Beispieltext:** "Home… the fields are cold… I can't find the door… mother, the fire went out… so hungry… so cold…" –
->   *DE:* „Heim … die Felder sind kalt … ich finde die Tür nicht … Mutter, das Feuer ist aus … so hungrig … so kalt …“
+>   throat, murmuring fragments of words as if half-remembering a past life. Slow, confused, mournful, unsettling. Murmurs
+>   German word fragments with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Heim … die Felder sind kalt … ich finde die Tür nicht … Mutter, das Feuer ist aus … so hungrig … so
+>   kalt …“
 > - **Einstellungen:** v3 *Creative*; alternativ Voice Changer mit eigener Performance; Pitch −2 in der Nachbearbeitung.
 
 - Stimme: `AC_unit_hollow_thrall` (Profil D5.1) · Modell: Eleven v3, *Creative* · Speed 0,9
@@ -5514,57 +5493,58 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### hollow_thrall_attack (Event `voice.hollow_thrall.attack`)
 
 - [ ] `voices/units/hollow_thrall_attack_01.ogg` · Regie: gierig, kehlig
-  > [groans] Hnnngh… warm…
-  > *(Bedeutung DE: Hnnngh … warm …)*
+  > [groans] Hnnngh … warm …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_attack_02.ogg` · Regie: klagend-aggressiv
-  > [rasping] Give… it… back…
-  > *(Bedeutung DE: Gib … es … zurück …)*
+  > [rasping] Gib … es … zurück …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_attack_03.ogg` · Regie: wortloser Angriffslaut, Luftstoß
   > [hisses] Hhhaaah!
-  > *(Bedeutung DE: Hhhaaah!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_attack_04.ogg` · Regie: gemurmelt, besitzergreifend
-  > …home… mine…
-  > *(Bedeutung DE: … Heim … meins …)*
+  > … Heim … meins …
+  > *(Sprache: Deutsch)*
 
 ##### hollow_thrall_hit (Event `voice.hollow_thrall.hit`)
 
 - [ ] `voices/units/hollow_thrall_hit_01.ogg` · Regie: dumpf, gleichgültig
-  > [groans] Uhhh —
-  > *(Bedeutung DE: Uhhh –)*
+  > [groans] Uhhh –
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_hit_02.ogg` · Regie: trockenes Keuchen, abgebrochen
-  > [gasps] Hhkk —
-  > *(Bedeutung DE: Hhkk –)*
+  > [gasps] Hhkk –
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_hit_03.ogg` · Regie: verloren, fast menschlich
-  > …still… hurts…
-  > *(Bedeutung DE: … tut … noch weh …)*
+  > … tut … noch weh …
+  > *(Sprache: Deutsch)*
 
 ##### hollow_thrall_death (Event `voice.hollow_thrall.death`)
 
 - [ ] `voices/units/hollow_thrall_death_01.ogg` · Regie: erlöst, verhauchend
-  > [sighs] …finally… quiet…
-  > *(Bedeutung DE: … endlich … still …)*
+  > [sighs] … endlich … still …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_death_02.ogg` · Regie: leises, trauriges Erinnern
-  > [exhales] …mother…
-  > *(Bedeutung DE: … Mutter …)*
+  > [exhales] … Mutter …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_thrall_death_03.ogg` · Regie: langes Todesröcheln, 1,5–2 s
-  > [rattling breath] Hhhhaaahhh…
-  > *(Bedeutung DE: Hhhhaaahhh …)*
+  > [rattling breath] Hhhhaaahhh …
+  > *(Sprache: Deutsch)*
 
 #### Knochenschütze – Stimme `AC_unit_hollow_archer` (10 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - **Prompt:** "A dry, whispering, skeletal voice with clicking, rattling consonants and almost no breath, thin and airy,
->   hissing fragments of words, cold and precise. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Sssee you… sssee the warm ones… one more… mark the heart… it never stops counting… one more…" –
->   *DE:* „Ssseh dich … ssseh die Warmen … noch einer … markier das Herz … es hört nie auf zu zählen … noch einer …“
+>   hissing fragments of words, cold and precise. Hisses German word fragments with a natural, native pronunciation. Close-mic
+>   studio-quality recording, no background noise."
+> - **Beispieltext:** „Ssseh dich … ssseh die Warmen … noch einer … markier das Herz … es hört nie auf zu zählen … noch einer
+>   …“
 > - **Einstellungen:** v3 *Creative* mit `[whispers]`; Nachbearbeitung: Hohle-Kette + hochfrequentes Knochenklacken (SFX-Layer, −18 dB).
 
 - Stimme: `AC_unit_hollow_archer` (Profil D5.2) · Modell: Eleven v3, *Creative* mit `[whispers]`
@@ -5572,58 +5552,57 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### hollow_archer_attack (Event `voice.hollow_archer.attack`)
 
 - [ ] `voices/units/hollow_archer_attack_01.ogg` · Regie: kalt, zischend
-  > [whispers] Sssee you.
-  > *(Bedeutung DE: Ssseh dich.)*
+  > [whispers] Ich ssseh dich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_attack_02.ogg` · Regie: zählend, gierig
-  > [whispers] One more…
-  > *(Bedeutung DE: Noch einer …)*
+  > [whispers] Noch einer …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_attack_03.ogg` · Regie: wortlos, Zischlaut beim Schuss
   > [hisses] Tsssk!
-  > *(Bedeutung DE: Tsssk!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_attack_04.ogg` · Regie: präzise, eisig
-  > [whispers] Mark the heart.
-  > *(Bedeutung DE: Markier das Herz.)*
+  > [whispers] Markier das Herz.
+  > *(Sprache: Deutsch)*
 
 ##### hollow_archer_hit (Event `voice.hollow_archer.hit`)
 
 - [ ] `voices/units/hollow_archer_hit_01.ogg` · Regie: Knack-Zischen
   > [hisses] Kkhh!
-  > *(Bedeutung DE: Kkhh!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_hit_02.ogg` · Regie: scharfes, kurzes Zischen
   > Ssss!
-  > *(Bedeutung DE: Ssss!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_hit_03.ogg` · Regie: tonlos, fast verwundert
-  > [whispers] …cracked…
-  > *(Bedeutung DE: … gesprungen …)*
+  > [whispers] … gesprungen …
+  > *(Sprache: Deutsch)*
 
 ##### hollow_archer_death (Event `voice.hollow_archer.death`)
 
 - [ ] `voices/units/hollow_archer_death_01.ogg` · Regie: verwehend
-  > [whispers] …falling… apart…
-  > *(Bedeutung DE: … zerfalle …)*
+  > [whispers] … zerfalle …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_death_02.ogg` · Regie: letzter, trockener Hauch
-  > [exhales] Hhhaaa…
-  > *(Bedeutung DE: Hhhaaa …)*
+  > [exhales] Hhhaaa …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_archer_death_03.ogg` · Regie: erleichtert, tonlos
-  > [whispers] …the counting… stops…
-  > *(Bedeutung DE: … das Zählen … hört auf …)*
+  > [whispers] … das Zählen … hört auf …
+  > *(Sprache: Deutsch)*
 
 #### Grabkoloss – Stimme `AC_unit_grave_brute` (10 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - **Prompt:** "A huge, deep, guttural creature voice of a bloated undead giant, slow heavy breathing, wet low rumbling
->   groans, able to bellow single words with crushing force. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Hhhrrrgh… crush… CRUSH… down… stay down… hhhuuurrgh… all of you… in the ground…" – *DE:* „Hhhrrrgh …
->   zerquetschen … ZERQUETSCHEN … runter … bleib unten … hhhuuurrgh … ihr alle … in die Erde …“
->   (Hinweis: Großschreibung hier nur als Regie; im Generierungstext klein schreiben, Betonung über `[shouting]`.)
+>   groans, able to bellow single words with crushing force. Bellows single German words with a natural, native pronunciation.
+>   Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Hhhrrrgh … zerquetschen … zerquetschen … runter … bleib unten … hhhuuurrgh … ihr alle … in die Erde …“
 > - **Einstellungen:** v3 *Creative*; zusätzlich SFX-Layer „massive undead giant groan“ (siehe Einheitendokument); Pitch −4 bis −6.
 
 - Stimme: `AC_unit_grave_brute` (Profil D5.3) · Modell: Eleven v3, *Creative* · Speed 0,85
@@ -5631,56 +5610,56 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### grave_brute_attack (Event `voice.grave_brute.attack`)
 
 - [ ] `voices/units/grave_brute_attack_01.ogg` · Regie: brüllend, ein Wort
-  > [shouting] Crush!
-  > *(Bedeutung DE: Zerquetschen!)*
+  > [shouting] Zerquetschen!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_attack_02.ogg` · Regie: wortloser Brüller, 1,2 s
   > [groans] Hhhrrraaagh!
-  > *(Bedeutung DE: Hhhrrraaagh!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_attack_03.ogg` · Regie: kurz, wuchtig
-  > [shouting] Down!
-  > *(Bedeutung DE: Runter!)*
+  > [shouting] Runter!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_attack_04.ogg` · Regie: langsam, genüsslich
-  > [growls] Smash… small ones…
-  > *(Bedeutung DE: Zerschmettern … die Kleinen …)*
+  > [growls] Zerschmettern … die Kleinen …
+  > *(Sprache: Deutsch)*
 
 ##### grave_brute_hit (Event `voice.grave_brute.hit`)
 
 - [ ] `voices/units/grave_brute_hit_01.ogg` · Regie: dumpfes Grunzen
   > [groans] Hhhrrmph!
-  > *(Bedeutung DE: Hhhrrmph!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_hit_02.ogg` · Regie: wütend, kurz
   > [roars] Rrraah!
-  > *(Bedeutung DE: Rrraah!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_hit_03.ogg` · Regie: träge, überrascht
-  > [groans] …hurts…
-  > *(Bedeutung DE: … tut weh …)*
+  > [groans] … tut weh …
+  > *(Sprache: Deutsch)*
 
 ##### grave_brute_death (Event `voice.grave_brute.death`)
 
 - [ ] `voices/units/grave_brute_death_01.ogg` · Regie: langes, absinkendes Stöhnen, 2 s
-  > [groans] Hhhuuurrrgh…
-  > *(Bedeutung DE: Hhhuuurrrgh …)*
+  > [groans] Hhhuuurrrgh …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_death_02.ogg` · Regie: müde, fast kindlich
-  > [exhales] …ground… cold…
-  > *(Bedeutung DE: … Erde … kalt …)*
+  > [exhales] … Erde … kalt …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/grave_brute_death_03.ogg` · Regie: Brüllen, das in Röcheln zerfällt
-  > [roars] Rrrraaaaagh…
-  > *(Bedeutung DE: Rrrraaaaagh …)*
+  > [roars] Rrrraaaaagh …
+  > *(Sprache: Deutsch)*
 
 #### Grabgräber – Stimme `AC_unit_hollow_digger` (10 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Hohler Wiedergänger-Arbeiter, flach, heiser, murmelt Fetzen von Werkzeugen und Schichten; Hohle-Kette, Pitch −2.
-> - **Prompt:** "A hollow, reanimated grave-digger with a flat, dusty, hoarse male voice, muttering fragments of tools and soil layers as if still at work, slow and monotonous, breathy and dry, mournful and unsettling. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Deeper… another hand's width… the earth is cold… always deeper." – *DE:* „Tiefer … noch eine Handbreit … die Erde ist kalt … immer tiefer.“
+> - **Prompt:** "A hollow, reanimated grave-digger with a flat, dusty, hoarse male voice, muttering fragments of tools and soil layers as if still at work, slow and monotonous, breathy and dry, mournful and unsettling. Mutters German word fragments with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Tiefer … noch eine Handbreit … die Erde ist kalt … immer tiefer.“
 > - **Einstellungen:** v3 *Creative*, Speed 0,9; danach Hohle-Kette (Pitch −2).
 
 - Stimme: `AC_unit_hollow_digger (Profil G10)` · Modell: Eleven v3, *Creative* · Speed 0,9
@@ -5689,56 +5668,56 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### hollow_digger_attack (Event `voice.hollow_digger.attack`)
 
 - [ ] `voices/units/hollow_digger_attack_01.ogg` · Regie: gierig, kehlig
-  > [rasping] Mine… mine…
-  > *(Bedeutung DE: Mein … mein …)*
+  > [rasping] Mein … mein …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_attack_02.ogg` · Regie: klagend
-  > [groans] Not the… shovel…
-  > *(Bedeutung DE: Nicht die … Schaufel …)*
+  > [groans] Nicht die … Schaufel …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_attack_03.ogg` · Regie: wortlos
   > [hisses] Hhhaah!
-  > *(Bedeutung DE: Hhhaah!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_attack_04.ogg` · Regie: gemurmelt
-  > …shift's… not over…
-  > *(Bedeutung DE: … Schicht … nicht vorbei …)*
+  > … Schicht … nicht vorbei …
+  > *(Sprache: Deutsch)*
 
 ##### hollow_digger_hit (Event `voice.hollow_digger.hit`)
 
 - [ ] `voices/units/hollow_digger_hit_01.ogg` · Regie: gleichgültig
-  > [groans] Uhh — back to work…
-  > *(Bedeutung DE: Uhh – zurück an die Arbeit …)*
+  > [groans] Uhh – zurück an die Arbeit …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_hit_02.ogg` · Regie: trockenes Keuchen
-  > [gasps] Hhkk —
-  > *(Bedeutung DE: Hhkk –)*
+  > [gasps] Hhkk –
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_hit_03.ogg` · Regie: verloren
-  > …dust… in my… eyes…
-  > *(Bedeutung DE: … Staub … in den … Augen …)*
+  > … Staub … in den … Augen …
+  > *(Sprache: Deutsch)*
 
 ##### hollow_digger_death (Event `voice.hollow_digger.death`)
 
 - [ ] `voices/units/hollow_digger_death_01.ogg` · Regie: erlöst
-  > [sighs] …shift's… done…
-  > *(Bedeutung DE: … Schicht … vorbei …)*
+  > [sighs] … Schicht … vorbei …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_death_02.ogg` · Regie: verhauchend
-  > [exhales] …deeper… deeper…
-  > *(Bedeutung DE: … tiefer … tiefer …)*
+  > [exhales] … tiefer … tiefer …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/hollow_digger_death_03.ogg` · Regie: langes Röcheln
-  > [rattling breath] Hhhaaahh…
-  > *(Bedeutung DE: Hhhaaahh …)*
+  > [rattling breath] Hhhaaahh …
+  > *(Sprache: Deutsch)*
 
 #### Ghul – Stimme `AC_unit_ghoul` (10 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Ausgehungerte Leichenfresser: hohes Kreischen, Schmatzen, Schnappen; fast keine Wörter.
-> - **Prompt:** "A starving ghoul, a high, cracking, shrieking creature voice with wet smacking and snapping jaws, hoarse hissing and guttural gurgles, almost no words, feral and desperate. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Hungry… so hungry… [snarls] flesh… warm flesh…" – *DE:* „Hunger … so ein Hunger … Fleisch … warmes Fleisch …“
+> - **Prompt:** "A starving ghoul, a high, cracking, shrieking creature voice with wet smacking and snapping jaws, hoarse hissing and guttural gurgles, almost no words, feral and desperate. Rasps the few German words it has with a natural, native pronunciation. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Hunger … so ein Hunger … Fleisch … warmes Fleisch …“
 > - **Einstellungen:** v3 *Creative*, Speed 1,1; alternativ Voice Changer oder SFX-Prompt, danach Hohle-Kette; Zeilen sind überwiegend Laute.
 
 - Stimme: `AC_unit_ghoul (Profil G11)` · Modell: Eleven v3, *Creative* + SFX-Layer · Speed 1,1
@@ -5747,56 +5726,56 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### ghoul_attack (Event `voice.ghoul.attack`)
 
 - [ ] `voices/units/ghoul_attack_01.ogg` · Regie: hohes Kreischen
-  > [screeches] Hhheeeeee!
-  > *(Bedeutung DE: Hhheeeee!)*
+  > [screeches] Hhheeeee!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_attack_02.ogg` · Regie: gierig, schmatzend
-  > [snarls] Hungry… hungry…
-  > *(Bedeutung DE: Hunger … Hunger …)*
+  > [snarls] Hunger … Hunger …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_attack_03.ogg` · Regie: lüstern
-  > [hisses] Fresh… fresh…
-  > *(Bedeutung DE: Frisch … frisch …)*
+  > [hisses] Frisch … frisch …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_attack_04.ogg` · Regie: tiefes, nasses Knurren
   > [wet growl] Grrrhhh!
-  > *(Bedeutung DE: Grrrhhh!)*
+  > *(Sprache: Deutsch)*
 
 ##### ghoul_hit (Event `voice.ghoul.hit`)
 
 - [ ] `voices/units/ghoul_hit_01.ogg` · Regie: kurzer Aufschrei
   > [yelps] Hkkh!
-  > *(Bedeutung DE: Hkkh!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_hit_02.ogg` · Regie: wütend
   > [snarls] Hrrrk!
-  > *(Bedeutung DE: Hrrrk!)*
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_hit_03.ogg` · Regie: kläglich
-  > [whines] Hnnn…
-  > *(Bedeutung DE: Hnnn …)*
+  > [whines] Hnnn …
+  > *(Sprache: Deutsch)*
 
 ##### ghoul_death (Event `voice.ghoul.death`)
 
 - [ ] `voices/units/ghoul_death_01.ogg` · Regie: abfallendes Kreischen
-  > [shrieks] Heeeeaaah…
-  > *(Bedeutung DE: Heeeaaah …)*
+  > [shrieks] Heeeaaah …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_death_02.ogg` · Regie: röchelnd
-  > [gurgles] Hungry… still…
-  > *(Bedeutung DE: Hunger … noch …)*
+  > [gurgles] Hunger … noch …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ghoul_death_03.ogg` · Regie: dünnes Ausatmen
-  > [rattling breath] Hhhh…
-  > *(Bedeutung DE: Hhhh …)*
+  > [rattling breath] Hhhh …
+  > *(Sprache: Deutsch)*
 
 #### Aschhexe – Stimme `AC_unit_ash_witch` (13 Dateien)
 
 **Stimmprofil / Voice Design (einmal pro Sprecher anlegen, danach alle Zeilen unten mit dieser Stimme erzeugen):**
 
 > - Frau, undefinierbares Alter, flüsternde, kalt-berechnende Nekromantin; spricht wie eine Lehrerin zu ihren Toten; Hohle-Kette mit mehr Hall.
-> - **Prompt:** "A whispering necromancer, a woman of indeterminate age with a cold, soft, breathy alto voice, speaking calmly and precisely like a teacher to her pupils, with a chill of dry ash in every syllable and an ancient, hollow undertone. Close-mic studio-quality recording, no background noise."
-> - **Beispieltext:** "Rise, my little ones. The ash remembers what the living forget." – *DE:* „Erhebt euch, meine Kleinen. Die Asche erinnert sich, was die Lebenden vergessen.“
+> - **Prompt:** "A whispering necromancer, a woman of indeterminate age with a cold, soft, breathy alto voice, speaking calmly and precisely like a teacher to her pupils, with a chill of dry ash in every syllable and an ancient, hollow undertone. Speaks German with a natural, native accent. Close-mic studio-quality recording, no background noise."
+> - **Beispieltext:** „Erhebt euch, meine Kleinen. Die Asche erinnert sich, was die Lebenden vergessen.“
 > - **Einstellungen:** v3 *Creative* mit `[whispers]`, Speed 0,92; danach Hohle-Kette mit mehr Hall-Anteil.
 
 - Stimme: `AC_unit_ash_witch (Profil G12)` · Modell: Eleven v3, *Creative* mit `[whispers]` · Speed 0,92
@@ -5805,62 +5784,62 @@ Kontext: Isarre Mol, auf der Riffinsel.
 ##### ash_witch_attack (Event `voice.ash_witch.attack`)
 
 - [ ] `voices/units/ash_witch_attack_01.ogg` · Regie: kalt, flüsternd
-  > [whispers] Burn for me.
-  > *(Bedeutung DE: Brennt für mich.)*
+  > [whispers] Brennt für mich.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_attack_02.ogg` · Regie: scharf
-  > [hisses] Ash and bone.
-  > *(Bedeutung DE: Asche und Knochen.)*
+  > [hisses] Asche und Knochen.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_attack_03.ogg` · Regie: spöttisch
-  > [whispers] You were warm once.
-  > *(Bedeutung DE: Du warst einmal warm.)*
+  > [whispers] Du warst einmal warm.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_attack_04.ogg` · Regie: leise-lockend
-  > [cold laugh] Come closer.
-  > *(Bedeutung DE: Kommt näher.)*
+  > [cold laugh] Kommt näher.
+  > *(Sprache: Deutsch)*
 
 ##### ash_witch_hit (Event `voice.ash_witch.hit`)
 
 - [ ] `voices/units/ash_witch_hit_01.ogg` · Regie: gereizt
-  > [hisses] Insolent flesh!
-  > *(Bedeutung DE: Unverschämtes Fleisch!)*
+  > [hisses] Unverschämtes Fleisch!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_hit_02.ogg` · Regie: verblüfft
-  > [gasps] How… warm.
-  > *(Bedeutung DE: Wie … warm.)*
+  > [gasps] Wie … warm.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_hit_03.ogg` · Regie: kurz
   > [hisses] Hnh!
-  > *(Bedeutung DE: Hnh!)*
+  > *(Sprache: Deutsch)*
 
 ##### ash_witch_death (Event `voice.ash_witch.death`)
 
 - [ ] `voices/units/ash_witch_death_01.ogg` · Regie: verhauchend
-  > [exhales] The Deep… is patient…
-  > *(Bedeutung DE: Das Tief … ist geduldig …)*
+  > [exhales] Das Tief … ist geduldig …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_death_02.ogg` · Regie: leise
-  > [whispers] Rise… without me…
-  > *(Bedeutung DE: Erhebt euch … ohne mich …)*
+  > [whispers] Erhebt euch … ohne mich …
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_death_03.ogg` · Regie: Röcheln
-  > [rattling breath] Dust to dust…
-  > *(Bedeutung DE: Staub zu Staub …)*
+  > [rattling breath] Staub zu Staub …
+  > *(Sprache: Deutsch)*
 
 ##### ash_witch_ability (Event `voice.ash_witch.ability`)
 
 - [ ] `voices/units/ash_witch_ability_01.ogg` · Regie: beschwörend, tief
-  > [whispers] Rise, my children.
-  > *(Bedeutung DE: Erhebt euch, meine Kinder.)*
+  > [whispers] Erhebt euch, meine Kinder.
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_ability_02.ogg` · Regie: befehlend
-  > [commanding] Up from the ash!
-  > *(Bedeutung DE: Hoch aus der Asche!)*
+  > [commanding] Hoch aus der Asche!
+  > *(Sprache: Deutsch)*
 
 - [ ] `voices/units/ash_witch_ability_03.ogg` · Regie: Singsang, rituell
-  > [chants] Bone to bone, flesh to flesh.
-  > *(Bedeutung DE: Knochen zu Knochen, Fleisch zu Fleisch.)*
+  > [chants] Knochen zu Knochen, Fleisch zu Fleisch.
+  > *(Sprache: Deutsch)*
 
 ---
 

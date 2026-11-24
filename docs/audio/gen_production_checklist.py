@@ -326,20 +326,18 @@ def section_voices(entries, docs, chars, out):
                 for kl in docs.note(r, "*Kontext"):
                     out.append(strip_md(kl).replace("*Kontext:*", "Kontext:"))
                 out.append("")
-            text_de = get(r, "Sprechtext (DE, exakt wie im Spiel)")
+            text_de = get(r, "Sprechtext (DE, exakt wie im Spiel)", "Sprechtext (DE)")
+            exact = "Sprechtext (DE, exakt wie im Spiel)" in r.cells
             regie = get(r, "Regie")
             num = get(r, "#")
             meta = ["Regie: " + regie if regie else "", f"Zeile {num} der Szene" if num else ""]
             out.append(f"- [ ] `{e['path']}` · " + " · ".join(m for m in meta if m))
             if text_de:
                 out.append(f"  > {text_de}")
-                out.append("  > *(Sprache: Deutsch, exakter Spieltext)*")
+                out.append("  > *(Sprache: Deutsch, exakter Spieltext)*" if exact else "  > *(Sprache: Deutsch)*")
             else:
                 en = get(r, "EN-Text", "EN-Text/Prompt", "EN-Prompt")
-                de = get(r, "DE")
                 out.append(f"  > {en}")
-                if de:
-                    out.append(f"  > *(Bedeutung DE: {de})*")
             out.append("")
     return count
 
@@ -526,7 +524,7 @@ def main():
     out.append("**Werkzeug:** ElevenLabs → Sound Effects. Prompt (englisch) einfügen, **Dauer manuell** auf den angegebenen Wert setzen, **Prompt Influence** wie angegeben (Startwert; höher = wörtlicher), Loop aus (außer ausdrücklich Loop). Je Eintrag mehrere Generierungen erzeugen und die beste wählen. Zusatz „no music“ anhängen, falls der Generator Melodien einstreut. Kurze Dateien (< Mindestdauer des Werkzeugs) länger generieren und kürzen.\n")
     out.extend(a_lines)
     out.append(f"---\n\n## B. ElevenLabs Stimmen ({nb} Dateien)\n")
-    out.append("**Vorgehen:** Pro Sprecher einmal die Stimme anlegen (Voice Design: Prompt aus dem Stimmprofil in *Voice Description*, Beispieltext in *Text to preview*, speichern als `AC_<id>`), dann alle Zeilen des Sprechers mit dieser Stimme erzeugen. Sprechtext **exakt** wie angegeben einfügen; eckige Klammern (`[sighs]`, `[shouting]`) sind Eleven-v3-Audio-Tags und werden nicht gesprochen. Sprache ist je Zeile angegeben: Einheiten-/Helden-Barks und Mission-1-Zeilen auf Englisch (Kanon-Entscheidung, deutsche Bedeutung in Klammern), Kampagnen-Dialoge auf **Deutsch** (exakter Spieltext).")
+    out.append("**Vorgehen:** Pro Sprecher einmal die Stimme anlegen (Voice Design: Prompt aus dem Stimmprofil in *Voice Description*, Beispieltext in *Text to preview*, speichern als `AC_<id>`), dann alle Zeilen des Sprechers mit dieser Stimme erzeugen. Sprechtext **exakt** wie angegeben einfügen; eckige Klammern (`[sighs]`, `[shouting]`) sind Eleven-v3-Audio-Tags und werden nicht gesprochen. Alle Stimmen werden auf **Deutsch** gesprochen (Erzähler, Dialoge, Helden-, Boss- und Einheitenrufe): in der Oberfläche/API die Sprache explizit auf Deutsch (`de`) stellen, Modell Eleven v3 bzw. Multilingual v2. Die Voice-Design-Prompts sind englisch formuliert und enthalten „speaks German with a natural, native accent“; die Audio-Tags in eckigen Klammern bleiben englisch. Zeilen mit dem Vermerk „exakter Spieltext“ entsprechen wortgleich dem Untertitel im Spiel (Prüfung: `python3 docs/audio/verify_spoken_text.py`); bei Sequenz-Events sind die Dateien `_01`, `_02`, … wörtliche Teilstücke der Spielzeile. Kanon-Eigennamen in deutscher Aussprache über das Aussprache-Wörterbuch (Leitfaden, Abschnitt 6).")
     out.append("")
     out.append("**Einstellungs-Startwerte** (Feinabstimmung je Sprecher im Profil): Eleven v3 – Stability-Modus *Natural* für Barks, Helden und Dialog, *Creative* für Kampf-/Schmerzlaute und Hohle, *Robust* für konsistenzkritische Bosse (v3 kennt kein Similarity/Style; Speed 0,92–1,08 laut Profil). Multilingual v2 (Erzähler): Stability 0,60, Similarity 0,80, Style 0,15, Speaker Boost an, Speed 0,95; ruhige Monologe 0,45–0,55 / 0,75–0,80 / 0,15–0,30; bedrohliche Stimmen 0,60–0,75 / 0,80–0,90 / 0,05–0,15. Style über 0,4 erhöht das Artefaktrisiko. Nachbearbeitung: Standardkette Stimme (Hochpass 80–100 Hz, De-Esser, Kompressor 3:1, Limiter −1 dBTP); Hohle/Bosse/Deep Voice zusätzlich Spezialketten laut Leitfaden Abschnitt 8.3.\n")
     out.extend(b_lines)

@@ -21,7 +21,7 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 |---|---|
 | `docs/audio/elevenlabs_production_guide.md` | dieses Dokument: Pipeline, Werkzeugwahl, Einstellungen, Klangziele, Nachbearbeitung, Export, Ablage, Musik, QA, Lieferung |
 | `docs/audio/elevenlabs_characters.md` | Stimmprofile & Voice-Design-Prompts (Heldin, Kernfiguren, Erzähler, Bosse, Fraktions-Archetypen, Einheiten-Zuordnung) |
-| `docs/audio/elevenlabs_unit_voices.md` | alle Einheiten-, Helden- und Boss-Zeilen des Manifests (Ziel-Datei, EN-Text, DE, Regie) + Ausblick |
+| `docs/audio/elevenlabs_unit_voices.md` | alle Einheiten-, Helden- und Boss-Zeilen des Manifests (Ziel-Datei, deutscher Sprechtext, Regie) + Ausblick |
 | `docs/audio/elevenlabs_dialogues.md` | Erzähler- und Dialogzeilen Mission 1 (Manifest) + Kampagnenszenen Zeitalter I–VII |
 | `docs/audio/elevenlabs_sound_effects.md` | alle SFX des Manifests je Variante + erweiterter Katalog |
 | `docs/audio/elevenlabs_ambient_audio.md` | alle Ambience-Loops des Manifests + Regionen-Ambiences |
@@ -31,11 +31,15 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 
 ## 1. Grundsatzentscheidungen
 
-1. **Aufnahmesprache Englisch** (Primärsprache). Alle Sprechtexte in den Dokumenten sind englisch.
-2. **Dokumentationssprache Deutsch.** Zu jeder Sprechzeile gibt es eine kurze deutsche Übersetzung als Basis für eine
-   spätere Lokalisierung (die DE-Übersetzung ist **kein** fertiges Lokalisierungsskript, sondern Bedeutungsreferenz).
-3. **Kanon ist bindend.** Eigennamen, IDs und Dateinamen exakt nach `docs/canon.md`. Englische Begriffe, die der Kanon nur
-   deutsch führt, sind im Glossar (Abschnitt 6) als *EN-Arbeitsbegriff* markiert und vom Kanon-Owner zu bestätigen.
+1. **Aufnahmesprache Deutsch.** Alle Stimmen im Spiel werden auf Deutsch gesprochen: Erzähler, Dialoge, Helden-, Boss- und
+   Einheitenrufe (Entscheidung des Auftraggebers). In allen Dokumenten stehen die Sprechtexte deutsch. Wo das Spiel denselben Text
+   als Untertitel oder Dialog zeigt (`assets/data/missions/*.ron`, `assets/data/campaign/*.ron`), ist der Sprechtext **wortgleich**
+   mit dem Spieltext; das prüft `python3 docs/audio/verify_spoken_text.py`. Nur Voice-Design-Prompts, Sound-Effects-Prompts,
+   Musik-Prompts und die v3-Audio-Tags in eckigen Klammern bleiben englisch (das Werkzeug versteht sie am besten).
+2. **Dokumentationssprache Deutsch.** Eine englische Referenzfassung der Sprechzeilen gibt es nicht mehr; sie kann bei einer
+   späteren englischen Lokalisierung aus dem deutschen Text neu erstellt werden.
+3. **Kanon ist bindend.** Eigennamen, IDs und Dateinamen exakt nach `docs/canon.md`. Eigennamen werden im Deutschen gesprochen
+   wie im Kanon geschrieben; die Aussprache regelt das Aussprache-Wörterbuch (Abschnitt 6).
 4. **Eine Stimme = ein gespeichertes Voice-Design.** Jede Figur/Einheit erhält genau eine gespeicherte Stimme in der
    ElevenLabs-Voice-Library (Benennung `AC_<id>`, z. B. `AC_hero_isolde`, `AC_unit_swordsman`). Keine Ad-hoc-Stimmen.
 5. **Keine Stimmen realer Personen.** Keine Prompts, die eine reale Person, einen bekannten Schauspieler oder eine
@@ -49,9 +53,9 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 | Asset-Typ | Primärwerkzeug | Modell (Empfehlung) | Begründung |
 |---|---|---|---|
 | Neue Stimme anlegen | **Voice Design** (Text → Stimme) | aktuelles Voice-Design-Modell (v3-basiert, falls angeboten) | Stimme aus Beschreibung; 3 Vorschauen; speichern |
-| Einheiten-Barks (select/move/attack …) | **Text to Speech** | **Eleven v3** | Audio-Tags für Schreie, Flüstern, Atmer; hohe Expressivität |
+| Einheiten-Barks (select/move/attack …) | **Text to Speech** | **Eleven v3** (Sprache: Deutsch) | Audio-Tags für Schreie, Flüstern, Atmer; hohe Expressivität; deutsche Stimmen sicher unterstützt |
 | Held/Boss-Barks, Kampfrufe, Tode | Text to Speech | **Eleven v3** | emotionale Spitzen, `[shouting]`, `[groans]`, `[exhales]` |
-| Erzähler, lange Passagen | Text to Speech (ggf. **Studio**) | **Multilingual v2** | stabile, gleichmäßige, lange Erzählung; feinere Regler |
+| Erzähler, lange Passagen | Text to Speech (ggf. **Studio**) | **Multilingual v2** (Sprache: Deutsch) | stabile, gleichmäßige, lange Erzählung; ausgereifte deutsche Prosodie; feinere Regler |
 | Dialogszenen (Mission/Kampagne) | Text to Speech | **Eleven v3** (Dialog) / Multilingual v2 (ruhige Monologe) | v3 für Emotion; v2 wenn Konsistenz über viele Takes wichtiger ist |
 | Kreaturen-Vokale ohne Worte (Hohle) | Sound Effects **oder** v3 + Nachbearbeitung **oder** Voice Changer | Sound-Effects-Modell / Eleven v3 | Grunzen, Rasseln, Brüllen klingen per SFX oft organischer |
 | One-Shot-Soundeffekte | **Sound Effects** (Text to SFX) | aktuelles SFX-Modell | prägnante EN-Prompts, Dauer, Prompt Influence |
@@ -60,9 +64,10 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 
 ### 2.1 Voice Design (Stimme aus Textbeschreibung)
 
-- **Eingaben:** (a) *Voice Description* – englischer Beschreibungs-Prompt; (b) *Text to preview* – englischer Beispieltext
-  in der Rolle (empfohlen deutlich über 100 Zeichen, damit die Vorschau Charakter zeigt; Mindest-/Maximallänge in der UI prüfen).
-- **Gute Beschreibungen enthalten:** Alter, Geschlecht, Timbre (rau, warm, hauchig, nasal), Akzent, Tempo, Grundemotion,
+- **Eingaben:** (a) *Voice Description* – Beschreibungs-Prompt, **englisch formuliert** (das Tool versteht ihn am besten), aber mit der
+  festen Angabe **„speaks German with a natural, native accent“** (ohne diese Angabe entstehen oft englisch gefärbte Stimmen);
+  (b) *Text to preview* – **deutscher** Beispieltext in der Rolle (empfohlen deutlich über 100 Zeichen, damit die Vorschau Charakter zeigt; Mindest-/Maximallänge in der UI prüfen).
+- **Gute Beschreibungen enthalten:** Alter, Geschlecht, Timbre (rau, warm, hauchig, nasal), Akzent (hier: Färbung des Deutschen, nie ein englischer Akzent), Tempo, Grundemotion,
   Sprechhaltung (befehlend, müde, spöttisch) und eine Angabe zur Aufnahmequalität („studio-quality recording, close mic,
   no background noise“). Für Kreaturen/Untote zusätzlich *gewünschte Textur* (rasselnd, hohl, kehlig).
 - **Regler (sofern vorhanden):** *Loudness* neutral lassen; *Guidance Scale* mittel bis hoch (Prompt-Treue), bei zu
@@ -86,11 +91,16 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
   erzeugen (Zeilen durch Absatz/„…“ getrennt), danach im Editor schneiden. Das hält Klangfarbe und Lautstärke konsistent.
   Wenn sich Emotion „hinüberzieht“, Zeilen einzeln generieren.
 - **Zeichenlimit** pro Generierung bei v3 niedriger als bei v2 – aktuelles Limit in der UI prüfen; lange Szenen splitten.
+- **Sprache Deutsch:** Eleven v3 erkennt die Sprache aus dem Text; trotzdem die Sprache, wo die Oberfläche/API ein Sprachfeld
+  anbietet (`language_code`), **explizit auf Deutsch (`de`) setzen**, damit kurze Rufe („Los!“, „Hü!“) nicht als englisch gelesen werden.
+  Audio-Tags bleiben **englisch** in eckigen Klammern (`[whispers]`, `[shouting]`, `[sighs]`); sie stehen am Satzanfang oder direkt
+  vor dem betroffenen Satzteil und werden nicht gesprochen. Deutsche Tag-Wörter („[flüstert]“) nicht verwenden.
 
 ### 2.3 Text to Speech – Multilingual v2
 
 - Für **Erzähler** und lange, ruhige Monologe. Regler: *Stability*, *Similarity (Clarity + Similarity Enhancement)*,
   *Style Exaggeration*, *Speaker Boost*, *Speed*.
+- **Sprache explizit Deutsch** (`de`) einstellen. v2 ist die Referenz für ruhige, lange deutsche Erzählung; Satzbögen werden sicher geführt.
 - Keine Audio-Tags (v2 interpretiert eckige Klammern ggf. als Text) – Emotion über Wortwahl, Interpunktion und Regler.
 - Für längere Erzählstrecken **Studio** (ehemals Projects) nutzen: Absätze, Neu-Generierung einzelner Absätze, Aussprache-Wörterbuch.
 
@@ -117,7 +127,7 @@ erzeugt; alle Texte, Prompts und Einstellungen sind Produktionsvorlagen.
 | Werkzeug | Einsatz in ASHEN CROWNS |
 |---|---|
 | **Voice Changer** (Speech to Speech) | Eigene Performance (z. B. Grunzen, Röcheln der Hohlen, Atemzüge der Heldin) aufnehmen und in eine gespeicherte Stimme umwandeln – ideal für nonverbale Vokale mit exaktem Timing |
-| **Pronunciation Dictionary** (Aussprache-Wörterbuch, Alias-Regeln) | Eigennamen (Eldraeth, Aureth, Varkhan, Vyrmathax …) einheitlich; Alias-Schreibweisen aus Abschnitt 6 hinterlegen |
+| **Pronunciation Dictionary** (Aussprache-Wörterbuch, Alias-Regeln) | Kanon-Eigennamen (Eldraeth, Aureth, Varkhan, Vyrmathax …) in **deutscher Aussprache** einheitlich; Alias-Schreibweisen (und IPA als Referenz) aus Abschnitt 6 hinterlegen. Das Wörterbuch wirkt nur auf die Aussprache, **nicht** auf den Text im Skript |
 | **Voice Isolator** | nur bei Bedarf, um Rauschen/Artefakte aus Voice-Changer-Aufnahmen zu entfernen |
 | **Seed** (API/erweiterte Einstellungen) | gleiche Einstellungen + Seed ≈ reproduzierbarere Takes (keine Garantie); Seed im Take-Log notieren |
 
@@ -206,74 +216,80 @@ Resampling auf 48 kHz erfolgt im Export-Schritt.
 
 ## 5. Schreibregeln für TTS-Texte
 
-1. **Englisch, natürlich gesprochen.** Kurze Sätze; Barks 1–8 Wörter.
-2. **Zahlen ausschreiben** („eight hundred ninety-seven“ statt „897“), Abkürzungen auflösen („After the Fall“ statt „A.F.“).
-3. **Eigennamen** gemäß Glossar; schwierige Namen per Aussprache-Wörterbuch (Alias), nicht durch falsche Schreibung im Text.
-4. **Interpunktion als Regie:** „…“ für Zögern, „—“ für Abbruch, „!“ sparsam (v3 reagiert stark).
-5. **Audio-Tags nur in v3** und nur, wo im Dokument angegeben. Tags werden nicht gesprochen; Text in Klammern nie ins Spiel-Untertitel übernehmen.
-6. **Untertitel** = EN-Text **ohne** Tags.
-7. **Keine Großbuchstaben-Wörter** zur Betonung (können buchstabiert werden); Betonung über Satzbau/Kursivverzicht.
+1. **Deutsch, natürlich gesprochen.** Kurze Sätze; Barks 1–8 Wörter. Umgangssprachliche Verschleifungen („'ne“, „hab“, „ich mein“) nur dort,
+   wo sie im Dokument stehen (Arbeiter, Milizen); Adel, Priester, Legion und Erzähler sprechen gehoben ohne Verschleifung.
+2. **Spieltext ist maßgeblich.** Zeilen mit Entsprechung im Spiel (Mission, Kampagne, Zeitalter-Texte) werden **unverändert** gesprochen,
+   auch bei Ziffern („Jahr 897 nach dem Fall“) und Kürzeln. Stimmt die Aussprache nicht, wird sie über das Aussprache-Wörterbuch
+   korrigiert (z. B. Alias „897“ → „achthundertsiebenundneunzig“), **nie** durch Umschreiben des Skripts. Sequenz-Segmente sind wörtliche Teilstücke.
+3. **Eigennamen** wie im Kanon geschrieben; deutsche Aussprache über das Aussprache-Wörterbuch (Alias/IPA), nicht durch falsche Schreibung im Text.
+4. **Interpunktion als Regie:** „…“ für Zögern, „–“ bzw. „—“ für Abbruch oder Schwebe, „!“ sparsam (v3 reagiert stark). Komma und Punkt
+   setzen deutsche Sprechpausen; Gedankenstriche am Segmentende nicht abschneiden (Stimme bleibt oben).
+5. **Audio-Tags nur in v3**, englisch in eckigen Klammern, nur wo im Dokument angegeben. Tags werden nicht gesprochen und **nie** in den
+   Untertitel übernommen.
+6. **Untertitel** = Sprechtext **ohne** Tags.
+7. **Keine Großbuchstaben-Wörter** zur Betonung (können buchstabiert werden); Betonung über Satzbau und Wortstellung.
+8. **Deutsche Prosodie:** Der Satzakzent liegt meist auf dem letzten inhaltstragenden Wort („Die Mauer **steht** noch“); Verben am Satzende
+   nicht verschlucken; Verbzweitstellung und Nebensätze mit Komma gliedern, damit v3 die Satzmelodie nicht englisch hebt. Zusammengesetzte
+   Wörter (Aschmark, Hohlschrein, Bergfried) nicht trennen und nicht auf der zweiten Silbe betonen. Anrede „Ihr/Euch“ (höfisch, Hal Venn/Soldaten zur Heldin)
+   und „du“ (Vertraute: Hal ↔ Isolde, Torvald ↔ Isolde) strikt wie im Dokument; Großschreibung der Anrede ändert die Aussprache nicht.
+9. **Zahlen und Silben:** deutsche Zahlwörter sind lang; Sätze mit Zahlen im Zweifel einzeln generieren und den Takt prüfen.
 
 ---
 
-## 6. EN-Glossar und Aussprache (für Aussprache-Wörterbuch)
+## 6. Aussprache-Wörterbuch (Kanon-Eigennamen, deutsche Aussprache)
 
-| Kanon (DE) | Englisch im VO | Status | Aussprache-Alias (Vorschlag) |
+Die Namen werden **deutsch** gesprochen. Das Problem für deutsche TTS-Modelle sind vor allem **V** (im Deutschen /f/, im Kanon aber meist /v/), **ae/ei/ey**
+(fremdländische Schreibung) und englisch anmutende Endungen. Reihenfolge der Prüfung: (1) Standardaussprache mit Testsatz, (2) nur bei Fehlern **Alias** hinterlegen
+(Regeltyp *Alias* wirkt in allen Modellen, auch Eleven v3 und Multilingual v2), (3) IPA nur als Referenz für das Casting; die IPA-/Phonem-Regeln des Wörterbuchs
+werden nur von einem Teil der Modelle unterstützt (in der UI prüfen), Alias ist der verlässliche Weg. Groß-/Kleinschreibung beachten; Einträge pro Name einmal anlegen.
+
+| Kanon | Deutsche Aussprache (IPA) | Aussprache-Alias | Hinweis |
 |---|---|---|---|
-| Eldraeth | Eldraeth | Kanon | „EL-dray-eth“ → Alias `Eldrayeth` |
-| Aureth | Aureth | Kanon | „OR-eth“ → Alias `Oreth` |
-| Solmere | Solmere | Kanon | „SOL-meer“ → Alias `Solmeer` |
-| Varkhan Aurelith | Varkhan Aurelith | Kanon | „VAR-kahn or-EL-ith“ → `Varkahn Oreleth` |
-| der Letzte Sonnenkönig | the Last Sun King | EN-Arbeitsbegriff | – |
-| Das Hohle Tief | the Hollow Deep | Kanon (engl.) | – |
-| der Schleier | the Veil | EN-Arbeitsbegriff | – |
-| der Aschenfall | the Ashfall | EN-Arbeitsbegriff | – |
-| Zeitalter der Asche | the Age of Ash | EN-Arbeitsbegriff | – |
-| Aschglas | ashglass | EN-Arbeitsbegriff | – |
-| Die Hohlung | the Hollowing | Kanon (engl.) | – |
-| n.F. | After the Fall | EN-Arbeitsbegriff | ausschreiben |
-| Die Aschmark | the Ashmarch | EN-Arbeitsbegriff (ID `ashmarch`) | – |
-| Valemark | Valemark | Kanon | „VALE-mark“ |
-| Skarnheim | Skarnheim | Kanon | „SKARN-hime“ → `Skarnhime` |
-| Der Dornwald | the Thornwild | Kanon (engl.) | – |
-| Saelith | Saelith | Kanon | „SAY-lith“ → `Saylith` |
-| Die Aurethwüste | the Aureth Wastes | EN-Arbeitsbegriff | – |
-| Die Schleiernarbe | the Veilscar | Kanon (engl.) | – |
-| Glutweite | Cinderreach | Kanon (engl.) | – |
-| Die Glutkrone | the Ember Crown | Kanon (engl.) | – |
-| Die Clans von Skarnheim | the Skarn Clans / the Clans of Skarnheim | EN-Arbeitsbegriff | – |
-| Der Dornenbund | the Thorn Covenant | Kanon (engl.) | – |
-| Der Saelith-Pakt | the Saelith Compact | EN-Arbeitsbegriff (ID) | – |
-| Die Hohlen | the Hollowed | Kanon (engl.) | – |
-| Die Aschenlegion | the Ashen Legion | EN-Arbeitsbegriff (ID) | – |
-| Veyl | Veyl | Kanon | „VAIL“ |
-| Ewige Flamme | the Eternal Flame | EN-Arbeitsbegriff | – |
-| Erzflammenwahrer | the Arch-Flamekeeper | EN-Arbeitsbegriff | – |
-| Kaldris | Kaldris | Kanon | „KAL-driss“ |
-| Ahnenpfad / Grüner Kreis / Haus der Gezeiten | the Ancestor Path / the Green Circle / the Tide House | EN-Arbeitsbegriffe | – |
-| Leere Liturgie / Sonnenhäresie | the Hollow Liturgy / the Sun Heresy | EN-Arbeitsbegriffe | – |
-| Ithren, Morvaine, Calyx, Thal, Oruun | dto. | Kanon | „ITH-ren“, „mor-VAIN“, „KAY-lix“, „THAHL“, „oh-ROON“ |
-| Der Hohle König | the Hollow King | EN-Arbeitsbegriff | – |
-| Aschdrache Vyrmathax | the Ashen Dragon Vyrmathax | EN-Arbeitsbegriff | „VEER-ma-thax“ → `Veermathax` |
-| Die Wurzelmutter | the Root Mother | EN-Arbeitsbegriff | – |
-| Der Fahle Vogt | the Pale Reeve | EN-Arbeitsbegriff (ID) | – |
-| Brennhollow | Brennhollow | Kanon | „BREN-hollow“ |
-| Hohlschrein von Vael Dorn | the Hollow Shrine of Vael Dorn | EN-Arbeitsbegriff | „VAIL DORN“ |
-| Isolde Raventhorn | Isolde Raventhorn | Kanon | „ee-SOL-duh RAY-ven-thorn“ → `Eesolda` |
-| Wächterin der Aschmark | Warden of the Ashmarch | EN-Arbeitsbegriff | – |
-| Glutklingen-Adeptin | Emberblade adept | EN-Arbeitsbegriff | – |
-| Glutspalter / Sammelbanner / Aschenschild | Ember Cleave / Rallying Banner / Ashen Ward | EN aus IDs | – |
-| Aldric III. | King Aldric the Third | Kanon | – |
-| Mireille Corvane | Mireille Corvane | Kanon | „meer-AY kor-VANE“ → `Meeray` |
-| Nordmark | Nordmark | Kanon | „NORD-mark“ |
-| Hal Venn | Brother Hal Venn | Kanon | – |
-| Torvald Eisenhand | Torvald Eisenhand | Kanon (Name bleibt) | „TOR-vald EYE-zen-hand“ |
-| Sylaen | Sylaen | Kanon | „sih-LAY-en“ → `Silayen` |
-| Ophira Saelith-Varo | Ophira Saelith-Varo | Kanon | „oh-FEE-ra SAY-lith VAR-oh“ |
-| Kassian Vale | Kassian Vale | Kanon | „KASS-ee-an“ |
-| Die Stimme aus dem Tief | the Voice from the Deep | EN-Arbeitsbegriff | – |
+| Eldraeth | /ˈɛldʁaːɛt/ | `Eldra-et` | „EL-dra-et“, Doppelvokal „ae“ getrennt |
+| Aureth | /ˈaʊʁɛt/ | `Auret` | „AU-ret“, „th“ = t |
+| Solmere | /zɔlˈmeːʁə/ | `Solmehre` | „Sol-MEH-re“ |
+| Varkhan Aurelith | /ˈvaʁkaːn aʊʁeˈliːt/ | `Warkahn Aureliet` | V = /v/; „kh“ = k |
+| Valemark | /ˈvaːləmaʁk/ | `Walemark` | V = /v/ |
+| Skarnheim | /ˈskaʁnhaɪm/ | – | Standardaussprache passt |
+| Saelith | /ˈzɛːlɪt/ | `Sälit` | „SÄ-lit“ |
+| Saelith-Pakt / Saelith-Inseln | /ˈzɛːlɪt/ | `Sälit-Pakt` / `Sälit-Inseln` | Alias für den Namensteil genügt |
+| Veyl | /vaɪl/ | `Wail` | V = /v/, „ey“ = ai |
+| Kaldris | /ˈkaldʁɪs/ | – | Standardaussprache passt |
+| Arnvale | /ˈaʁnvaːlə/ | `Arnwale` | V = /v/ |
+| Nordmark | /ˈnɔʁtmaʁk/ | – | Standardaussprache passt |
+| Dornwald / Dornenbund | – | – | deutsche Wörter, Standardaussprache |
+| Brennhollow | /ˈbʁɛnhɔlo/ | `Brennhollo` | „ow“ als offenes o |
+| Vael Dorn | /vɛːl dɔʁn/ | `Wäl Dorn` | V = /v/, „ae“ = ä |
+| Grauwall | /ˈɡʁaʊval/ | `Grauwall` | Standardaussprache passt, nur zur Kontrolle |
+| Harrowmere | /ˈhaʁomiːʁ/ | `Harromihr` | |
+| Marrowfen | /ˈmaʁofɛn/ | `Marrofen` | |
+| Ithren | /ˈɪtʁən/ | – | Standardaussprache passt |
+| Morvaine | /mɔʁˈvɛːn/ | `Morwäne` | V = /v/ |
+| Calyx | /ˈkaːlʏks/ | `Kalüx` | „y“ = ü |
+| Thal | /taːl/ | – | wie das deutsche Wort „Tal“ |
+| Oruun | /oˈʁuːn/ | `Orun` | Doppel-u lang |
+| Vyrmathax | /ˈvʏʁmataks/ | `Würmatax` | V = /v/, „y“ = ü, „th“ = t |
+| Isolde Raventhorn | /iˈzɔldə ˈʁaːvn̩tɔʁn/ | – | Standardaussprache passt; „Raventhorn“ mit /v/ |
+| Edran Raventhorn | /ˈɛdʁan ˈʁaːvn̩tɔʁn/ | – | |
+| Aldric | /ˈaldʁɪk/ | – | Standardaussprache; „Aldric der Dritte“ ausgesprochen („III.“ als Alias `der Dritte`) |
+| Mireille Corvane | /miˈʁɛj kɔʁˈvaːnə/ | `Mirej Korwane` | französische Vornamenform, V = /v/ |
+| Hal Venn | /hal vɛn/ | `Hal Wenn` | V = /v/ (sonst „Fenn“) |
+| Torvald Eisenhand | /ˈtɔʁvalt ˈaɪzn̩hant/ | – | Standardaussprache passt |
+| Sylaen | /zyˈlaːɛn/ | `Süla-en` | „y“ = ü |
+| Ophira Saelith-Varo | /oˈfiːʁa ˈzɛːlɪt ˈvaːʁo/ | `Ofira Sälit-Waro` | V = /v/ |
+| Kassian Vale | /ˈkasi̯an veːl/ | `Kassian Wehl` | Nachname als deutsches „Wehl“ |
+| Ser Wendel | /zɛʁ ˈvɛndl̩/ | – | Standardaussprache passt |
+| Nel | /nɛl/ | – | |
+| Gharun | /ˈɡaːʁuːn/ | `Garun` | „gh“ = g |
+| Isarre Mol | /iˈzaʁə mɔl/ | – | Standardaussprache passt |
+| Aldous Meringer | /ˈaldʊs ˈmeːʁɪŋɐ/ | – | Standardaussprache passt |
+| n.F. | – | `nach dem Fall` | im Sprechtext ausgeschrieben, falls das Kürzel vorkommt |
+| 897 | – | `achthundertsiebenundneunzig` | Alias für Ziffern im Spieltext (Aussprache prüfen) |
 
-Alias-Einträge zuerst mit einem Testsatz pro Name prüfen; Alias nur setzen, wenn die Standardaussprache falsch ist.
+Aussprache der deutschen Sachwörter (Aschmark, Aschenfall, Aschglas, Hohlschrein, Glutkrone, Bergfried, Ewige Flamme, Leere Liturgie, Sonnenhäresie, Schleier,
+Hohles Tief) benötigt keinen Eintrag. Ausnahme: *Aschglas* wird als zwei Silben-Kompositum betont (**ASCH**-glas), nicht „Asch-**glas**“; bei Fehlern Alias `Aschglas` → `Asch-Glas`.
+
+Alias-Einträge zuerst mit einem Testsatz pro Name prüfen (im Satz und als Einzelwort); Alias nur setzen, wenn die Standardaussprache falsch ist. Neue Namen aus künftigen Missionen ergänzen.
 
 ---
 
@@ -500,7 +516,7 @@ trennen. `_intro` endet exakt dort, wo `_loop` beginnt (gleiches Tempo, gleiche 
 | Stimme | `AC_hero_isolde` |
 | Einstellungen | Natural, Speed 1.0 |
 | Seed (falls genutzt) | 418223 |
-| Text (final) | „Raventhorn. Speak.“ |
+| Text (final) | „Raventhorn. Sprecht.“ |
 | Take-Nr. / Datum | 3 / 2026-11-24 |
 | Nachbearbeitung | Standardkette Stimme, −16 LUFS-S |
 | Freigabe | AD ✔ |
