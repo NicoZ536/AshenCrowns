@@ -1,12 +1,15 @@
 # ASHEN CROWNS – Entwicklungsroadmap (15 Phasen)
 
-Stand: **Phase 1 (Technisches Fundament) und der Vertical Slice sind umgesetzt.** Der Vertical Slice ist die
-spielbare Mission 1 „Die letzte Siedlung“ (`m01_last_settlement`, Zeitalter I) in den Modi Kampagne, Gefecht,
-Überleben und Sandbox.
+Stand: **Alle Phasen außer Sounddesign sind umgesetzt; Mehrspieler, Wiederholungen und ein Mod-Manager sind nicht umgesetzt.**
+Spielbar sind die Echtzeit-Kampagne „Das Zeitalter der Gefallenen“ (18 Missionen, 7 Zeitalter), die Große Kampagne auf der
+Weltkarte von Eldraeth (Crate `ashen_strategy`, Schlachten wahlweise im Echtzeitmodus), Gefecht, Überleben, Sandbox, Szenarien,
+Herausforderungen und der Karteneditor. Die Audio-Dateien selbst fehlen noch (Manifest, Scanner, Import und die
+[Produktionsliste](../audio/PRODUCTION_CHECKLIST.md) sind fertig). Eine Messung auf echter Apple-Hardware (Metal) steht aus.
 
-Diese Roadmap beschreibt für jede Phase Ziel, Status, Aufgaben, Akzeptanzkriterien, Tests, Dokumentation und die
-Integration mit vorherigen Phasen. Beim Status steht jeweils konkret, was **im Vertical Slice bereits existiert** und
-was **offen** ist. Alles, was als „offen“ oder „geplant“ steht, ist **nicht implementiert**.
+Der Abschnitt **Status** jeder Phase unten gibt den heutigen Stand wieder; die darauf folgenden Absätze „Vorhanden“,
+„Offen“, „Aufgaben“ und „Akzeptanzkriterien“ stammen aus der ursprünglichen Planung (Stand Vertical Slice) und sind als
+Planungsbeschreibung zu lesen, nicht als aktueller Rest. Was tatsächlich noch offen ist, steht im Abschnitt
+[Offene Punkte](#offene-punkte-gesamt) am Ende.
 
 Zur Zuordnung der Phasen: Verbindlich festgelegt sind Phase 1 (Technisches Fundament), Phase 15
 (Balancing/Polishing/Performance) und die im Spiel (`crates/ashen_game/src/menu.rs`) genannten Verweise:
@@ -21,23 +24,23 @@ Verwandte Dokumente: [`architecture.md`](architecture.md), [`modules.md`](module
 
 ## Übersicht
 
-| Phase | Titel | Status | Im Vertical Slice vorhanden (Kurzform) |
+| Phase | Titel | Status | Umsetzung (Modul / Dokument) |
 |---|---|---|---|
-| 1 | Technisches Fundament | **umgesetzt** | Engine, Renderer, Simulation, Spielstände, Audio-System, Werkzeuge, Mod-Grundlage |
-| 2 | Echtzeitwelt (RTS-Kern) | teilweise (Vertical Slice) | Eine Karte, 4 Ressourcen, 3 baubare Gebäude, 5 Einheitentypen plus Held, Gegnerwellen, 4 Modi |
-| 3 | Weltkarte (strategische Ebene) | offen | – (Menüeintrag „Grand Campaign“ deaktiviert) |
-| 4 | Wirtschaft und Bevölkerung | teilweise (Kern) | 4 Ressourcen, Unterhalt, Hungersnot, Wohnraum |
-| 5 | Militär und Kampfsystem | teilweise (Kern) | Schadens-/Rüstungstabelle, Moral, Fernkampf, Kavallerie, Türme |
-| 6 | Helden und Rollenspielsystem | teilweise (1 Held) | Isolde Raventhorn, 3 Fähigkeiten, 10 Stufen, Wiederkehr |
-| 7 | Magie und die Hohlung | teilweise (Effektsystem) | 6 Fähigkeitseffekte, Mana, visuelle Verderbnis am Hohlschrein |
-| 8 | Dynastien und Herrscher | offen | – |
-| 9 | Politik, Adelshäuser und Intrigen | offen | – |
-| 10 | Diplomatie | offen | – |
-| 11 | Religion, Monster, neutrale Fraktionen und Bosse | teilweise (1 Fraktion, 1 Boss) | Die Hohlen, Fahler Vogt |
-| 12 | Dynamische Ereignisse und Chroniksystem | teilweise (Chronik-Kern) | Chronik mit 8 Kategorien, Wetter-/Tageszeitereignisse, Missions-Auslöser |
-| 13 | Kampagne und Endgame | teilweise (Mission 1) | Mission 1 mit Zielen, Dialogen und Skript |
-| 14 | Editor, Modding-Werkzeuge und Mehrspieler | teilweise (Datenmods, CLI, Karteneditor, Szenarien) | Daten-Mods, `validate-data`, `audio-scan`, Headless-Screenshots, Shader-Hot-Reload, Karteneditor mit Trigger-Editor und Testspiel, Szenarien/Herausforderungen als Daten (siehe [`../design/editor_and_scenarios.md`](../design/editor_and_scenarios.md)) |
-| 15 | Balancing, Polishing, Performance | teilweise (Grundlagen) | 3 Grafikprofile, Budgets, Autosave; Plattformen außer macOS ungetestet |
+| 1 | Technisches Fundament | **umgesetzt** | `ashen_engine`, `ashen_core`, `ashen_sim::save`, `ashen_tools`; [`architecture.md`](architecture.md) |
+| 2 | Echtzeitwelt (RTS-Kern) | **umgesetzt** | `ashen_sim` (`mapgen`, `genmap`, `scenario`, `systems/`), `ashen_game::mission`, `play_modes`; Modi Kampagne, Gefecht, Überleben, Sandbox, Szenarien, Herausforderungen |
+| 3 | Weltkarte (strategische Ebene) | **umgesetzt** | `ashen_strategy`, `ashen_game::worldmap`; [`strategy_layer.md`](strategy_layer.md), [`../design/grand_campaign_ui.md`](../design/grand_campaign_ui.md) |
+| 4 | Wirtschaft und Bevölkerung | **umgesetzt** | Echtzeit: `systems/city.rs`, `systems/economy.rs`, [`rts_economy.md`](../design/rts_economy.md); Strategie: `ashen_strategy::{economy,population,goods}` |
+| 5 | Militär und Kampfsystem | **umgesetzt** | `systems/{combat,formation,ai_player,tactics}.rs`, [`rts_military.md`](../design/rts_military.md); Strategie: `ashen_strategy::military` |
+| 6 | Helden und Rollenspielsystem | **umgesetzt** | `rpg.rs`, `systems/heroes.rs`, `ashen_game::hud_hero`; 3 Helden, Stufe 10, Talente, Ausrüstung |
+| 7 | Magie und die Hohlung | **umgesetzt** | `systems/{abilities,casters}.rs`; Strategie: `ashen_strategy::magic` |
+| 8 | Dynastien und Herrscher | **umgesetzt** (Strategieebene) | `ashen_strategy::character` ([`strategy_layer.md`](strategy_layer.md) §7) |
+| 9 | Politik, Adelshäuser, Ämter und Intrigen | **umgesetzt** (Strategieebene) | `ashen_strategy::politics` (§8) |
+| 10 | Diplomatie | **umgesetzt** (Strategieebene) | `ashen_strategy::{diplomacy,ai}` (§9) |
+| 11 | Religion, Monster, neutrale Fraktionen und Bosse | **umgesetzt** | `ashen_strategy::{religion,neutral}`; Echtzeit: Hohle, Bosse in den Kampagnenmissionen |
+| 12 | Dynamische Ereignisse und Chroniksystem | **umgesetzt** | `ashen_strategy::{events,chronicle}`, `assets/data/world/events/`; Echtzeit: `ashen_sim::chronicle` |
+| 13 | Kampagne und Endgame | **teilweise** | 18 von 29 entworfenen Missionen spielbar (`ashen_sim::campaign`, `ashen_game::campaign_ui`, [`campaign.md`](../design/campaign.md)); Strategie-Endgame `ashen_strategy::endgame` |
+| 14 | Editor, Modding-Werkzeuge und Mehrspieler | **teilweise** | umgesetzt: Karteneditor, Szenarien, Herausforderungen, Datenmods, CLI-Werkzeuge; **nicht umgesetzt**: Mehrspieler, Wiederholungen, Mod-Manager |
+| 15 | Balancing, Polishing, Performance | **teilweise** | `ashen_sim::{balance,bench}`, `rts-balance`, `strategy-stats`, [`performance.md`](performance.md); offen: Hardware-Messung, Tutorial, Barrierefreiheit, Lokalisierung, Paketierung |
 
 Abhängigkeiten zwischen den Phasen (vereinfacht): 1 → 2 → {4, 5, 6, 7} → 3 → {8, 9, 10} → {11, 12} → 13 → 14 → 15.
 Phase 14 (Werkzeuge) und Phase 15 können projektbegleitend vorgezogen werden, wo es Nutzen bringt (z. B.
@@ -86,7 +89,7 @@ Kartengenerator, Kamera, FixedStep, Partikel, Atlas, Animation, Audio-Scanner, A
 **Ziel:** Ein vollständiger, vielseitiger Echtzeit-Spielkern auf Karten aller Regionen (GDD Kapitel 4, 19, 21):
 mehrere Karten und Biome, Skirmish gegen eine KI, die selbst wirtschaftet und baut.
 
-**Status: teilweise (Vertical Slice).**
+**Status: umgesetzt.** Karten: handentworfene Aschmark (`mapgen`), parametrischer Generator mit sechs Vorlagen (`genmap`), 18 Kampagnenkarten, 4 historische Szenarien; Modi Kampagne, Gefecht (Einrichtung mit Schwierigkeit, Startressourcen, Siegbedingung), Überleben, Sandbox, Szenarien, Herausforderungen; KI-Spieler der Hohlen im Gefecht (`systems/ai_player.rs`).
 
 *Vorhanden:* Eine handentworfene 72×72-Karte der Aschmark mit seed-basierter Variation (`mapgen`); 10 Terrainarten mit
 Übergangskacheln; Brücke/Furt; Befehle `Move`, Angriffsmarsch, `Attack`, `Stop`, `Hold`, `Patrol`, `Gather`, `Build`,
@@ -134,10 +137,7 @@ neue Karten benötigen ggf. zusätzliche Terrain-/Dekor-Sprites über die vorhan
 **Ziel:** Die zweite Spielebene der „Grand Campaign“ (GDD Kapitel 4): eine Weltkarte Eldraeths mit Provinzen, Armeen
 und Missionsknoten, die RTS-Missionen startet und deren Ergebnis übernimmt.
 
-**Status: offen.** Im Vertical Slice vorhanden sind nur Vorarbeiten: serialisierbarer Zustand und Spielstandformat
-(erweiterbar), die Chronik (`Chronicle` mit Jahr/Tag), `MatchSettings` für den Missionsstart. Der Menüeintrag
-„Grand Campaign“ ist deaktiviert und verweist auf die Phasen 3, 8 und 10. Eine Weltkarten-Simulation, Provinzen oder
-Armeen auf der Weltkarte existieren **nicht**.
+**Status: umgesetzt.** Crate `ashen_strategy` (deterministische Simulation, 50 Kern- und 14 optionale Provinzen, 12 Reiche) und Szene `ashen_game::worldmap` mit sieben Kartenmodi, 11 Fenstern, Spielständen `.acstrat` und Übergang in Echtzeitschlachten (`worldmap::battle`). Siehe [`strategy_layer.md`](strategy_layer.md).
 
 **Aufgaben:**
 
@@ -169,7 +169,7 @@ passende Schlachtfelder erzeugen können.
 
 **Ziel:** Die tiefe Wirtschafts- und Bevölkerungssimulation (GDD Kapitel 8 und 9) für Echtzeitwelt und Weltkarte.
 
-**Status: teilweise (Kern im Vertical Slice).**
+**Status: umgesetzt.** Echtzeit: 17 Waren, Lager, Produktionsketten, Wohnstufen mit Bedürfnissen, Steuern, Markt, Ausbau, Mauern und Tore (`systems/city.rs`, [`rts_economy.md`](../design/rts_economy.md)). Strategieebene: 57 Waren, 54 Gebäude, Märkte, Handelsrouten, Bevölkerungsschichten.
 
 *Vorhanden:* Vier Ressourcen (Gold, Holz, Stein, Nahrung); Sammeln und Abliefern (Tragekapazität, `gather_time`);
 passives Einkommen (`gold_per_sec`, `food_per_sec`); Nahrungsunterhalt je Einheit (`upkeep`); Hungersnot (Ausbildung
@@ -200,7 +200,7 @@ nutzt das Weltkartenmodell aus Phase 3.
 
 **Ziel:** Vielfältiges Militär (GDD Kapitel 10): mehr Einheitenrollen, Belagerung, Formationen, Veteranentum.
 
-**Status: teilweise (Kern im Vertical Slice).**
+**Status: umgesetzt.** Konter-Matrix, Belagerung, Flieger, Heiler/Beschwörer mit Autocast, Schmiede-Upgrades, Formationen, Gegner-KI nach Konterlogik, taktische Führung in Weltkarten-Schlachten ([`rts_military.md`](../design/rts_military.md)); Auto-Resolve auf der Strategieebene.
 
 *Vorhanden:* Fünf Schadensarten gegen sechs Rüstungsarten (`DamageType::multiplier`); Rüstungsformel;
 Klassenboni (`bonus_vs`); Nahkampf mit Ausholzeit (`windup`); Fernkampf mit Projektilen (`Arrow`, `BoneBolt`,
@@ -232,7 +232,7 @@ Schlachten; Performance-Test (Einheitenzahl gegen Tick-Zeit).
 **Ziel:** Das Heldensystem der Kampagne (GDD Kapitel 11): mehrere Helden mit Fähigkeitsbäumen, Ausrüstung und
 Eigenschaften.
 
-**Status: teilweise (1 Held im Vertical Slice).**
+**Status: umgesetzt.** 3 Helden mit Talentbäumen bis Stufe 10, Ausrüstung (Waffe, Rüstung, Amulett, 2 Ringe), Inventar, 25 Gegenstände, Beute, Wiederbeleben am Altar, Heldenfenster (`hud_hero.rs`); Heldenfortschritt über alle Kampagnenmissionen (`ashen_sim::campaign`).
 
 *Vorhanden:* Held Isolde Raventhorn (`hero_isolde`); drei Fähigkeiten (`ember_cleave`, `rallying_banner`,
 `ashen_ward`) auf `Q`, `W`, `E`; Mana und Regeneration; 10 Erfahrungsstufen (`Rules::xp_levels`) mit
@@ -263,7 +263,7 @@ Kampfmodell (Phase 5); Übergabe zwischen Weltkarte (Phase 3) und Mission.
 
 **Ziel:** Magiesystem und die Korruptionsmechanik „Die Hohlung“ (GDD Kapitel 12, `canon.md`).
 
-**Status: teilweise (Effektsystem im Vertical Slice).**
+**Status: umgesetzt.** Fähigkeitseffekte und Autocast in der Echtzeit (`systems/abilities.rs`, `systems/casters.rs`); Strategieebene: Forschung, Rituale, Hohlungspfad, Schleierstärke, Artefakte, Orden (`ashen_strategy::magic`).
 
 *Vorhanden:* Fähigkeiten als Kombination elementarer Effekte (`Damage`, `Shield`, `Rally`, `Drain`, `Summon`,
 `Terror`); Mana; Magieschaden mit Rüstungstabelle; Beschwörungen (Fahler Vogt); visuelle Verderbnis um den
@@ -295,8 +295,7 @@ Wirtschaft (Aschglas, Phase 4).
 **Ziel:** Dynastien, Herrscher und Erbfolge (GDD Kapitel 5) – die generationsübergreifende Ebene der Kampagne
 (Isolde und ihre Erben).
 
-**Status: offen.** Im Vertical Slice existiert nur die Heldin Isolde als Einzeleinheit; es gibt kein Dynastie-,
-Herrscher- oder Erbfolgemodell. Der Menüeintrag „Grand Campaign“ verweist auf diese Phase.
+**Status: umgesetzt (Strategieebene).** Charaktere, Nachfolge, Regentschaft, Heirat, Dynastien und Vermächtnisse in `ashen_strategy::character`.
 
 **Aufgaben:** Datenmodell für Haus, Herrscher, Familie, Erbfolge, Eigenschaften; Alterung und Generationswechsel auf
 der Weltkarte (Phase 3); Einfluss auf Wirtschaft, Militär, Diplomatie; Dynastie-Oberfläche; Chronikeinträge
@@ -318,7 +317,7 @@ Politik (9) und Diplomatie (10).
 
 **Ziel:** Innenpolitik (GDD Kapitel 6): Adelshäuser, Ämter, Loyalitäten, Intrigen.
 
-**Status: offen.** Nichts davon im Vertical Slice.
+**Status: umgesetzt (Strategieebene).** Ämter, Adelshäuser mit Macht/Loyalität, Fraktionen, Rebellion, Intrigen in `ashen_strategy::politics`.
 
 **Aufgaben:** Modell für Häuser, Ämter, Loyalität und Intrigen; Ereignisse und Entscheidungen; Einfluss auf
 Armeen und Wirtschaft; Oberfläche (Hofansicht); KI-Akteure.
@@ -339,8 +338,7 @@ Weltkarte und Schlachten nachvollziehbar.
 
 **Ziel:** Diplomatie zwischen Fraktionen (GDD Kapitel 7): Verträge, Bündnisse, Handel, Kriegserklärungen.
 
-**Status: offen.** Nichts davon im Vertical Slice (Feindschaft ist fest: `SimWorld::hostile`). Der Menüeintrag
-„Grand Campaign“ verweist auf diese Phase.
+**Status: umgesetzt (Strategieebene).** Meinungsmodell, Verträge, Kriegsgründe, Koalitionen und KI-Diplomatie in `ashen_strategy::{diplomacy,ai}`; Fenster im Spiel (`worldmap::windows`).
 
 **Aufgaben:** Beziehungs- und Vertragsmodell; Diplomatie-Oberfläche; KI-Verhalten; Einfluss auf Weltkarte und
 Echtzeitwelt (Bündnispartner in Schlachten); Fraktionen aus `canon.md`.
@@ -362,7 +360,7 @@ Beziehungsmatrix (setzt Phase 2: konfigurierbare Spieler voraus); nutzt Politik 
 
 **Ziel:** Religionen, neutrale Fraktionen, Monster und Bosse (GDD Kapitel 13 und 14).
 
-**Status: teilweise (1 Fraktion, 1 Boss im Vertical Slice).**
+**Status: umgesetzt.** Sechs Religionen und Kirche (`ashen_strategy::religion`), neutrale Akteure und Bosse (`ashen_strategy::neutral`); Echtzeit: Hohle, Bosse Fahler Vogt, Isarre Mol, Wurzelmutter, Gharun und Hohler König in der Kampagne.
 
 *Vorhanden:* Fraktion „Die Hohlen“ (`Faction::Hollowed`): `hollow_thrall`, `hollow_archer`, `grave_brute`,
 `hollow_shrine`, `bone_spire`; Boss `boss_pale_reeve` mit drei Fähigkeiten (`soul_drain`, `summon_thralls`,
@@ -395,7 +393,7 @@ referenzieren derzeit feste IDs (`hollow_thrall`, `hollow_archer`, `grave_brute`
 **Ziel:** Kausalketten und dynamische Ereignisse (GDD Kapitel 15) sowie das ausgebaute Chroniksystem (Kapitel 17)
 mit „Ahnenbuch“.
 
-**Status: teilweise (Chronik-Kern im Vertical Slice).**
+**Status: umgesetzt.** Datengetriebene Ereignisse (6 RON-Dateien unter `assets/data/world/events/`, `ashen_strategy::events`), Chronik mit Kausalketten (`ashen_strategy::chronicle`); Echtzeit-Chronik (`ashen_sim::chronicle`).
 
 *Vorhanden:* `Chronicle` mit acht Kategorien (`Founding`, `Construction`, `Battle`, `Death`, `Hero`, `Omen`,
 `Victory`, `Defeat`), Einträge mit Jahr, Tag, Tageszeit; automatische Einträge (Gründung, erste Nacht, Wellen,
@@ -426,7 +424,7 @@ aus Phasen 3 und 8–10 als Ereignisquellen.
 **Ziel:** Die Grand Campaign „Das Zeitalter der Gefallenen“ in sieben Zeitaltern (`campaign.md`, GDD Kapitel 16):
 Story-Missionen, Entscheidungspunkte, Enden, Endgame.
 
-**Status: teilweise (Mission 1 im Vertical Slice).**
+**Status: teilweise.** Spielbar sind 18 Missionen, 14 Entscheidungen und 4 Enden (`ashen_sim::campaign`, `assets/data/campaign/`). Der Gesamtentwurf in [`campaign.md`](../design/campaign.md) sieht 29 Missionen, 16 Entscheidungspunkte und 6 Enden vor; der Rest ist **nicht umgesetzt**. Das Endgame der Strategieebene (8 Siegziele, Schleierdruck) ist umgesetzt (`ashen_strategy::endgame`).
 
 *Vorhanden:* Mission 1 „Die letzte Siedlung“ (Zeitalter I) als vollständige RON-Mission mit 11 Zielen, ihren
 Auslösern (Einführung, Gehöft/Kaserne/Armee/Wachturm-Ziele, erste Nacht, Wellenwarnung, Überleben, Schreinfund,
@@ -457,7 +455,7 @@ Kampagnenzustands-Roundtrip; Pfade durch Entscheidungsbäume.
 **Ziel:** Werkzeuge für Autoren und Community sowie Mehrspieler (GDD Kapitel 19; deterministische Simulation und
 Befehle als Daten sind dafür vorbereitet).
 
-**Status: teilweise (Datenmods und CLI-Werkzeuge im Vertical Slice).**
+**Status: teilweise.** Umgesetzt: Karteneditor mit Trigger-Editor und Testspiel, Szenarioformat, 4 historische Szenarien, 8 Herausforderungen ([`editor_and_scenarios.md`](../design/editor_and_scenarios.md)), Datenmods ([`modding.md`](modding.md)), Werkzeuge `validate-data`, `audio-scan`, `audio-list`, `forge-*`. **Nicht umgesetzt:** Mehrspieler (kein Netzcode; `PlayerCommand` und `state_hash` sind nur vorbereitet), Wiederholungen (Replays), Mod-Manager (nur Ein-/Ausschalten, Ladereihenfolge per `load_order`).
 
 *Vorhanden:* Daten-Mods (`mods/<ordner>/mod.ron`, `data/*.ron`, `data/missions/*.ron`; Überschreiben/Ergänzen per
 `id`; Aktivierung im Menü „Modifikationen“, Neuladen ohne Neustart); `ashen_tools validate-data --mod`;
@@ -496,7 +494,7 @@ Phase gesondert abgesichert werden.
 **Ziel:** Spielgefühl, Stabilität und Leistung auf der Zielhardware (Apple A18 Pro, 8 GB) und weiteren Plattformen;
 Release-Reife (GDD Kapitel 20–24: UI/UX, Tastenkürzel, Schwierigkeitsgrade, Barrierefreiheit, Balancing-Grundsätze).
 
-**Status: teilweise (Grundlagen im Vertical Slice).**
+**Status: teilweise.** Umgesetzt: Balancemessung (`rts-balance`, `strategy-stats`, [`rts_military.md`](../design/rts_military.md) §10.5, [`strategy_layer.md`](strategy_layer.md) §19), Benchmark (`--bench`, `sim_bench`), Optimierung (`GroundRects`), Grafikprofile ([`performance.md`](performance.md)). Offen: Messung auf Apple-Hardware (Metal), Tutorial, Barrierefreiheit, Lokalisierung, CI und Paketierung (macOS-App-Bundle, Windows, Linux).
 
 *Vorhanden:* Drei Grafikprofile (Leistung/Ausgewogen/Qualität) mit Lichter-, Partikel-, Bloom- und Zoom-Budgets;
 Low-Res-Rendering mit Ganzzahl-Skalierung; Instancing, ein Atlas, Culling; budgetierte Wegsuche; FPS-/Statistikanzeige;
@@ -524,3 +522,17 @@ Regressionstests per Headless-Screenshot; Cross-Plattform-Builds in CI.
 
 **Integration mit Phasen 1–14:** Querschnittsphase; arbeitet auf allen Systemen. Grundlage sind die Profile
 (`render/profile.rs`), Budgets (`movement.rs`, Partikel, Lichter) und Werkzeuge aus Phase 1.
+
+---
+
+## Offene Punkte (gesamt)
+
+* **Audio:** Die Dateien selbst fehlen (werden vom Auftraggeber produziert); Integration nach Lieferung mit `audio-scan --import`, siehe [`../audio/PRODUCTION_CHECKLIST.md`](../audio/PRODUCTION_CHECKLIST.md) und [`../audio/audio_integration.md`](../audio/audio_integration.md).
+* **Hardware:** Messung auf Apple A18 Pro (Metal, GPU-Zeiten, Speicher) ausstehend ([`performance.md`](performance.md) §6); alle Werte stammen von Linux mit Software-Vulkan.
+* **Mehrspieler und Wiederholungen:** nicht umgesetzt (kein Netzcode, kein Replay-Rekorder).
+* **Mod-Manager:** nicht umgesetzt ([`modding.md`](modding.md) §8).
+* **Kampagne:** 11 der 29 entworfenen Missionen sind nicht umgesetzt ([`campaign.md`](../design/campaign.md)).
+* **Editor:** keine Höhenstufen, keine Weltkarten-Szenarien ([`editor_and_scenarios.md`](../design/editor_and_scenarios.md) §7).
+* **Assets:** glTF-Import und Festplatten-Cache für gebackene Sprites geplant ([`3d_pixel_pipeline.md`](../art/3d_pixel_pipeline.md) §7).
+* **Politur:** Tutorial, Barrierefreiheit, Lokalisierung, CI, Paketierung/Signierung sind nicht umgesetzt.
+* **Balance:** Werte sind mit Testspielern und KI-Beobachterläufen eingestellt; lange menschliche Testsitzungen fehlen.
