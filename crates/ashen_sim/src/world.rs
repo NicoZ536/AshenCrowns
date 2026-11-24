@@ -156,16 +156,37 @@ pub struct SimWorld {
     pub(crate) scratch: Vec<UnitId>,
 }
 
+/// Phasen von [`SimWorld::step_profiled`] in Reihenfolge der Zeitanteile.
+pub const STEP_PHASES: [&str; 9] = [
+    "Umwelt/Wirtschaft/Helden/Stadt",
+    "KI (Missions-KI, Gegner-KI)",
+    "Spatial-Grid neu aufbauen",
+    "Einheiten-Entscheidungen (units::tick)",
+    "Pfadverarbeitung",
+    "Bewegung/Kollision (integrate)",
+    "Kampf (combat::tick)",
+    "Status/Zauber/Aufräumen",
+    "Nebel/Skripte",
+];
+
+/// Aufsummierte Sekunden je Phase von [`SimWorld::step_profiled`].
+#[derive(Clone, Debug, Default)]
+pub struct StepProfile {
+    pub secs: [f64; 9],
+    pub steps: u32,
+}
+
 impl SimWorld {
     /// Erzeugt eine neue Partie aus Missionsdefinition und Startoptionen.
     pub fn new(data: &GameData, mission: MissionDef, settings: MatchSettings) -> Result<SimWorld, String> {
         // Entscheidungen früherer Missionen verändern die Mission (Varianten je Flag).
         let carried = mission.carry.flags.clone();
         let mission = if mission.variants.is_empty() { mission } else { mission.with_flags(&carried) };
-        let map = match &mission.map {
+        let mut map = match &mission.map {
             Some(md) => md.to_tilemap()?,
             None => crate::mapgen::generate(mission.map_seed, settings.seed),
         };
+        crate::genmap::add_flavor_decor(&mut map);
         let (w, h) = (map.width, map.height);
         let mut world = SimWorld {
             tick: 0,
@@ -695,8 +716,30 @@ impl SimWorld {
 
     /// Ein fester Simulationsschritt.
     pub fn step(&mut self, data: &GameData) {
+        self.step_inner(data, None);
+    }
+
+    /// Wie [`SimWorld::step`], misst aber die Zeit je Phase (Benchmark, `bench`-Modul).
+    pub fn step_profiled(&mut self, data: &GameData, prof: &mut StepProfile) {
+        self.step_inner(data, Some(prof));
+    }
+
+    fn step_inner(&mut self, data: &GameData, mut prof: Option<&mut StepProfile>) {
         if self.mission.outcome.is_some() {
             return;
+        }
+        // Misst einen Block, falls ein Profil übergeben wurde (ohne Profil entfällt jede Zeitnahme).
+        macro_rules! phase {
+            ($i:expr, $body:block) => {
+                match prof.as_deref_mut() {
+                    Some(p) => {
+                        let t0 = std::time::Instant::now();
+                        $body
+                        p.secs[$i] += t0.elapsed().as_secs_f64();
+                    }
+                    None => $body,
+                }
+            };
         }
         let dt = Self::dt(data);
         self.tick += 1;
@@ -707,30 +750,51 @@ impl SimWorld {
         for p in &mut self.projectiles {
             p.prev_pos = p.pos;
         }
+        if let Some(p) = prof.as_deref_mut() {
+            p.steps += 1;
+        }
 
         let cmds = std::mem::take(&mut self.pending);
         for c in cmds {
             systems::commands::apply(self, data, c);
         }
-        systems::environment::tick(self, data, dt);
-        systems::economy::tick(self, data, dt);
-        systems::heroes::tick(self, data, dt);
-        systems::city::tick(self, data, dt);
-        systems::ai::tick(self, data, dt);
-        systems::ai_player::tick(self, data, dt);
-        let ids: Vec<(UnitId, Vec2)> = self.units.iter().map(|(id, u)| (id, u.pos)).collect();
-        self.spatial.rebuild(self.map.width, self.map.height, ids.into_iter());
-        systems::units::tick(self, data, dt);
-        systems::movement::process_paths(self, data);
-        systems::movement::integrate(self, data, dt);
-        systems::combat::tick(self, data, dt);
-        systems::units::status_tick(self, data, dt);
-        systems::casters::tick(self, data);
-        systems::combat::cleanup_dead(self, data);
-        if self.tick.is_multiple_of(4) {
-            systems::fog::update(self, data);
-        }
-        systems::script::tick(self, data);
+        phase!(0, {
+            systems::environment::tick(self, data, dt);
+            systems::economy::tick(self, data, dt);
+            systems::heroes::tick(self, data, dt);
+            systems::city::tick(self, data, dt);
+        });
+        phase!(1, {
+            systems::ai::tick(self, data, dt);
+            systems::ai_player::tick(self, data, dt);
+        });
+        phase!(2, {
+            let ids: Vec<(UnitId, Vec2)> = self.units.iter().map(|(id, u)| (id, u.pos)).collect();
+            self.spatial.rebuild(self.map.width, self.map.height, ids.into_iter());
+        });
+        phase!(3, {
+            systems::units::tick(self, data, dt);
+        });
+        phase!(4, {
+            systems::movement::process_paths(self, data);
+        });
+        phase!(5, {
+            systems::movement::integrate(self, data, dt);
+        });
+        phase!(6, {
+            systems::combat::tick(self, data, dt);
+        });
+        phase!(7, {
+            systems::units::status_tick(self, data, dt);
+            systems::casters::tick(self, data);
+            systems::combat::cleanup_dead(self, data);
+        });
+        phase!(8, {
+            if self.tick.is_multiple_of(4) {
+                systems::fog::update(self, data);
+            }
+            systems::script::tick(self, data);
+        });
     }
 
     /// Stabiler Hash des Zustands (für Determinismus-Tests und Desync-Erkennung).

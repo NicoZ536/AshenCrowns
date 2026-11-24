@@ -165,8 +165,22 @@ fn troop(world: &mut SimWorld, data: &GameData, id: &str, owner: u8, p: Vec2) ->
     Some(world.spawn_unit(data, kind, owner, p))
 }
 
+/// Einheiten je Seite für den Lasttest `--bench stress` (0 = aus). Wird von `main` gesetzt, von `army` gelesen.
+static STRESS_UNITS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+pub fn set_stress_units(n: usize) {
+    STRESS_UNITS.store(n, std::sync::atomic::Ordering::Relaxed);
+}
+
 /// Alle neuen Militärgebäude und Einheiten in Reihen (Kontrolle von Modellen und Farben).
+/// Ist ein Lasttest gesetzt (`set_stress_units`), entsteht stattdessen eine große Schlacht in der Kartenmitte.
 pub fn army(world: &mut SimWorld, data: &GameData) {
+    let stress = STRESS_UNITS.load(std::sync::atomic::Ordering::Relaxed);
+    if stress > 0 {
+        world.map.static_block.iter_mut().for_each(|b| *b = false);
+        ashen_sim::bench::populate_battle(world, data, stress);
+        return;
+    }
     clear_area(world, IVec2::new(12, 24), IVec2::new(40, 56));
     world.players[PLAYER as usize].era = data.rules.eras.len() as u8;
     for (i, id) in ["shooting_range", "stable", "chapel", "mage_tower", "siege_workshop", "altar"].iter().enumerate() {

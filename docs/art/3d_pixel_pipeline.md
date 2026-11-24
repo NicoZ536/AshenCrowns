@@ -76,11 +76,14 @@ Beine oder Robe, Rucksack).
 | death | 6 | 10 | nein | Rückwärts fallen |
 
 Weitere Rig-Elemente (Echtzeit-Militär): Waffen *Armbrust*, *Hellebarde*, *Feuerstab*, *Priesterstab*, *Streitkolben*, *Streitaxt*, *Krallen*, *Spitzhacke*; Helme *Spitzhut*, *Kettenhaube*,
-*Nordhelm mit Hörnern*, *Mitra*; Körperform *Gown* (langes Gewand über animierten Beinen), Turmschild (`big_shield`).
+*Nordhelm mit Hörnern*, *Mitra*; Körperform *Gown* (langes Gewand über animierten Beinen; Rock und Robe hängen an einem eigenen Knochen `skirt`, sind unten offen
+(`Mesh::frustum_open`, dunkleres Futter) und sinken beim Fallen zusammen – vorher zeigte der geschlossene Saumdeckel in der Todesanimation
+eine Kreisscheibe), Turmschild (`big_shield`).
 Berittene (Ritter, Spähreiter, Berittene Bogenschützen) teilen das Pferdeskelett (`mounted()`, Fell- und Schabrackenfarbe als Parameter).
 **Belagerungsmaschinen** (`Kind::Machine`): Körper, beweglicher Teil (Rammbaum als Pendel unter dem Dach, Wurfarm des Katapults) und vier Räder; Lauf = Raddrehung,
-Angriff = Rückschwung–Stoß bzw. Spannen–Auslösen, Tod = Einsturz. **Fledermausschwarm** (`Kind::Swarm`): vier Tiere mit je zwei Flügelknochen, V-Grundstellung ±35° Flügelschlag,
-Angriff = Sturzflug, Tod = Fallen.
+Angriff = Rückschwung–Stoß bzw. Spannen–Auslösen, Tod = Einsturz. **Fledermausschwarm** (`Kind::Swarm`): vier Tiere mit dunklem Körper, leuchtenden Augen und Flügeln aus Hautfächern mit gezackter Hinterkante
+und Fingerknochen (helle Haut, damit sie sich vom Körper abhebt); 12° V-Grundstellung ±32° Flügelschlag, hoch über dem Anker schwebend (die
+Blob-Schatten bleiben am Boden zurück, `shadow_l`). Angriff = Sturzflug, Tod = Fallen.
 
 Sonderformen: **Ritter** = Pferdeskelett (Körper, Hals, Kopf, 4 zweigliedrige Beine, Schweif) mit eingehängtem
 Reiter; Galopp mit versetzten Beinpaaren. **Grabkoloss** = humanoid mit `bulk 1.75` und Buckel. **Fahler Vogt** =

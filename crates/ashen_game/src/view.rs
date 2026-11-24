@@ -93,6 +93,65 @@ fn sprite_id(world: &SimWorld, data: &GameData, b: &Building, forts: &HashSet<IV
     }
 }
 
+/// Vorab aufgelöste Atlas-Rechtecke für Bodenkacheln, Übergänge, Schaum und Dekoration. Spart je Kachel und Frame
+/// den Bau eines Namens (String-Allokation) und die Hash-Suche im Atlas.
+struct GroundRects {
+    /// [Terrain::priority()][Variante]
+    tiles: [[SpriteRect; 4]; 10],
+    /// [Terrain::priority()][Seite]
+    edges: [[Option<SpriteRect>; 4]; 10],
+    foam: [[Option<SpriteRect>; 4]; 10],
+    /// [DecorKind als Index][Variante 0..3]
+    decor: Vec<[Option<SpriteRect>; 3]>,
+    bridge: SpriteRect,
+}
+
+fn decor_sprite_name(kind: DecorKind, v: u32) -> String {
+    match kind {
+        DecorKind::Rock => format!("decor_rock_{v}"),
+        DecorKind::Boulder => format!("decor_boulder_{v}"),
+        DecorKind::Bush => format!("decor_bush_{v}"),
+        DecorKind::GrassTuft => format!("decor_tuft_{v}"),
+        DecorKind::Flowers => format!("decor_flowers_{v}"),
+        DecorKind::DeadTree => format!("tree_dead_{v}"),
+        DecorKind::Ruin => "decor_ruin".into(),
+        DecorKind::Pillar => "decor_pillar".into(),
+        DecorKind::Grave => format!("decor_grave_{v}"),
+        DecorKind::Bones => format!("decor_bones_{v}"),
+        DecorKind::Brazier => "decor_brazier".into(),
+        DecorKind::Fence => "decor_fence".into(),
+        DecorKind::Crops => format!("decor_flowers_{v}"),
+        DecorKind::Reeds => format!("decor_reeds_{v}"),
+        DecorKind::Lantern => "decor_lantern".into(),
+        DecorKind::Pebbles => format!("decor_pebbles_{v}"),
+        DecorKind::Embers => format!("decor_embers_{v}"),
+        DecorKind::Puddle => format!("decor_puddle_{v}"),
+    }
+}
+
+impl GroundRects {
+    fn new(art: &ArtLibrary) -> GroundRects {
+        use crate::art::terrain::{edge_name, foam_name, tile_name};
+        let mut g = GroundRects { tiles: [[SpriteRect::default(); 4]; 10], edges: [[None; 4]; 10], foam: [[None; 4]; 10], decor: vec![[None; 3]; DecorKind::ALL.len()], bridge: art.get("bridge") };
+        for t in Terrain::ALL {
+            let pi = t.priority() as usize;
+            for v in 0..4 {
+                g.tiles[pi][v] = art.get(&tile_name(t, v as u32));
+            }
+            for side in 0..4u8 {
+                g.edges[pi][side as usize] = art.atlas.try_get(&edge_name(t, side));
+                g.foam[pi][side as usize] = art.atlas.try_get(&foam_name(t, side));
+            }
+        }
+        for kind in DecorKind::ALL {
+            for v in 0..3u32 {
+                g.decor[kind as usize][v as usize] = art.atlas.try_get(&decor_sprite_name(kind, v));
+            }
+        }
+        g
+    }
+}
+
 pub struct WorldView {
     pub particles: ParticleSystem,
     corpses: Vec<Corpse>,
@@ -104,9 +163,14 @@ pub struct WorldView {
     lightning: f32,
     emit_acc: f32,
     tint: Vec<f32>,
-    water_depth: Vec<f32>,
+    /// Wassertiefe je Kachelecke (4 × 4 Bit, siehe `SpriteInstance::water_corners`).
+    water_corners: Vec<u16>,
     bridge: Vec<bool>,
     map_size: (i32, i32),
+    ground_rects: Option<GroundRects>,
+    /// Wiederverwendete Puffer für Übergänge und Schaum (vermeiden Allokationen je Frame).
+    edge_buckets: Vec<Vec<SpriteInstance>>,
+    foam_buf: Vec<SpriteInstance>,
 }
 
 impl WorldView {
@@ -122,9 +186,12 @@ impl WorldView {
             lightning: 0.0,
             emit_acc: 0.0,
             tint: Vec::new(),
-            water_depth: Vec::new(),
+            water_corners: Vec::new(),
             bridge: Vec::new(),
             map_size: (0, 0),
+            ground_rects: None,
+            edge_buckets: Vec::new(),
+            foam_buf: Vec::new(),
         }
     }
 
@@ -141,34 +208,59 @@ impl WorldView {
         self.map_size = (map.width, map.height);
         let n = (map.width * map.height) as usize;
         self.tint = vec![1.0; n];
-        self.water_depth = vec![0.0; n];
+        self.water_corners = vec![0; n];
         self.bridge = vec![false; n];
         for y in 0..map.height {
             for x in 0..map.width {
                 let i = (y * map.width + x) as usize;
                 let f = fbm2(x as f32 * 0.07, y as f32 * 0.07, 77, 3);
                 self.tint[i] = 0.82 + f * 0.36;
-                let t = map.terrain[i];
-                if t == Terrain::Road {
+                if map.terrain[i] == Terrain::Road {
                     let near_water = [IVec2::X, IVec2::NEG_X, IVec2::Y, IVec2::NEG_Y].iter().any(|d| map.terrain_at(IVec2::new(x, y) + *d).is_water());
                     self.bridge[i] = near_water;
                 }
-                if matches!(t, Terrain::Water | Terrain::DeepWater) {
-                    // Abstand zum Ufer (bis 4 Kacheln) als Tiefe.
-                    let mut d = 4;
-                    'search: for r in 1..=4 {
-                        for dy in -r..=r {
-                            for dx in -r..=r {
-                                let tt = map.terrain_at(IVec2::new(x + dx, y + dy));
-                                if !matches!(tt, Terrain::Water | Terrain::DeepWater) {
-                                    d = r;
-                                    break 'search;
-                                }
-                            }
+            }
+        }
+        // Distanzfeld zum Ufer auf den Kachelecken (Ecke (vx, vy) grenzt an die Kacheln vx-1..vx, vy-1..vy).
+        // Brücken zählen als Wasser, Furten und Land als Ufer. 0 = Ufer, 15 = 5 Kacheln und mehr; Tiefsee zusätzlich abgedunkelt.
+        const R: i32 = 5;
+        let is_water = |x: i32, y: i32| -> Option<bool> {
+            if !map.in_bounds(IVec2::new(x, y)) {
+                return None;
+            }
+            let i = map.idx(IVec2::new(x, y));
+            let t = map.terrain[i];
+            Some(self.bridge[i] || matches!(t, Terrain::Water | Terrain::DeepWater))
+        };
+        let (vw, vh) = (map.width + 1, map.height + 1);
+        let mut vert = vec![0u8; (vw * vh) as usize];
+        for vy in 0..vh {
+            for vx in 0..vw {
+                let mut dmin = f32::MAX;
+                let mut deep = true;
+                for ty in vy - R..vy + R {
+                    for tx in vx - R..vx + R {
+                        // Außerhalb der Karte wie Wasser behandeln (offene See).
+                        let wat = is_water(tx, ty).unwrap_or(true);
+                        let (dx, dy) = (tx as f32 + 0.5 - vx as f32, ty as f32 + 0.5 - vy as f32);
+                        let d2 = dx * dx + dy * dy;
+                        if !wat {
+                            dmin = dmin.min(d2);
+                        }
+                        if d2 < 2.1 && map.in_bounds(IVec2::new(tx, ty)) && map.terrain[map.idx(IVec2::new(tx, ty))] != Terrain::DeepWater {
+                            deep = false;
                         }
                     }
-                    self.water_depth[i] = (d as f32 - 1.0) / 3.0;
                 }
+                let d = if dmin == f32::MAX { 1.0 } else { ((dmin.sqrt() - 0.7) / (R as f32 - 0.7)).clamp(0.0, 1.0) };
+                let d = if deep { d.max(0.85) } else { d };
+                vert[(vy * vw + vx) as usize] = (d * 15.0).round() as u8;
+            }
+        }
+        for y in 0..map.height {
+            for x in 0..map.width {
+                let v = |dx: i32, dy: i32| vert[((y + dy) * vw + x + dx) as usize] as u16;
+                self.water_corners[(y * map.width + x) as usize] = v(0, 0) | (v(1, 0) << 4) | (v(0, 1) << 8) | (v(1, 1) << 12);
             }
         }
     }
@@ -510,7 +602,10 @@ impl WorldView {
         let wind = (self.time * 1.3).sin() * 0.03;
 
         // --- Boden
-        let mut edges: Vec<Vec<SpriteInstance>> = vec![Vec::new(); 10];
+        let gr = self.ground_rects.take().unwrap_or_else(|| GroundRects::new(art));
+        let mut edges = std::mem::take(&mut self.edge_buckets);
+        edges.resize_with(10, Vec::new);
+        let mut foam = std::mem::take(&mut self.foam_buf);
         for ty in tmin.y..=tmax.y {
             for tx in tmin.x..=tmax.x {
                 let t = IVec2::new(tx, ty);
@@ -521,34 +616,47 @@ impl WorldView {
                 let variant = (rand2(tx, ty, 11) * 4.0) as u32;
                 let bridge = self.bridge[i];
                 let base_terr = if bridge { Terrain::Water } else { terr };
-                let rect = art.get(&crate::art::terrain::tile_name(base_terr, variant));
+                let rect = gr.tiles[base_terr.priority() as usize][variant as usize % 4];
                 let mut inst = SpriteInstance::new(&rect, wp + Vec2::new(0.0, 8.0)).tint(Vec4::new(tint, tint, tint * 0.98, 1.0));
                 if base_terr.is_water() && base_terr != Terrain::Ford {
-                    inst = inst.material(Material::Water).water_depth(self.water_depth[i]);
+                    inst = inst.material(Material::Water).water_corners(self.water_corners[i]);
                 } else if base_terr == Terrain::Ford {
-                    inst = inst.material(Material::Water).water_depth(0.0);
+                    inst = inst.material(Material::Water).water_depth(-1.0);
                 }
                 frame.ground.push(inst);
                 if bridge {
-                    let b = art.get("bridge");
-                    frame.ground.push(SpriteInstance::new(&b, wp + Vec2::new(0.0, 8.0)));
+                    frame.ground.push(SpriteInstance::new(&gr.bridge, wp + Vec2::new(0.0, 8.0)));
                 }
                 // Übergänge: höher priorisierte Nachbarn ragen herein.
                 for (side, d) in [(0u8, IVec2::new(0, -1)), (1, IVec2::new(1, 0)), (2, IVec2::new(0, 1)), (3, IVec2::new(-1, 0))] {
                     let nt = map.terrain_at(t + d);
                     let n_terr = if map.in_bounds(t + d) && self.bridge[map.idx(t + d)] { Terrain::Water } else { nt };
                     if n_terr.priority() > base_terr.priority() && (n_terr.priority() >= Terrain::Sand.priority() || n_terr == Terrain::Ford) && map.in_bounds(t + d) {
-                        let er = art.get(&crate::art::terrain::edge_name(n_terr, side));
+                        let Some(er) = gr.edges[n_terr.priority() as usize][side as usize] else { continue };
                         let ni = map.idx(t + d);
+                        if base_terr.is_water() && base_terr != Terrain::Ford && !bridge
+                            && let Some(fr) = gr.foam[n_terr.priority() as usize][side as usize]
+                        {
+                            // Brandungssaum: Schaum atmet mit der Welle (Alpha-Dithering je Kachel versetzt).
+                            let a = 0.62 + 0.38 * (self.time * 1.1 + tx as f32 * 0.7 + ty as f32 * 1.3).sin();
+                            foam.push(SpriteInstance::new(&fr, wp + Vec2::new(0.0, 8.0)).alpha(a));
+                        }
                         let nt_tint = self.tint[ni];
-                        edges[n_terr.priority() as usize].push(SpriteInstance::new(&er, wp + Vec2::new(0.0, 8.0)).tint(Vec4::new(nt_tint, nt_tint, nt_tint * 0.98, 1.0)));
+                        let mut ei = SpriteInstance::new(&er, wp + Vec2::new(0.0, 8.0)).tint(Vec4::new(nt_tint, nt_tint, nt_tint * 0.98, 1.0));
+                        if n_terr == Terrain::Ford {
+                            ei = ei.material(Material::Water).water_depth(-1.0);
+                        }
+                        edges[n_terr.priority() as usize].push(ei);
                     }
                 }
             }
         }
-        for bucket in edges {
-            frame.ground.extend(bucket);
+        frame.ground.append(&mut foam);
+        for bucket in &mut edges {
+            frame.ground.append(bucket);
         }
+        self.edge_buckets = edges;
+        self.foam_buf = foam;
         for s in &self.stumps {
             if in_view(*s) {
                 let r = art.get("decor_stump");
@@ -562,29 +670,16 @@ impl WorldView {
                 continue;
             }
             let wp = tile_to_world(d.pos);
-            let v = d.variant as u32 % 3;
-            let name = match d.kind {
-                DecorKind::Rock => format!("decor_rock_{v}"),
-                DecorKind::Boulder => format!("decor_boulder_{v}"),
-                DecorKind::Bush => format!("decor_bush_{v}"),
-                DecorKind::GrassTuft => format!("decor_tuft_{v}"),
-                DecorKind::Flowers => format!("decor_flowers_{v}"),
-                DecorKind::DeadTree => format!("tree_dead_{v}"),
-                DecorKind::Ruin => "decor_ruin".into(),
-                DecorKind::Pillar => "decor_pillar".into(),
-                DecorKind::Grave => format!("decor_grave_{v}"),
-                DecorKind::Bones => format!("decor_bones_{v}"),
-                DecorKind::Brazier => "decor_brazier".into(),
-                DecorKind::Fence => "decor_fence".into(),
-                DecorKind::Crops => format!("decor_flowers_{v}"),
-                DecorKind::Reeds => format!("decor_reeds_{v}"),
-                DecorKind::Lantern => "decor_lantern".into(),
-            };
-            let rect = art.get(&name);
+            let v = d.variant as usize % 3;
+            let Some(rect) = gr.decor[d.kind as usize][v] else { continue };
             let tall = matches!(d.kind, DecorKind::Boulder | DecorKind::DeadTree | DecorKind::Ruin | DecorKind::Pillar | DecorKind::Brazier | DecorKind::Lantern | DecorKind::Grave);
             let mut inst = SpriteInstance::new(&rect, wp);
             if matches!(d.kind, DecorKind::GrassTuft | DecorKind::Reeds | DecorKind::Bush) {
                 inst = inst.shear(wind * if d.kind == DecorKind::Reeds { 3.0 } else { 1.5 });
+            }
+            if d.kind == DecorKind::Embers {
+                // Glut pulsiert träge, je Häufchen phasenverschoben.
+                inst = inst.emissive(0.25 + 0.3 * (self.time * 1.7 + d.pos.x * 2.3 + d.pos.y * 1.1).sin().abs());
             }
             frame.world.push((depth_of(d.pos), inst));
             if tall {
@@ -598,6 +693,8 @@ impl WorldView {
                 }
             }
         }
+
+        self.ground_rects = Some(gr);
 
         // --- Ressourcenquellen
         for (_, n) in world.nodes.iter() {
@@ -836,9 +933,12 @@ impl WorldView {
             let shadow = match def.class {
                 UnitClass::Cavalry | UnitClass::Boss => "shadow_l",
                 UnitClass::Monster if def.radius > 0.5 => "shadow_l",
+                _ if def.id == "bat_swarm" => "shadow_l",
                 _ => "shadow_s",
             };
-            frame.shadows.push(SpriteInstance::new(&art.get(shadow), wp).material(Material::Shadow).alpha(0.9));
+            // Fledermausschwarm: schwebt hoch über dem Boden, der Schatten bleibt als weiche Ellipse am Boden zurück.
+            let shadow_alpha = if def.id == "bat_swarm" { 0.55 } else { 0.9 };
+            frame.shadows.push(SpriteInstance::new(&art.get(shadow), wp).material(Material::Shadow).alpha(shadow_alpha));
             // Auswahl.
             let selected = overlay.selected_units.contains(&id);
             let ring_name = if def.radius > 0.42 { "ring_m" } else { "ring_s" };

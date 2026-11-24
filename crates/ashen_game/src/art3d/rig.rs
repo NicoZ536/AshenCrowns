@@ -109,6 +109,8 @@ pub struct Bones {
     pub cape: usize,
     pub weapon: usize,
     pub offhand: usize,
+    /// Rock bzw. Robe (Kind des Beckens): lässt sich beim Fallen eigenständig stauchen und kippen.
+    pub skirt: usize,
 }
 
 pub struct Rig {
@@ -127,6 +129,7 @@ pub fn build_skeleton(sk: &mut Skeleton, look: &Look, parent: Option<usize>, ori
     let leg = 0.46 * h;
     let root = sk.add("root", parent, origin);
     let pelvis = sk.add("pelvis", Some(root), Vec3::new(0.0, leg, 0.0));
+    let skirt = sk.add("skirt", Some(pelvis), Vec3::ZERO);
     let chest = sk.add("chest", Some(pelvis), Vec3::new(0.0, 0.08 * h, 0.0));
     let head = sk.add("head", Some(chest), Vec3::new(0.0, 0.3 * h, 0.02 * h));
     let sw = 0.135 * h * look.bulk;
@@ -144,7 +147,7 @@ pub fn build_skeleton(sk: &mut Skeleton, look: &Look, parent: Option<usize>, ori
     let cape = sk.add("cape", Some(chest), Vec3::new(0.0, 0.27 * h, -0.07 * h * look.bulk));
     let weapon = sk.add("weapon", Some(hand_r), Vec3::new(0.0, -0.02 * h, 0.0));
     let offhand = sk.add("offhand", Some(hand_l), Vec3::new(0.0, -0.02 * h, 0.0));
-    Bones { root, pelvis, chest, head, arm_l, fore_l, hand_l, arm_r, fore_r, hand_r, thigh_l, shin_l, thigh_r, shin_r, cape, weapon, offhand }
+    Bones { root, pelvis, chest, head, arm_l, fore_l, hand_l, arm_r, fore_r, hand_r, thigh_l, shin_l, thigh_r, shin_r, cape, weapon, offhand, skirt }
 }
 
 fn limb(m: &mut Mesh, paint: &Paint, len: f32, r0: f32, r1: f32) {
@@ -409,15 +412,22 @@ pub fn build_mesh(look: &Look, b: &Bones) -> Mesh {
                 limb(&mut m, &leg(t), 0.23 * h, 0.055 * h * bulk, 0.045 * h * bulk);
                 limb(&mut m, &p(look.boots, Mat::Leather, s), 0.22 * h, 0.045 * h * bulk, 0.04 * h * bulk);
             }
-            let robe = p(look.legs.0, look.legs.1, b.pelvis);
-            m.frustum(&robe, Vec3::new(0.0, 0.04 * h, 0.0), Vec3::new(0.0, -0.4 * h, 0.0), 0.125 * h * bulk, 0.2 * h * bulk, 10);
+            // Offener Saum samt dunklem Futter: Beim Fallen blickt man sonst auf einen flachen Deckel (Kreisscheibe).
+            let robe = p(look.legs.0, look.legs.1, b.skirt);
+            let mut lining = robe;
+            lining.color *= 0.7;
+            m.frustum_open(&robe, Vec3::new(0.0, 0.04 * h, 0.0), Vec3::new(0.0, -0.4 * h, 0.0), 0.125 * h * bulk, 0.2 * h * bulk, 10);
+            m.frustum_open(&lining, Vec3::new(0.0, 0.03 * h, 0.0), Vec3::new(0.0, -0.395 * h, 0.0), 0.115 * h * bulk, 0.185 * h * bulk, 10);
             if let Some(t) = look.trim {
-                m.frustum(&p(t, Mat::Gold, b.pelvis), Vec3::new(0.0, -0.4 * h, 0.0), Vec3::new(0.0, -0.37 * h, 0.0), 0.2 * h * bulk, 0.195 * h * bulk, 10);
+                m.frustum_open(&p(t, Mat::Gold, b.skirt), Vec3::new(0.0, -0.4 * h, 0.0), Vec3::new(0.0, -0.37 * h, 0.0), 0.2 * h * bulk, 0.195 * h * bulk, 10);
             }
         }
         Body::Robe => {
-            let robe = p(look.legs.0, look.legs.1, b.pelvis);
-            m.frustum(&robe, Vec3::new(0.0, 0.05 * h, 0.0), Vec3::new(0.0, -0.5 * h, 0.0), 0.13 * h * bulk, 0.24 * h * bulk, 9);
+            let robe = p(look.legs.0, look.legs.1, b.skirt);
+            let mut lining = robe;
+            lining.color *= 0.7;
+            m.frustum_open(&robe, Vec3::new(0.0, 0.05 * h, 0.0), Vec3::new(0.0, -0.5 * h, 0.0), 0.13 * h * bulk, 0.24 * h * bulk, 9);
+            m.frustum_open(&lining, Vec3::new(0.0, 0.04 * h, 0.0), Vec3::new(0.0, -0.495 * h, 0.0), 0.12 * h * bulk, 0.22 * h * bulk, 9);
             // Zerfetzter Saum.
             for i in 0..9 {
                 let a = i as f32 / 9.0 * TAU;
@@ -565,6 +575,8 @@ fn ready(pose: &mut Pose, b: &Bones, look: &Look) {
     }
 }
 
+const SKIRT_TILT: f32 = 55.0;
+
 /// Pose einer Animation zum Zeitpunkt t ∈ [0,1).
 pub fn pose(rig: &Rig, anim: Anim, t: f32) -> Pose {
     let b = &rig.bones;
@@ -708,6 +720,11 @@ pub fn pose(rig: &Rig, anim: Anim, t: f32) -> Pose {
             ps.euler(b.weapon, 60.0 * f, 0.0, 30.0 * f);
             if robe {
                 ps.shift(b.root, Vec3::new(0.0, 0.06 * (1.0 - f), 0.0));
+            }
+            // Gewänder sinken zusammen und kippen ab, statt als offenes Rohr auf den Betrachter zu zeigen.
+            if matches!(look.body, Body::Gown | Body::Robe) {
+                ps.scale[b.skirt] = 1.0 - 0.4 * f;
+                ps.euler(b.skirt, SKIRT_TILT * f, 0.0, 0.0);
             }
         }
     }

@@ -5,6 +5,7 @@
 //! alles Sichtbare/Hörbare als [`events::SimEvent`].
 
 pub mod arena;
+pub mod bench;
 pub mod campaign;
 pub mod challenge;
 pub mod chronicle;

@@ -47,7 +47,7 @@ impl Terrain {
 }
 
 impl DecorKind {
-    pub const ALL: [DecorKind; 15] = [
+    pub const ALL: [DecorKind; 18] = [
         DecorKind::Rock,
         DecorKind::Boulder,
         DecorKind::Bush,
@@ -63,6 +63,9 @@ impl DecorKind {
         DecorKind::Crops,
         DecorKind::Reeds,
         DecorKind::Lantern,
+        DecorKind::Pebbles,
+        DecorKind::Embers,
+        DecorKind::Puddle,
     ];
 
     pub fn label(self) -> &'static str {
@@ -82,6 +85,9 @@ impl DecorKind {
             DecorKind::Crops => "Feldfrucht",
             DecorKind::Reeds => "Schilf",
             DecorKind::Lantern => "Laterne",
+            DecorKind::Pebbles => "Kiesel",
+            DecorKind::Embers => "Ascheglut",
+            DecorKind::Puddle => "Pfütze",
         }
     }
 }

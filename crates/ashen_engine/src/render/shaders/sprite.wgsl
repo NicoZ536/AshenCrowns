@@ -99,27 +99,62 @@ fn fs_gbuffer(in: VsOut) -> GOut {
     var flags = 0.0;
 
     if (mat == MAT_WATER) {
-        // Animiertes Wasser: Tiefenfarbe, Wellen, Schaum am Ufer, Glitzern.
+        // Ruhiges Pixel-Art-Wasser: Tiefenbänder aus einem Distanzfeld zum Ufer (an den Kachelecken
+        // gespeichert, hier bilinear gelesen und per Bayer-Raster abgestuft), dünne wandernde
+        // Wellenlinien, ein weicher Brandungssaum und seltene Glanzpunkte. Furt: heller Sandgrund.
         let t = g.time.x;
         let w = in.world;
-        let depth = clamp(in.p1.z, 0.0, 1.0);
-        let shallow = vec3<f32>(0.10, 0.25, 0.28);
-        let deep = vec3<f32>(0.025, 0.07, 0.10);
-        var col = mix(shallow, deep, depth);
-        let wave1 = sin(w.x * 0.21 + w.y * 0.43 + t * 1.6);
-        let wave2 = sin(w.x * -0.13 + w.y * 0.31 - t * 1.1 + 1.7);
-        let ripple = noise2(vec2<f32>(w.x * 0.09 + t * 0.35, w.y * 0.18 - t * 0.2));
-        let h = wave1 * 0.35 + wave2 * 0.35 + ripple * 0.6;
-        // Quantisierte Lichtbänder für Pixel-Art-Optik.
-        let band = floor((h * 0.5 + 0.5) * 4.0) / 4.0;
-        col = col * (0.85 + band * 0.3);
-        let foam_n = noise2(vec2<f32>(w.x * 0.25 + t * 0.6, w.y * 0.5));
-        let foam = step(0.62 + depth * 0.9, foam_n + (1.0 - depth) * 0.35);
-        col = mix(col, vec3<f32>(0.55, 0.68, 0.66), foam * 0.6);
-        let spark = step(0.985, hash12(floor(w / 2.0) + floor(t * 3.0)));
-        albedo = col * tex.rgb * 2.2;
-        emissive = spark * 0.6 * (1.0 - depth * 0.5);
-        n = vec2<f32>(cos(w.x * 0.21 + t) * 0.25, sin(w.y * 0.43 + t * 1.3) * 0.25);
+        let ford = in.p1.z < -0.5;
+        let pk = u32(in.p1.w + 0.5);
+        let c00 = f32(pk & 15u);
+        let c10 = f32((pk >> 4u) & 15u);
+        let c01 = f32((pk >> 8u) & 15u);
+        let c11 = f32((pk >> 12u) & 15u);
+        let tf = fract(world_to_tile(w));
+        var depth = clamp(mix(mix(c00, c10, tf.x), mix(c01, c11, tf.x), tf.y) / 15.0, 0.0, 1.0);
+        if (ford) {
+            depth = 0.3;
+        }
+        let bay = bayer4(in.clip.xy);
+        let lv = clamp(floor(depth * 4.0 + bay), 0.0, 4.0);
+        var col = vec3<f32>(0.20, 0.42, 0.43);
+        if (lv > 3.5) {
+            col = vec3<f32>(0.05, 0.13, 0.21);
+        } else if (lv > 2.5) {
+            col = vec3<f32>(0.08, 0.19, 0.27);
+        } else if (lv > 1.5) {
+            col = vec3<f32>(0.11, 0.26, 0.32);
+        } else if (lv > 0.5) {
+            col = vec3<f32>(0.15, 0.34, 0.38);
+        }
+        // Wellenlinien: kurze, langsam driftende Striche, leicht geschwungen.
+        let warp = sin(w.x * 0.07 + t * 0.5) * 1.6 + sin(w.x * 0.19 - t * 0.8 + w.y * 0.1) * 0.6;
+        let row = (w.y + warp) / 6.0;
+        let ri = floor(row);
+        let streak = noise2(vec2<f32>(w.x * 0.045 + t * 0.12 * (1.0 + fract(ri * 0.37)) + ri * 7.3, ri * 3.1));
+        let on_line = step(fract(row), 0.17) * step(0.58, streak);
+        let trough = step(0.5, fract(row)) * step(fract(row), 0.67) * step(0.62, streak);
+        let calm = 1.0 - depth * 0.55;
+        col = col + vec3<f32>(0.20, 0.27, 0.25) * on_line * calm;
+        col = col * (1.0 - 0.10 * trough);
+        // Brandungssaum: weißer Schaum nahe am Ufer, atmet mit der Welle.
+        let phase = noise2(w * 0.04) * 5.0;
+        let front = 0.06 + 0.07 * (0.5 + 0.5 * sin(t * 0.9 + phase));
+        let breakup = noise2(vec2<f32>(w.x * 0.18 + t * 0.2, w.y * 0.36));
+        let foam = step(depth, front) * step(0.34, breakup) * (1.0 - f32(ford));
+        col = mix(col, vec3<f32>(0.62, 0.74, 0.72), foam * 0.75);
+        if (ford) {
+            // Furt: Sandgrund scheint durch das flache Wasser.
+            let sand = tex.rgb * in.color.rgb * 1.0;
+            let shallow = vec3<f32>(0.10, 0.36, 0.40) + vec3<f32>(0.2, 0.24, 0.2) * on_line;
+            col = mix(sand, shallow, 0.46 + 0.2 * on_line);
+        } else {
+            col = col * in.color.rgb;
+        }
+        let spark = step(0.9965, hash12(floor(w * 0.5) + floor(t * 2.0 + hash12(floor(w * 0.5)) * 3.0)));
+        albedo = col;
+        emissive = spark * 0.45 * (1.0 - depth * 0.6);
+        n = vec2<f32>(sin(w.x * 0.12 + t * 0.9) * 0.1, sin(w.y * 0.2 + t * 0.7) * 0.1);
     } else if (mat == MAT_UNLIT) {
         flags = 0.6;
     } else if (mat == MAT_EMISSIVE) {

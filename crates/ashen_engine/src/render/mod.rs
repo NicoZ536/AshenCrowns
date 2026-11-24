@@ -54,12 +54,63 @@ impl FrameData {
     }
 }
 
+/// GPU-Zeitstempel je Render-Pass (nur mit `TIMESTAMP_QUERY`, siehe `GpuContext::with_timing`).
+struct GpuTimer {
+    set: wgpu::QuerySet,
+    resolve: wgpu::Buffer,
+    read: wgpu::Buffer,
+    labels: Vec<&'static str>,
+    period_ns: f32,
+}
+
+const MAX_TIMED_PASSES: u32 = 24;
+
+impl GpuTimer {
+    fn new(gpu: &GpuContext) -> Option<GpuTimer> {
+        if !gpu.device.features().contains(wgpu::Features::TIMESTAMP_QUERY) {
+            return None;
+        }
+        let bytes = MAX_TIMED_PASSES as u64 * 2 * 8;
+        Some(GpuTimer {
+            set: gpu.device.create_query_set(&wgpu::QuerySetDescriptor { label: Some("pass-times"), ty: wgpu::QueryType::Timestamp, count: MAX_TIMED_PASSES * 2 }),
+            resolve: buffer(&gpu.device, "pass-times-resolve", bytes, wgpu::BufferUsages::QUERY_RESOLVE | wgpu::BufferUsages::COPY_SRC),
+            read: buffer(&gpu.device, "pass-times-read", bytes, wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST),
+            labels: Vec::new(),
+            period_ns: gpu.queue.get_timestamp_period(),
+        })
+    }
+
+    /// Reserviert den nächsten Zeitstempelplatz für einen Pass.
+    fn alloc(&mut self, label: &'static str) -> Option<u32> {
+        let i = self.labels.len() as u32;
+        if i >= MAX_TIMED_PASSES {
+            return None;
+        }
+        self.labels.push(label);
+        Some(i)
+    }
+
+    fn writes(&self, slot: Option<u32>) -> Option<wgpu::RenderPassTimestampWrites<'_>> {
+        slot.map(|i| wgpu::RenderPassTimestampWrites { query_set: &self.set, beginning_of_pass_write_index: Some(i * 2), end_of_pass_write_index: Some(i * 2 + 1) })
+    }
+
+    fn resolve(&self, encoder: &mut wgpu::CommandEncoder) {
+        let n = self.labels.len() as u32 * 2;
+        if n > 0 {
+            encoder.resolve_query_set(&self.set, 0..n, &self.resolve, 0);
+            encoder.copy_buffer_to_buffer(&self.resolve, 0, &self.read, 0, n as u64 * 8);
+        }
+    }
+}
+
 /// Statistik des letzten Frames.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct RenderStats {
     pub sprites: usize,
     pub lights: usize,
     pub draw_calls: usize,
+    /// Sichtbare Instanzen je Gruppe: Boden, Schatten, Welt, Hitzeflimmern+Overlay.
+    pub groups: [usize; 4],
     pub internal: (u32, u32),
     pub pixel_scale: u32,
 }
@@ -156,6 +207,7 @@ pub struct Renderer {
     frame: u64,
     pub last_view: Option<ViewParams>,
     pub stats: RenderStats,
+    gpu_timer: Option<GpuTimer>,
 }
 
 fn tex_entry(binding: u32, vis: wgpu::ShaderStages, filterable: bool) -> wgpu::BindGroupLayoutEntry {
@@ -385,6 +437,7 @@ impl Renderer {
             frame: 0,
             last_view: None,
             stats: RenderStats::default(),
+            gpu_timer: GpuTimer::new(gpu),
         })
     }
 
@@ -632,9 +685,15 @@ impl Renderer {
             gpu.queue.write_buffer(&self.light_buf, 0, bytemuck::cast_slice(&lights));
         }
 
+        let mut timer = self.gpu_timer.take();
+        if let Some(tm) = timer.as_mut() {
+            tm.labels.clear();
+        }
+        let slot = |tm: &mut Option<GpuTimer>, label: &'static str| tm.as_mut().and_then(|t| t.alloc(label));
         let t = self.targets.as_ref().expect("targets ensured");
         let mut draws = 0;
         // 1) G-Buffer
+        let ts = slot(&mut timer, "gbuffer");
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("gbuffer"),
@@ -653,7 +712,7 @@ impl Renderer {
                     }),
                 ],
                 depth_stencil_attachment: None,
-                timestamp_writes: None,
+                timestamp_writes: timer.as_ref().and_then(|tm| tm.writes(ts)),
                 occlusion_query_set: None,
                 multiview_mask: None,
             });
@@ -676,6 +735,7 @@ impl Renderer {
             }
         }
         // 2) Lichter
+        let ts = slot(&mut timer, "lights");
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("lights"),
@@ -686,7 +746,7 @@ impl Renderer {
                     ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::BLACK), store: wgpu::StoreOp::Store },
                 })],
                 depth_stencil_attachment: None,
-                timestamp_writes: None,
+                timestamp_writes: timer.as_ref().and_then(|tm| tm.writes(ts)),
                 occlusion_query_set: None,
                 multiview_mask: None,
             });
@@ -700,7 +760,8 @@ impl Renderer {
             }
         }
         // 3) Komposition
-        fullscreen_pass(encoder, "composite", &t.scene.view, &self.pipelines.composite, &self.globals_bg, &t.composite_bg, None);
+        let ts = slot(&mut timer, "composite");
+        fullscreen_pass(encoder, "composite", &t.scene.view, &self.pipelines.composite, &self.globals_bg, &t.composite_bg, None, timer.as_ref().and_then(|tm| tm.writes(ts)));
         draws += 1;
         // 4) Bloom
         if !t.bloom.is_empty() {
@@ -711,7 +772,8 @@ impl Renderer {
                 let data = [1.0 / src_size.0 as f32, 1.0 / src_size.1 as f32, a.bloom_threshold, knee];
                 gpu.queue.write_buffer(&t.bloom_bufs[bi], 0, bytemuck::cast_slice(&data));
                 let pipe = if i == 0 { &self.pipelines.bloom_prefilter } else { &self.pipelines.bloom_down };
-                fullscreen_pass(encoder, "bloom-down", &dst.view, pipe, &self.globals_bg, &t.bloom_down_bgs[i], None);
+                let ts = slot(&mut timer, "bloom");
+                fullscreen_pass(encoder, "bloom-down", &dst.view, pipe, &self.globals_bg, &t.bloom_down_bgs[i], None, timer.as_ref().and_then(|tm| tm.writes(ts)));
                 src_size = dst.size;
                 bi += 1;
                 draws += 1;
@@ -720,16 +782,49 @@ impl Renderer {
                 let src = &t.bloom[i];
                 let data = [1.0 / src.size.0 as f32, 1.0 / src.size.1 as f32, 0.0, 0.0];
                 gpu.queue.write_buffer(&t.bloom_bufs[bi], 0, bytemuck::cast_slice(&data));
-                fullscreen_pass(encoder, "bloom-up", &t.bloom[i - 1].view, &self.pipelines.bloom_up, &self.globals_bg, &t.bloom_up_bgs[k], Some(wgpu::LoadOp::Load));
+                let ts = slot(&mut timer, "bloom");
+                fullscreen_pass(encoder, "bloom-up", &t.bloom[i - 1].view, &self.pipelines.bloom_up, &self.globals_bg, &t.bloom_up_bgs[k], Some(wgpu::LoadOp::Load), timer.as_ref().and_then(|tm| tm.writes(ts)));
                 bi += 1;
                 draws += 1;
             }
         }
         // 5) Ausgabe
-        fullscreen_pass(encoder, "final", output, &self.pipelines.final_, &self.globals_bg, &t.final_bg, None);
+        let ts = slot(&mut timer, "final");
+        fullscreen_pass(encoder, "final", output, &self.pipelines.final_, &self.globals_bg, &t.final_bg, None, timer.as_ref().and_then(|tm| tm.writes(ts)));
         draws += 1;
+        if let Some(tm) = timer.as_ref() {
+            tm.resolve(encoder);
+        }
+        self.gpu_timer = timer;
 
-        self.stats = RenderStats { sprites: self.scratch.len(), lights: lights.len(), draw_calls: draws, internal: view.internal, pixel_scale: view.pixel_scale };
+        self.stats = RenderStats { sprites: self.scratch.len(), lights: lights.len(), draw_calls: draws, groups: [ranges[1] as usize, (ranges[2] - ranges[1]) as usize, (ranges[3] - ranges[2]) as usize, (ranges[5] - ranges[3]) as usize], internal: view.internal, pixel_scale: view.pixel_scale };
+    }
+
+    /// GPU-Zeit je Pass des zuletzt eingereichten Frames in Millisekunden (Bloom-Stufen aufsummiert). Blockiert, bis die GPU
+    /// fertig ist; `None` ohne Zeitstempel-Unterstützung. Nur für Messungen gedacht.
+    pub fn read_gpu_pass_times(&mut self, gpu: &GpuContext) -> Option<Vec<(&'static str, f64)>> {
+        let tm = self.gpu_timer.as_ref()?;
+        let n = tm.labels.len() * 2;
+        if n == 0 {
+            return None;
+        }
+        let slice = tm.read.slice(..n as u64 * 8);
+        slice.map_async(wgpu::MapMode::Read, |_| {});
+        gpu.device.poll(wgpu::PollType::wait_indefinitely()).ok()?;
+        let mut out: Vec<(&'static str, f64)> = Vec::new();
+        {
+            let data = slice.get_mapped_range().ok()?;
+            let ticks: &[u64] = bytemuck::cast_slice(&data);
+            for (i, label) in tm.labels.iter().enumerate() {
+                let ms = ticks[i * 2 + 1].saturating_sub(ticks[i * 2]) as f64 * tm.period_ns as f64 / 1.0e6;
+                match out.iter_mut().find(|(l, _)| l == label) {
+                    Some(e) => e.1 += ms,
+                    None => out.push((label, ms)),
+                }
+            }
+        }
+        tm.read.unmap();
+        Some(out)
     }
 
     /// Welt-zu-Bildschirm-Umrechnung des zuletzt gerenderten Frames.
@@ -738,7 +833,8 @@ impl Renderer {
     }
 }
 
-fn fullscreen_pass(encoder: &mut wgpu::CommandEncoder, label: &str, target: &wgpu::TextureView, pipe: &wgpu::RenderPipeline, globals: &wgpu::BindGroup, bg: &wgpu::BindGroup, load: Option<wgpu::LoadOp<wgpu::Color>>) {
+#[allow(clippy::too_many_arguments)]
+fn fullscreen_pass(encoder: &mut wgpu::CommandEncoder, label: &str, target: &wgpu::TextureView, pipe: &wgpu::RenderPipeline, globals: &wgpu::BindGroup, bg: &wgpu::BindGroup, load: Option<wgpu::LoadOp<wgpu::Color>>, timestamps: Option<wgpu::RenderPassTimestampWrites<'_>>) {
     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: Some(label),
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -748,7 +844,7 @@ fn fullscreen_pass(encoder: &mut wgpu::CommandEncoder, label: &str, target: &wgp
             ops: wgpu::Operations { load: load.unwrap_or(wgpu::LoadOp::Clear(wgpu::Color::BLACK)), store: wgpu::StoreOp::Store },
         })],
         depth_stencil_attachment: None,
-        timestamp_writes: None,
+        timestamp_writes: timestamps,
         occlusion_query_set: None,
         multiview_mask: None,
     });

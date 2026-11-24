@@ -246,7 +246,7 @@ Fragment-Shader unterschieden, sondern über eigene Pipelines (Listen `frame.sha
 | ID | Material | Pipeline / Einstieg | Funktionsweise | Typische Verwendung |
 |---|---|---|---|---|
 | 0 | **Lit** | `fs_gbuffer` | Standard: Albedo × Tönung, Normale aus dem Atlas, voll beleuchtet (Ambient, Sonne, Punktlichter), Nebel, Wetter. Flags 0. | Gelände, Figuren, Gebäude, Bäume, Dekoration |
-| 1 | **Water** | `fs_gbuffer` | Prozedural animiertes Wasser: Mischung aus flacher und tiefer Farbe nach Wassertiefe (`p1.z`, 0 = Ufer), zwei Sinuswellen plus Rauschen, auf 4 Lichtbänder quantisiert, Schaum nahe dem Ufer (`noise2`), Glitzern (Hash auf 2-px-Zellen, 3 Hz), eigene animierte Normale. Das Kachel-Sprite moduliert die Farbe. | Wasser, Tiefes Wasser, Furt (Tiefe 0), Brückenkachel |
+| 1 | **Water** | `fs_gbuffer` | Ruhiges Pixel-Art-Wasser, vollständig im Shader: Das Ufer-Distanzfeld liegt als 4-Bit-Wert je Kachelecke gepackt in `p1.w` (`SpriteInstance::water_corners`, vom `WorldView` aus dem Gelände berechnet), wird im Fragment bilinear gelesen und per Bayer-Raster auf 5 Tiefenbänder (Flachwasser-Türkis bis Tiefsee-Blau) abgestuft; Brücken zählen als Wasser, Furten und Land als Ufer. Darüber: dünne, langsam wandernde Wellenlinien (Striche je Zeile, leicht geschwungen), ein weicher Brandungssaum bei geringer Tiefe, seltene Glanzpunkte, flache animierte Normale. Das Kachel-Sprite liefert nur die Form. **Furt:** `p1.z < 0` – sandiger Grund (Kachel-Textur mit Kieseln) scheint durch türkises Flachwasser. Zusätzlich zeichnet der `WorldView` je Uferkante einen Schaumsaum-Streifen (`foam_<terrain>_<seite>`, Alpha pulsiert je Kachel versetzt) unter die Land-Übergänge. | Wasser, Tiefes Wasser, Furt, Brückenkachel |
 | 2 | **Unlit** | `fs_gbuffer`, Flags 0,6 | Albedo wird unverändert ausgegeben, **ohne** Beleuchtung, Nebel, Wetter und Kriegsnebel. | Auswahlringe, Befehlsmarker, Bauvorschau |
 | 3 | **Emissive** | `fs_gbuffer` | Wie Lit, aber die Emission beträgt mindestens `p0.y` (Instanz-Emission). In der Komposition wird `albedo · emission · 3,2` addiert → HDR-Werte, die den Bloom speisen. | Flammen, Glut, Funken, Seelenblitze, Schildring |
 | 4 | **Shadow** | `fs_shadow` | Schreibt nur den Schattenanteil (`alpha · fade · Schattenstärke · 0,49`) in `g-normal.a`; `fade` nimmt von 1,0 (unten) auf 0,55 (oben) ab. Schattenform ist die Alphamaske des Sprites selbst. | Schatten von Bäumen, Gebäuden, hohen Dekorationen; weiche Blob-Schatten der Einheiten |
@@ -476,7 +476,7 @@ Aus `render/profile.rs` (Zielhardware: Apple A18 Pro, 5-Kern-GPU, 8 GB Unified M
 | Max. Partikel | 600 | 1 600 | 3 200 |
 | Normalmapping | aus | an | an |
 | Atmosphärischer Nebel | an | an | an |
-| Filmkorn | 0,0 | 0,012 | 0,018 |
+| Filmkorn | 0,0 | 0,006 | 0,009 |
 | Mindest-Bildzeilen (Zoom-Grenze) | 300 | 260 | 220 |
 
 Profil wählen: Einstellungen im Spiel, `--profile <performance|balanced|quality>` oder `settings.ron`. Der Kommentar in

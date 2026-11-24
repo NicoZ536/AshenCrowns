@@ -21,7 +21,7 @@ pub mod render;
 pub mod time;
 pub mod ui;
 
-pub use app::{run, run_headless, AppConfig, Engine, Game, WindowRequest};
+pub use app::{run, run_bench, run_headless, AppConfig, BenchReport, Engine, FrameSample, Game, WindowRequest};
 pub use egui;
 pub use glam;
 pub use winit::keyboard::KeyCode;

@@ -693,7 +693,7 @@ pub struct SwarmBones {
     pub bats: Vec<(usize, usize, usize, Vec3)>,
 }
 
-const BAT_SPOTS: [(f32, f32, f32); 4] = [(0.0, 1.0, 0.0), (0.75, 0.75, 0.25), (-0.75, 0.85, 0.0), (0.05, 1.35, -0.6)];
+const BAT_SPOTS: [(f32, f32, f32); 4] = [(0.0, 1.5, 0.1), (0.62, 1.15, -0.2), (-0.62, 1.3, -0.1), (0.05, 1.9, -0.45)];
 
 fn bat_swarm() -> UnitModel {
     let mut sk = Skeleton::default();
@@ -701,27 +701,38 @@ fn bat_swarm() -> UnitModel {
     let mut m = Mesh::default();
     let mut bats = Vec::new();
     // Tiere sind größer als natürlich, damit der Schwarm im Pixelraster lesbar bleibt.
-    let k = 1.8;
+    let k = 1.45;
     for (x, y, z) in BAT_SPOTS.iter() {
         let pos = Vec3::new(*x, *y, *z);
         let body = sk.add("bat", Some(root), pos);
-        let wl = sk.add("wing_l", Some(body), Vec3::new(-0.035 * k, 0.0, 0.0));
-        let wr = sk.add("wing_r", Some(body), Vec3::new(0.035 * k, 0.0, 0.0));
-        let fur = Paint::new(0x4a3c5c, Mat::Cloth).bone(body);
-        m.ellipsoid(&fur, Vec3::ZERO, Vec3::new(0.06 * k, 0.05 * k, 0.1 * k), 6, 4);
-        m.ellipsoid(&fur, Vec3::new(0.0, 0.02 * k, 0.1 * k), Vec3::splat(0.045 * k), 5, 3);
+        let wl = sk.add("wing_l", Some(body), Vec3::new(-0.04 * k, 0.02 * k, 0.0));
+        let wr = sk.add("wing_r", Some(body), Vec3::new(0.04 * k, 0.02 * k, 0.0));
+        // Dunkler Körper hebt sich von der helleren Flughaut ab.
+        let fur = Paint::new(0x20182c, Mat::Cloth).bone(body);
+        m.ellipsoid(&fur, Vec3::ZERO, Vec3::new(0.065 * k, 0.055 * k, 0.1 * k), 6, 4);
+        m.ellipsoid(&fur, Vec3::new(0.0, 0.025 * k, 0.1 * k), Vec3::splat(0.05 * k), 5, 3);
         for sx in [-1.0f32, 1.0] {
-            m.frustum(&fur, Vec3::new(sx * 0.025 * k, 0.05 * k, 0.11 * k), Vec3::new(sx * 0.04 * k, 0.11 * k, 0.1 * k), 0.016 * k, 0.0, 3);
-            m.ellipsoid(&Paint::new(0x86f2a0, Mat::Glow).bone(body).glow(1.0), Vec3::new(sx * 0.02 * k, 0.035 * k, 0.14 * k), Vec3::splat(0.016 * k), 3, 2);
+            // Spitze Ohren und leuchtende Augen.
+            m.frustum(&fur, Vec3::new(sx * 0.03 * k, 0.06 * k, 0.11 * k), Vec3::new(sx * 0.045 * k, 0.15 * k, 0.1 * k), 0.02 * k, 0.0, 3);
+            m.ellipsoid(&Paint::new(0x86f2a0, Mat::Glow).bone(body).glow(1.0), Vec3::new(sx * 0.022 * k, 0.04 * k, 0.15 * k), Vec3::splat(0.02 * k), 3, 2);
         }
-        // Flügel: Membran mit Spitze und hellen Fingerstreben.
+        // Flügel: Flughaut als Fächer zwischen Schulter, Handgelenk und drei Fingerspitzen (gezackte Hinterkante),
+        // dazu helle Fingerknochen als Zeichnung.
         for (bone, s) in [(wl, -1.0f32), (wr, 1.0)] {
-            let w = Paint::new(0x8a78a4, Mat::Cloth).bone(bone);
-            let (x0, x1) = if s < 0.0 { (-0.34 * k, 0.0) } else { (0.0, 0.34 * k) };
-            m.cuboid(&w, Vec3::new(x0, -0.01 * k, -0.13 * k), Vec3::new(x1, 0.01 * k, 0.15 * k), Mat4::IDENTITY);
-            m.tri_flat(&w, Vec3::new(s * 0.34 * k, 0.0, -0.13 * k), Vec3::new(s * 0.34 * k, 0.0, 0.15 * k), Vec3::new(s * 0.5 * k, 0.0, -0.05 * k));
-            let strut = Paint::new(0xa898bc, Mat::Bone).bone(bone);
-            m.frustum(&strut, Vec3::new(0.0, 0.012 * k, -0.08 * k), Vec3::new(s * 0.47 * k, 0.012 * k, -0.04 * k), 0.016 * k, 0.006 * k, 3);
+            let membrane = Paint::new(0xa088cc, Mat::Cloth).bone(bone).flat();
+            let strut = Paint::new(0x3a2c52, Mat::Bone).bone(bone);
+            let sh = Vec3::new(0.0, 0.0, -0.02 * k);
+            let wrist = Vec3::new(s * 0.24 * k, 0.015 * k, -0.15 * k);
+            let tips = [Vec3::new(s * 0.52 * k, -0.02 * k, -0.3 * k), Vec3::new(s * 0.5 * k, -0.02 * k, -0.02 * k), Vec3::new(s * 0.34 * k, -0.02 * k, 0.24 * k)];
+            let rear = Vec3::new(0.0, 0.0, 0.2 * k);
+            m.tri_flat(&membrane, sh, wrist, tips[0]);
+            m.tri_flat(&membrane, sh, tips[0], tips[1]);
+            m.tri_flat(&membrane, sh, tips[1], tips[2]);
+            m.tri_flat(&membrane, sh, tips[2], rear);
+            m.frustum(&strut, sh, wrist, 0.018 * k, 0.014 * k, 3);
+            for t in tips {
+                m.frustum(&strut, wrist, t, 0.014 * k, 0.006 * k, 3);
+            }
         }
         bats.push((body, wl, wr, pos));
     }
@@ -732,19 +743,20 @@ fn swarm_pose(model: &UnitModel, b: &SwarmBones, anim: Anim, t: f32) -> Pose {
     let mut ps = model.skeleton.rest();
     let ph = t * TAU;
     let cycles = match anim {
-        Anim::Walk => 3.0,
-        Anim::Attack => 2.0,
+        Anim::Walk => 2.0,
+        Anim::Attack => 1.0,
         _ => 1.0,
     };
     for (i, (body, wl, wr, pos)) in b.bats.iter().enumerate() {
         let off = i as f32 * 1.1;
         let f = match anim {
             Anim::Death => -85.0,
-            _ => (ph * cycles + off).sin() * 35.0,
+            _ => (ph * cycles + off).sin() * 32.0,
         };
-        // Flügel stehen in V-Form (30° Grundwinkel) und schlagen um ±35° darum.
-        ps.euler(*wl, 0.0, 0.0, -(30.0 + f));
-        ps.euler(*wr, 0.0, 0.0, 30.0 + f);
+        // Flügel stehen in V-Form (12° Grundwinkel) und schlagen um ±32° darum: Die Flughaut zeigt dem Betrachter
+        // in jedem Bild Fläche, die V-/M-Silhouette bleibt erkennbar.
+        ps.euler(*wl, 0.0, 0.0, -(12.0 + f));
+        ps.euler(*wr, 0.0, 0.0, 12.0 + f);
         match anim {
             Anim::Death => {
                 let g = keys6(t, &[0.0, 0.3, 0.7, 1.0, 1.0, 1.0]);
